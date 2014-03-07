@@ -4,7 +4,7 @@
   <title><![CDATA[My Octopress Blog]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-03-07T14:50:40+08:00</updated>
+  <updated>2014-03-07T14:53:32+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Your Name]]></name>
@@ -18,6 +18,15 @@
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/07/sheng-cheng-bo-ke-de-guo-cheng/"/>
     <updated>2014-03-07T00:00:00+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/07/sheng-cheng-bo-ke-de-guo-cheng</id>
+    <content type="html"><![CDATA[
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Github Page Plus Octopress]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/07/github-page-plus-octopress/"/>
+    <updated>2014-03-07T00:00:00+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/07/github-page-plus-octopress</id>
     <content type="html"><![CDATA[
 ]]></content>
   </entry>
