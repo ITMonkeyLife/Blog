@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-03-13T13:54:41+08:00</updated>
+  <updated>2014-03-13T13:57:06+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -14,11 +14,75 @@
 
   
   <entry>
-    <title type="html"><![CDATA[教程:一步步在github上建立octopress博客]]></title>
+    <title type="html"><![CDATA[教程一步步在github上建立octopress博客]]></title>
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/13/%E6%95%99%E7%A8%8B%E4%B8%80%E6%AD%A5%E6%AD%A5%E5%9C%A8github%E4%B8%8A%E5%BB%BA%E7%AB%8Boctopress%E5%8D%9A%E5%AE%A2/"/>
-    <updated>2014-03-13T13:03:33+08:00</updated>
+    <updated>2014-03-13T00:00:00+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/13/教程一步步在github上建立octopress博客</id>
-    <content type="html"><![CDATA[
+    <content type="html"><![CDATA[<p>layout: post  <br />
+title: &quot;教程:一步步在github上建立octopress博客&quot;  <br />
+date: 2013-04-18 01:13  <br />
+author: znithy  <br />
+comments: true  <br />
+categories:   <br />
+- 教程  <br />
+- github  <br />
+- octopress  <br />
+published: false
+—
+第一张指明此篇是post,后面是标题,时间和作者,我加了教程 github octopuses 三个标签,并且允许评论,published: false表示不要发表,如想要发表改成published: true或者直接删掉这行.
+文章直接写在这部分内容下面.
+10) 发表外链文章
+点击标题转向其他网页.创建方法同上,只是需要添加external-url这个条目.
+下面是一个例子:
+—      <br />
+layout: post  <br />
+title: &quot;非常不错的科学博客&quot;  <br />
+date: 2013-04-18 01:13       <br />
+comments: true      <br />
+external-url: http://keep.doubting.me/      <br />
+—
+11) 发表页面
+创建网址为http://never.doubting.me/about/i.html的网页:
+rake new_page[about/i.html]
+与post不同的是,此时没有categories这个条目,但多了sharing和footer,具体有什么作用,不妨自己试下.
+—  <br />
+layout: page      <br />
+title: &quot;Super Awesome&quot;  <br />
+date: 2011-07-03 5:59  <br />
+comments: true  <br />
+sharing: true  <br />
+footer: true      <br />
+—
+12) 管理文章
+直接增加或删除.markdown文件即可.
+每次更新文件后别忘了:
+rake generate
+rake deploy
+其他
+git设置用户名
+默认情况下直接使用系统的用户名,也可通过下面的命令自定义:
+git config –global user.name author #将用户名设为author  <br />
+git config –global user.email author@mail.com #将用户邮箱设为author@mail.com
+关于怎样使用git,这份教程很不错,推荐.</p>
+
+<p>看日记学git.pdf</p>
+
+<p>第三方插件地址:</p>
+
+<p>https://github.com/imathis/octopress/wiki/3rd-party-plugins</p>
+
+<p>中文问题:
+如遇到此类提示(可能因设置了中文的catagory):
+…
+Liquid Exception: invalid byte sequence in UTF-8 in atom.xml
+/Documents/never.doubting.me/plugins/octopress_filters.rb:75:in <code>gsub&amp;amp;#39;
+/Documents/never.doubting.me/plugins/octopress_filters.rb:75:in </code>cdata_escape&amp;#39;
+…
+最方便的方法是换用kramdown.首先安装kramdown:
+gem install kramdown
+之后修改_config.yml文件:
+markdown: kramdown”&gt;
+—</p>
 ]]></content>
   </entry>
   
