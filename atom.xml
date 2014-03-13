@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-03-13T14:30:50+08:00</updated>
+  <updated>2014-03-13T14:48:53+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -109,7 +109,7 @@ rake deploy</code></pre>
 <pre><code class="lang-html">---
 layout: post    
 title: &quot;教程:一步步在github上建立octopress博客&quot;    
-date: 2013-04-18 01:13    
+date: 2014-03-13 11:13    
 author: znithy    
 comments: true    
 categories:     
@@ -126,12 +126,12 @@ published: false
 <pre><code class="lang-html">---        
 layout: post    
 title: &quot;非常不错的科学博客&quot;    
-date: 2013-04-18 01:13         
+date: 2014-03-13 14:13         
 comments: true        
-external-url: http://keep.doubting.me/        
+external-url: http://www.baidu.com/        
 ---</code></pre>
 <h3>11) 发表页面</h3>
-<p>创建网址为<code>http://never.doubting.me/about/i.html</code>的网页:</p>
+<p>创建网址为<code>http://itmonkeylife.github.io/Blog//about/i.html</code>的网页:</p>
 <pre><code class="lang-bash">rake new_page[about/i.html]</code></pre>
 <p>与<code>post</code>不同的是,此时没有<code>categories</code>这个条目,但多了<code>sharing</code>和<code>footer</code>,具体有什么作用,不妨自己试下.</p>
 <pre><code class="lang-html">---    
