@@ -1,16 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
-        <loc>http://ITMonkeyLife.github.io/Blog/blog/2014/03/07/github-page-plus-octopress/</loc>
-        <lastmod>2014-03-07T14:53:24+08:00</lastmod>
-    </url>
-    <url>
-        <loc>
-            http://ITMonkeyLife.github.io/Blog/blog/2014/03/07/sheng-cheng-bo-ke-de-guo-cheng/
-        </loc>
-        <lastmod>2014-03-07T14:49:46+08:00</lastmod>
-    </url>
-    <url>
         <loc>
             http://ITMonkeyLife.github.io/Blog/blog/2014/03/13/%E6%95%99%E7%A8%8B%E4%B8%80%E6%AD%A5%E6%AD%A5%E5%9C%A8github%E4%B8%8A%E5%BB%BA%E7%AB%8Boctopress%E5%8D%9A%E5%AE%A2/
         </loc>
