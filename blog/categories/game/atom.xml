@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Game | IT Monkey Life]]></title>
+  <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/game/atom.xml" rel="self"/>
+  <link href="http://ITMonkeyLife.github.io/Blog/"/>
+  <updated>2014-03-17T10:39:38+08:00</updated>
+  <id>http://ITMonkeyLife.github.io/Blog/</id>
+  <author>
+    <name><![CDATA[Rick]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[使用物理引擎制作弹球游戏]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/17/%E4%BD%BF%E7%94%A8%E7%89%A9%E7%90%86%E5%BC%95%E6%93%8E%E5%88%B6%E4%BD%9C%E5%BC%B9%E7%90%83%E6%B8%B8%E6%88%8F/"/>
+    <updated>2014-03-17T10:32:17+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/17/使用物理引擎制作弹球游戏</id>
+    <content type="html"><![CDATA[<h2>目标</h2>
+<p>熟悉在cocos2d里面如何使用box2d，所采用的例子就是制作一个简单的应用，里面有一个篮球，你可以通过旋转你的iPhone来改变重力的方向，同时篮球碰到屏幕边界可以反弹。</p>
+<h2>步骤</h2>
+<h3>0) 创建一个空的工程</h3>
+<p>打开Xcode，选择 cocos2d-0.99.1 Box2d Application template来创建一个新的工程，并且命名为Box2D.如果你直接编译并且运行的话，你将会看到一个很酷的例子，里面展示了Box2d的许多内容。然后，这个教程的目的，我们将从0开始，创建一个篮球反弹的应用，这样我们就可以更好地理解那个范例的具体原理。</p>
+<p>因此，让我们把HelloWorld模板里面的内容都删除掉，因为我们要从0开始。把HelloWorldScene.h里面的内容替换成下面的代码：</p>
+<blockquote>
+<p>#import "cocos2d.h"
+ 
+#define PTM_RATIO 32.0
+ 
+@interface HelloWorldLayer : CCLayer {   
+}
+ 
++ (id) scene;
+ 
+@end</p>
+</blockquote>
+]]></content>
+  </entry>
+  
+</feed>

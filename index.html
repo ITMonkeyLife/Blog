@@ -10,10 +10,10 @@
 
   
   <meta name="description" content="目标
-创建网址为http://itmonkeylife.github.io/Blog的博客.博客使用octopress程序,搭建在github的服务器上.网页与本地机器的Blog文件夹同步.
+熟悉在cocos2d里面如何使用box2d，所采用的例子就是制作一个简单的应用，里面有一个篮球，你可以通过旋转你的iPhone来改变重力的方向，同时篮球碰到屏幕边界可以反弹。
 步骤
-0) 配置环境
-octopress需要ruby和git支持. 因此我们需要先安装这两个程序. &hellip;">
+0) 创建一个空的工程
+打开Xcode，选择 cocos2d-0.99.1 Box2d Application &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -68,6 +68,61 @@ octopress需要ruby和git支持. 因此我们需要先安装这两个程序. &he
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/03/17/%E4%BD%BF%E7%94%A8%E7%89%A9%E7%90%86%E5%BC%95%E6%93%8E%E5%88%B6%E4%BD%9C%E5%BC%B9%E7%90%83%E6%B8%B8%E6%88%8F/">使用物理引擎制作弹球游戏</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-17T10:32:17+08:00" pubdate data-updated="true">Mar 17<span>th</span>, 2014</time>
+        
+         | <a href="/Blog/blog/2014/03/17/%E4%BD%BF%E7%94%A8%E7%89%A9%E7%90%86%E5%BC%95%E6%93%8E%E5%88%B6%E4%BD%9C%E5%BC%B9%E7%90%83%E6%B8%B8%E6%88%8F/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>目标</h2>
+<p>熟悉在cocos2d里面如何使用box2d，所采用的例子就是制作一个简单的应用，里面有一个篮球，你可以通过旋转你的iPhone来改变重力的方向，同时篮球碰到屏幕边界可以反弹。</p>
+<h2>步骤</h2>
+<h3>0) 创建一个空的工程</h3>
+<p>打开Xcode，选择 cocos2d-0.99.1 Box2d Application template来创建一个新的工程，并且命名为Box2D.如果你直接编译并且运行的话，你将会看到一个很酷的例子，里面展示了Box2d的许多内容。然后，这个教程的目的，我们将从0开始，创建一个篮球反弹的应用，这样我们就可以更好地理解那个范例的具体原理。</p>
+<p>因此，让我们把HelloWorld模板里面的内容都删除掉，因为我们要从0开始。把HelloWorldScene.h里面的内容替换成下面的代码：</p>
+<blockquote>
+<p>#import &#8220;cocos2d.h&#8221;
+ 
+#define PTM_RATIO 32.0
+ 
+@interface HelloWorldLayer : CCLayer {   
+}
+ 
++ (id) scene;
+ 
+@end</p>
+</blockquote>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -269,14 +324,21 @@ Liquid Exception: invalid byte sequence in UTF-8 in atom.xml
     <section>
     <h1>Categories</h1>
     <ul id="categories">
-        <li class='category'><a href='/Blog/blog/categories/blog/'>blog (1)</a></li>
+        <li class='category'><a href='/Blog/blog/categories/game/'>Game (1)</a></li>
+<li class='category'><a href='/Blog/blog/categories/blog/'>blog (1)</a></li>
+<li class='category'><a href='/Blog/blog/categories/cocos2d/'>cocos2d (1)</a></li>
 <li class='category'><a href='/Blog/blog/categories/github/'>github (1)</a></li>
+<li class='category'><a href='/Blog/blog/categories/ios/'>iOS (1)</a></li>
 <li class='category'><a href='/Blog/blog/categories/octopress/'>octopress (1)</a></li>
 
     </ul>
 </section><section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/Blog/blog/2014/03/17/%E4%BD%BF%E7%94%A8%E7%89%A9%E7%90%86%E5%BC%95%E6%93%8E%E5%88%B6%E4%BD%9C%E5%BC%B9%E7%90%83%E6%B8%B8%E6%88%8F/">使用物理引擎制作弹球游戏</a>
+      </li>
     
       <li class="post">
         <a href="/Blog/blog/2014/03/13/%E6%95%99%E7%A8%8B%E4%B8%80%E6%AD%A5%E6%AD%A5%E5%9C%A8github%E4%B8%8A%E5%BB%BA%E7%AB%8Boctopress%E5%8D%9A%E5%AE%A2/">教程:一步步在github上建立octopress博客</a>
