@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-03-17T17:42:21+08:00</updated>
+  <updated>2014-03-17T17:47:03+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -18,84 +18,16 @@
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/17/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8/"/>
     <updated>2014-03-17T17:26:25+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/17/代码大全</id>
-    <content type="html"><![CDATA[<div><script src="https://gist.github.com/4321346.js"></script>
-<noscript><pre><code>@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase
+    <content type="html"><![CDATA[<p>代码大全是程序员的宝典，一点都不为过</p>
+<p><code>@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase
   it &quot;should generate a sprite from nested folders&quot; do
     css = render &lt;&lt;-SCSS
 -     @import &quot;nested/*.png&quot;;
 +     @import &quot;nested/**/*.png&quot;;
       @include all-nested-sprites;
     SCSS
-    assert_correct css, &lt;&lt;-CSS</code></pre></noscript></div>
-
-<p>If you want syntax highlighting (for a <a href="http://pygments.org/docs/lexers/">supported language</a>), specify the filename (with extension):</p>
-
-<div class="highlight"><pre><code class="text"><div><script src="https://gist.github.com/4321346.js?file=gistfile1.diff"></script>
-<noscript><pre><code>@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase
-  it &quot;should generate a sprite from nested folders&quot; do
-    css = render &lt;&lt;-SCSS
--     @import &quot;nested/*.png&quot;;
-+     @import &quot;nested/**/*.png&quot;;
-      @include all-nested-sprites;
-    SCSS
-    assert_correct css, &lt;&lt;-CSS</code></pre></noscript></div>
-
-</code></pre></div>
-
-<div><script src="https://gist.github.com/4321346.js?file=gistfile1.diff"></script>
-<noscript><pre><code>@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase
-  it &quot;should generate a sprite from nested folders&quot; do
-    css = render &lt;&lt;-SCSS
--     @import &quot;nested/*.png&quot;;
-+     @import &quot;nested/**/*.png&quot;;
-      @include all-nested-sprites;
-    SCSS
-    assert_correct css, &lt;&lt;-CSS</code></pre></noscript></div>
-
-<p>If you have a gist with multiple files, you can include files one at a time by adding the name after the gist id.</p>
-
-<div class="highlight"><pre><code class="text"><div><script src="https://gist.github.com/1059334.js?file=svg_bullets.rb"></script>
-<noscript><pre><code>require &#39;sass&#39;
-
-module Sass::Script::Functions
-  def svg_circle(radius, color, circle_type)
-    img = if circle_type.value == &quot;disc&quot;
-      %Q{&lt;circle cx=&quot;#{radius.value}&quot; cy=&quot;#{radius.value}&quot; r=&quot;#{radius.value}&quot;
-                          stroke-width=&quot;0&quot; fill=&quot;#{color}&quot;/&gt;}
-    else
-      %Q{&lt;circle cx=&quot;#{radius.value}&quot; cy=&quot;#{radius.value}&quot; r=&quot;#{radius.value}&quot;
-                          stroke=&quot;#{color}&quot; stroke-width=&quot;1&quot; fill=&quot;white&quot;/&gt;}
-    end
-    inline_image_string(svg_circle_envelope(img).gsub(/  +/, &#39; &#39;), &#39;image/svg+xml&#39;)
-  end
-  private
-  def svg_circle_envelope(content)
-    %Q{&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt; &lt;svg version=&quot;1.1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;#{content}&lt;/svg&gt;}
-  end
-end
-</code></pre></noscript></div>
-
-<div><script src="https://gist.github.com/1059334.js?file=usage.scss"></script>
-<noscript><pre><code>// Draw a list style image in svg using the radius and color specified.
-@mixin colored-bullet($radius, $color, $type: disc) {
-  list-style-type: $type;
-  list-style-image: svg-circle($radius, $color, $type);
-}
-
-
-ul {
-  @include colored-bullet(2px, $green, disc);
-  ul {
-    @include colored-bullet(2px, $green, circle);
-  }
-}
-</code></pre></noscript></div>
-
-</code></pre></div>
-
-<p>This plugin was initially developed by <a href="http://brandontilley.com/2011/01/31/gist-tag-for-jekyll.html">Brandon Tilly</a> for Jekyll blogs.</p>
-<p class="post-footer">
-                        #written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+    assert_correct css, &lt;&lt;-CSS</code>&lt;p class=&#8217;post-footer&#8217;&gt;
+                        #written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a> posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a>&lt;/p&gt;</p>
 ]]></content>
   </entry>
   
