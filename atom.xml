@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-03-17T17:47:03+08:00</updated>
+  <updated>2014-03-17T17:48:31+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -19,15 +19,8 @@
     <updated>2014-03-17T17:26:25+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/17/代码大全</id>
     <content type="html"><![CDATA[<p>代码大全是程序员的宝典，一点都不为过</p>
-<p><code>@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase
-  it &quot;should generate a sprite from nested folders&quot; do
-    css = render &lt;&lt;-SCSS
--     @import &quot;nested/*.png&quot;;
-+     @import &quot;nested/**/*.png&quot;;
-      @include all-nested-sprites;
-    SCSS
-    assert_correct css, &lt;&lt;-CSS</code>&lt;p class=&#8217;post-footer&#8217;&gt;
-                        #written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a> posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a>&lt;/p&gt;</p>
+<p class="post-footer">
+                        #written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 ]]></content>
   </entry>
   
