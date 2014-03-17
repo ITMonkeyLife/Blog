@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Game | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/game/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-03-17T10:50:00+08:00</updated>
+  <updated>2014-03-17T10:51:57+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -33,7 +33,7 @@
 <p>@end</p>
 </blockquote>
 <p>同时修改HelloWorldScene.mm文件：（为什么后缀是.mm，因为box2d是c++写的，而objective-c++的实现文件必须是.mm后缀，否则你编译会出n个错误！）</p>
-<blockquota>
+<blockquote>
 <p>#import "HelloWorldLayer.h"</p>
 <p>@implementation HelloWorldLayer</p>
 <p>+ (id)scene {</p>
@@ -52,7 +52,7 @@
 <p>最后一步—-验证一下，你的Classes分组下面的所有文件（比如HelloWorldScene）是以.mm文件结尾的，如果是.m，那么请改成.mm，否则等下使用Box2d的时候，编译器会报出一大堆莫名其妙的错误！</p>
 <p>　　如果你编译并运行，你应该看到一个黑色的屏幕。好了，现在让我们开始创建Box2d场景吧。</p>
 <h3>1) Box2D相关理论</h3>
-</p></blockquota>
+</p></blockquote>
 ]]></content>
   </entry>
   
