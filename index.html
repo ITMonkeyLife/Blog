@@ -9,11 +9,7 @@
   <meta name="author" content="Rick">
 
   
-  <meta name="description" content="目标
-创建网址为http://itmonkeylife.github.io/Blog的博客.博客使用octopress程序,搭建在github的服务器上.网页与本地机器的Blog文件夹同步.
-步骤
-0) 配置环境
-octopress需要ruby和git支持. 因此我们需要先安装这两个程序. &hellip;">
+  <meta name="description" content="@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase it &quot;should generate a sprite from nested folders&quot; do css = render &lt;&lt &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -68,6 +64,68 @@ octopress需要ruby和git支持. 因此我们需要先安装这两个程序. &he
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/03/17/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8/">代码大全</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-17T17:26:25+08:00" pubdate data-updated="true">Mar 17<span>th</span>, 2014</time>
+        
+         | <a href="/Blog/blog/2014/03/17/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><div><script src="https://gist.github.com/4321346.js"></script>
+<noscript><pre><code>@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase
+  it &quot;should generate a sprite from nested folders&quot; do
+    css = render &lt;&lt;-SCSS
+-     @import &quot;nested/*.png&quot;;
++     @import &quot;nested/**/*.png&quot;;
+      @include all-nested-sprites;
+    SCSS
+    assert_correct css, &lt;&lt;-CSS</code></pre></noscript></div>
+
+<p>If you want syntax highlighting (for a <a href="http://pygments.org/docs/lexers/">supported language</a>), specify the filename (with extension):</p>
+
+<div class="highlight"><pre><code class="text"><div><script src="https://gist.github.com/4321346.js?file=gistfile1.diff"></script>
+<noscript><pre><code>@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase
+  it &quot;should generate a sprite from nested folders&quot; do
+    css = render &lt;&lt;-SCSS
+-     @import &quot;nested/*.png&quot;;
++     @import &quot;nested/**/*.png&quot;;
+      @include all-nested-sprites;
+    SCSS
+    assert_correct css, &lt;&lt;-CSS</code></pre></noscript></div>
+
+</code></pre></div>
+<p class="post-footer">
+                        original link:<a href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/17/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8/">http://ITMonkeyLife.github.io/Blog/blog/2014/03/17/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8/</a><br />&nbsp;written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -279,6 +337,10 @@ Liquid Exception: invalid byte sequence in UTF-8 in atom.xml
 </section><section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/Blog/blog/2014/03/17/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8/">代码大全</a>
+      </li>
     
       <li class="post">
         <a href="/Blog/blog/2014/03/13/%E6%95%99%E7%A8%8B%E4%B8%80%E6%AD%A5%E6%AD%A5%E5%9C%A8github%E4%B8%8A%E5%BB%BA%E7%AB%8Boctopress%E5%8D%9A%E5%AE%A2/">教程:一步步在github上建立octopress博客</a>
