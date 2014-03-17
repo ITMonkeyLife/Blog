@@ -9,7 +9,7 @@
   <meta name="author" content="Rick">
 
   
-  <meta name="description" content="@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase it &quot;should generate a sprite from nested folders&quot; do css = render &lt;&lt &hellip;">
+  <meta name="description" content="@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase it &quot;should generate a sprite from nested folders&quot; do css = render &lt;&lt;- &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -92,15 +92,15 @@
   </header>
 
 
-<div class="entry-content"><div><script src="https://gist.github.com/4321346.js"></script>
-<noscript><pre><code>@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase
+<div class="entry-content"><noscript><pre><code>@@ -590,7 +590,7 @@ class SpritesTest &lt; Test::Unit::TestCase
   it &quot;should generate a sprite from nested folders&quot; do
     css = render &lt;&lt;-SCSS
 -     @import &quot;nested/*.png&quot;;
 +     @import &quot;nested/**/*.png&quot;;
       @include all-nested-sprites;
     SCSS
-    assert_correct css, &lt;&lt;-CSS</code></pre></noscript></div>
+    assert_correct css, &lt;&lt;-CSS</code></pre></noscript>
+<p>&lt;/div&gt;</p>
 
 <p>If you want syntax highlighting (for a <a href="http://pygments.org/docs/lexers/">supported language</a>), specify the filename (with extension):</p>
 
