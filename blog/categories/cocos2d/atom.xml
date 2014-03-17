@@ -4,7 +4,7 @@
   <title><![CDATA[Category: cocos2d | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/cocos2d/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-03-17T10:39:38+08:00</updated>
+  <updated>2014-03-17T10:41:51+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -25,16 +25,12 @@
 <p>打开Xcode，选择 cocos2d-0.99.1 Box2d Application template来创建一个新的工程，并且命名为Box2D.如果你直接编译并且运行的话，你将会看到一个很酷的例子，里面展示了Box2d的许多内容。然后，这个教程的目的，我们将从0开始，创建一个篮球反弹的应用，这样我们就可以更好地理解那个范例的具体原理。</p>
 <p>因此，让我们把HelloWorld模板里面的内容都删除掉，因为我们要从0开始。把HelloWorldScene.h里面的内容替换成下面的代码：</p>
 <blockquote>
-<p>#import "cocos2d.h"
- 
-#define PTM_RATIO 32.0
- 
-@interface HelloWorldLayer : CCLayer {   
-}
- 
-+ (id) scene;
- 
-@end</p>
+<p>#import "cocos2d.h"</p>
+<p>#define PTM_RATIO 32.0</p>
+<p>@interface HelloWorldLayer : CCLayer {</p>   
+<p>}</p>
+<p>+ (id) scene;</p>
+<p>@end</p>
 </blockquote>
 ]]></content>
   </entry>
