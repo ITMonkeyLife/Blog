@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-03-17T17:57:35+08:00</updated>
+  <updated>2014-03-18T15:34:44+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -14,19 +14,75 @@
 
   
   <entry>
-    <title type="html"><![CDATA[代码大全]]></title>
+    <title type="html"><![CDATA[Markdown 入门新手指南]]></title>
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/17/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8/"/>
     <updated>2014-03-17T17:26:25+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/17/代码大全</id>
-    <content type="html"><![CDATA[<p>代码大全是程序员的宝典，一点都不为过</p>
-<p> c hello world http://itmonkeylife.github.io/Blog/
-int main()
-{
-  printf(&#8220;hello world&#8221;);
-}
+    <content type="html"><![CDATA[<div class="show-content">
+          <p>作为一款「写作软件」在诞生之初就支持了 Markdown，Markdown 是一种「电子邮件」风格的「标记语言」，我强烈推荐所有写作者学习和掌握该语言。</p>
+<p>在此，总结 Markdown 的优点如下：</p>
+<ul>
+<li>纯文本，所以兼容性极强，可以用所有文本编辑器打开。</li>
+<li>让你专注于文字而不是排版。</li>
+<li>格式转换方便，Markdown 的文本你可以轻松转换为 html、电子书等。</li>
+<li>Markdown 的标记语法有极好的可读性。</li>
+</ul>
+<p>当然，既然如此推崇 Markdown ，也必定会教会你使用 Markdown ，这也是本文的目的所在。不过，虽然 <a href="http://wowubuntu.com/markdown/">Markdown 的语法</a>已经足够简单，但是现有的 Markdown 语法说明更多的是写给 web 从业者看的，对于很多写作者来说，学习起来效率很低，现在，特地为写作者量身定做本指南，从写作者的实际需求出发，介绍写作者真正实用的常用格式，深入浅出、图文并茂地让您迅速掌握 Markdown 语法。</p>
+<p>为了使您更好地学习，我们建议您登录，将您的编辑器切换至 Markdown 编辑器，新建一篇空白笔记，然后点击右上角的预览模式，此时，您的界面应当如下图所示，左侧为编辑区域，右侧为预览区域，您在左侧输入 Markdown 语法的文本，右侧会立即帮您呈现最终结果，好了，让我们开始学习吧~</p>
+<p><em> Markdown：</em><br /><img src="http://ww2.sinaimg.cn/large/687afc7fjw1dzs642j2qoj.jpg" alt="" /></p>
+<h2>标题</h2>
+<p>这是最为常用的格式，在平时常用的的文本编辑器中大多是这样实现的：输入文本、选中文本、设置标题格式。</p>
+<p>而在 Markdown 中，你只需要在文本前面加上 <code>#</code> 即可，同理、你还可以增加二级标题、三级标题、四级标题、五级标题和六级标题，总共六级，只需要增加  <code>#</code> 即可，标题字号相应降低。例如：</p>
+<pre><code># 一级标题
+## 二级标题
+### 三级标题
+#### 四级标题
+##### 五级标题
+###### 六级标题</code></pre>
+<p><em>注：<code>#</code> 和「一级标题」之间建议保留一个字符的空格，这是最标准的 Markdown 写法。</em></p>
+<p><em>你可以你的编辑器中尝试输入这六级标题，可以参考下方的截图：</em><br /><img src="http://ww4.sinaimg.cn/large/687afc7fjw1dzs5crii94j.jpg" alt="一级标题至六级标题" />  </p>
+<h2>列表</h2>
+<p>列表格式也很常用，在 Markdown 中，你只需要在文字前面加上 <code>-</code> 就可以了，例如：</p>
+<pre><code>- 文本1
+- 文本2
+- 文本3</code></pre>
+<p>如果你希望有序列表，也可以在文字前面加上 <code>1.</code> <code>2.</code> <code>3.</code> 就可以了，例如：</p>
+<pre><code>1. 文本1
+2. 文本2
+3. 文本3</code></pre>
+<p><em>注：<code>-</code>、<code>1.</code>和文本之间要保留一个字符的空格。</em></p>
+<p><em>列表案例截图如下：</em><br /><img src="http://ww1.sinaimg.cn/large/687afc7fjw1dzs56gavuzj.jpg" alt="" /></p>
+<p><h2 id="picture"> 链接和图片</h2>
+
 </p>
+<p>在 Markdown 中，插入链接不需要其他按钮，你只需要使用 <code>[显示文本](链接地址)</code> 这样的语法即可，例如：</p>
+<pre><code>[ITMonkeyLife](http://itmonkeylife.github.io/Blog/)</code></pre>
+<p>在 Markdown 中，插入图片不需要其他按钮，你只需要使用 <code>![](图片链接地址)</code> 这样的语法即可，例如：</p>
+<pre><code>![](http://ww4.sinaimg.cn/bmiddle/aa397b7fjw1dzplsgpdw5j.jpg)</code></pre>
+<p><em>注：插入图片的语法和链接的语法很像，只是前面多了一个 <code>！</code>。</em></p>
+<p><em>插入链接和图片的案例截图：</em><br /><img src="http://ww3.sinaimg.cn/large/687afc7fjw1dzs5i4iw3uj.jpg" alt="" /></p>
+<h2>引用</h2>
+<p>在我们写作的时候经常需要引用他人的文字，这个时候引用这个格式就很有必要了，在 Markdown 中，你只需要在你希望引用的文字前面加上 <code>&gt;</code> 就好了，例如：</p>
+<pre><code>&gt; 一盏灯， 一片昏黄； 一简书， 一杯淡茶。 守着那一份淡定， 品读属于自己的寂寞。 保持淡定， 才能欣赏到最美丽的风景！ 保持淡定， 人生从此不再寂寞。</code></pre>
+<p><em>注：<code>&gt;</code> 和文本之间要保留一个字符的空格。</em></p>
+<p>最终显示的就是：</p>
+<blockquote>
+<p>一盏灯， 一片昏黄； 一简书， 一杯淡茶。 守着那一份淡定， 品读属于自己的寂寞。 保持淡定， 才能欣赏到最美丽的风景！ 保持淡定， 人生从此不再寂寞。</p>
+</blockquote>
+<p><em>引用的案例截图：</em><br /><img src="http://ww3.sinaimg.cn/large/687afc7fjw1dzs5oehlj5j.jpg" alt="" /></p>
+<h2>粗体和斜体</h2>
+<p>Markdown 的粗体和斜体也非常简单，用两个 <code>*</code> 包含一段文本就是粗体的语法，用一个 <code>*</code> 包含一段文本就是斜体的语法。例如：</p>
+<pre><code> *一盏灯*， 一片昏黄；**一简书**， 一杯淡茶。 守着那一份淡定， 品读属于自己的寂寞。 保持淡定， 才能欣赏到最美丽的风景！ 保持淡定， 人生从此不再寂寞。</code></pre>
+<p>最终显示的就是下文，其中「一盏灯」是斜体，「一简书」是粗体：</p>
+<p> <em>一盏灯</em>， 一片昏黄；<strong>一简书</strong>， 一杯淡茶。 守着那一份淡定， 品读属于自己的寂寞。 保持淡定， 才能欣赏到最美丽的风景！ 保持淡定， 人生从此不再寂寞。</p>
+<p><em>粗体和斜体的案例截图：</em><br /><img src="http://ww4.sinaimg.cn/large/687afc7fjw1dzs5qrr3jcj.jpg" alt="" /></p>
+<h2>结语</h2>
+<p>以上几种格式是比较常用的格式，所以我们针对这些语法做了比较详细的说明。除这些之外，Markdown 还有其他语法，如想了解和学习更多，可以参考这篇<a href="http://wowubuntu.com/markdown/">『Markdown 语法说明』</a>。</p>
+<p>强烈建议您现在就立马用 Markdown 写一篇文章吧，体会一下 Markdown 的优雅之处！</p>
+<p>最后，希望我们的指南可以帮助到您，也希望能够成为您书写 Markdown 的最佳选择。</p>
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</div>
 ]]></content>
   </entry>
   
