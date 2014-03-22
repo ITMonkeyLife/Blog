@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-03-22T08:53:05+08:00</updated>
+  <updated>2014-03-22T16:23:34+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -14,10 +14,10 @@
 
   
   <entry>
-    <title type="html"><![CDATA[iOS Device Collect设备信息收集]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/21/iOS-Device-Collect%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/"/>
+    <title type="html"><![CDATA[iOS设备信息收集]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/"/>
     <updated>2014-03-21T18:05:55+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/21/iOS-Device-Collect设备信息收集</id>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/21/iOS设备信息收集</id>
     <content type="html"><![CDATA[<p>收集iOS设备的信息，包含设备系统版本，设备型号，手机型号，屏幕分辨率，当地所在时区，CPU 型号，系统语言，网络环境，应用名称以及应用版本，还有判断设备是否，应用是否被破解</p>
 <p>需要的头文件</p>
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
