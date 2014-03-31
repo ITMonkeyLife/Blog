@@ -316,6 +316,16 @@
 当一个 view controller 想把某个状态传递给多个其他 view controllers 时，就会出现这样的问题。较好的做法是把状态放到一个单独的对象里，然后把这个对象传递给其它 view controllers，它们观察和修改这个状态。这样的好处是消息传递都在一个地方（被观察的对象）进行，而且我们也不用纠结嵌套的 delegate 回调。这其实是一个复杂的主题，我们可能在未来用一个完整的话题来讨论这个主题。</p>
 <h2>总结</h2>
 <p>我们已经看到一些用来创建更小巧的 view controllers 的技术。我们并不是想把这些技术应用到每一个可能的角落，只是我们有一个目标：写可维护的代码。知道这些模式后，我们就更有可能把那些笨重的 view controllers 变得更整洁。</p>
+<h3>扩展阅读</h3>
+
+<ul>
+<li><a href="http://developer.apple.com/library/ios/#featuredarticles/ViewControllerPGforiPhoneOS/BasicViewControllers/BasicViewControllers.html">View Controller Programming Guide for iOS</a></li>
+<li><a href="http://developer.apple.com/library/mac/#documentation/General/Conceptual/DevPedia-CocoaCore/ControllerObject.html">Cocoa Core Competencies: Controller Object</a></li>
+<li><a href="http://subjective-objective-c.blogspot.de/2011/08/writing-high-quality-view-controller.html">Writing high quality view controllers</a></li>
+<li><a href="http://programmers.stackexchange.com/questions/184396/mvcs-model-view-controller-store">Stack Overflow: Model View Controller Store</a></li>
+<li><a href="https://speakerdeck.com/trianglecocoa/unburdened-viewcontrollers-by-jay-thrash">Unburdened View Controllers</a></li>
+<li><a href="http://programmers.stackexchange.com/questions/177668/how-to-avoid-big-and-clumsy-uitableviewcontroller-on-ios">Stack Overflow: How to avoid big and clumsy <code>UITableViewControllers</code> on iOS</a></li>
+</ul>
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
