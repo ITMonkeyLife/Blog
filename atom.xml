@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-02T11:01:39+08:00</updated>
+  <updated>2014-04-02T11:02:56+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -933,20 +933,6 @@
 <p>这是由于 UNIX的静态库实现、linker和Objective-C的动态结构三者之间的问题引起的。通过修改工程配置文件，只要在build静态库时，加上linker flag “-ObjC”即可（在64位osx上和iOS程序上，这样做还不够），这个flag告诉linker将每个定义了class或者category的对象文件都载入静态库。</p>
 <p>但是最终程序还是会抛这个异常，这是因为linker的bug，对于64位osx程序和iOS程序，这个bug导致只包含category而不包含class的文件没法从静态库中加载。</p>
 
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[会做饭的孩子]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/21/%E4%BC%9A%E5%81%9A%E9%A5%AD%E7%9A%84%E5%AD%A9%E5%AD%90/"/>
-    <updated>2014-03-21T00:00:00+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/21/会做饭的孩子</id>
-    <content type="html"><![CDATA[<p>一个真实的故事</p>
-<p>永远快乐下去吧</p>
-<p><img src="http://ww4.sinaimg.cn/large/626e5d69tw1eencbe5cgfj20dm0gstab.jpg" alt="" /></p>
-<p />
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 ]]></content>
