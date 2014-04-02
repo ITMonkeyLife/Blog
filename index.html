@@ -9,7 +9,11 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Mar 31st, 2014 Comments 精简开发iOS View controllers 通常是 iOS 项目中最大的文件，并且它们包含了许多不必要的代码。所以 View controllers 中的代码几乎总是复用率最低的。我们将会看到给 view controllers 瘦身的技术， &hellip;">
+	<meta name="description" content="Apr 2nd, 2014 少年 Comments 一个少年 我要是没有生在这个世界就好了 受伤的心灵如此诉说
+要是这么想的话就中了那个混蛋的当了 不要认输呀少年
+「让内心休息一下」这种事 看来是不会被允许的呢
+略微玩耍一下 把该做的事都置于身后吧 选择自己喜欢的事情吧
+在这双手伸出之前 &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -98,6 +102,62 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-04-02T10:34:35+08:00" data-updated="true" itemprop="datePublished">Apr 2<span>nd</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/shao-nian/'>少年</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/04/02/%5B%3F%5D-ge-shao-nian/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/02/%5B%3F%5D-ge-shao-nian/" itemprop="url">一个少年</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1ef12djbjbkj20s00j342z.jpg" alt="" /></p>
+<p>我要是没有生在这个世界就好了 受伤的心灵如此诉说</p>
+<p>要是这么想的话就中了那个混蛋的当了 不要认输呀少年</p>
+<p>「让内心休息一下」这种事 看来是不会被允许的呢</p>
+<p>略微玩耍一下 把该做的事都置于身后吧 选择自己喜欢的事情吧</p>
+<p>在这双手伸出之前 还有着无尽的喜悦</p>
+<p>那无穷无尽而来的悲伤 如果无法背负的话就不背好了</p>
+<p>为何要去勉强自己去感受痛苦呢? 本来谁都可以自由自在</p>
+<p>像那振翅翱翔的鸟儿一般 像那海面中跳跃的飞鱼一般</p>
+<p>在这欢乐的地方 比谁都能 自由微笑的少年吧</p>
+<p>如果穿上流行的服饰的话 明天也会变得落伍吧</p>
+<p>要不要去赶潮流 选择自己喜欢的方法就好了</p>
+<p>在这双脚踏出路程之前 还有着无限的幸福存在</p>
+<p>如果有着无尽的烦恼的话 那就让他烦恼下去好了</p>
+<p>欲速则不达 不要不懂装懂 每个人都有缺陷</p>
+<p>自己诞生而来的意义 即使最后再想也是绝妙的</p>
+<p>微风轻轻拂过 将身心委任给涓涓小溪 成为一个学习的少年吧</p>
+<p>成为在这个世界上 比谁都能 自由恋爱的少年吧</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -309,11 +369,11 @@
 <p><img src="http://ww1.sinaimg.cn/large/626e5d69tw1eeys0sfm2tj20wg0naq7c.jpg" alt="" /></p>
 <p>就像你看到的那样，我们在 view（我们没有在这个 nib 上使用 File&#8217;s Owner 对象）上面创建了 properties，然后连接到指定的 subviews。这种技术同样适用于其他自定义的 views。</p>
 <h2>通讯</h2>
-<p>其他在 view controllers 中经常发生的事是与其他 view controllers，model，和 views 之间进行通讯。这当然是 controller 应该做的，但我们还是希望以尽可能少的代码来完成它。
+<p>其他在 view controllers 中经常发生的事是与其他 view controllers，model，和 views 之间进行通讯。这当然是 controller 应该做的，但我们还是希望以尽可能少的代码来完成它。</p>
 
-关于 view controllers 和 model 对象之间的消息传递，已经有很多阐述得很好的技术（比如 KVO 和 fetched results controllers）。但是 view controllers 之间的消息传递稍微就不是那么清晰了。
+<p>关于 view controllers 和 model 对象之间的消息传递，已经有很多阐述得很好的技术（比如 KVO 和 fetched results controllers）。但是 view controllers 之间的消息传递稍微就不是那么清晰了。</p>
 
-当一个 view controller 想把某个状态传递给多个其他 view controllers 时，就会出现这样的问题。较好的做法是把状态放到一个单独的对象里，然后把这个对象传递给其它 view controllers，它们观察和修改这个状态。这样的好处是消息传递都在一个地方（被观察的对象）进行，而且我们也不用纠结嵌套的 delegate 回调。这其实是一个复杂的主题，我们可能在未来用一个完整的话题来讨论这个主题。</p>
+<p>当一个 view controller 想把某个状态传递给多个其他 view controllers 时，就会出现这样的问题。较好的做法是把状态放到一个单独的对象里，然后把这个对象传递给其它 view controllers，它们观察和修改这个状态。这样的好处是消息传递都在一个地方（被观察的对象）进行，而且我们也不用纠结嵌套的 delegate 回调。这其实是一个复杂的主题，我们可能在未来用一个完整的话题来讨论这个主题。</p>
 <h2>总结</h2>
 <p>我们已经看到一些用来创建更小巧的 view controllers 的技术。我们并不是想把这些技术应用到每一个可能的角落，只是我们有一个目标：写可维护的代码。知道这些模式后，我们就更有可能把那些笨重的 view controllers 变得更整洁。</p>
 <h3>扩展阅读</h3>

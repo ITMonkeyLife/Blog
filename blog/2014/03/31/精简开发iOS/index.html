@@ -283,11 +283,11 @@
 <p><img src="http://ww1.sinaimg.cn/large/626e5d69tw1eeys0sfm2tj20wg0naq7c.jpg" alt="" /></p>
 <p>就像你看到的那样，我们在 view（我们没有在这个 nib 上使用 File&#8217;s Owner 对象）上面创建了 properties，然后连接到指定的 subviews。这种技术同样适用于其他自定义的 views。</p>
 <h2>通讯</h2>
-<p>其他在 view controllers 中经常发生的事是与其他 view controllers，model，和 views 之间进行通讯。这当然是 controller 应该做的，但我们还是希望以尽可能少的代码来完成它。
+<p>其他在 view controllers 中经常发生的事是与其他 view controllers，model，和 views 之间进行通讯。这当然是 controller 应该做的，但我们还是希望以尽可能少的代码来完成它。</p>
 
-关于 view controllers 和 model 对象之间的消息传递，已经有很多阐述得很好的技术（比如 KVO 和 fetched results controllers）。但是 view controllers 之间的消息传递稍微就不是那么清晰了。
+<p>关于 view controllers 和 model 对象之间的消息传递，已经有很多阐述得很好的技术（比如 KVO 和 fetched results controllers）。但是 view controllers 之间的消息传递稍微就不是那么清晰了。</p>
 
-当一个 view controller 想把某个状态传递给多个其他 view controllers 时，就会出现这样的问题。较好的做法是把状态放到一个单独的对象里，然后把这个对象传递给其它 view controllers，它们观察和修改这个状态。这样的好处是消息传递都在一个地方（被观察的对象）进行，而且我们也不用纠结嵌套的 delegate 回调。这其实是一个复杂的主题，我们可能在未来用一个完整的话题来讨论这个主题。</p>
+<p>当一个 view controller 想把某个状态传递给多个其他 view controllers 时，就会出现这样的问题。较好的做法是把状态放到一个单独的对象里，然后把这个对象传递给其它 view controllers，它们观察和修改这个状态。这样的好处是消息传递都在一个地方（被观察的对象）进行，而且我们也不用纠结嵌套的 delegate 回调。这其实是一个复杂的主题，我们可能在未来用一个完整的话题来讨论这个主题。</p>
 <h2>总结</h2>
 <p>我们已经看到一些用来创建更小巧的 view controllers 的技术。我们并不是想把这些技术应用到每一个可能的角落，只是我们有一个目标：写可维护的代码。知道这些模式后，我们就更有可能把那些笨重的 view controllers 变得更整洁。</p>
 <h3>扩展阅读</h3>
