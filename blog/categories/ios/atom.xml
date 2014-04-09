@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-09T17:10:21+08:00</updated>
+  <updated>2014-04-09T17:22:59+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,298 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[iOS7.0:隐藏技巧和变通之道]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/"/>
+    <updated>2014-04-09T17:16:22+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao</id>
+    <content type="html"><![CDATA[<p>当 iOS 7 刚发布的时候，全世界的苹果开发人员都立马尝试着去编译他们的 app，接着再花上数月的时间来修复任何出现的错误，甚至从头开始重建这个 app。这样的结果，使得人们根本无暇去探究 iOS 7 所带来的新思想。除开一些明显而细微的更新，比如说 NSArray 的 <code>firstObject</code> 方法——这个方法可追溯到 iOS 4 时代，现在被提为公有 API——还有很多隐藏的技巧等着我们去挖掘。</p>
+
+<h2>平滑淡入淡出动画</h2>
+
+<p>我在这里要讨论的并非新的弹性动画 API 或者 UIDynamics，而是一些更细微的东西。CALayer 增加了两个新方法：<code>allowsGroupOpacity</code> 和 <code>allowsEdgeAntialiasing</code>。现在，组不透明度（group opacity）不再是什么新鲜的东西了。iOS 会多次使用存在于 Info.plist 中的键 <code>UIViewGroupOpacity</code> 并可在应用程序范围内启用或禁用它。对于大多数 app 而言，这（译注：启用）并非所期望的，因为它会降低整体性能。在 iOS 7 中，用 SDK 7 所链接的程序，这项属性默认是启用的。当它被启用时，一些动画将会变得不流畅，它也可以在 layer 层上被控制。</p>
+
+<p>一个有趣的细节，如果 <code>allowsGroupOpacity</code> 启用的话，<code>_UIBackdropView</code>（被用作 <code>UIToolbar</code> 或者 <code>UIPopoverView</code> 的背景视图）不能对其模糊进行动画处理，所以当你做一个 alpha 转换时，你可能会临时禁用这项属性。因为这会降低动画体验，你可以回到旧的方式然后在动画期间临时启用 <code>shouldRasterize</code>。别忘了设置适当的 <code>rasterizationScale</code>，否则在 retina 的设备上这些视图会成锯齿状（pixelerated）。</p>
+
+<p>如果你想要复制 Safari 显示所有选项卡时的动画，那么边缘抗锯齿属性将变得非常有用。</p>
+
+<h2>阻塞动画</h2>
+
+<p>有一个小但是非常有用的新方法 <code>[UIView performWithoutAnimation:]</code>。它是一个简单的封装，先检查动画当前是否启用，如果是则停用动画，执行块语句，然后重新启用动画。一个需要说明的地方是，它并 <em>不会</em> 阻塞基于 CoreAnimation 的动画。因此，不用急于将你的方法调用从：</p>
+
+<p><code>objc
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
+    view.frame = CGRectMake(...);
+    [CATransaction commit];
+</code></p>
+
+<p>替换成:</p>
+
+<p><code>objc
+    [UIView performWithoutAnimation:^{
+        view.frame = CGRectMake(...);
+    }];
+</code></p>
+
+<p>但是，绝大多数情况下这样也能工作得很好，只要你不直接跟 CALayer 打交道。</p>
+
+<p>iOS 7 中，我有很多代码路径（主要是 <code>UITableViewCells</code>）需要额外保护以防止意外的动画，例如，如果一个弹窗（popover）的大小调整了，与此同时其中的表视图将因为高度的变化而加载新的 cell。我通常的做法是将整个 <code>layoutSubviews</code> 的代码包扎到一个动画块中：</p>
+
+<p><code>objc
+- (void)layoutSubviews 
+{
+    // 否则在 iOS 7 的传统模式下弹窗动画会渗入我们的单元格
+    [UIView performWithoutAnimation:^{
+        [super layoutSubviews];
+        _renderView.frame = self.bounds;
+    }];
+}
+</code></p>
+
+<h2>处理长的表视图</h2>
+
+<p><code>UITableView</code> 非常快速高效，除非你开始使用 <code>tableView:heightForRowAtIndexPath:</code>，它会开始为你表中 <em>每一个</em> 元素调用此方法，即便没有可视对象——这是为了让其下层的 <code>UIScrollView</code> 能获取正确的 <code>contentSize</code>。此前有一些变通方法，但都不好用。iOS 7 中，苹果公司终于承认这一问题，并添加了  <code>tableView:estimatedHeightForRowAtIndexPath:</code>，这个方法把绝大部分计算成本推迟到实际滚动的时候。如果你完全不知道一个 cell 的大小，返回 <code>UITableViewAutomaticDimension</code> 就行了。</p>
+
+<p>对于段头/尾（section headers/footers），现在也有类似的 API 了。</p>
+
+<h2 id="uisearchdisplaycontroller">UISearchDisplayController</h2>
+
+<p>苹果的 search controller 使用了新的技巧来简化移动 search bar 到 navigation bar 的过程。启用 <code>displaysSearchBarInNavigationBar</code> 就可以了（除非你还在用 scope bar，那你就太不幸了）。我倒是很喜欢这么做，但遗憾的是，iOS 7 上的 <code>UISearchDisplayController</code> 貌似被破坏得相当严重，尤其在 iPad 上。苹果公司看上去像是没时间处理这个问题，对于显示的搜索结果并不会隐藏实际的表视图。在 iOS 7 之前，这不算问题，但是现在 <code>searchResultsTableView</code> 有一个透明的背景色，使它看上去相当糟糕。作为一种变通方法，你可以设置不透明背景色或者采取一些<a href="http://petersteinberger.com/blog/2013/fixing-uisearchdisplaycontroller-on-ios-7/">更富于技巧的手段</a>来获得你期望的效果。关于这个控件我碰到过各种各样的结果，当使用 <code>displaysSearchBarInNavigationBar</code> 时甚至 <em>根本</em> 不会显示搜索表视图。</p>
+
+<p>你的结果可能有所不同，但我依赖于一些手段（severe hacks）来让 <code>displaysSearchBarInNavigationBar</code> 工作：</p>
+
+<p>```objc
+- (void)restoreOriginalTableView 
+{
+    if (PSPDFIsUIKitFlatMode() &amp;&amp; self.originalTableView) {
+        self.view = self.originalTableView;
+    }
+}</p>
+
+<ul>
+  <li>
+    <p>(UITableView *)tableView 
+{
+  return self.originalTableView ?: [super tableView];
+}</p>
+  </li>
+  <li>
+    <p>(void)searchDisplayController:(UISearchDisplayController *)controller 
+didShowSearchResultsTableView:(UITableView *)tableView 
+{
+  // HACK: iOS 7 依赖于重度的变通来显示搜索表视图
+  if (PSPDFIsUIKitFlatMode()) {
+      if (!self.originalTableView) self.originalTableView = self.tableView;
+      self.view = controller.searchResultsTableView;
+      controller.searchResultsTableView.contentInset = UIEdgeInsetsZero; // 移除 64 像素的空白
+  }
+}</p>
+  </li>
+  <li>
+    <p>(void)searchDisplayController:(UISearchDisplayController *)controller 
+didHideSearchResultsTableView:(UITableView *)tableView 
+{
+  [self restoreOriginalTableView];
+}
+```</p>
+  </li>
+</ul>
+
+<p>另外，别忘了在 <code>viewWillDisappear</code> 中调用 <code>restoreOriginalTableView</code>，否则程序会 crash。
+记住这只是一种解决办法；可能还有不那么激进的方法，不用替换视图本身，但这个问题确实应该由苹果公司来修复。（TODO: RADAR!）</p>
+
+<h2>分页</h2>
+
+<p><code>UIWebView</code> 现在可以对带有 <code>paginationMode</code> 的网站进行自动分页。有一大堆与此功能相关的新属性：</p>
+
+<p><code>objc
+@property (nonatomic) UIWebPaginationMode paginationMode NS_AVAILABLE_IOS(7_0);
+@property (nonatomic) UIWebPaginationBreakingMode paginationBreakingMode NS_AVAILABLE_IOS(7_0);
+@property (nonatomic) CGFloat pageLength NS_AVAILABLE_IOS(7_0);
+@property (nonatomic) CGFloat gapBetweenPages NS_AVAILABLE_IOS(7_0);
+@property (nonatomic, readonly) NSUInteger pageCount NS_AVAILABLE_IOS(7_0);
+</code></p>
+
+<p>目前而言，虽然这不一定对大多数网站都有用，但它肯定是生成简单的电子书阅读器或者显示文本的一种更好的方式。加点乐子的话，请尝试将它设置为 <code>UIWebPaginationModeBottomToTop</code>。</p>
+
+<h2 id="popover">会飞的 Popover</h2>
+
+<p>想知道为什么你的 popover 疯了一样到处乱飞？在 <code>UIPopoverControllerDelegate</code> 协议中有一个新的代理方法让你能控制它：</p>
+
+<p><code>objc
+-  (void)popoverController:(UIPopoverController *)popoverController
+  willRepositionPopoverToRect:(inout CGRect *)rect 
+                       inView:(inout UIView **)view
+</code></p>
+
+<p>当 popover 锚点是指向一个 <code>UIBarButtonItem</code> 时，<code>UIPopoverController</code> 会做出合适的展现，但是如果你让它在一个 view 或者 rect 中显示，你可能就需要实现此方法并正常返回。一个花费了我相当长时间来验证的问题——如果你通过改变 <code>preferredContentSize</code> 来动态调整你的 popover，那么这个方法就尤其需要实现。苹果公司现在对改变 popover 大小的请求更严格，如果没有预留足够的空间，popover 将会到处移动。</p>
+
+<h2>键盘支持</h2>
+
+<p>苹果公司不只为我们提供了<a href="https://developer.apple.com/library/ios/documentation/ServicesDiscovery/Conceptual/GameControllerPG/Introduction/Introduction.html">全新的 framework 用于游戏控制器</a>，它也给了我们这些键盘爱好者一些关注！你会发现新定义的公用键，比如  <code>UIKeyInputEscape</code> 或 <code>UIKeyInputUpArrow</code>，可以使用全新的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIKeyCommand_class/Reference/Reference.html#//apple_ref/occ/instp/UIKeyCommand/input"><code>UIKeyCommand</code></a> 类截查。在 iOS 7 之前，只能通过一些<a href="http://petersteinberger.com/blog/2013/adding-keyboard-shortcuts-to-uialertview/">难以言表的手段来处理键盘命令</a>，现在，就让我们操起蓝牙键盘试试看我们能用这个做什么！</p>
+
+<p>开始之前，你需要对响应链（responder chain）有个了解。你的 <code>UIApplication</code> 继承自  <code>UIResponder</code>，<code>UIView</code> 和 <code>UIViewController</code> 也是如此。如果你曾经处理过 <code>UIMenuItem</code>  并且没有使用<a href="https://github.com/steipete/PSMenuItem">我的基于块的包装</a>的话，那么你对此已经有所了解。事件先被发送到最上层的响应者，然后一级级往下传递直到 UIApplication。为了捕获按键命令，你需要告诉系统你关心哪些按键命令（而不是全捕获）。为了完成这个，你需要重写 <code>keyCommands</code> 这个新属性：</p>
+
+<p>```objc
+- (NSArray *)keyCommands 
+{
+    return @[[UIKeyCommand keyCommandWithInput:@”f”
+                                 modifierFlags:UIKeyModifierCommand<br />
+                                        action:@selector(searchKeyPressed:)]];
+}</p>
+
+<ul>
+  <li>(void)searchKeyPressed:(UIKeyCommand *)keyCommand 
+{
+  // 响应事件
+}
+```</li>
+</ul>
+
+<p><img src="http://img.objccn.io/issue-5/responder-chain.png" name="工作中的响应者链" width="472" height="548" /></p>
+
+<p>现在可别太激动，需要注意的是，这个方法只在键盘可见时有效（比如有类似 <code>UITextView</code> 这样的对象作为第一响应者时）。对于全局热键，你仍然需要用上面提到的 hack 方法。除去那些，这个解决途径还是很优雅的。不要覆盖类似 cmd-V 这种系统的快捷键，它会被自动映射到 <code>paste:</code> 方法。</p>
+
+<p>还有一些新的预定义的响应者行为：</p>
+
+<p><code>objc
+- (void)increaseSize:(id)sender NS_AVAILABLE_IOS(7_0);
+- (void)decreaseSize:(id)sender NS_AVAILABLE_IOS(7_0);
+</code></p>
+
+<p>它们分别对应 cmd+ 和 cmd- 命令，用来放大/缩小内容。</p>
+
+<h2>匹配键盘背景</h2>
+
+<p>苹果公司终于公开了 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIInputView_class/Reference/Reference.html"><code>UIInputView</code></a>，其中提供了一种方式——使用 <code>UIInputViewStyleKeyboard</code> 来匹配键盘样式。这使得你能编写自定义的键盘或者适应默认样式的默认键盘的扩展（工具条）。这个类<a href="https://github.com/nst/iOS-Runtime-Headers/commits/master/Frameworks/UIKit.framework/UIInputView.h">一开始</a>就存在了，不过现在我们终于可以绕过私有API的方式来使用它了。</p>
+
+<p>如果 <code>UIInputView</code> 是一个 <code>inputView</code> 或者 <code>inputAccessoryView</code> 的<em>根视图</em>，它将只显示一个背景，否则它将是透明的。遗憾的是，这并不能让你实现一个未填充的分离态的键盘，但它仍然比用一个简单的 UIToolbar 要好。我还没看到苹果在何处使用这个新 API，看上去 Safari 里仍然使用着 <code>UIToolbar</code>。</p>
+
+<h2>了解你的无线电通信</h2>
+
+<p>虽然早在 iOS 4 的时候，大部分的运营商信息已经在 CTTelephony 暴露了，但它通常只用于特定场景并非十分有用。iOS 7 中，苹果公司为其添加了一个方法，其中最有用的：<code>currentRadioAccessTechnology</code>。这个方法能告诉你手机是处于较慢的 GPRS 还是高速的 LTE 或者介于其中。目前还没有方法得到连接速度（当然手机本身也无法获取这个），但是这足以用来优化一个下载管理器，让其在 EDGE 下不用尝试 <em>同时</em> 去下载6张图片了。</p>
+
+<p>现在还没有 <code>currentRadioAccessTechnology</code> 的相关文档，为了让它工作，会遇到一些麻烦和错误。当你想要获取当前网络信号值，你应当注册一个 <code>CTRadioAccessTechnologyDidChangeNotification</code> 通知而不是去轮询这个属性。为了确切的使 iOS 发送这些通知，你需要持有一个 <code>CTTelephonyNetworkInfo</code> 的实例，但不要在通知中创建  <code>CTTelephonyNetworkInfo</code> 的实例，否则会 crash。</p>
+
+<p>在这个简单的例子中，因为在 block 中捕获 <code>telephonyInfo</code> 将会持有它，所以我就这么用了：</p>
+
+<p><code>objc
+CTTelephonyNetworkInfo *telephonyInfo = [CTTelephonyNetworkInfo new];
+NSLog(@"Current Radio Access Technology: %@", telephonyInfo.currentRadioAccessTechnology);
+[NSNotificationCenter.defaultCenter addObserverForName:CTRadioAccessTechnologyDidChangeNotification 
+                                                object:nil 
+                                                 queue:nil 
+                                            usingBlock:^(NSNotification *note) 
+{
+    NSLog(@"New Radio Access Technology: %@", telephonyInfo.currentRadioAccessTechnology);
+}];
+</code></p>
+
+<p>当手机从 Edge 环境切换到 3G，日志输出应该像这样：</p>
+
+<pre><code>iOS7Tests[612:60b] Current Radio Access Technology: CTRadioAccessTechnologyEdge
+iOS7Tests[612:1803] New Radio Access Technology: (null)
+iOS7Tests[612:1803] New Radio Access Technology: CTRadioAccessTechnologyHSDPA
+</code></pre>
+
+<p>苹果导出了所有字符串符号，因此可以很简单的比较和检测当前的网络信息。</p>
+
+<h2 id="corefoundationautorelease">Core Foundation，Autorelease 和你</h2>
+
+<p>Core Foundation 中出现了一个新的辅助方法，它被用于私有调用已有数年时间：</p>
+
+<p><code>objc
+CFTypeRef CFAutorelease(CFTypeRef CF_RELEASES_ARGUMENT arg)
+</code></p>
+
+<p>它的确做了你所期望的事，让人费解的是苹果花了这么长时间才把它公开。ARC 下，大多数人在处理返回 Core Foundation 对象时是通过转换成对等的 NS 对象来完成的，如返回一个  <code>NSDictionary</code>，虽然它是一个 <code>CFDictionaryRef</code>，简单地使用 <code>CFBridgingRelease()</code> 就行了。这样通常没问题，除非你返回的没有可用的对等 NS 对象，如 <code>CFBagRef</code>。你要么使用 id，这样会失去类型安全性，要么你将你的方法重命名为 <code>createMethod</code> 并考虑所有的内存语义，最后使用 CFRelease。还有一些手段，比如<a href="http://favstar.fm/users/AndrePang/status/18099774996">这个</a>，使用 non-ARC-file 参数你才能编译它，但终归得使用 CFAutorelease()。另外：不要编写使用苹果公司命名空间的代码，所有这些自定义的 CF-宏将来都会被打破的。</p>
+
+<h2>图片解压缩</h2>
+
+<p>当通过 <code>UIImage</code> 展示一张图片时，在显示之前需要解压缩（除非图片源已经像素缓存了）。对于 JPG/PNG 文件这会占用相当可观的时间并会造成卡顿。iOS 6 以前，通常是通过创建一个位图上下文，然后在其中画图来解决。<a href="https://github.com/AFNetworking/AFNetworking/blob/09658b352a496875c91cc33dd52c3f47b9369945/AFNetworking/AFURLResponseSerialization.m#L442-518">（参见 AFNetworking 如何处理这个问题）</a>。</p>
+
+<p>从 iOS 7 开始，你可以使用 <code>kCGImageSourceShouldCacheImmediately</code>: 强制图片在创建时直接解压缩：</p>
+
+<p>```objc
++ (UIImage *)decompressedImageWithData:(NSData *)data 
+{
+    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
+    CGImageRef cgImage = CGImageSourceCreateImageAtIndex(source, 0, (__bridge CFDictionaryRef)@{(id)kCGImageSourceShouldCacheImmediately: @YES});</p>
+
+<pre><code>UIImage *image = [UIImage imageWithCGImage:cgImage];
+CGImageRelease(cgImage);
+CFRelease(source);
+return image; } ```
+</code></pre>
+
+<p>刚发现这一点时我很很兴奋，但不要高兴得太早。在我的测试中，开启即时缓存后性能实际上有所 <em>降低</em>。要么这个方法最终是在主线程中被调用的（好像不太可能），要么感官上的性能下降是因为其在方法 <code>copyImageBlockSetJPEG</code> 中锁住了，因为这个方法也被用在主线程显示非加密的图片时。在我的 app 中，我在主线程中加载小的预览图，在后台线程中加载大型图，使用了 <code>kCGImageSourceShouldCacheImmediately</code> 后小小的解压缩阻塞了主线程，同时在后台处理大量开销昂贵的操作。    </p>
+
+<p><img src="http://img.objccn.io/issue-5/image-decompression.png" name="Image Decompression Stack Trace" width="662" height="1008" /></p>
+
+<p>还有更多关于图片解压缩的却不是 iOS 7 中的新东西，像 <code>kCGImageSourceShouldCache</code>，它用来控制系统自动卸载解压缩图片数据的能力。确保你将它设置为 YES，否则所有的工作都将没有意义。有趣的是，苹果在 64-bit 运行时的系统中将 <code>kCGImageSourceShouldCache</code> 的 <em>默认值</em> 从 NO 改为了 YES。</p>
+
+<h2>盗版检查</h2>
+
+<p>苹果添加了一个方式，通过 NSBunble 上的新方法 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Classes/NSBundle_Class/Reference/Reference.html#//apple_ref/occ/instm/NSBundle/appStoreReceiptURL"><code>appStoreReceiptURL</code></a> 来获取和验证 Lion 系统上 App Store 的收据，现在终于也移植到了 iOS 上了。这使得你可以检查你的应用是合法购买的还是被破解了的。检查收据还有另一个重要的原因，它包含了 <em>初始购买日期</em>，这点对于把你的应用从付费模式迁移到免费+应用内付费模式很有帮助。你可以根据这个初始购买日期来决定额外内容对于你的用户是免费（因为他们已经付过费了）还是收费的。</p>
+
+<p>收据还允许你检查应用程序是否通过批量购买计划购买以及该许可证是否仍有效，有一个名为  <code>SKReceiptPropertyIsVolumePurchase</code> 的属性标示了该值。</p>
+
+<p>当你调用 <code>appStoreReceiptURL</code> 时，你需要特别注意，因为在 iOS 6 上，它还是一个私有 API，你应该在用户代码中先调用 <code>doesNotRecognizeSelector:</code>，在调用前检查运行（基础）版本。在开发期间，这个方法返回的 URL 不会指向一个文件。你可能需要使用 StoreKit 的 <a href="https://developer.apple.com/library/ios/documentation/StoreKit/Reference/SKReceiptRefreshRequest_ClassRef/SKReceiptRefreshRequest.html"><code>SKReceiptRefreshRequest</code></a>，这也是 iOS 7 中的新东西，用它来下载证书。使用一个至少有过一次购买的测试用户，否则它将没法工作：</p>
+
+<p><code>objc
+// 刷新收据
+SKReceiptRefreshRequest *request = [[SKReceiptRefreshRequest alloc] init];
+[request setDelegate:self];
+[request start];
+</code></p>
+
+<p>验证收据需要大量的代码。你需要使用 OpenSSL 和内嵌的<a href="http://www.apple.com/certificateauthority/">苹果根证书</a>，并且你还要了解一些基本的东西像是证书、<a href="http://en.wikipedia.org/wiki/PKCS">PCKS 容器</a>以及 <a href="http://de.wikipedia.org/wiki/Abstract_Syntax_Notation_One">ASN.1</a>。这里有一些<a href="https://github.com/rmaddy/VerifyStoreReceiptiOS">样例代码</a>，但是你不应该让它这么简单——尤其是对那些有“高尚意图”的人，别只是拷贝现有的验证方法，至少做点修改或者编写你自己的，你应该不希望一个普通的补丁程序就能在数秒内瓦解你的努力吧。</p>
+
+<p>你绝对应该读读苹果的指南——<a href="https://developer.apple.com/library/mac/releasenotes/General/ValidateAppStoreReceipt/index.html#//apple_ref/doc/uid/TP40010573-CH1-SW6">验证 Mac App 商店收据</a>，这里面的大多数都适用于 iOS。苹果在 <a href="https://developer.apple.com/wwdc/videos/">WWDC 2013 的 Session 308 “Using Receipts to Protect Your Digital Sales”</a> 中详述了通过新加入的“Grand Unified Receipt”而带来的变动。</p>
+
+<h2 id="comicsansms">Comic Sans MS</h2>
+
+<p>承认吧，你是怀念 Comic Sans MS 的。在 iOS 7 中，Comic Sans MS 终于回来了。iOS 6 中添加了可下载字体，但那时的字体列表很少也不见得有趣。在 iOS 7 中苹果添加了不少字体，包括 “famous”，它和 <a href="http://www.fontsquirrel.com/fonts/PT-Sans">PT Sans</a> 或 <a href="http://sixrevisions.com/graphics-design/comic-sans-the-font-everyone-loves-to-hate/">Comic Sans MS</a> 有些类似。<code>kCTFontDownloadableAttribute</code> 并没有在 iOS 6 中声明，所以 iOS 7 之前它并不真正可用，但苹果确是在 iOS 6 的时候就已经做了私有声明了。</p>
+
+<p><img src="http://img.objccn.io/issue-5/comic-sans-ms.png" name="Who doesn't love Comic Sans MS" width="414" height="559" /></p>
+
+<p>字体列表是<a href="http://mesu.apple.com/assets/com_apple_MobileAsset_Font/com_apple_MobileAsset_Font.xml">动态变化</a>的，以后可能就会发生变动。苹果在 <a href="http://support.apple.com/kb/HT5484">Tech Note HT5484</a> 中罗列了一些可用的字体，但这个文档已经过时了，并不能反映 iOS 7 的变化。</p>
+
+<p>这里显示了你该如何获取一个用 <code>CTFontDescriptorRef</code> 标示的可下载的字体数组：</p>
+
+<p><code>objc
+CFDictionary *descriptorOptions = @{(id)kCTFontDownloadableAttribute : @YES};
+CTFontDescriptorRef descriptor = CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
+CFArrayRef fontDescriptors = CTFontDescriptorCreateMatchingFontDescriptors(descriptor, NULL);
+</code></p>
+
+<p>系统不会检查字体是否已存在于磁盘上而将直接返回同样的列表。另外，这个方法可能会启用网络并造成阻塞，你不应该在主线程中使用它。</p>
+
+<p>使用如下基于块的 API 来下载字体：    </p>
+
+<p><code>objc
+bool CTFontDescriptorMatchFontDescriptorsWithProgressHandler(
+         CFArrayRef                          descriptors,
+         CFSetRef                            mandatoryAttributes,
+         CTFontDescriptorProgressHandler     progressBlock)
+</code></p>
+
+<p>这个方法能操作网络并传递下载进度信息来调用你的 <code>progressBlock</code> 方法直到下载成功或者失败。参考苹果的 <a href="https://developer.apple.com/library/ios/samplecode/DownloadFont/Listings/DownloadFont_ViewController_m.html">DownloadFont 样例</a>看看如何使用它。    </p>
+
+<p>有一些值得注意的地方，这里的字体只在当前程序运行时有效，下次运行将被重新载入内存。因为字体存放在共享空间中，你不能依赖于它们是否可用。很有可能但不能保证地说，系统会清理这个目录，或者你的程序被拷贝到没有这个字体的新设备中，同时你又没有网络。在 Mac 或是模拟器上，你能根据 <code>kCTFontURLAttribute</code> 获得字体的绝对路径，加载速度也会提升，但是在 iOS 上是不行的，因为这个目录在你的程序之外，你需要再次调用 <code>CTFontDescriptorMatchFontDescriptorsWithProgressHandler</code>。</p>
+
+<p>你也可以注册新的 <code>kCTFontManagerRegisteredFontsChangedNotification</code> 通知来跟踪新字体在何时被载入到了字体注册表中。你可以在 <a href="https://developer.apple.com/wwdc/videos/">WWDC 2013 的 Session 223 “Using Fonts with TextKit”</a>中查找更多信息。</p>
+
+<h2>这还不够?</h2>
+
+<p>没关系，iOS 7 的新东西远不止如此！了解一下 <a href="http://nshipster.com/ios7/">NSHipster</a> 你将明白语音合成相关的东西，base64、全新的 <code>NSURLComponents</code>、<code>NSProgress</code>、条形码扫描、阅读列表以及 <code>CIDetectorEyeBlink</code>。还有很多我们没有涵盖到的，比如苹果的 <a href="https://developer.apple.com/library/ios/releasenotes/General/iOS70APIDiffs/index.html#//apple_ref/doc/uid/TP40013203">iOS 7 API 变化</a>，<a href="https://developer.apple.com/library/ios/releasenotes/General/WhatsNewIniOS/Articles/iOS7.html">What's new in iOS</a>指南以及 <a href="https://developer.apple.com/library/prerelease/mac/releasenotes/Foundation/RN-Foundation/index.html#//apple_ref/doc/uid/TP30000742">Foundation Release Notes</a>（这些都是基于 OS X的，但是代码都是共享的，很多也同样适用于 iOS）。很多新方法都还没形成文档，等着你来探究和写成博客。</p>
+
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[ScrollView的前世今生]]></title>
@@ -1236,302 +1528,6 @@ mo = [OCMockObject partialMockForObject:self.resourceManager.server];</p>
 <p>刚开始时候，使用并发设计模式测试应用程序是具有一定的挑战性，但是一旦你理解了它们的不同，并建立最佳实践，一切都会变得简单而有趣。</p>
 
 <p>在 <a href="http://nxtbgthng.com" title="nxtbgthng">nxtbgthng</a> 项目中，我们用 <a href="https://github.com/nxtbgthng/SenTestingKitAsync" title="SenTestingKitAsync">SenTestingKitAsync</a> 框架来测试。但是像 <a href="https://github.com/allending/Kiwi" title="Kiwi">Kiwi</a> 和 <a href="https://github.com/gabriel/gh-unit/" title="GHUnit">GHUnit</a>  也都是不错的异步测试框架。建议你都可以尝试下，然后找到合适自己的测试工具并开始使用它。</p>
-
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[线程安全]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/xian-cheng-an-quan/"/>
-    <updated>2014-04-09T16:08:45+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/xian-cheng-an-quan</id>
-    <content type="html"><![CDATA[<p>这篇文章将专注于实用技巧，设计模式，以及对于写出线程安全类和使用 GCD 来说所特别需要注意的一些<a href="http://zh.wikipedia.org/wiki/反面模式">反面模式</a>。</p>
-
-<h2>线程安全</h2>
-
-<h3 id="apple">Apple 的框架</h3>
-
-<p>首先让我们来看看 Apple 的框架。一般来说除非特别声明，大多数的类默认都不是线程安全的。对于其中的一些类来说，这是很合理的，但是对于另外一些来说就很有趣了。</p>
-
-<p>就算是在经验丰富的 iOS/Mac 开发者，也难免会犯从后台线程去访问 UIKit/AppKit 这种错误。比如因为图片的内容本身就是从后台的网络请求中获取的话，顺手就在后台线程中设置了 <code>image</code> 之类的属性，这样的错误其实是屡见不鲜的。Apple 的代码都经过了性能的优化，所以即使你从别的线程设置了属性的时候，也不会产生什么警告。</p>
-
-<p>在设置图片这个例子中，症结其实是你的改变通常要过一会儿才能生效。但是如果有两个线程在同时对图片进行了设定，那么很可能因为当前的图片被释放两次，而导致应用崩溃。这种行为是和时机有关系的，所以很可能在开发阶段没有崩溃，但是你的用户使用时却不断 crash。</p>
-
-<p>现在没有<strong>官方</strong>的用来寻找类似错误的工具，但我们确实有一些技巧来避免这个问题。<a href="https://gist.github.com/steipete/5664345">UIKit Main Thread Guard</a> 是一段用来监视每一次对 <code>setNeedsLayout</code> 和 <code>setNeedsDisplay</code> 的调用代码，并检查它们是否是在主线程被调用的。因为这两个方法在 UIKit 的 setter （包括 image 属性）中广泛使用，所以它可以捕获到很多线程相关的错误。虽然这个小技巧并不包含任何私有 API， 但我们还是不建议将它是用在发布产品中，不过在开发过程中使用的话还是相当赞的。</p>
-
-<p>Apple没有把 UIKit 设计为线程安全的类是有意为之的，将其打造为线程安全的话会使很多操作变慢。而事实上 UIKit 是和主线程绑定的，这一特点使得编写并发程序以及使用 UIKit 十分容易的，你唯一需要确保的就是对于 UIKit 的调用总是在主线程中来进行。</p>
-
-<h4 id="uikit">为什么 UIKit 不是线程安全的？</h4>
-
-<p>对于一个像 UIKit 这样的大型框架，确保它的线程安全将会带来巨大的工作量和成本。将 non-atomic 的属性变为 atomic 的属性只不过是需要做的变化里的微不足道的一小部分。通常来说，你需要同时改变若干个属性，才能看到它所带来的结果。为了解决这个问题，苹果可能不得不提供像 Core Data 中的 <code>performBlock:</code> 和 <code>performBlockAndWait:</code> 那样类似的方法来同步变更。另外你想想看，绝大多数对 UIKit 类的调用其实都是以<strong>配置</strong>为目的的，这使得将 UIKit 改为线程安全这件事情更显得毫无意义了。</p>
-
-<p>然而即使是那些与配置共享的内部状态之类事情无关的调用，其实也不是线程安全的。如果你做过 iOS 3.2 或之前的黑暗年代的 app 开发的话，你肯定有过一边在后台准备图像时一边使用 NSString 的 <code>drawInRect:withFont:</code> 时的随机崩溃的经历。值得庆幸的事，在 iOS 4 中 <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniOS/Articles/iPhoneOS4.html">苹果将大部分绘图的方法和诸如 <code>UIColor</code> 和 <code>UIFont</code> 这样的类改写为了后台线程可用</a>。</p>
-
-<p>但不幸的是 Apple 在线程安全方面的文档是极度匮乏的。他们推荐只访问主线程，并且甚至是绘图方法他们都没有明确地表示保证线程安全。因此在阅读文档的同时，去读读 <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniOS/Articles/iPhoneOS4.html">iOS 版本更新说明</a>会是一个很好的选择。</p>
-
-<p>对于大多数情况来说，UIKit 类确实只应该用在应用的主线程中。这对于那些继承自 UIResponder 的类以及那些操作你的应用的用户界面的类来说，不管如何都是很正确的。</p>
-
-<h4 id="deallocation">内存回收 (deallocation) 问题</h4>
-
-<p>另一个在后台使用 UIKit 对象的的危险之处在于“内存回收问题”。Apple 在技术笔记 <a href="ttp://developer.apple.com/library/ios/#technotes/tn2109/_index.html">TN2109</a> 中概述了这个问题，并提供了多种解决方案。这个问题其实是要求 UI 对象应该在主线程中被回收，因为在它们的 <code>dealloc</code> 方法被调用回收的时候，可能会去改变 view 的结构关系，而如我们所知，这种操作应该放在主线程来进行。</p>
-
-<p>因为调用者被其他线程持有是非常常见的（不管是由于 operation 还是 block 所导致的），这也是很容易犯错并且难以被修正的问题。在 <a href="https://github.com/AFNetworking/AFNetworking/issues/56">AFNetworking 中也一直长久存在这样的 bug</a>，但是由于其自身的隐蔽性而鲜为人知，也很难重现其所造成的崩溃。在异步的 block 或者操作中一致使用 <code>__weak</code>，并且不去直接访问局部变量会对避开这类问题有所帮助。</p>
-
-<h4 id="collection">Collection 类</h4>
-
-<p>Apple 有一个<a href="ttps://developer.apple.com/library/ios/#documentation/Cocoa/Conceptual/Multithreading/ThreadSafetySummary/ThreadSafetySummary.html#//apple_ref/doc/uid/10000057i-CH12-SW1">针对 iOS 和 Mac 的很好的总览性文档</a>，为大多数基本的 foundation 类列举了其线程安全特性。总的来说，比如 <code>NSArry</code> 这样不可变类是线程安全的。然而它们的可变版本，比如 <code>NSMutableArray</code> 是线程不安全的。事实上，如果是在一个队列中串行地进行访问的话，在不同线程中使用它们也是没有问题的。要记住的是即使你申明了返回类型是不可变的，方法里还是有可能返回的其实是一个可变版本的 collection 类。一个好习惯是写类似于 <code>return [array copy]</code> 这样的代码来确保返回的对象事实上是不可变对象。</p>
-
-<p>与和<a href="">Java</a>这样的语言不一样，Foundation 框架并不提供直接可用的 collection 类，这是有其道理的，因为大多数情况下，你想要的是在更高层级上的锁，以避免太多的加解锁操作。但缓存是一个值得注意的例外，iOS 4 中 Apple 添加的 <code>NSCache</code> 使用一个可变的字典来存储不可变数据，它不仅会对访问加锁，更甚至在低内存情况下会清空自己的内容。</p>
-
-<p>也就是说，在你的应用中存在可变的且线程安全的字典是可以做到的。借助于 class cluster 的方式，我们也很容易<a href="https://gist.github.com/steipete/5928916">写出这样的代码</a>。</p>
-
-<h3 id="atomicproperties">原子属性 (Atomic Properties)</h3>
-
-<p>你曾经好奇过 Apple 是怎么处理 atomic 的设置/读取属性的么？至今为止，你可能听说过自旋锁 (spinlocks)，信标 (semaphores)，锁 (locks)，@synchronized 等，Apple 用的是什么呢？因为 <a href="http://www.opensource.apple.com/source/objc4/">Objctive-C 的 runtime 是开源</a>的，所以我们可以一探究竟。</p>
-
-<p>一个非原子的 setter 看起来是这个样子的：</p>
-
-<p><code>objc
-- (void)setUserName:(NSString *)userName {
-      if (userName != _userName) {
-          [userName retain];
-          [_userName release];
-          _userName = userName;
-      }
-}
-</code></p>
-
-<p>这是一个手动 retain/release 的版本，ARC 生成的代码和这个看起来也是类似的。当我们看这段代码时，显而易见要是 <code>setUserName:</code> 被并发调用的话会造成麻烦。我们可能会释放 <code>_userName</code> 两次，这回使内存错误，并且导致难以发现的 bug。</p>
-
-<p>对于任何没有手动实现的属性，编译器都会生成一个 <a href="https://github.com/opensource-apple/objc4/blob/master/runtime/Accessors.subproj/objc-accessors.mm#L127"><code>objc_setProperty_non_gc(id self, SEL _cmd, ptrdiff_t offset, id newValue, BOOL atomic, signed char shouldCopy)</code></a> 的调用。在我们的例子中，这个调用的参数是这样的：</p>
-
-<p><code>objc
-objc_setProperty_non_gc(self, _cmd, 
-  (ptrdiff_t)(&amp;amp;_userName) - (ptrdiff_t)(self), userName, NO, NO);`
-</code></p>
-
-<p><code>ptrdiff_t</code> 可能会吓到你，但是实际上这就是一个简单的指针算术，因为其实 Objective-C 的类仅仅只是 C 结构体而已。</p>
-
-<p><code>objc_setrProperty</code> 调用的是如下方法：</p>
-
-<p>```objc
-static inline void reallySetProperty(id self, SEL _cmd, id newValue, 
-  ptrdiff_t offset, bool atomic, bool copy, bool mutableCopy) 
-{
-    id oldValue;
-    id <em>slot = (id</em>) ((char*)self + offset);</p>
-
-<pre><code>if (copy) {
-    newValue = [newValue copyWithZone:NULL];
-} else if (mutableCopy) {
-    newValue = [newValue mutableCopyWithZone:NULL];
-} else {
-    if (*slot == newValue) return;
-    newValue = objc_retain(newValue);
-}
-
-if (!atomic) {
-    oldValue = *slot;
-    *slot = newValue;
-} else {
-    spin_lock_t *slotlock = &amp;amp;PropertyLocks[GOODHASH(slot)];
-    _spin_lock(slotlock);
-    oldValue = *slot;
-    *slot = newValue;        
-    _spin_unlock(slotlock);
-}
-
-objc_release(oldValue); } ```
-</code></pre>
-
-<p>除开方法名字很有趣以外，其实方法实际做的事情非常直接，它使用了在 <code>PropertyLocks</code> 中的 128 个自旋锁中的 1 个来给操作上锁。这是一种务实和快速的方式，最糟糕的情况下，如果遇到了哈希碰撞，那么 setter 需要等待另一个和它无关的 setter 完成之后再进行工作。</p>
-
-<p>虽然这些方法没有定义在任何公开的头文件中，但我们还是可用手动调用他们。我不是说这是一个好的做法，但是知道这个还是蛮有趣的，而且如果你想要同时实现原子属性<strong>和</strong>自定义的 setter 的话，这个技巧就非常有用了。</p>
-
-<p>```objc
-// 手动声明运行时的方法
-extern void objc_setProperty(id self, SEL _cmd, ptrdiff_t offset, 
-  id newValue, BOOL atomic, BOOL shouldCopy);
-extern id objc_getProperty(id self, SEL _cmd, ptrdiff_t offset, 
-  BOOL atomic);</p>
-
-<h1 id="define-pstatomicretainedsetdest-src-objcsetpropertyself-cmd">define PSTAtomicRetainedSet(dest, src) objc_setProperty(self, _cmd,</h1>
-<p>(ptrdiff_t)(&amp;dest) - (ptrdiff_t)(self), src, YES, NO) 
-#define PSTAtomicAutoreleasedGet(src) objc_getProperty(self, _cmd, 
-  (ptrdiff_t)(&amp;src) - (ptrdiff_t)(self), YES)
-```</p>
-
-<p><a href="https://gist.github.com/steipete/5928690">参考这个 gist</a> 来获取包含处理结构体的完整的代码，但是我们其实并不推荐使用它。</p>
-
-<h4 id="synchronized">为何不用 @synchronized ？</h4>
-
-<p>你也许会想问为什么苹果不用 <code>@synchronized(self)</code> 这样一个已经存在的运行时特性来锁定属？？你可以看看<a href="https://github.com/opensource-apple/objc4/blob/master/runtime/objc-sync.mm#L291">这里的源码</a>，就会发现其实发生了很多的事情。Apple 使用了<a href="http://googlemac.blogspot.co.at/2006/10/synchronized-swimming.html">最多三个加/解锁序列</a>，还有一部分原因是他们也添加了<a href="https://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/Multithreading/ThreadSafety/ThreadSafety.html#//apple_ref/doc/uid/10000057i-CH8-SW3">异常开解(exception unwinding)</a>机制。相比于更快的自旋锁方式，这种实现要慢得多。由于设置某个属性一般来说会相当快，因此自旋锁更适合用来完成这项工作。<code>@synchonized(self)</code> 更适合使用在你
-需要确保在发生错误时代码不会死锁，而是抛出异常的时候。</p>
-
-<h3>你自己的类</h3>
-
-<p>单独使用原子属性并不会是你的类变成线程安全。它不能保护你应用的逻辑，只能保护你免于在 setter 中遭遇到<a href="http://objccn.io/issue-3-1">竞态条件</a>的困扰。看看下面的代码片段：</p>
-
-<p><code>objc
-if (self.contents) {
-    CFAttributedStringRef stringRef = CFAttributedStringCreate(NULL, 
-      (__bridge CFStringRef)self.contents, NULL);
-    // 渲染字符串
-}
-</code></p>
-
-<p>我之前在 <a href="http://pspdfkit.com">PSPDFKit</a> 中就犯了这个错误。时不时地应用就会因为 <code>contents</code> 属性在通过检查之后却又被设成了 nil 而导致 EXC<em>BAD</em>ACCESS 崩溃。捕获这个变量就可以简单修复这个问题；</p>
-
-<p><code>objc
-NSString *contents = self.contents;
-if (contents) {
-    CFAttributedStringRef stringRef = CFAttributedStringCreate(NULL, 
-      (__bridge CFStringRef)contents, NULL);
-    // 渲染字符串
-}
-</code></p>
-
-<p>在这里这样就能解决问题，但是大多数情况下不会这么简单。想象一下我们还有一个 <code>textColor</code> 的属性，我们在一个线程中将两个属性都做了改变。我们的渲染线程有可能使用了新的内容，但是依旧保持了旧的颜色，于是我们得到了一组奇怪的组合。这其实也是为什么 Core Data 要将 model 对象都绑定在一个线程或者队列中的原因。</p>
-
-<p>对于这个问题，其实没有万用解法。使用 <a href="http://www.cocoawithlove.com/2008/04/value-of-immutable-values.html">不可变模型</a>是一个可能的方案，但是它也有自己的问题。另一种途径是限制对存在在主线程或者某个特定队列中的既存对象的改变，而是先进行一次拷贝之后再在工作线程中使用。对于这个问题的更多对应方法，我推荐阅读 Jonathan Sterling 的关于 <a href="http://www.jonmsterling.com/posts/2012-12-27-a-pattern-for-immutability.html">Objective-C 中轻量化不可变对象</a>的文章。</p>
-
-<p>一个简单的解决办法是使用 <code>@synchronize</code>。其他的方式都非常非常可能使你误入歧途，已经有太多聪明人在这种尝试上一次又一次地以失败告终。</p>
-
-<h4>可行的线程安全设计</h4>
-
-<p>在尝试写一些线程安全的东西之前，应该先想清楚是不是真的需要。确保你要做的事情不会是过早优化。如果要写的东西是一个类似配置类 (configuration class) 的话，去考虑线程安全这种事情就毫无意义了。更正确的做法是扔一个断言上去，以保证它被正确地使用：</p>
-
-<p><code>objc
-void PSPDFAssertIfNotMainThread(void) {
-    NSAssert(NSThread.isMainThread, 
-      @"Error: Method needs to be called on the main thread. %@", 
-      [NSThread callStackSymbols]);
-}
-</code></p>
-
-<p>对于那些肯定应该线程安全的代码（一个好例子是负责缓存的类）来说，一个不错的设计是使用并发的 <code>dispatch_queue</code> 作为读/写锁，并且确保只锁着那些真的需要被锁住的部分，以此来最大化性能。一旦你使用多个队列来给不同的部分上锁的话，整件事情很快就会变得难以控制了。</p>
-
-<p>于是你也可以重新组织你的代码，这样某些特定的锁就不再需要了。看看下面这段实现了一种多委托的代码（其实在大多数情况下，用 NSNotifications 会更好，但是其实也还是有<a href="https://code.google.com/r/riky-adsfasfasf/source/browse/Utilities/GCDMulticastDelegate.h">多委托的实用例子</a>）的</p>
-
-<p>```objc
-// 头文件
-@property (nonatomic, strong) NSMutableSet *delegates;</p>
-
-<p>// init方法中
-_delegateQueue = dispatch_queue_create(“com.PSPDFKit.cacheDelegateQueue”, 
-  DISPATCH_QUEUE_CONCURRENT);</p>
-
-<ul>
-  <li>
-    <p>(void)addDelegate:(id&lt;PSPDFCacheDelegate&gt;)delegate {
-  dispatch_barrier_async(_delegateQueue, ^{
-      [self.delegates addObject:delegate];
-  });
-}</p>
-  </li>
-  <li>
-    <p>(void)removeAllDelegates {
-  dispatch_barrier_async(_delegateQueue, ^{
-      self.delegates removeAllObjects];
-  });
-}</p>
-  </li>
-  <li>
-    <p>(void)callDelegateForX {
-  dispatch_sync(_delegateQueue, ^{
-      [self.delegates enumerateObjectsUsingBlock:^(id&lt;PSPDFCacheDelegate&gt; delegate, NSUInteger idx, BOOL *stop) {
-          // 调用delegate
-      }];
-  });
-}
-```</p>
-  </li>
-</ul>
-
-<p>除非 <code>addDelegate:</code> 或者 <code>removeDelegate:</code> 每秒要被调用上千次，否则我们可以使用一个相对简洁的实现方式：</p>
-
-<p>```objc
-// 头文件
-@property (atomic, copy) NSSet *delegates;</p>
-
-<ul>
-  <li>
-    <p>(void)addDelegate:(id&lt;PSPDFCacheDelegate&gt;)delegate {
-  @synchronized(self) {
-      self.delegates = [self.delegates setByAddingObject:delegate];
-  }
-}</p>
-  </li>
-  <li>
-    <p>(void)removeAllDelegates {
-  self.delegates = nil;
-}</p>
-  </li>
-  <li>
-    <p>(void)callDelegateForX {
-  [self.delegates enumerateObjectsUsingBlock:^(id&lt;PSPDFCacheDelegate&gt; delegate, NSUInteger idx, BOOL *stop) {
-      // 调用delegate
-  }];
-}
-```</p>
-  </li>
-</ul>
-
-<p>当然啦，这个例子有点过于人为编造，其实我们很容易可以把变化限制在主线程中来避免问题。但是对于很多数据结构来说，可以在进行变更操作的方法中创建不可变的拷贝，这样 app 的整体逻辑就不需要处理很多锁的情况。请注意我们还是需要给 <code>addDelegate:</code> 加上锁，否则在其他线程进行异步调用的时候可能遭遇委托对象丢失的问题。</p>
-
-<h2 id="gcd">GCD 的陷阱</h2>
-
-<p>对于大多数上锁的需求来说，GCD 就足够好了。它简单迅速，并且基于 block 的 API 使得粗心大意造成非平衡锁操作的概率下降了不少。然后，GCD 中还是有不少陷阱，我们在这里探索一下其中的一些。</p>
-
-<h3 id="gcd">将 GCD 当作递归锁使用</h3>
-
-<p>GCD 是一个对共享资源的访问进行串行化的队列。这个特性可以被当作锁来使用，但实际上它和 <code>@synchronized</code> 有很大区别。 GCD队列并非是<a href="http://zh.wikipedia.org/w/index.php?title=可重入&amp;variant=zh-cn">可重入</a>的，因为这将破坏队列的特性。很多有试图使用 <code>dispatch_get_current_queue()</code> 来绕开这个限制，但是这是一个<a href="https://gist.github.com/steipete/3713233">糟糕的做法</a>，Apple 在 iOS6 中将这个方法标记为废弃，自然也是有自己的理由。</p>
-
-<p><code>objc
-// This is a bad idea.
-inline void pst_dispatch_sync_reentrant(dispatch_queue_t queue, 
-  dispatch_block_t block) 
-{
-    dispatch_get_current_queue() == queue ? block() 
-                                          : dispatch_sync(queue, block);
-}
-</code></p>
-
-<p>对当前的队列进行测试也许在简单情况下可以行得通，但是一旦你的代码变得复杂一些，并且你可能有多个队列在同时被锁住的情况下，这种方法很快就悲剧了。一旦这种情况发生，几乎可以肯定的是你会遇到<a href="http://objccn.io/issue-2-1/#dead_locks">死锁</a>。当然，你可以使用 <code>dispatch_get_specific()</code>，这将截断整个队列结构，从而对某个特定的队列进行测试。要这么做的话，你还得为了在队列中附加标志队列的元数据，而去写自定义的队列构造函数。嘛，最好别这么做。其实在实用中，使用 <code>NSRecursiveLock</code> 会是一个更好的选择。</p>
-
-<h3 id="dispatch_async">用 dispatch_async 修复时序问题</h3>
-
-<p>在使用 UIKit 的时候遇到了一些时序上的麻烦？很多时候，这样进行“修正”看来非常完美：</p>
-
-<p><code>objc
-dispatch_async(dispatch_get_main_queue(), ^{
-    // Some UIKit call that had timing issues but works fine 
-    // in the next runloop.
-    [self updatePopoverSize];
-});
-</code></p>
-
-<p>千万别这么做！相信我，这种做法将会在之后你的 app 规模大一些的时候让你找不着北。这种代码非常难以调试，并且你很快就会陷入用更多的 dispatch 来修复所谓的莫名其妙的"时序问题"。审视你的代码，并且找到合适的地方来进行调用（比如在 viewWillAppear 里调用，而不是 viewDidLoad 之类的）才是解决这个问题的正确做法。我在自己的代码中也还留有一些这样的 hack，但是我为它们基本都做了正确的文档工作，并且对应的 issue 也被一一记录过。</p>
-
-<p>记住这不是真正的 GCD 特性，而只是一个在 GCD 下很容易实现的常见反面模式。事实上你可以使用 <code>performSelector:afterDelay:</code> 方法来实现同样的操作，其中 delay 是在对应时间后的 runloop。</p>
-
-<h3 id="dispatch_syncdispatch_async">在性能关键的代码中混用 dispatch<em>sync 和 dispatch</em>async</h3>
-
-<p>这个问题我花了好久来研究。在 <a href="http://pspdfkit.com">PSPDFKit</a> 中有一个使用了 LRU（最久未使用）算法列表的缓存类来记录对图片的访问。当你在页面中滚动时，这个方法将被调用<strong>非常多次</strong>。最初的实现使用了 <code>dispatch_sync</code> 来进行实际有效的访问，使用 <code>dispatch_async</code> 来更新 LRU 列表的位置。这导致了帧数远低于原来的 60 帧的目标。</p>
-
-<p>当你的 app 中的其他运行的代码阻挡了 GCD 线程的时候，dispatch manager 需要花时间去寻找能够执行 dispatch_async 代码的线程，这有时候会花费一点时间。在找到合适的执行线程之前，你的同步调用就会被 block 住了。其实在这个例子中，异步情况的执行顺序并不是很重要，但没有能将这件事情告诉 GCD 的好办法。读/写锁这里并不能起到什么作用，因为在异步操作中基本上一定会需要进行顺序写入，而在此过程中读操作将被阻塞住。如果误用了 <code>dispatch_async</code> 代价将会是非常惨重的。在将它用作锁的时候，一定要非常小心。</p>
-
-<h3 id="dispatch_async">使用 dispatch_async 来派发内存敏感的操作</h3>
-
-<p>我们已经谈论了很多关于 NSOperations 的话题了，一般情况下，使用这个更高层级的 API 会是一个好主意。当你要处理一段内存敏感的操作的代码块时，这个优势尤为突出、</p>
-
-<p>在 PSPDFKit 的老版本中，我用了 GCD 队列来将已缓存的 JPG 图片写到磁盘中。当 retina 的 iPad 问世之后，这个操作出现了问题。ß因为分辨率翻倍了，相比渲染这张图片，将它编码花费的时间要长得多。所以，操作堆积在了队列中，当系统繁忙时，甚至有可能因为内存耗尽而崩溃。</p>
-
-<p>我们没有办法追踪有多少个操作在队列中等待运行（除非你手动添加了追踪这个的代码），我们也没有现成的方法来在接收到低内存通告的时候来取消操作、这时候，切换到 NSOperations 可以使代码变得容易调试得多，并且允许我们在不添加手动管理的代码的情况下，做到对操作的追踪和取消。</p>
-
-<p>当然也有一些不好的地方，比如你不能在你的 <code>NSOperationQueue</code> 中设置目标队列（就像 <code>DISPATCH_QUEUE_PRIORITY_BACKGROUND</code> 之于 缓速 I/O 那样）。但这只是为了可调试性的一点小代价，而事实上这也帮助你避免遇到<a href="http://objccn.io/issue-2-1/#priority_inversion">优先级反转</a>的问题。我甚至不推荐直接使用已经包装好的 <code>NSBlockOperation</code> 的 API，而是建议使用一个 NSOperation 的真正的子类，包括实现其 description。诚然，这样做工作量会大一些，但是能输出所有运行中/准备运行的操作是及其有用的。</p>
 
 <hr />
 
