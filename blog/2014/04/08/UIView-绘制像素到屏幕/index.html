@@ -1,24 +1,104 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
-  <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
-  <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-09T09:08:51+08:00</updated>
-  <id>http://ITMonkeyLife.github.io/Blog/</id>
-  <author>
-    <name><![CDATA[Rick]]></name>
-    <email><![CDATA[382542165@qq.com]]></email>
-  </author>
-  <generator uri="http://octopress.org/">Octopress</generator>
+<!DOCTYPE HTML>
 
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>绘制像素到屏幕 - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="绘制像素到屏幕 一个像素是如何绘制到屏幕上去的？有很多种方式将一些东西映射到显示屏上，他们需要调用不同的框架、许多功能和方法的结合体。这里我们大概的看一下屏幕之后发生的事情。当你想要弄清楚什么时候、怎么去查明并解决问题时，我希望这篇文章能帮助你理解哪一个 API 可以更好的帮你解决问题。 &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/">
+	<link href="/Blog/favicon.png" rel="shortcut icon">
+	<link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="/Blog/stylesheets/font-awesome.min.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<link href='http://fonts.googleapis.com/css?family=Nunito:400,300,700' rel='stylesheet' type='text/css'>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
   
-  <entry>
-    <title type="html"><![CDATA[绘制像素到屏幕]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/"/>
-    <updated>2014-04-08T18:23:21+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/08/UIView-绘制像素到屏幕</id>
-    <content type="html"><![CDATA[<p>一个像素是如何绘制到屏幕上去的？有很多种方式将一些东西映射到显示屏上，他们需要调用不同的框架、许多功能和方法的结合体。这里我们大概的看一下屏幕之后发生的事情。当你想要弄清楚什么时候、怎么去查明并解决问题时，我希望这篇文章能帮助你理解哪一个 API 可以更好的帮你解决问题。我们将聚焦于 iOS，然而我讨论的大多数问题也同样适用于 OS X。</p>
+
+</head>
+
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">
+	
+	<script src="/Blog/javascripts/md5.js"></script>
+	<script type="text/javascript">
+		$(function(){
+			$('.profilepic').append("<img src='http://www.gravatar.com/avatar/" + MD5("382542165@qq.com") + "?s=160' alt='Profile Picture' style='width: 160px;' />");
+		});
+	</script>
+	
+</div>
+
+<nav id="main-nav">
+<section class="aboutme">
+  <p class = "subtitle">
+    心无所恃，随遇而安
+  </p>
+</section>
+
+<ul class="main">
+    <li><a href="/Blog/">我的Blog</a></li>
+    <li><a href="/Blog/about/">关于我</a></li>
+    <li><a href="/Blog/blog/archives">全部文章</a></li>
+</ul></nav>
+<nav id="sub-nav">
+	<div class="social">
+    	
+			<a class="sina" href="http://weibo.com/1651400041" title="Sina">Sina</a>
+		
+		
+			<a class="email" href="mailto:382542165@qq.com" title="Email">Email</a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+			<a class="douban" href="https://www.douban.com/people/47445127" title="Douban">Douban</a>
+		
+		
+		
+    	
+    	
+			<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+	</div>
+</nav>
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+	<h1 class="title" itemprop="name">绘制像素到屏幕</h1>
+	<div class="entry-content" itemprop="articleBody"><p>一个像素是如何绘制到屏幕上去的？有很多种方式将一些东西映射到显示屏上，他们需要调用不同的框架、许多功能和方法的结合体。这里我们大概的看一下屏幕之后发生的事情。当你想要弄清楚什么时候、怎么去查明并解决问题时，我希望这篇文章能帮助你理解哪一个 API 可以更好的帮你解决问题。我们将聚焦于 iOS，然而我讨论的大多数问题也同样适用于 OS X。</p>
 
 <h2>图形堆栈</h2>
 
@@ -180,72 +260,116 @@ R = S + D * (1 - Sa) = 0   + 0 * (1 - 0.5) = 0
 <p>当你的程序进行位图绘制时，不管使用哪种方式，都是基于 Quartz 2D 的。也就是说，CPU 部分实现的绘制是通过 Quartz 2D 实现的。尽管 Quartz 可以做其它的事情，但是我们这里还是集中于位图绘制，在缓冲区(一块内存)绘制位图会包括 RGBA 数据。</p>
 
 <p>比方说，我们要画一个<a href="https://zh.wikipedia.org/wiki/%E5%85%AB%E8%BE%B9%E5%BD%A2">八角形</a>，我们通过 UIKit 能做到这一点</p>
-<p><code>objc
-UIBezierPath *path = [UIBezierPath bezierPath];
-[path moveToPoint:CGPointMake(16.72, 7.22)];
-[path addLineToPoint:CGPointMake(3.29, 20.83)];
-[path addLineToPoint:CGPointMake(0.4, 18.05)];
-[path addLineToPoint:CGPointMake(18.8, -0.47)];
-[path addLineToPoint:CGPointMake(37.21, 18.05)];
-[path addLineToPoint:CGPointMake(34.31, 20.83)];
-[path addLineToPoint:CGPointMake(20.88, 7.22)];
-[path addLineToPoint:CGPointMake(20.88, 42.18)];
-[path addLineToPoint:CGPointMake(16.72, 42.18)];
-[path addLineToPoint:CGPointMake(16.72, 7.22)];
-[path closePath];
-path.lineWidth = 1;
-[[UIColor redColor] setStroke];
-[path stroke];
-</code></p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">UIBezierPath</span> <span class="o">*</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="n">bezierPath</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">moveToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">3.29</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">18.05</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">18.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.47</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">37.21</span><span class="p">,</span> <span class="mf">18.05</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">34.31</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">20.88</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">20.88</span><span class="p">,</span> <span class="mf">42.18</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">16.72</span><span class="p">,</span> <span class="mf">42.18</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="n">closePath</span><span class="p">];</span>
+</span><span class="line"><span class="n">path</span><span class="p">.</span><span class="n">lineWidth</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class="line"><span class="p">[[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span> <span class="n">setStroke</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="n">stroke</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>相对应的 Core Graphics 代码：</p>
-<p><code>objc
-CGContextBeginPath(ctx);
-CGContextMoveToPoint(ctx, 16.72, 7.22);
-CGContextAddLineToPoint(ctx, 3.29, 20.83);
-CGContextAddLineToPoint(ctx, 0.4, 18.05);
-CGContextAddLineToPoint(ctx, 18.8, -0.47);
-CGContextAddLineToPoint(ctx, 37.21, 18.05);
-CGContextAddLineToPoint(ctx, 34.31, 20.83);
-CGContextAddLineToPoint(ctx, 20.88, 7.22);
-CGContextAddLineToPoint(ctx, 20.88, 42.18);
-CGContextAddLineToPoint(ctx, 16.72, 42.18);
-CGContextAddLineToPoint(ctx, 16.72, 7.22);
-CGContextClosePath(ctx);
-CGContextSetLineWidth(ctx, 1);
-CGContextSetStrokeColorWithColor(ctx, [UIColor redColor].CGColor);
-CGContextStrokePath(ctx);
-</code></p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGContextBeginPath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextMoveToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">3.29</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">18.05</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">18.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.47</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">37.21</span><span class="p">,</span> <span class="mf">18.05</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">34.31</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">20.88</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">20.88</span><span class="p">,</span> <span class="mf">42.18</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">16.72</span><span class="p">,</span> <span class="mf">42.18</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextClosePath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextSetLineWidth</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextSetStrokeColorWithColor</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextStrokePath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>需要问的问题是:这个绘制到哪儿去了？这正好引出所谓的 CGContext 登场。我们传过去的ctx参数正是在那个上下文中。而这个上下文定义了我们需要绘制的地方。如果我们实现了 CALayer 的 <code>-drawInContext:</code> 这时已经传过来一个上下文。绘制到这个上下文中的内容将会被绘制到图层的备份区(图层的缓冲区).但是我们也可以创建我们自己的上下文，叫做基于位图的上下文，比如 <code>CGBitmapContextCreate()</code>.这个方法返回一个我们可以传给 CGContext 方法来绘制的上下文。</p>
 
 <p>注意 UIKit 版本的代码为何不传入一个上下文参数到方法中？这是因为当使用 UIKit 或者 AppKit 时，上下文是唯一的。UIkit 维护着一个上下文堆栈，UIKit 方法总是绘制到最顶层的上下文中。你可以使用 <code>UIGraphicsGetCurrentContext()</code> 来得到最顶层的上下文。你可以使用 <code>UIGraphicsPushContext()</code> 和 <code>UIGraphicsPopContext()</code> 在 UIKit 的堆栈中推进或取出上下文。</p>
 
 <p>最为突出的是，UIKit 使用 <code>UIGraphicsBeginImageContextWithOptions()</code> 和 <code>UIGraphicsEndImageContext()</code> 方便的创建类似于 <code>CGBitmapContextCreate()</code> 的位图上下文。混合调用 UIKit 和 Core Graphics 非常简单：</p>
-<p><code>objc
-UIGraphicsBeginImageContextWithOptions(CGSizeMake(45, 45), YES, 2);
-CGContextRef ctx = UIGraphicsGetCurrentContext();
-CGContextBeginPath(ctx);
-CGContextMoveToPoint(ctx, 16.72, 7.22);
-CGContextAddLineToPoint(ctx, 3.29, 20.83);
-...
-CGContextStrokePath(ctx);
-UIGraphicsEndImageContext();
-</code></p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">UIGraphicsBeginImageContextWithOptions</span><span class="p">(</span><span class="n">CGSizeMake</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="n">YES</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextRef</span> <span class="n">ctx</span> <span class="o">=</span> <span class="n">UIGraphicsGetCurrentContext</span><span class="p">();</span>
+</span><span class="line"><span class="n">CGContextBeginPath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextMoveToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">3.29</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">);</span>
+</span><span class="line"><span class="p">...</span>
+</span><span class="line"><span class="n">CGContextStrokePath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span><span class="line"><span class="n">UIGraphicsEndImageContext</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>或者另外一种方法:</p>
-<p><code>objc
-CGContextRef ctx = CGBitmapContextCreate(NULL, 90, 90, 8, 90 * 4, space, bitmapInfo);
-CGContextScaleCTM(ctx, 0.5, 0.5);
-UIGraphicsPushContext(ctx);
-UIBezierPath *path = [UIBezierPath bezierPath];
-[path moveToPoint:CGPointMake(16.72, 7.22)];
-[path addLineToPoint:CGPointMake(3.29, 20.83)];
-...
-[path stroke];
-UIGraphicsPopContext(ctx);
-CGContextRelease(ctx);
-</code></p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGContextRef</span> <span class="n">ctx</span> <span class="o">=</span> <span class="n">CGBitmapContextCreate</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">90</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">bitmapInfo</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextScaleCTM</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">);</span>
+</span><span class="line"><span class="n">UIGraphicsPushContext</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span><span class="line"><span class="n">UIBezierPath</span> <span class="o">*</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="n">bezierPath</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">moveToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">3.29</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">)];</span>
+</span><span class="line"><span class="p">...</span>
+</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="n">stroke</span><span class="p">];</span>
+</span><span class="line"><span class="n">UIGraphicsPopContext</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span><span class="line"><span class="n">CGContextRelease</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>你可以使用 Core Graphics 创建大量的非常酷的东西。一个很好的理由就是，苹果的文档有很多例子。我们不能得到所有的细节，但是 Core Graphics 有一个非常接近 <a href="https://zh.wikipedia.org/wiki/Adobe_Illustrator">Adobe Illustrator</a> 和 <a href="https://zh.wikipedia.org/wiki/Adobe_Photoshop">Adobe Photoshop</a> 如何工作的绘图模型，并且大多数工具的理念翻译成 Core Graphics 了。终究，他是起源于 <a href="https://zh.wikipedia.org/wiki/NEXTSTEP">NeXTSTEP</a> 。(原来也是乔老爷的作品)。</p>
 
@@ -370,14 +494,19 @@ CGContextRelease(ctx);
 <h2>单一颜色</h2>
 
 <p>如果我们看这个例子：</p>
-<p><code>objc
-// Don't do this
-- (void)drawRect:(CGRect)rect
-{
-    [[UIColor redColor] setFill];
-    UIRectFill([self bounds]);
-}
-</code></p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// Don&#39;t do this</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">drawRect:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">rect</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span> <span class="n">setFill</span><span class="p">];</span>
+</span><span class="line">    <span class="n">UIRectFill</span><span class="p">([</span><span class="n">self</span> <span class="n">bounds</span><span class="p">]);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>现在我们知道这为什么不好:我们促使 Core Animation 来为我们创建一个后备存储，并让它使用单一颜色填充后备存储，然后上传给 GPU。</p>
 
@@ -404,17 +533,27 @@ CGContextRelease(ctx);
 <p>为了同时绘制，我们需要做下面的操作。我们需要在另一个队列创建一个图像，一旦我们拥有了图像，我们可以切换回主队列，并且设置这个图像为 UIImageView 的图像。这个技术在 <a href="https://developer.apple.com/videos/wwdc/2012/?id=211">WWDC 2012 session 211</a> 中讨论过。(异步下载图片经常用到这个)</p>
 
 <p>增加一个你可以在其中绘制的新方法：</p>
-<p>```objc
-- (UIImage *)renderInImageOfSize:(CGSize)size;
-{
-    UIGraphicsBeginImageContextWithOptions(size, NO, 0);</p>
-
-<pre><code>// do drawing here
-
-UIImage *result = UIGraphicsGetImageFromCurrentImageContext();
-UIGraphicsEndImageContext();
-return result; } ```
-</code></pre>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIImage</span> <span class="o">*</span><span class="p">)</span><span class="nf">renderInImageOfSize:</span><span class="p">(</span><span class="n">CGSize</span><span class="p">)</span><span class="nv">size</span><span class="p">;</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIGraphicsBeginImageContextWithOptions</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">NO</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// do drawing here</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">UIImage</span> <span class="o">*</span><span class="n">result</span> <span class="o">=</span> <span class="n">UIGraphicsGetImageFromCurrentImageContext</span><span class="p">();</span>
+</span><span class="line">    <span class="n">UIGraphicsEndImageContext</span><span class="p">();</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>这个方法通过 <code>UIGraphicsBeginImageContextWithOptions()</code> 方法，并根据给定的大小创建一个新的 CGContextRef 位图。这个方法也会将这个上下文设置为<em>当前UIKit</em>的上下文。现在你可以在这里做你想在 <code>-drawRect:</code> 中做的事了。然后我们可以通过 <code>UIGraphicsGetImageFromCurrentImageContext()</code>,将获得的这个上下文位图数据作为一个 UIImage，最终移除这个上下文。</p>
 
@@ -423,17 +562,25 @@ return result; } ```
 <p>要知道，所有 UIKit 的绘制 API 在使用另一个队列时，都是安全的。只需要确定是在同一个操作中调用他们的，这个操作需要以 <code>UIGraphicsBeginImageContextWithOptions()</code> 开始，以 <code>UIGraphicsEndIamgeContext()</code> 结束。</p>
 
 <p>你需要像下面这样触发渲染代码：</p>
-<p><code>objc
-UIImageView *view; // assume we have this
-NSOperationQueue *renderQueue; // assume we have this
-CGSize size = view.bounds.size;
-[renderQueue addOperationWithBlock:^(){
-        UIImage *image = [renderer renderInImageOfSize:size];
-        [[NSOperationQueue mainQueue] addOperationWithBlock:^(){
-            view.image = image;
-        }];
-}];
-</code></p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">UIImageView</span> <span class="o">*</span><span class="n">view</span><span class="p">;</span> <span class="c1">// assume we have this</span>
+</span><span class="line"><span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">renderQueue</span><span class="p">;</span> <span class="c1">// assume we have this</span>
+</span><span class="line"><span class="n">CGSize</span> <span class="n">size</span> <span class="o">=</span> <span class="n">view</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">;</span>
+</span><span class="line"><span class="p">[</span><span class="n">renderQueue</span> <span class="nl">addOperationWithBlock:</span><span class="o">^</span><span class="p">(){</span>
+</span><span class="line">        <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">renderer</span> <span class="nl">renderInImageOfSize:</span><span class="n">size</span><span class="p">];</span>
+</span><span class="line">        <span class="p">[[</span><span class="n">NSOperationQueue</span> <span class="n">mainQueue</span><span class="p">]</span> <span class="nl">addOperationWithBlock:</span><span class="o">^</span><span class="p">(){</span>
+</span><span class="line">            <span class="n">view</span><span class="p">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">;</span>
+</span><span class="line">        <span class="p">}];</span>
+</span><span class="line"><span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>要注意，我们是在主队列中调用 view.image = image.这是一个非常重要的细节。你不可以在任何其他队列中调用这个代码。</p>
 
@@ -472,162 +619,53 @@ CGSize size = view.bounds.size;
 <p>对于昂贵的绘图方法，这是最有可能提升性能的，但对于那些绘图方法来说，也不会节省太多资源。</p>
 
 <hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</div>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[iOS设备信息收集]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/"/>
-    <updated>2014-03-21T18:05:55+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/03/21/iOS设备信息收集</id>
-    <content type="html"><![CDATA[<p>收集iOS设备的信息，包含设备系统版本，设备型号，手机型号，屏幕分辨率，当地所在时区，CPU 型号，系统语言，网络环境，应用名称以及应用版本，还有判断设备是否，应用是否被破解</p>
-<p>需要的头文件</p>
-<p><code>objc
-#import "ISSMobileClick.h"
-#import "AppInfoModel.h"
-#import &lt;CoreLocation/CoreLocation.h&gt;
-#import &lt;CoreTelephony/CTCarrier.h&gt;
-#import &lt;CoreTelephony/CTTelephonyNetworkInfo.h&gt;
-#import &lt;objc/runtime.h&gt;
-#include &lt;sys/types.h&gt;
-#include &lt;sys/sysctl.h&gt;
-#include &lt;mach/machine.h&gt;
-#include &lt;sys/types.h&gt;
-#import "ITTNetworkTrafficManager.h"
-</code></p>
-<p>实现方法，我使用类方法方便调用，无需实例化，直接类调用</p>
-<p>```objc
-+ (void)collectAppInfo
-{
-    //获取设备信息，如当前系统版本、设备型号，</p>
+</article>
 
-<pre><code>NSString *content=[[NSString alloc]
-                   initWithFormat:
-                   @"unique id: %@ \nlocalized model: %@ \nsystem version: %@ \nsystem name: %@ \nmodel: %@",
-                   [[UIDevice currentDevice] identifierForVendor],
-                   [[UIDevice currentDevice] localizedModel],
-                   [[UIDevice currentDevice] systemVersion],
-                   [[UIDevice currentDevice] systemName],
-                   [[UIDevice currentDevice] model]];
-//platform手机型号
-//
-size_t size;
-sysctlbyname("hw.machine", NULL, &amp;size, NULL, 0);
-char *machine = (char*)malloc(size);
-sysctlbyname("hw.machine", machine, &amp;size, NULL, 0);
-NSString *platform = [NSString stringWithCString:machine encoding:NSUTF8StringEncoding];
-
-NSLog(@"手机型号 :%@",platform);
-//date
-NSString *date =[[NSDate date] stringWithFormat:@"yyyy-MM-dd"];
-NSString *time =[[NSDate date] stringWithFormat:@"HH:MM:SS"];
-
-NSLog(@"%@\napp version %@\ndate :%@\ntime:%@",content,XcodeAppVersion,date,time);
-
-CTTelephonyNetworkInfo *netInfo = [[CTTelephonyNetworkInfo alloc]init];
-CTCarrier*carrier = [netInfo subscriberCellularProvider];
-NSLog(@"Carriername:%@\nISO Country Code:%@",[carrier carrierName],[carrier isoCountryCode]);//手机运营商以及运营国家标号
-
-UIScreen *MainScreen = [UIScreen mainScreen];
-CGSize Size = [MainScreen bounds].size;
-CGFloat scale = [MainScreen scale];
-CGFloat screenWidth = Size.width * scale;
-CGFloat screenHeight = Size.height * scale;
-
-NSLog(@"屏幕分辨率为 :%.0f %.0f",screenWidth, screenHeight);
-
-NSLog(@"当地所在时区 :%@",[[NSTimeZone localTimeZone] description]);
-
-NSMutableString *cpu = [[NSMutableString alloc] init];
-
-cpu_type_t type;
-cpu_subtype_t subtype;
-size = sizeof(type);
-sysctlbyname("hw.cputype", &amp;type, &amp;size, NULL, 0);
-
-size = sizeof(subtype);
-sysctlbyname("hw.cpusubtype", &amp;subtype, &amp;size, NULL, 0);
-
-// values for cputype and cpusubtype defined in mach/machine.h
-if (type == CPU_TYPE_X86)
-{
-    [cpu appendString:@"x86 "];
-    // check for subtype ...
-    
-} else if (type == CPU_TYPE_ARM)
-{
-    [cpu appendString:@"ARM"];
-    switch(subtype)
-    {
-        case CPU_SUBTYPE_ARM_V7:
-            [cpu appendString:@"V7"];
-            break;
-        case CPU_SUBTYPE_ARM_V7S:
-            [cpu appendString:@"V7s"];
-            break;
-            // ...
-    }
-}
-
-NSLog(@"cpu 型号 :%@",cpu);
-
-NSArray *arLanguages = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleLanguages"];
-NSString *strLang = [arLanguages objectAtIndex:0];
-NSLog(@"LANG:%@",strLang);
-
-NSLog(@"网络环境:%@",[ITTNetworkTrafficManager sharedManager].networkType);
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	
+	<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
 
 
-AppInfoModel *appInfo = [[AppInfoModel alloc] init];
-appInfo.uniqIdentifier = (NSString*)[[UIDevice currentDevice] identifierForVendor];
-appInfo.deviceModel = platform;
-appInfo.systemVersion = [[UIDevice currentDevice] systemVersion];
-appInfo.systemName = [[UIDevice currentDevice] systemName];
-appInfo.systemModel = [[UIDevice currentDevice] model];
-appInfo.currentDate = [NSDate date];
-appInfo.carrierName = [carrier carrierName];
-appInfo.carrierCountryCode = [carrier isoCountryCode];
-appInfo.screen = [NSString stringWithFormat:@"%.0fx%.0f",screenWidth, screenHeight];
-appInfo.timeZone = [[NSTimeZone localTimeZone] abbreviation];
-appInfo.sdkType = @"iOS";
-appInfo.packageName = PACKAGE_NAME;
-appInfo.appName = XcodeAppName;
-NSLog(@"应用名称 ：%@\ngmt %@",appInfo.appName ,[[NSTimeZone localTimeZone] abbreviation]);
-</code></pre>
 
-<p>}
-```</p>
-<p>真机运行之后，log信息如下</p>
-<p><code>c
-	2014-03-21 17:40:13.224 AppCountDemo[2004:60b] 手机型号 :iPhone5,4
-	2014-03-21 17:40:13.230 AppCountDemo[2004:60b] unique id: &lt;__NSConcreteUUID 0x17d827f0&gt; 0E21F593-06EB-4D3B-8DE4-8CAF31AB413A 
-	localized model: iPhone 
-	system version: 7.1 
-	system name: iPhone OS 
-	model: iPhone
-	app version 1.0
-	date :2014-03-21
-	time:17:03:22
-	2014-03-21 17:40:13.240 AppCountDemo[2004:60b] Carriername:中国联通
-	ISO Country Code:cn
-	2014-03-21 17:40:13.242 AppCountDemo[2004:60b] 屏幕分辨率为 :640 1136
-	2014-03-21 17:40:13.244 AppCountDemo[2004:60b] 当地所在时区 :Local Time Zone (Asia/Shanghai (GMT+8) offset 28800)
-	2014-03-21 17:40:13.246 AppCountDemo[2004:60b] cpu 型号 :ARMV7s
-	2014-03-21 17:40:13.247 AppCountDemo[2004:60b] LANG:zh-Hans
-	2014-03-21 17:40:13.260 AppCountDemo[2004:60b] Reachability Flag Status: -R -----l- networkStatusForFlags
-	2014-03-21 17:40:13.261 AppCountDemo[2004:60b] -[ITTNetworkTrafficManager updateNetwordStatus:](120): network status wifi
-	2014-03-21 17:40:13.304 AppCountDemo[2004:60b] 网络环境:wifi
-	2014-03-21 17:40:13.306 AppCountDemo[2004:60b] 应用名称 ：统计SDKDemo
-	gmt GMT+8
-</code></p>
+<section id="comment">
+    <h1 class="title">Comments</h1>
+    <div id="disqus_thread" aria-live="polite">    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'itmonkeylife'; // required: replace example with your forum shortname
 
-<p>最后聊一下，目前遇到的问题</p>
-<li>生成静态库，另一个工程载入静态库时候出现一个问题，Catagory使用出现错误，调用方法会报错，运行时exception “selector not recognized”。</li>
-<p>这是由于 UNIX的静态库实现、linker和Objective-C的动态结构三者之间的问题引起的。通过修改工程配置文件，只要在build静态库时，加上linker flag “-ObjC”即可（在64位osx上和iOS程序上，这样做还不够），这个flag告诉linker将每个定义了class或者category的对象文件都载入静态库。</p>
-<p>但是最终程序还是会抛这个异常，这是因为linker的bug，对于64位osx程序和iOS程序，这个bug导致只包含category而不包含class的文件没法从静态库中加载。</p>
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    </div>
+</section>
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2014
 
-]]></content>
-  </entry>
-  
-</feed>
+    Rick
+
+
+Design credit: <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a></footer>
+		</div>
+	</div>
+</body>
+</html>
