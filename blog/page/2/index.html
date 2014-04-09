@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Mar 24th, 2014 Comments 你真的懂GCD吗? GCD是什么，你知道吗？你知道了GCD，你确定你会使用吗？ 这一篇文章是站在初学者角度去分析GCD，原因是这个很多iOS开发者根本就没用过，即使用过，不知道其中的原理。讲解之前认识一下什么是线程，为什么要介绍线程。 &hellip;">
+	<meta name="description" content="Mar 31st, 2014 iOS Comments 精简开发iOS View controllers 通常是 iOS 项目中最大的文件，并且它们包含了许多不必要的代码。所以 View controllers 中的代码几乎总是复用率最低的。我们将会看到给 view controllers &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -114,8 +114,252 @@
   
 
 
+<time datetime="2014-03-31T11:13:25+08:00" data-updated="true" itemprop="datePublished">Mar 31<span>st</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/03/31/%E7%B2%BE%E7%AE%80%E5%BC%80%E5%8F%91iOS/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/03/31/%E7%B2%BE%E7%AE%80%E5%BC%80%E5%8F%91iOS/" itemprop="url">精简开发iOS</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>View controllers 通常是 iOS 项目中最大的文件，并且它们包含了许多不必要的代码。所以 View controllers 中的代码几乎总是复用率最低的。我们将会看到给 view controllers 瘦身的技术，让代码变得可以复用，以及把代码移动到更合适的地方。</p>
+<h2>把 Data Source 和其他 Protocols 分离出来</h2>
+<p>把 <code>UITableViewDataSource</code> 的代码提取出来放到一个单独的类中，是为 view controller 瘦身的强大技术之一。当你多做几次，你就能总结出一些模式，并且创建出可复用的类。</p>
+<p>举个例，在示例项目中，有个 <code>PhotosViewController</code> 类，它有以下几个方法：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp"># pragma mark Pragma</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">Photo</span><span class="o">*</span><span class="p">)</span><span class="nf">photoAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span><span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">photos</span><span class="p">[(</span><span class="n">NSUInteger</span><span class="p">)</span><span class="n">indexPath</span><span class="p">.</span><span class="n">row</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span><span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
+</span><span class="line"> <span class="nf">numberOfRowsInSection:</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">section</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">photos</span><span class="p">.</span><span class="n">count</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UITableViewCell</span><span class="o">*</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span><span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
+</span><span class="line">        <span class="nf">cellForRowAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span><span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">PhotoCell</span><span class="o">*</span> <span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">tableView</span> <span class="nl">dequeueReusableCellWithIdentifier:</span><span class="n">PhotoCellIdentifier</span>
+</span><span class="line">                                                      <span class="nl">forIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">    <span class="n">Photo</span><span class="o">*</span> <span class="n">photo</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">photoAtIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">label</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">photo</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>这些代码基本都是围绕数组做一些事情，更针对地说，是围绕 view controller 所管理的 photos 数组做一些事情。我们可以尝试把数组相关的代码移到<code>单独的类</code>中。我们使用一个 block 来设置 cell，也可以用 delegate 来做这件事，这取决于你的习惯。</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">ArrayDataSource</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">itemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span><span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">items</span><span class="p">[(</span><span class="n">NSUInteger</span><span class="p">)</span><span class="n">indexPath</span><span class="p">.</span><span class="n">row</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span><span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
+</span><span class="line"> <span class="nf">numberOfRowsInSection:</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">section</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">items</span><span class="p">.</span><span class="n">count</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UITableViewCell</span><span class="o">*</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span><span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
+</span><span class="line">        <span class="nf">cellForRowAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span><span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">id</span> <span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">tableView</span> <span class="nl">dequeueReusableCellWithIdentifier:</span><span class="n">cellIdentifier</span>
+</span><span class="line">                                              <span class="nl">forIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">    <span class="kt">id</span> <span class="n">item</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">itemAtIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">    <span class="n">configureCellBlock</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span><span class="n">item</span><span class="p">);</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>现在，你可以把 view controller 中的这 3 个方法去掉了，取而代之，你可以创建一个 <code>ArrayDataSource</code> 类的实例作为 table view 的 data source。</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="n">configureCell</span><span class="p">)(</span><span class="n">PhotoCell</span><span class="o">*</span><span class="p">,</span> <span class="n">Photo</span><span class="o">*</span><span class="p">)</span> <span class="o">=</span> <span class="o">^</span><span class="p">(</span><span class="n">PhotoCell</span><span class="o">*</span> <span class="n">cell</span><span class="p">,</span> <span class="n">Photo</span><span class="o">*</span> <span class="n">photo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">   <span class="n">cell</span><span class="p">.</span><span class="n">label</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">photo</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
+</span><span class="line"><span class="p">};</span>
+</span><span class="line"><span class="n">photosArrayDataSource</span> <span class="o">=</span> <span class="p">[[</span><span class="n">ArrayDataSource</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItems:</span><span class="n">photos</span>
+</span><span class="line">                                                <span class="nl">cellIdentifier:</span><span class="n">PhotoCellIdentifier</span>
+</span><span class="line">                                            <span class="nl">configureCellBlock:</span><span class="n">configureCell</span><span class="p">];</span>
+</span><span class="line"><span class="n">self</span><span class="p">.</span><span class="n">tableView</span><span class="p">.</span><span class="n">dataSource</span> <span class="o">=</span> <span class="n">photosArrayDataSource</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>现在你不用担心把一个 index path 映射到数组中的位置了，每次你想把这个数组显示到一个 table view 中时，你都可以复用这些代码。你也可以实现一些额外的方法，比如 <code>tableView:commitEditingStyle:forRowAtIndexPath:</code>，在 table view controllers 之间共享。</p>
+<p>这样的好处在于，你可以<code>单独测试这个类</code>，再也不用写第二遍。该原则同样适用于数组之外的其他对象。</p>
+<p>在今年我们做的一个应用里面，我们大量使用了<code> Core Data</code>。我们创建了相似的类，但和之前使用的数组不一样，它用一个 fetched results controller 来获取数据。它实现了所有动画更新、处理 section headers、删除操作等逻辑。你可以创建这个类的实例，然后赋予一个 fetch request 和用来设置 cell 的 block，剩下的它都会处理，不用你操心了。</p>
+<p>此外，这种方法也可以扩展到其他 protocols 上面。最明显的一个就是<code> UICollectionViewDataSource</code>。这给了你极大的灵活性；如果，在开发的某个时候，你想用 <code>UICollectionView </code>代替 <code>UITableView</code>，你几乎不需要对 view controller 作任何修改。你甚至可以让你的 data source 同时支持这两个协议。</p>
+<h2>将业务逻辑移到 Model 中</h2>
+<p>下面是 view controller（来自其他项目）中的示例代码，用来查找一个用户的目前的优先事项的列表：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">loadPriorities</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">NSDate</span><span class="o">*</span> <span class="n">now</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDate</span> <span class="n">date</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span><span class="o">*</span> <span class="n">formatString</span> <span class="o">=</span> <span class="s">@&quot;startDate = %@&quot;</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSPredicate</span><span class="o">*</span> <span class="n">predicate</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithFormat:</span><span class="n">formatString</span><span class="p">,</span> <span class="n">now</span><span class="p">,</span> <span class="n">now</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSSet</span><span class="o">*</span> <span class="n">priorities</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">user</span><span class="p">.</span><span class="n">priorities</span> <span class="nl">filteredSetUsingPredicate:</span><span class="n">predicate</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">priorities</span> <span class="o">=</span> <span class="p">[</span><span class="n">priorities</span> <span class="n">allObjects</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>把这些代码移动到<code> User </code>类的 category 中会变得更加清晰，处理之后，在<code> View Controller.m</code> 中看起来就是这样：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">loadPriorities</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">priorities</span> <span class="o">=</span> <span class="p">[</span><span class="n">user</span> <span class="n">currentPriorities</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>在<code> User+Extensions.m </code>中：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nf">currentPriorities</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">NSDate</span><span class="o">*</span> <span class="n">now</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDate</span> <span class="n">date</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span><span class="o">*</span> <span class="n">formatString</span> <span class="o">=</span> <span class="s">@&quot;startDate = %@&quot;</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSPredicate</span><span class="o">*</span> <span class="n">predicate</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithFormat:</span><span class="n">formatString</span><span class="p">,</span> <span class="n">now</span><span class="p">,</span> <span class="n">now</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">priorities</span> <span class="nl">filteredSetUsingPredicate:</span><span class="n">predicate</span><span class="p">]</span> <span class="n">allObjects</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>有些代码不能被轻松地移动到 model 对象中，但明显和 model 代码紧密联系，对于这种情况，我们可以使用一个 <code>Store</code>：</p>
+<h2>创建 Store 类</h2>
+<p>在我们第一版的示例程序的中，有些代码去加载文件并解析它。下面就是 view controller 中的代码</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">readArchive</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">NSBundle</span><span class="o">*</span> <span class="n">bundle</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSBundle</span> <span class="nl">bundleForClass:</span><span class="p">[</span><span class="n">self</span> <span class="n">class</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">NSURL</span> <span class="o">*</span><span class="n">archiveURL</span> <span class="o">=</span> <span class="p">[</span><span class="n">bundle</span> <span class="nl">URLForResource:</span><span class="s">@&quot;photodata&quot;</span>
+</span><span class="line">                                 <span class="nl">withExtension:</span><span class="s">@&quot;bin&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSAssert</span><span class="p">(</span><span class="n">archiveURL</span> <span class="o">!=</span> <span class="nb">nil</span><span class="p">,</span> <span class="s">@&quot;Unable to find archive in bundle.&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">NSData</span> <span class="o">*</span><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSData</span> <span class="nl">dataWithContentsOfURL:</span><span class="n">archiveURL</span>
+</span><span class="line">                                         <span class="nl">options:</span><span class="mi">0</span>
+</span><span class="line">                                           <span class="nl">error:</span><span class="nb">NULL</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSKeyedUnarchiver</span> <span class="o">*</span><span class="n">unarchiver</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSKeyedUnarchiver</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initForReadingWithData:</span><span class="n">data</span><span class="p">];</span>
+</span><span class="line">    <span class="n">_users</span> <span class="o">=</span> <span class="p">[</span><span class="n">unarchiver</span> <span class="nl">decodeObjectOfClass:</span><span class="p">[</span><span class="n">NSArray</span> <span class="n">class</span><span class="p">]</span> <span class="nl">forKey:</span><span class="s">@&quot;users&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">_photos</span> <span class="o">=</span> <span class="p">[</span><span class="n">unarchiver</span> <span class="nl">decodeObjectOfClass:</span><span class="p">[</span><span class="n">NSArray</span> <span class="n">class</span><span class="p">]</span> <span class="nl">forKey:</span><span class="s">@&quot;photos&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">unarchiver</span> <span class="n">finishDecoding</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>但是 view controller 没必要知道这些，所以我们创建了一个 Store 对象来做这些事。通过分离，我们就可以复用这些代码，单独测试他们，并且让 view controller 保持小巧。Store 对象会关心数据加载、缓存和设置数据栈。它也经常被称为服务层或者仓库。</p>
+<h2>把网络请求逻辑移到 Model 层</h2>
+<p>和上面的主题相似：不要在 view controller 中做网络请求的逻辑。取而代之，你应该将它们封装到另一个类中。这样，你的 view controller 就可以在之后通过使用带有回调（比如一个 completion 的 block）来请求网络了。这样的好处是，缓存和错误控制也可以在这个类里面完成。</p>
+<h2>把 View 代码移到 View 层</h2>
+<p>不应该在 view controller 中构建复杂的 view 层次结构。你可以使用 Interface Builder 或者把 views 封装到一个<code> UIView </code>子类当中。例如，如果你要创建一个选择日期的控件，把它放到一个名为 <code>DatePickerView</code> 的类中会比把所有的事情都在 view controller 中做好好得多。再一次，这样增加了可复用性并保持了简单。</p>
+<p>如果你喜欢 Interface Builder，你也可以在 Interface Builder 中做。有些人认为 IB 只能和 view controllers 一起使用，但事实上你也可以加载单独的 nib 文件到自定义的 view 中。在示例程序中，我们创建了一个<code> PhotoCell.xib</code>，包含了 photo cell 的布局：</p>
+<p><img src="http://ww1.sinaimg.cn/large/626e5d69tw1eeys0sfm2tj20wg0naq7c.jpg" alt="" /></p>
+<p>就像你看到的那样，我们在 view（我们没有在这个 nib 上使用 File&#8217;s Owner 对象）上面创建了 properties，然后连接到指定的 subviews。这种技术同样适用于其他自定义的 views。</p>
+<h2>通讯</h2>
+<p>其他在 view controllers 中经常发生的事是与其他 view controllers，model，和 views 之间进行通讯。这当然是 controller 应该做的，但我们还是希望以尽可能少的代码来完成它。</p>
+
+<p>关于 view controllers 和 model 对象之间的消息传递，已经有很多阐述得很好的技术（比如 KVO 和 fetched results controllers）。但是 view controllers 之间的消息传递稍微就不是那么清晰了。</p>
+
+<p>当一个 view controller 想把某个状态传递给多个其他 view controllers 时，就会出现这样的问题。较好的做法是把状态放到一个单独的对象里，然后把这个对象传递给其它 view controllers，它们观察和修改这个状态。这样的好处是消息传递都在一个地方（被观察的对象）进行，而且我们也不用纠结嵌套的 delegate 回调。这其实是一个复杂的主题，我们可能在未来用一个完整的话题来讨论这个主题。</p>
+<h2>总结</h2>
+<p>我们已经看到一些用来创建更小巧的 view controllers 的技术。我们并不是想把这些技术应用到每一个可能的角落，只是我们有一个目标：写可维护的代码。知道这些模式后，我们就更有可能把那些笨重的 view controllers 变得更整洁。</p>
+<h3>扩展阅读</h3>
+
+<ul>
+<li><a href="http://developer.apple.com/library/ios/#featuredarticles/ViewControllerPGforiPhoneOS/BasicViewControllers/BasicViewControllers.html">View Controller Programming Guide for iOS</a></li>
+<li><a href="http://developer.apple.com/library/mac/#documentation/General/Conceptual/DevPedia-CocoaCore/ControllerObject.html">Cocoa Core Competencies: Controller Object</a></li>
+<li><a href="http://subjective-objective-c.blogspot.de/2011/08/writing-high-quality-view-controller.html">Writing high quality view controllers</a></li>
+<li><a href="http://programmers.stackexchange.com/questions/184396/mvcs-model-view-controller-store">Stack Overflow: Model View Controller Store</a></li>
+<li><a href="https://speakerdeck.com/trianglecocoa/unburdened-viewcontrollers-by-jay-thrash">Unburdened View Controllers</a></li>
+<li><a href="http://programmers.stackexchange.com/questions/177668/how-to-avoid-big-and-clumsy-uitableviewcontroller-on-ios">Stack Overflow: How to avoid big and clumsy <code>UITableViewControllers</code> on iOS</a></li>
+</ul>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
 <time datetime="2014-03-24T15:54:02+08:00" data-updated="true" itemprop="datePublished">Mar 24<span>th</span>, 2014</time></div>
 		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
 
 </div>
 		
