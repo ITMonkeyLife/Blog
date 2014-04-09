@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-09T16:58:54+08:00</updated>
+  <updated>2014-04-09T17:10:21+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,137 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[ScrollView的前世今生]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/"/>
+    <updated>2014-04-09T17:04:49+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng</id>
+    <content type="html"><![CDATA[<p>可能你很难相信 <a href="http://developer.apple.com/library/ios/#documentation/uikit/reference/UIScrollView_Class/Reference/UIScrollView.html">UIScrollView</a> 和一个标准的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html">UIView</a> 差异并不大，scroll view 确实会多出一些方法，但这些方法只是和 UIView 的属性很好的结合到一起了。因此，在要想弄懂 UIScrollView 是怎么工作之前，你需要先了解一下 UIView，特别是视图渲染的两步过程。</p>
+
+<h2>光栅化和组合</h2>
+
+<p>渲染过程的第一部分是众所周知的光栅化(<code>rasterization</code>)，光栅化简单的说就是产生一组绘图指令并且生成一张图片。比如绘制一个圆角矩形、带图片、标题居中的 UIButtons。这些图片并没有被绘制到屏幕上去；取而代之的是，他们被自己的视图保持着留到下一个步骤使用。</p>
+
+<p>一旦每个视图都产生了自己的光栅化图片，这些图片便被一个接一个的绘制，并产生一个屏幕大小的图片，这便是上文所说的组合。视图层级(view hierarchy)对于组合如何进行扮演了很重要的角色：一个视图的图片被组合在它父视图的图片上面。然后，组合好的图片被组合到父视图的父视图图片上面。视图层级最顶端是窗口(window)，它组合好的图片便是我们看到的东西了。</p>
+
+<p>概念上，依次在每个视图上放置独立分层的图片并最终产生一个图片，单调的图像更容易被理解，特别是如果你以前使用过像 Photoshop 这样的工具。我们还有另外一篇文章详细解释了<a href="http://objccn.io/issue-3-1/">像素是如何绘制到屏幕上去的</a>。</p>
+
+<p>现在，回想一下，每个视图都有一个 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/bounds">bounds</a> 和 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/frame">frame</a>。当布局一个界面时，我们需要处理视图的 frame。这允许我们放置并设置视图的大小。视图的 frame 和 bounds 的大小总是一样的，但是他们的 origin 有可能不同。弄懂这两个工作原理是理解 UIScrollView 的关键。</p>
+
+<p>在光栅化步骤中，视图并不关心即将发生的组合步骤。也就是说，它并不关心自己的 frame (这是用来放置视图的图像)或自己在视图层级中的位置(这是决定组合的顺序)。这时视图只关心一件事就是绘制它自己的 content。这个绘制发生在每个视图的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instm/UIView/drawRect:"><code>drawRect:</code></a> 方法中。</p>
+
+<p>在 <code>drawRect:</code> 方法被调用前，会为视图创建一个空白的图片来绘制 content。这个图片的坐标系统是视图的 bounds。几乎每个视图 bounds 的 origin 都是 {0，0}。因此，当在光栅化图片左上角绘制一些东西的时候，你都会在 bounds 的 origin {x:0, y:0} 处绘制。在一个图片右下角的地方绘制东西的时候，你都会绘制在 {x:width, y:height} 处。如果你的绘制超出了视图的 bounds，那么超出的部分就不属于光栅化图片的部分了，并且会被丢弃。</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV2.png" alt="" title="" /></p>
+
+<p>在组合的步骤中，每个视图将自己光栅化图片组合到自己父视图的光栅化图片上面。视图的 frame 决定了自己在父视图中绘制的位置，frame 的 origin 表明了视图光栅化图片左上角相对父视图光栅化图片左上角的偏移量。所以，一个 origin 为 {x:20, y:15} 的 frame 所绘制的图片左边距其父视图 20 点，上边距父视图 15 点。因为视图的 frame 和 bounds 矩形的大小总是一样的，所以光栅化图片组合的时候是像素对齐的。这确保了光栅化图片不会被拉伸或缩小。</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV1.png" alt="" title="" /></p>
+
+<p>记住，我们才仅仅讨论了一个视图和它父视图之间的组合操作。一旦这两个视图被组合到一起，组合的结果图片将会和父视图的父视图进行组合，这是一个雪球效应。</p>
+
+<p>考虑一下组合图片背后的公式。视图图片的左上角会根据它 frame 的 origin 进行偏移，并绘制到父视图的图片上：</p>
+
+<p>```objc
+CompositedPosition.x = View.frame.origin.x - Superview.bounds.origin.x;</p>
+
+<p>CompositedPosition.y = View.frame.origin.y - Superview.bounds.origin.y;
+```</p>
+
+<p>正如之前所说的，如果一个视图 bounds 的 origin 是 {0,0}。那么，我们得到这个公式：</p>
+
+<p>```objc
+CompositedPosition.x = View.frame.origin.x;</p>
+
+<p>CompositedPosition.y = View.frame.origin.y;
+```</p>
+
+<p>我们可以通过几个不同的 frames 看一下：</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV3.png" alt="" title="" /></p>
+
+<p>这样做是有道理的，我们改变 button 的 <code>frame.origin</code>后，它会改变自己相对紫色父视图的位置。注意，如果我们移动 button 直到它的一部分已经在紫色父视图 bounds 的外面，当光栅化图片被截去时这部分也将会通过同样的绘制方式被截去。然而，技术上讲，因为 iOS 处理组合方法的原因，你可以将一个子视图渲染在其父视图的 bounds 之外，但是光栅化期间的绘制不可能超出一个视图的 bounds。</p>
+
+<h2 id="scrollviewcontentoffset">Scroll View的Content Offset</h2>
+
+<p>现在我们所讲的跟 UIScrollView 有什么关系呢？一切都和它有关！考虑一种我们可以实现的滚动：我们有一个拖动时 frame 不断改变的视图。这达到了相同的效果，对吗？如果我拖动我的手指到右边，那么拖动的同时我增大视图的 <code>origin.x</code> ，瞧，这货就是 scroll view。</p>
+
+<p>当然，在 scroll view 中有很多具有代表性的视图。为了实现这个平移功能，当用户移动手指时，你需要时刻改变每个视图的 frames。当我们提到组合一个 view 的光栅化图片到它父视图什么地方时，记住这个公式：</p>
+
+<p>```objc
+CompositedPosition.x = View.frame.origin.x - Superview.bounds.origin.x;</p>
+
+<p>CompositedPosition.y = View.frame.origin.y - Superview.bounds.origin.y;
+```</p>
+
+<p>我们减少 <code>Superview.bounds.origin</code> 的值(因为他们总是0)。但是如果他们不为0呢？我们用和前一个图例相同的 frames，但是我们改变了紫色视图 bounds 的 origin 为 {-30, -30}。得到下图：</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV4.png" alt="" title="" /></p>
+
+<p>现在，巧妙的是通过改变这个紫色视图的 bounds，它每一个单独的子视图都被移动了。事实上，这正是 scroll view 工作的原理。当你设置它的 <a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIScrollView_Class/Reference/UIScrollView.html#//apple_ref/occ/instp/UIScrollView/contentOffset">contentOffset</a> 属性时它改变 <code>scroll view.bounds</code> 的 origin。事实上，contentOffset 甚至不是实际存在的。代码看起来像这样：</p>
+
+<p><code>objc
+- (void)setContentOffset:(CGPoint)offset
+{
+    CGRect bounds = [self bounds];
+    bounds.origin = offset;
+    [self setBounds:bounds];
+}
+</code></p>
+
+<p>注意前一个图例，只要足够的改变 bounds 的 origin，button 将会超出紫色视图和 button 组合成的图片的范围。这也是当你足够的移动 scroll view 时，一个视图会消失！</p>
+
+<h2 id="contentsize">世界之窗：Content Size</h2>
+
+<p>现在，最难的部分已经过去了，我们再看看 UIScrollView 另一个属性：<a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIScrollView_Class/Reference/UIScrollView.html#//apple_ref/occ/instp/UIScrollView/contentSize">contentSize</a>。
+scroll view 的 content size 并不会改变其 bounds 的任何东西，所以这并不会影响 scroll view 如何组合自己的子视图。反而，content size 定义了可滚动区域。scroll view 的默认 content size 为 {w:0, h:0}。既然没有可滚动区域，用户是不可以滚动的，但是 scroll view 任然会显示其 bounds 范围内所有的子视图。 <br />
+当 content size 设置为比 bounds 大的时候，用户就可以滚动视图了。你可以认为 scroll view 的 bounds 为可滚动区域上的一个窗口：</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV5.png" alt="" title="" /></p>
+
+<p>当 content offset 为 {x:0, y:0} 时，可见窗口的左上角在可滚动区域的左上角处。这也是 content offset 的最小值；用户不能再往可滚动区域的左边或上边移动了。那儿没啥，别滚了！</p>
+
+<p>content offset 的最大值是 content size 和 scroll view size 的差(不同于 content size 和scroll view的 bounds 大小)。这也在情理之中：从左上角一直滚动到右下角，用户停止时，滚动区域右下角边缘和滚动视图 bounds 的右下角边缘是齐平的。你可以像这样记下 content offset 的最大值：</p>
+
+<p>```objc
+contentOffset.x = contentSize.width - bounds.size.width;</p>
+
+<p>contentOffset.y = contentSize.height - bounds.size.height;
+```</p>
+
+<h2 id="contentinsets">用Content Insets对窗口稍作调整</h2>
+
+<p><a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIScrollView_Class/Reference/UIScrollView.html#//apple_ref/occ/instp/UIScrollView/contentInset">contentInset</a> 属性可以改变 content offset 的最大和最小值，这样便可以滚动出可滚动区域。它的类型为 <a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIKitDataTypesReference/Reference/reference.html#//apple_ref/doc/c_ref/UIEdgeInsets">UIEdgeInsets</a>，包含四个值：{top，left，bottom，right}。当你引进一个 inset 时，你改变了 content offset 的范围。比如，设置 content inset 顶部值为 10，则允许 content offset 的 y 值达到 10。这介绍了可滚动区域周围的填充。</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV6.png" alt="" title="" /></p>
+
+<p>这咋一看好像没什么用。实际上，为什么不仅仅增加 content size 呢？除非没办法，否则你需要避免改变scroll view 的 content size。想要知道为什么？想想一个 table view（UItableView是UIScrollView 的子类，所以它有所有相同的属性），table view 为了适应每一个cell，它的可滚动区域是通过精心计算的。当你滚动经过 table view 的第一个或最后一个 cell 的边界时，table view将 content offset 弹回并复位，所以 cells 又一次恰到好处的紧贴 scroll view 的 bounds。</p>
+
+<p>当你想要使用 <a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIRefreshControl_class/Reference/Reference.html">UIRefreshControl</a> 实现拉动刷新时发生了什么？你不能在 table view 的可滚动区域内放置 UIRefreshControl，否则，table view 将会允许用户通过 refresh control 中途停止滚动，并且将 refresh control 的顶部弹回到视图的顶部。因此，你必须将 refresh control 放在可滚动区域上方。这将允许首先将 content offset 弹回第一行，而不是 refresh control。</p>
+
+<p>但是等等，如果你通过滚动足够多的距离初始化 pull-to-refresh 机制，因为 table view 设置了 content inset，这将允许 content offset 将 refresh control 弹回到可滚动区域。当刷新动作被初始化时，content inset 已经被校正过，所以 content offset 的最小值包含了完整的 refresh control。当刷新完成后，content inset 恢复正常，content offset 也跟着适应大小，这里并不需要为content size 做数学计算。(这里可能比较难理解，建议看看 EGOTableViewPullRefresh 这样的类库就应该明白了)</p>
+
+<p>如何在自己的代码中使用 content inset？当键盘在屏幕上时，有一个很好的用途：你想要设置一个紧贴屏幕的用户界面。当键盘出现在屏幕上时，你损失了几百个像素的空间，键盘下面的东西全都被挡住了。</p>
+
+<p>现在，scroll view 的 bounds 并没有改变，content size 也并没有改变(也不需要改变)。但是用户不能滚动 scroll view。考虑一下之前一个公式：content offset 的最大值是 content size 和 bounds 的差。如果他们相等，现在 content offset 的最大值是 {x:0, y:0}.</p>
+
+<p>现在开始出绝招，将界面放入一个 scroll view。scroll view 的 content size 仍然和 scroll view 的 bounds 一样大。当键盘出现在屏幕上时，你设置 content inset 的底部等于键盘的高度。</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV7.png" alt="" title="" /></p>
+
+<p>这允许在 content offset 的最大值下显示滚动区域外的区域。可视区域的顶部在 scroll view bounds 的外面，因此被截取了(虽然它在屏幕之外了，但这并没有什么)。</p>
+
+<p>但愿这能让你理解一些滚动视图内部工作的原理，你对缩放感兴趣？好吧，我们今天不会谈论它，但是这儿有一个有趣的小窍门：检查 <a href="http://developer.apple.com/library/ios/#documentation/uikit/reference/UIScrollViewDelegate_Protocol/Reference/UIScrollViewDelegate.html#//apple_ref/doc/uid/TP40006923-CH3-SW7"><code>viewForZoomingInScrollView:</code></a> 方法返回视图的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/transform">transform</a> 属性。你将再次发现 scroll view 只是聪明的利用了 UIView 已经存在的属性。</p>
+
+<p>相关链接(强烈推荐)：</p>
+
+<p><a href="http://bbs.weiphone.com/read-htm-tid-6880069.html">计算机图形渲染的流程</a></p>
+
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[iOS之玩转字符串]]></title>
@@ -1401,785 +1532,6 @@ dispatch_async(dispatch_get_main_queue(), ^{
 <p>我们没有办法追踪有多少个操作在队列中等待运行（除非你手动添加了追踪这个的代码），我们也没有现成的方法来在接收到低内存通告的时候来取消操作、这时候，切换到 NSOperations 可以使代码变得容易调试得多，并且允许我们在不添加手动管理的代码的情况下，做到对操作的追踪和取消。</p>
 
 <p>当然也有一些不好的地方，比如你不能在你的 <code>NSOperationQueue</code> 中设置目标队列（就像 <code>DISPATCH_QUEUE_PRIORITY_BACKGROUND</code> 之于 缓速 I/O 那样）。但这只是为了可调试性的一点小代价，而事实上这也帮助你避免遇到<a href="http://objccn.io/issue-2-1/#priority_inversion">优先级反转</a>的问题。我甚至不推荐直接使用已经包装好的 <code>NSBlockOperation</code> 的 API，而是建议使用一个 NSOperation 的真正的子类，包括实现其 description。诚然，这样做工作量会大一些，但是能输出所有运行中/准备运行的操作是及其有用的。</p>
-
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[底层并发API]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/di-ceng-bing-fa-api/"/>
-    <updated>2014-04-09T15:56:29+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/di-ceng-bing-fa-api</id>
-    <content type="html"><![CDATA[<p>这篇文章里，我们将会讨论一些 iOS 和 OS X 都可以使用的底层 API。除了 <code>dispatch_once</code> ，我们一般不鼓励使用其中的任何一种技术。</p>
-
-<p>但是我们想要揭示出表面之下深层次的一些可利用的方面。这些底层的 API 提供了大量的灵活性，随之而来的是大量的复杂度和更多的责任。在我们的文章<a href="http:/objccn.io/issue-2-2/">常见的后台实践</a>中提到的高层的 API 和模式能够让你专注于手头的任务并且免于大量的问题。通常来说，高层的 API 会提供更好的性能，除非你能承受起使用底层 API 带来的纠结于调试代码的时间和努力。</p>
-
-<p>尽管如此，了解深层次下的软件堆栈工作原理还是有很有帮助的。我们希望这篇文章能够让你更好的了解这个平台，同时，让你更加感谢这些高层的 API。</p>
-
-<p>首先，我们将会分析大多数组成 <em>Grand Central Dispatch</em> 的部分。它已经存在了好几年，并且苹果公司持续添加功能并且改善它。现在苹果已经将其开源，这意味着它对其他平台也是可用的了。最后，我们将会看一下<a href="#atomic_operations">原子操作</a>——另外的一种底层代码块的集合。</p>
-
-<p>或许关于并发编程最好的书是 <em>M. Ben-Ari</em> 写的《Principles of Concurrent Programming》,<a href="https://en.wikipedia.org/wiki/Special:BookSources/0-13-701078-8">ISBN 0-13-701078-8</a>。如果你正在做任何与并发编程有关的事情，你需要读一下这本书。这本书已经30多年了，仍然非常卓越。书中简洁的写法，优秀的例子和练习，带你领略并发编程中代码块的基本原理。这本书现在已经绝版了，但是它的一些复印版依然广为流传。有一个新版书，名字叫《Principles of Concurrent and Distributed Programming》,<a href="https://en.wikipedia.org/wiki/Special:BookSources/0-321-31283-X">ISBN 0-321-31283-X</a>,好像有很多相同的地方，不过我还没有读过。</p>
-
-<h2>从前...</h2>
-
-<p>或许GCD中使用最多并且被滥用功能的就是 <code>dispatch_once</code> 了。正确的用法看起来是这样的：</p>
-<p><code>objc
-+ (UIColor *)boringColor;
-{
-    static UIColor *color;
-    static dispatch_once_t onceToken;
-    dispatch_once(&amp;amp;onceToken, ^{
-        color = [UIColor colorWithRed:0.380f green:0.376f blue:0.376f alpha:1.000f];
-    });
-    return color;
-}
-</code></p>
-
-<p>上面的 block 只会运行一次。并且在连续的调用中，这种检查是很高效的。你能使用它来初始化全局数据比如单例。要注意的是，使用 <code>dispatch_once_t</code> 会使得测试变得非常困难（单例和测试不是很好配合）。</p>
-
-<p>要确保 <code>onceToken</code> 被声明为 <code>static</code> ，或者有全局作用域。任何其他的情况都会导致无法预知的行为。换句话说，<strong>不要</strong>把 <code>dispatch_once_t</code> 作为一个对象的成员变量，或者类似的情形。</p>
-
-<p>退回到远古时代（其实也就是几年前），人们会使用 <code>pthread_once</code> ，因为 <code>dispatch_once_t</code> 更容易使用并且不易出错，所以你永远都不会再用到 <code>pthread_once</code> 了。</p>
-
-<h2>延后执行</h2>
-
-<p>另一个常见的小伙伴就是 <code>dispatch_after</code> 了。它使工作延后执行。它是很强大的，但是要注意：你很容易就陷入到一堆麻烦中。一般用法是这样的：</p>
-<p><code>objc
-- (void)foo
-{
-    double delayInSeconds = 2.0;
-    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t) (delayInSeconds * NSEC_PER_SEC));
-    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-        [self bar];
-    });
-}
-</code></p>
-
-<p>第一眼看上去这段代码是极好的。但是这里存在一些缺点。我们不能（直接）取消我们已经提交到 <code>dispatch_after</code> 的代码，它将会运行。</p>
-
-<p>另外一个需要注意的事情就是，当人们使用 <code>dispatch_after</code> 去处理他们代码中存在的时序 bug 时，会存在一些有问题的倾向。一些代码执行的过早而你很可能不知道为什么会这样，所以你把这段代码放到了 <code>dispatch_after</code> 中，现在一切运行正常了。但是几周以后，之前的工作不起作用了。由于你并不十分清楚你自己代码的执行次序，调试代码就变成了一场噩梦。所以不要像上面这样做。大多数的情况下，你最好把代码放到正确的位置。如果代码放到 <code>-viewWillAppear</code> 太早，那么或许 <code>-viewDidAppear</code> 就是正确的地方。</p>
-
-<p>通过在自己代码中建立直接调用（类似 <code>-viewDidAppear</code> ）而不是依赖于  <code>dispatch_after</code> ，你会为自己省去很多麻烦。</p>
-
-<p>如果你需要一些事情在某个特定的时刻运行，那么 <code>dispatch_after</code> 或许会是个好的选择。确保同时考虑了 <code>NSTimer</code>，这个API虽然有点笨重，但是它允许你取消定时器的触发。</p>
-
-<h2>队列</h2>
-
-<p>GCD 中一个基本的代码块就是队列。下面我们会给出一些如何使用它的例子。当使用队列的时候，给它们一个明显的标签会帮自己不少忙。在调试时，这个标签会在 Xcode (和 lldb)中显示，这会帮助你了解你的 app 是由什么决定的：</p>
-
-<p>```objc
-- (id)init;
-{
-    self = [super init];
-    if (self != nil) {
-        NSString *label = [NSString stringWithFormat:@”%@.isolation.%p”, [self class], self];
-        self.isolationQueue = dispatch_queue_create([label UTF8String], 0);</p>
-
-<pre><code>    label = [NSString stringWithFormat:@"%@.work.%p", [self class], self];
-    self.workQueue = dispatch_queue_create([label UTF8String], 0);
-}
-return self; } ```
-</code></pre>
-
-<p>队列可以是并行也可以是串行的。默认情况下，它们是串行的，也就是说，任何给定的时间内，只能有一个单独的 block 运行。这就是隔离队列（原文：isolation queues。译注）的运行方式。队列也可以是并行的，也就是同一时间内允许多个 block 一起执行。</p>
-
-<p>GCD 队列的内部使用的是线程。GCD 管理这些线程，并且使用 GCD 的时候，你不需要自己创建线程。但是重要的外在部分 GCD 会呈现给你，也就是用户 API，一个很大不同的抽象层级。当使用 GCD 来完成并发的工作时，你不必考虑线程方面的问题，取而代之的，只需考虑队列和功能点（提交给队列的 block）。虽然往下深究，依然都是线程，但是 GCD 的抽象层级为你惯用的编码提供了更好的方式。</p>
-
-<p>队列和功能点同时解决了一个连续不断的扇出的问题：如果我们直接使用线程，并且想要做一些并发的事情，我们很可能将我们的工作分成 100 个小的功能点，然后基于可用的 CPU 内核数量来创建线程，假设是 8。我们把这些功能点送到这 8 个线程中。当我们处理这些功能点时，可能会调用一些函数作为功能的一部分。写那个函数的人也想要使用并发，因此当你调用这个函数的时候，这个函数也会创建 8 个线程。现在，你有了 8 × 8 = 64 个线程，尽管你只有 8 个CPU内核——也就是说任何时候只有12%的线程实际在运行而另外88%的线程什么事情都没做。使用 GCD 你就不会遇到这种问题，当系统关闭 CPU 内核以省电时，GCD 甚至能够相应地调整线程数量。</p>
-
-<p>GCD 通过创建所谓的<a href="http://en.wikipedia.org/wiki/Thread_pool_pattern">线程池</a>来大致匹配 CPU 内核数量。要记住，线程的创建并不是无代价的。每个线程都需要占用内存和内核资源。这里也有一个问题：如果你提交了一个 block 给 GCD，但是这段代码阻塞了这个线程，那么这个线程在这段时间内就不能用来完成其他工作——它被阻塞了。为了确保功能点在队列上一直是执行的，GCD 不得不创建一个新的线程，并把它添加到线程池。</p>
-
-<p>如果你的代码阻塞了许多线程，这会带来很大的问题。首先，线程消耗资源，此外，创建线程会变得代价高昂。创建过程需要一些时间。并且在这段时间中，GCD 无法以全速来完成功能点。有不少能够导致线程阻塞的情况，但是最常见的情况与 I/O 有关，也就是从文件或者网络中读写数据。正是因为这些原因，你不应该在GCD队列中以阻塞的方式来做这些操作。看一下下面的<a href="#input_output">输入输出</a>段落去了解一些关于如何以 GCD 运行良好的方式来做 I/O 操作的信息。</p>
-
-<h3>目标队列</h3>
-
-<p>你能够为你创建的任何一个队列设置一个<strong>目标队列</strong>。这会是很强大的，并且有助于调试。</p>
-
-<p>为一个类创建它自己的队列而不是使用全局的队列被普遍认为是一种好的风格。这种方式下，你可以设置队列的名字，这让调试变得轻松许多—— Xcode 可以让你在 Debug Navigator 中看到所有的队列名字，如果你直接使用 <code>lldb</code>。<code>(lldb) thread list</code> 命令将会在控制台打印出所有队列的名字。一旦你使用大量的异步内容，这会是非常有用的帮助。</p>
-
-<p>使用私有队列同样强调封装性。这时你自己的队列，你要自己决定如何使用它。</p>
-
-<p>默认情况下，一个新创建的队列转发到默认优先级的全局队列中。我们就将会讨论一些有关优先级的东西。</p>
-
-<p>你可以改变你队列转发到的队列——你可以设置自己队列的目标队列。以这种方式，你可以将不同队列链接在一起。你的 <code>Foo</code> 类有一个队列，该队列转发到 <code>Bar</code> 类的队列，<code>Bar</code> 类的队列又转发到全局队列。</p>
-
-<p>当你为了隔离目的而使用一个队列时，这会非常有用。<code>Foo</code> 有一个隔离队列，并且转发到 <code>Bar</code> 的隔离队列，与 <code>Bar</code> 的隔离队列所保护的有关的资源，会自动成为线程安全的。 </p>
-
-<p>如果你希望多个 block 同时运行，那要确保你自己的队列是并发的。同时需要注意，如果一个队列的目标队列是串行的（也就是非并发），那么实际上这个队列也会转换为一个串行队列。</p>
-
-<h3>优先级</h3>
-
-<p>你可以通过设置目标队列为一个全局队列来改变自己队列的优先级，但是你应该克制这么做的冲动。</p>
-
-<p>在大多数情况下，改变优先级不会使事情照你预想的方向运行。一些看起简单的事情实际上是一个非常复杂的问题。你很容易会碰到一个叫做<a href="http://en.wikipedia.org/wiki/Priority_inversion">优先级反转</a>的情况。我们的文章<a href="http://www.objc.io/issue-2/concurrency-apis-and-pitfalls.html#priority_inversion">《Concurrent Programming: APIs and Challenges》</a>（译注：参见objccn的译文<a href="http://objccn.io/issue-2-1">《并发编程：API 及挑战》</a>）有更多关于这个问题的信息，这个问题几乎导致了NASA的探路者火星漫游器变成砖头。</p>
-
-<p>此外，使用 <code>DISPATCH_QUEUE_PRIORITY_BACKGROUND</code> 队列时，你需要格外小心。除非你理解了 <em>throttled I/O</em> 和 <em>background status as per setpriority(2)</em> 的意义，否则不要使用它。不然，系统可能会以难以忍受的方式终止你的 app 的运行。打算以不干扰系统其他正在做 I/O 操作的方式去做 I/O 操作时，一旦和优先级反转情况结合起来，这会变成一种危险的情况。</p>
-
-<h2>隔离</h2>
-
-<p>隔离队列是 GCD 队列使用中非常普遍的一种模式。这里有两个变种。</p>
-
-<h3>资源保护</h3>
-
-<p>多线程编程中，最常见的情形是你有一个资源，每次只有一个线程被允许访问这个资源。</p>
-
-<p>我们在<a href="http://www.objc.io/issue-2/concurrency-apis-and-pitfalls.html#shared_resources">有关多线程技术的文章</a>（译注：参见 objccn <a href="http://objccn.io/issue-2-1">译文</a>）中讨论了<em>资源</em>在并发编程中意味着什么，它通常就是一块内存或者一个对象，每次只有一个线程可以访问它。</p>
-
-<p>举例来说，我们需要以多线程（或者多个队列）方式访问 <code>NSMutableDictionary</code> 。我们可能会照下面的代码来做：</p>
-
-<p>```objc
-- (void)setCount:(NSUInteger)count forKey:(NSString *)key
-{
-    key = [key copy];
-    dispatch_async(self.isolationQueue, ^(){
-        if (count == 0) {
-            [self.counts removeObjectForKey:key];
-        } else {
-            self.counts[key] = @(count);
-        }
-    });
-}</p>
-
-<ul>
-  <li>(NSUInteger)countForKey:(NSString *)key;
-{
-  __block NSUInteger count;
-  dispatch_sync(self.isolationQueue, ^(){
-      NSNumber *n = self.counts[key];
-      count = [n unsignedIntegerValue];
-  });
-  return count;
-}
-```</li>
-</ul>
-
-<p>通过以上代码，只有一个线程可以访问 <code>NSMutableDictionary</code> 的实例。</p>
-
-<p>注意以下四点：</p>
-
-<ol>
-<li>不要使用上面的代码，请先阅读<a href="#multiple_readers_single_writer">多读单写</a>和<a href="#contention">锁竞争</a>  </li>
-<li>我们使用 <code>async</code> 方式来保存值，这很重要。我们不想也不必阻塞当前线程只是为了等待<em>写操作</em>完成。当读操作时，我们使用 <code>sync</code> 因为我们需要返回值。  </li>
-<li>从函数接口可以看出，<code>-setCount:forKey:</code> 需要一个 <code>NSString</code> 参数，用来传递给 <code>dispatch_async</code>。函数调用者可以自由传递一个 <code>NSMutableString</code> 值并且能够在函数返回后修改它。因此我们<em>必须</em>对传入的字符串使用 <em>copy</em> 操作以确保函数能够正确地工作。如果传入的字符串不是可变的（也就是正常的 <code>NSString</code> 类型），调用<em>copy</em>基本上是个空操作。  </li>
-<li><code>isolationQueue</code> 创建时，参数 <code>dispatch_queue_attr_t</code> 的值必须是<em>DISPATCH_QUEUE_SERIAL</em>（或者0）。</li>
-</ol>
-
-<p><a id="multiple_readers_single_writer" name="multiple_readers_single_writer"> </a>  </p>
-
-<h3>单一资源的多读单写</h3>
-
-<p>我们能够改善上面的那个例子。GCD 有可以让多线程运行的并发队列。我们能够安全地使用多线程来从 <code>NSMutableDictionary</code> 中读取只要我们不同时修改它。当我们需要改变这个字典时，我们使用 <em>barrier</em> 来分发这个 block。这样的一个 block 的运行时机是，在它之前所有计划好的 block 完成之后，并且在所有它后面的 block 运行之前。</p>
-
-<p>以如下方式创建队列：</p>
-
-<p><code>objc
-self.isolationQueue = dispatch_queue_create([label UTF8String], DISPATCH_QUEUE_CONCURRENT);
-</code></p>
-
-<p>并且用以下代码来改变setter函数：</p>
-
-<p><code>objc
-- (void)setCount:(NSUInteger)count forKey:(NSString *)key
-{
-    key = [key copy];
-    dispatch_barrier_async(self.isolationQueue, ^(){
-        if (count == 0) {
-            [self.counts removeObjectForKey:key];
-        } else {
-            self.counts[key] = @(count);
-        }
-    });
-}
-</code></p>
-
-<p>当使用并发队列时，要确保所有的 <em>barrier</em> 调用都是 <em>async</em> 的。如果你使用 <code>dispatch_barrier_sync</code> ，那么你很可能会使你自己（更确切的说是，你的代码）产生死锁。写操作<em>需要</em>  barrier，并且<em>可以</em>是 async 的。</p>
-
-<p><a id="contention" name="contention"> </a>  </p>
-
-<h3>锁竞争</h3>
-
-<p>首先，这里有一个警告：上面这个例子中我们保护的资源是一个  <code>NSMutableDictionary</code>，出于这样的目的，这段代码运行地相当不错。但是在真实的代码中，把隔离放到正确的复杂度层级下是很重要的。</p>
-
-<p>如果你对 <code>NSMutableDictionary</code> 的访问操作变得非常频繁，你会碰到一个已知的叫做锁竞争的问题。锁竞争并不是只是在 GCD 和队列下才变得特殊，任何使用了锁机制的程序都会碰到同样的问题——只不过不同的锁机制会以不同的方式碰到。</p>
-
-<p>所有对  <code>dispatch_async</code>，<code>dispatch_sync</code> 等等的调用都需要完成某种形式的锁——以确保仅有一个线程或者特定的线程运行指定的代码。GCD 某些程序上可以使用时序(译注：原词为 scheduling)来避免使用锁，但在最后，问题只是稍有变化。根本问题仍然存在：如果你有<strong>大量</strong>的线程在相同时间去访问同一个锁或者队列，你就会看到性能的变化。性能会严重下降。</p>
-
-<p>你应该从直接复杂层次中隔离开。当你发现了性能下降，这明显表明代码中存在设计问题。这里有两个开销需要你来平衡。第一个是独占临界区资源太久的开销，以至于别的线程都因为进入临界区的操作而阻塞。第二个是太频繁出入临界区的开销。在 GCD 的世界里，第一种开销的情况就是一个 block 在隔离队列中运行，它可能潜在的阻塞了其他将要在这个隔离队列中运行的代码。第二种开销对应的就是调用 <code>dispatch_async</code> 和 <code>dispatch_sync</code> 。无论再怎么优化，这两个操作都不是无代价的。</p>
-
-<p>令人忧伤的，不存在通用的标准来指导如何正确的平衡，你需要自己评测和调整。启动 Instruments 观察你的 app 忙于什么操作。</p>
-
-<p>如果你看上面例子中的代码，我们的临界区代码仅仅做了很简单的事情。这可能是也可能不是好的方式，依赖于它怎么被使用。</p>
-
-<p>在你自己的代码中，要考虑自己是否在更高的层次保护了隔离队列。举个例子，类 <code>Foo</code> 有一个隔离队列并且它本身保护着对 <code>NSMutableDictionary</code> 的访问，代替的，可以有一个用到了 <code>Foo</code> 类的 <code>Bar</code> 类有一个隔离队列保护所有对类 <code>Foo</code> 的使用。换句话说，你可以把类 <code>Foo</code> 变为非线程安全的（没有隔离队列），并在 <code>Bar</code> 中，使用一个隔离队列来确保任何时刻只能有一个线程使用 <code>Foo</code> 。</p>
-
-<p><a name="async" id="async"> </a>  </p>
-
-<h3>全都使用异步分发</h3>
-
-<p>我们在这稍稍转变以下话题。正如你在上面看到的，你可以同步和异步地分发一个  block，一个工作单元。我们在[《article about concurrency APIs and pitfalls》[http://www.objc.io/issue-2/concurrency-apis-and-pitfalls.html#dead_locks]（译注：参见 objccn 的<a href="http://objccn.io/issue-2-1">译文</a>）中讨论的一个非常普遍的问题就是死锁。在 GCD 中，以同步分发的方式非常容易出现这种情况。见下面的代码：</p>
-
-<p><code>objc
-dispatch_queue_t queueA; // assume we have this
-dispatch_sync(queueA, ^(){
-    dispatch_sync(queueA, ^(){
-        foo();
-    });
-});
-</code></p>
-
-<p>一旦我们进入到第二个 <code>dispatch_sync</code> 就会发生死锁。我们不能分发到queueA，因为有人（当前线程）正在队列中并且永远不会离开。但是有更隐晦的产生死锁方式：</p>
-
-<p>```objc
-dispatch_queue_t queueA; // assume we have this
-dispatch_queue_t queueB; // assume we have this</p>
-
-<p>dispatch_sync(queueA, ^(){
-    foo();
-});</p>
-
-<p>void foo(void)
-{
-    dispatch_sync(queueB, ^(){
-        bar();
-    });
-}</p>
-
-<p>void bar(void)
-{
-    dispatch_sync(queueA, ^(){
-        baz();
-    });
-}
-```</p>
-
-<p>单独的每次调用 <code>dispatch_sync()</code> 看起来都没有问题，但是一旦组合起来，就会发生死锁。</p>
-
-<p>这是使用同步分发存在的固有问题，如果我们使用异步分发，比如：</p>
-
-<p><code>objc
-dispatch_queue_t queueA; // assume we have this
-dispatch_async(queueA, ^(){
-    dispatch_async(queueA, ^(){
-        foo();
-    });
-});
-</code></p>
-
-<p>一切运行正常。<em>异步调用不会产生死锁</em>。因此值得我们在任何可能的时候都使用异步分发。我们使用一个异步调用结果 block 的函数，来代替编写一个返回值（必须要用同步）的方法或者函数。这种方式，我们会有更少发生死锁的可能性。</p>
-
-<p>异步调用的副作用就是它们很难调试。当我们在调试器里中止代码运行，回溯并查看已经变得没有意义了。</p>
-
-<p>要牢记这些。死锁通常是最难处理的问题。</p>
-
-<h3 id="api">如何写出好的异步 API</h3>
-
-<p>如果你正在给设计一个给别人（或者是给自己）使用的 API，你需要记住几种好的实践。</p>
-
-<p>正如我们刚刚提到的，你需要倾向于异步 API。当你创建一个 API，它会在你的控制之外以各种方式调用，如果你的代码能产生死锁，那么死锁就会发生。</p>
-
-<p>如果你需要写的函数或者方法，那么让它们调用 <code>dispatch_async()</code> 。不要让你的函数调用者来这么做，这个调用应该在你的方法或者函数中来做。</p>
-
-<p>如果你的方法或函数有一个返回值，异步地将其传递给一个回调处理程序。这个 API 应该是这样的，你的方法或函数同时持有一个结果 block 和一个将结果传递过去的队列。你函数的调用者不需要自己来做分发。这么做的原因很简单：几乎所有时间，函数调用都应该在一个适当的队列中，而且以这种方式编写的代码是很容易阅读的。总之，你的函数将会（必须）调用 <code>dispatch_async()</code> 去运行回调处理程序，所以它同时也可能在需要调用的队列上做这些工作。</p>
-
-<p>如果你写一个类，让你类的使用者设置一个回调处理队列或许会是一个好的选择。你的代码可能像这样：</p>
-
-<p><code>objc
-- (void)processImage:(UIImage *)image completionHandler:(void(^)(BOOL success))handler;
-{
-    dispatch_async(self.isolationQueue, ^(void){
-        // do actual processing here
-        dispatch_async(self.resultQueue, ^(void){
-            handler(YES);
-        });
-    });
-}
-</code></p>
-
-<p>如果你以这种方式来写你的类，让类之间协同工作就会变得容易。如果类 A 使用了类 B，它会把自己的隔离队列设置为 B 的回调队列。</p>
-
-<h2>迭代执行</h2>
-
-<p>如果你正在倒弄一些数字，并且手头上的问题可以拆分出同样性质的部分，那么 <code>dispatch_apply</code> 会很有用。</p>
-
-<p>如果你的代码看起来是这样的：</p>
-
-<p><code>objc
-for (size_t y = 0; y &amp;lt; height; ++y) {
-    for (size_t x = 0; x &amp;lt; width; ++x) {
-        // Do something with x and y here
-    }
-}
-</code></p>
-
-<p>小小的改动或许就可以让它运行的更快：</p>
-
-<p><code>objc
-dispatch_apply(height, dispatch_get_global_queue(0, 0), ^(size_t y) {
-    for (size_t x = 0; x &amp;lt; width; x += 2) {
-        // Do something with x and y here
-    }
-});
-</code></p>
-
-<p>代码运行良好的程度取决于你在循环内部做的操作。</p>
-
-<p>block 中运行的工作必须是非常重要的，否则这个头部信息就显得过于繁重了。除非代码受到计算带宽的约束，每个工作单元为了很好适应缓存大小而读写的内存都是临界的。这会对性能会带来显著的影响。受到临界区约束的代码可能不会很好地运行。详细讨论这些问题已经超出了这篇文章的范围。使用 <code>dispatch_apply</code> 可能会对性能提升有所帮助，但是性能优化本身就是个很复杂的主题。维基百科上有一篇关于 <a href="https://en.wikipedia.org/wiki/Memory_bound">Memory-bound function</a> 的文章。内存访问速度在 L2，L3 和主存上变化很显著。当你的数据访问模式与缓存大小不匹配时，10倍性能下降的情况并不少见。</p>
-
-<h2>组</h2>
-
-<p>很多时候，你发现需要将异步的 block 组合起来去完成一个给定的任务。这些任务中甚至有些是并行的。现在，如果你想要在这些任务都执行完成后运行一些代码，"groups" 可以完成这项任务。看这里的例子：</p>
-
-<p>```objc
-dispatch_group_t group = dispatch_group_create();</p>
-
-<p>dispatch_queue_t queue = dispatch_get_global_queue(0, 0);
-dispatch_group_async(group, queue, ^(){
-    // Do something that takes a while
-    [self doSomeFoo];
-    dispatch_group_async(group, dispatch_get_main_queue(), ^(){
-        self.foo = 42;
-    });
-});
-dispatch_group_async(group, queue, ^(){
-    // Do something else that takes a while
-    [self doSomeBar];
-    dispatch_group_async(group, dispatch_get_main_queue(), ^(){
-        self.bar = 1;
-    });
-});</p>
-
-<p>// This block will run once everything above is done:
-dispatch_group_notify(group, dispatch_get_main_queue(), ^(){
-    NSLog(@”foo: %d”, self.foo);
-    NSLog(@”bar: %d”, self.bar);
-});
-```</p>
-
-<p>需要注意的重要事情是，所有的这些都是非阻塞的。我们从未让当前的线程一直等待直到别的任务做完。恰恰相反，我们只是简单的将多个 block 放入队列。由于代码不会阻塞，所以就不会产生死锁。</p>
-
-<p>同时需要注意的是，在这个小并且简单的例子中，我们是怎么在不同的队列间进切换的。</p>
-
-<h3 id="apidispatch_group_t">对现有API使用 dispatch<em>group</em>t</h3>
-
-<p>一旦你将  groups 作为你的工具箱中的一部分，你可能会怀疑为什么大多数的异步API不把 <code>dispatch_group_t</code> 作为一个可选参数。这没有什么无法接受的理由，仅仅是因为自己添加这个功能太简单了，但是你还是要小心以确保自己使用 groups 的代码是成对出现的。</p>
-
-<p>举例来说，我们可以给 Core Data 的 <code>-performBlock:</code> API 函数添加上 groups，就像这样：</p>
-
-<p><code>objc
-- (void)withGroup:(dispatch_group_t)group performBlock:(dispatch_block_t)block
-{
-    if (group == NULL) {
-        [self performBlock:block];
-    } else {
-        dispatch_group_enter(group);
-        [self performBlock:^(){
-            block();
-            dispatch_group_leave(group);
-        }];
-    }
-}
-</code></p>
-
-<p>当 Core Data 上的一系列操作(很可能和其他的代码组合起来)完成以后，我们可以使用 <code>dispatch_group_notify</code> 来运行一个 block 。</p>
-
-<p>很明显，我们可以给 <code>NSURLConnection</code> 做同样的事情：</p>
-
-<p><code>objc
-+ (void)withGroup:(dispatch_group_t)group 
-        sendAsynchronousRequest:(NSURLRequest *)request 
-        queue:(NSOperationQueue *)queue 
-        completionHandler:(void (^)(NSURLResponse*, NSData*, NSError*))handler
-{
-    if (group == NULL) {
-        [self sendAsynchronousRequest:request 
-                                queue:queue 
-                    completionHandler:handler];
-    } else {
-        dispatch_group_enter(group);
-        [self sendAsynchronousRequest:request 
-                                queue:queue 
-                    completionHandler:^(NSURLResponse *response, NSData *data, NSError *error){
-            handler(response, data, error);
-            dispatch_group_leave(group);
-        }];
-    }
-}
-</code></p>
-
-<p>为了能正常工作，你需要确保:</p>
-
-<ul>
-<li><code>dispatch_group_enter()</code> 必须要在 <code>dispatch_group_leave()</code>之前运行。</li>
-<li><code>dispatch_group_enter()</code> 和 <code>dispatch_group_leave()</code> 一直是成对出现的（就算有错误产生时）。</li>
-</ul>
-
-<h2>事件源</h2>
-
-<p>GCD 有一个较少人知道的特性：事件源 <code>dispatch_source_t</code>。</p>
-
-<p>跟 GCD 一样，它也是很底层的东西。当你需要用到它时，它会变得极其有用。它的一些使用是秘传招数，我们将会接触到一部分的使用。但是大部分事件源在 iOS 平台不是很有用，因为在 iOS 平台有诸多限制，你无法启动进程（因此就没有必要监视进程），也不能在你的 app bundle 之外写数据（因此也就没有必要去监视文件）等等。</p>
-
-<p>GCD 事件源是以极其资源高效的方式实现的。</p>
-
-<h3>监视进程</h3>
-
-<p>如果一些进程正在运行而你想知道他们什么时候存在，GCD 能够做到这些。你也可以使用 GCD 来检测进程什么时候分叉，也就是产生子进程或者传送给了进程的一个信号（比如 <code>SIGTERM</code>）。</p>
-
-<p><code>objc
-NSRunningApplication *mail = [NSRunningApplication 
-  runningApplicationsWithBundleIdentifier:@"com.apple.mail"];
-if (mail == nil) {
-    return;
-}
-pid_t const pid = mail.processIdentifier;
-self.source = dispatch_source_create(DISPATCH_SOURCE_TYPE_PROC, pid, 
-  DISPATCH_PROC_EXIT, DISPATCH_TARGET_QUEUE_DEFAULT);
-dispatch_source_set_event_handler(self.source, ^(){
-    NSLog(@"Mail quit.");
-});
-dispatch_resume(self.source);
-</code></p>
-
-<p>当 Mail.app 退出的时候，这个程序会打印出 <strong>Mail quit.</strong>。</p>
-
-<p>注意：在所有的事件源被传递到你的事件处理器之前，必须调用 <code>dispatch_resume()</code>。</p>
-
-<p><a name="watching_files" id="watching_files"> </a>  </p>
-
-<h3>监视文件</h3>
-
-<p>这种可能性是无穷的。你能直接监视一个文件的改变，并且当改变发生时事件源的事件处理将会被调用。</p>
-
-<p>你也可以使用它来监视文件夹，比如创建一个 <em>watch folder</em>：</p>
-
-<p><code>objc
-NSURL *directoryURL; // assume this is set to a directory
-int const fd = open([[directoryURL path] fileSystemRepresentation], O_EVTONLY);
-if (fd &amp;lt; 0) {
-    char buffer[80];
-    strerror_r(errno, buffer, sizeof(buffer));
-    NSLog(@"Unable to open \"%@\": %s (%d)", [directoryURL path], buffer, errno);
-    return;
-}
-dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, fd, 
-  DISPATCH_VNODE_WRITE | DISPATCH_VNODE_DELETE, DISPATCH_TARGET_QUEUE_DEFAULT);
-dispatch_source_set_event_handler(source, ^(){
-    unsigned long const data = dispatch_source_get_data(source);
-    if (data &amp;amp; DISPATCH_VNODE_WRITE) {
-        NSLog(@"The directory changed.");
-    }
-    if (data &amp;amp; DISPATCH_VNODE_DELETE) {
-        NSLog(@"The directory has been deleted.");
-    }
-});
-dispatch_source_set_cancel_handler(source, ^(){
-    close(fd);
-});
-self.source = source;
-dispatch_resume(self.source);
-</code></p>
-
-<p>你应该总是添加 <code>DISPATCH_VNODE_DELETE</code> 去检测文件或者文件夹是否已经被删除——然后就停止监听。</p>
-
-<h3>定时器</h3>
-
-<p>大多数情况下，对于定时事件你会选择 <code>NSTimer</code>。定时器的GCD版本是底层的，它会给你更多控制权——但要小心使用。</p>
-
-<p>需要特别重点指出的是，为了让 OS 节省电量，需要为 GCD 的定时器接口指定一个低的余地值(译注：原文leeway value)。如果你不必要的指定了一个低余地值，将会浪费更多的电量。</p>
-
-<p>这里我们设定了一个5秒的定时器，并允许有十分之一秒的余地值：</p>
-
-<p><code>objc
-dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 
-  0, 0, DISPATCH_TARGET_QUEUE_DEFAULT);
-dispatch_source_set_event_handler(source, ^(){
-    NSLog(@"Time flies.");
-});
-dispatch_time_t start
-dispatch_source_set_timer(source, DISPATCH_TIME_NOW, 5ull * NSEC_PER_SEC, 
-  100ull * NSEC_PER_MSEC);
-self.source = source;
-dispatch_resume(self.source);
-</code></p>
-
-<h3>取消</h3>
-
-<p>所有的事件源都允许你添加一个 <em>cancel handler</em> 。这对清理你为事件源创建的任何资源都是很有帮助的，比如关闭文件描述符。GCD 保证在 <em>cancel handle</em>  调用前，所有的事件处理都已经完成调用。</p>
-
-<p>参考上面的<a href="#watching_files">监视文件例子</a>中对 <code>dispatch_source_set_cancel_handler()</code> 的使用。</p>
-
-<p><a id="input_output" name="input_output"> </a>  </p>
-
-<h2>输入输出</h2>
-
-<p>写出能够在繁重的 I/O 处理情况下运行良好的代码是一件非常棘手的事情。GCD 有一些能够帮上忙的地方。不会涉及太多的细节，我们只简单的分析下问题是什么，GCD 是怎么处理的。</p>
-
-<p>习惯上，当你从一个网络套接字中读取数据时，你要么做一个阻塞的读操作，也就是让你个线程一直等待直到数据变得可用，或者是做反复的轮询。这两种方法都是很浪费资源并且无法度量。然而，<code>kqueue</code> 通过当数据变得可用时传递一个事件解决了轮询的问题，GCD 也采用了同样的方法，但是更加优雅。当向套接字写数据时，同样的问题也存在，这时你要么做阻塞的写操作，要么等待套接字直到能够接收数据。</p>
-
-<p>在处理 I/O 时，还有一个问题就是数据是以数据块的形式到达的。当从网络中读取数据时，依据 MTU([]最大传输单元](https://en.wikipedia.org/wiki/Maximum<em>transmission</em>unit))，数据块典型的大小是在1.5K字节左右。这使得数据块内可以是任何内容。一旦数据到达，你通常只是对跨多个数据块的内容感兴趣。而且通常你会在一个大的缓冲区里将数据组合起来然后再进行处理。假设（人为例子）你收到了这样8个数据块：</p>
-
-<pre><code>0: HTTP/1.1 200 OK\r\nDate: Mon, 23 May 2005 22:38
-1: :34 GMT\r\nServer: Apache/1.3.3.7 (Unix) (Red-H
-2: at/Linux)\r\nLast-Modified: Wed, 08 Jan 2003 23
-3: :11:55 GMT\r\nEtag: "3f80f-1b6-3e1cb03b"\r\nCon
-4: tent-Type: text/html; charset=UTF-8\r\nContent-
-5: Length: 131\r\nConnection: close\r\n\r\n&lt;html&gt;\r
-6: \n&lt;head&gt;\r\n  &lt;title&gt;An Example Page&lt;/title&gt;\r\n
-7: &lt;/head&gt;\r\n&lt;body&gt;\r\n  Hello World, this is a ve
-</code></pre>
-
-<p>如果你是在寻找 HTTP 的头部，将所有数据块组合成一个大的缓冲区并且从中查找 <code>\r\n\r\n</code> 是非常简单的。但是这样做，你会大量地复制这些数据。大量 <em>旧的</em> C 语言 API 存在的另一个问题就是，缓冲区没有所有权的概念，所以函数不得不将数据再次拷贝到自己的缓冲区中——又一次的拷贝。拷贝数据操作看起来是无关紧要的，但是当你正在做大量的 I/O 操作的时候，你会在 profiling tool(Instruments) 中看到这些拷贝操作大量出现。即使你仅仅每个内存区域拷贝一次，你还是使用了两倍的存储带宽并且占用了两倍的内存缓存。</p>
-
-<h3 id="gcd">GCD 和缓冲区</h3>
-
-<p>最直接了当的方法是使用数据缓冲区。GCD 有一个 <code>dispatch_data_t</code> 类型，在某种程度上和 Objective-C 的 <code>NSData</code> 类型很相似。但是它能做别的事情，而且更通用。</p>
-
-<p>注意，<code>dispatch_data_t</code> 可以被 retained 和 releaseed ，并且 <code>dispatch_data_t</code> <em>拥有</em>它持有的对象。</p>
-
-<p>这看起来无关紧要，但是我们必须记住 GCD 只是纯 C 的 API，并且不能使用Objective-C。通常的做法是创建一个缓冲区，这个缓冲区要么是基于栈的，要么是  <code>malloc</code> 操作分配的内存区域 —— 这些都没有所有权。</p>
-
-<p><code>dispatch_data_t</code> 的一个相当独特的属性是它可以基于零碎的内存区域。这解决了我们刚提到的组合内存的问题。当你要将两个数据对象连接起来时：</p>
-
-<p><code>objc
-dispatch_data_t a; // Assume this hold some valid data
-dispatch_data_t b; // Assume this hold some valid data
-dispatch_data_t c = dispatch_data_create_concat(a, b);
-</code></p>
-
-<p>数据对象 c 并不会将 a 和 b 拷贝到一个单独的，更大的内存区域里去。相反，它只是简单地 retain 了 a 和 b。你可以使用 <code>dispatch_data_apply</code> 来遍历对象 c 持有的内存区域：</p>
-
-<p><code>objc
-dispatch_data_apply(c, ^(dispatch_data_t region, size_t offset, const void *buffer, size_t size) {
-    fprintf(stderr, "region with offset %zu, size %zu\n", offset, size);
-    return true;
-});
-</code></p>
-
-<p>类似的，你可以使用 <code>dispatch_data_create_subrange</code> 来创建一个不做任何拷贝操作的子区域。</p>
-
-<h3>读和写</h3>
-
-<p>在 GCD 的核心里，<em>调度 I/O</em>（译注：原文为 Dispatch I/O） 与所谓的<em>通道</em>有关。调度 I/O 通道提供了一种与从文件描述符中读写不同的方式。创建这样一个通道最基本的方式就是调用：</p>
-
-<p><code>objc
-dispatch_io_t dispatch_io_create(dispatch_io_type_t type, dispatch_fd_t fd, 
-  dispatch_queue_t queue, void (^cleanup_handler)(int error));
-</code></p>
-
-<p>这将返回一个持有文件描述符的创建好的通道。在你通过它创建了通道之后，你不准以任何方式修改这个文件描述符。</p>
-
-<p>有两种从根本上不同类型的通道：流和随机存取。如果你打开了硬盘上的一个文件，你可以使用它来创建一个随机存取的通道（因为这样的文件描述符是可寻址的）。如果你打开了一个套接字，你可以创建一个流通道。</p>
-
-<p>如果你想要为一个文件创建一个通道，你最好使用需要一个路径参数的 <code>dispatch_io_create_with_path</code> ，并且让 GCD 来打开这个文件。这是有益的，因为GCD会延迟打开这个文件以限制相同时间内同时打开的文件数量。</p>
-
-<p>类似通常的 read(2)，write(2) 和 close(2) 的操作，GCD 提供了 <code>dispatch_io_read</code>，<code>dispatch_io_write</code> 和 <code>dispatch_io_close</code>。无论何时数据读完或者写完，读写操作调用一个回调 block 来结束。这些都是以非阻塞，异步 I/O 的形式高效实现的。</p>
-
-<p>在这你得不到所有的细节，但是这里会提供一个创建TCP服务端的例子：</p>
-
-<p>首先我们创建一个监听套接字，并且设置一个接受连接的事件源：</p>
-
-<p>```objc
-_isolation = dispatch_queue_create([[self description] UTF8String], 0);
-_nativeSocket = socket(PF_INET6, SOCK_STREAM, IPPROTO_TCP);
-struct sockaddr_in sin = {};
-sin.sin_len = sizeof(sin);
-sin.sin_family = AF_INET6;
-sin.sin_port = htons(port);
-sin.sin_addr.s_addr= INADDR_ANY;
-int err = bind(result.nativeSocket, (struct sockaddr *) &amp;sin, sizeof(sin));
-NSCAssert(0 &lt;= err, @””);</p>
-
-<p>_eventSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, _nativeSocket, 0, _isolation);
-dispatch_source_set_event_handler(result.eventSource, ^{
-    acceptConnection(_nativeSocket);
-});
-```</p>
-
-<p>当接受了连接，我们创建一个I/O通道：</p>
-
-<p>```objc
-typedef union socketAddress {
-    struct sockaddr sa;
-    struct sockaddr_in sin;
-    struct sockaddr_in6 sin6;
-} socketAddressUnion;</p>
-
-<p>socketAddressUnion rsa; // remote socket address
-socklen_t len = sizeof(rsa);
-int native = accept(nativeSocket, &amp;rsa.sa, &amp;len);
-if (native == -1) {
-    // Error. Ignore.
-    return nil;
-}</p>
-
-<p>_remoteAddress = rsa;
-_isolation = dispatch_queue_create([[self description] UTF8String], 0);
-_channel = dispatch_io_create(DISPATCH_IO_STREAM, native, _isolation, ^(int error) {
-    NSLog(@”An error occured while listening on socket: %d”, error);
-});</p>
-
-<p>//dispatch_io_set_high_water(_channel, 8 * 1024);
-dispatch_io_set_low_water(_channel, 1);
-dispatch_io_set_interval(_channel, NSEC_PER_MSEC * 10, DISPATCH_IO_STRICT_INTERVAL);</p>
-
-<p>socketAddressUnion lsa; // remote socket address
-socklen_t len = sizeof(rsa);
-getsockname(native, &amp;lsa.sa, &amp;len);
-_localAddress = lsa;
-```</p>
-
-<p>如果我们想要设置 <code>SO_KEEPALIVE</code>（如果使用了HTTP的keep-alive），我们需要在调用 <code>dispatch_io_create</code> 前这么做。</p>
-
-<p>创建好 I/O 通道后，我们可以设置读取处理程序：</p>
-
-<p><code>objc
-dispatch_io_read(_channel, 0, SIZE_MAX, _isolation, ^(bool done, dispatch_data_t data, int error){
-    if (data != NULL) {
-        if (_data == NULL) {
-            _data = data;
-        } else {
-            _data = dispatch_data_create_concat(_data, data);
-        }
-        [self processData];
-    }
-});
-</code></p>
-
-<p>如果所有你想做的只是读取或者写入一个文件，GCD 提供了两个方便的封装： <code>dispatch_read</code> 和 <code>dispatch_write</code> 。你需要传递给 <code>dispatch_read</code> 一个文件路径和一个在所有数据块读取后调用的 block。类似的，<code>dispatch_write</code> 需要一个文件路径和一个被写入的 <code>dispatch_data_t</code> 对象。</p>
-
-<h2>基准测试</h2>
-
-<p>在 GCD 的一个不起眼的角落，你会发现一个适合优化代码的灵巧小工具：</p>
-
-<p><code>objc
-uint64_t dispatch_benchmark(size_t count, void (^block)(void));
-</code></p>
-
-<p>把这个声明放到你的代码中，你就能够测量给定的代码执行的平均的纳秒数。例子如下：</p>
-
-<p><code>objc
-size_t const objectCount = 1000;
-uint64_t n = dispatch_benchmark(10000, ^{
-    @autoreleasepool {
-        id obj = @42;
-        NSMutableArray *array = [NSMutableArray array];
-        for (size_t i = 0; i &amp;lt; objectCount; ++i) {
-            [array addObject:obj];
-        }
-    }
-});
-NSLog(@"-[NSMutableArray addObject:] : %llu ns", n);
-</code></p>
-
-<p>在我的机器上输出了：</p>
-
-<p><code>objc
--[NSMutableArray addObject:] : 31803 ns
-</code></p>
-
-<p>也就是说添加1000个对象到 NSMutableArray 总共消耗了31803纳秒，或者说平均一个对象消耗32纳秒。</p>
-
-<p>正如 <code>dispatch_benchmark</code> 的<a href="http://opensource.apple.com/source/libdispatch/libdispatch-84.5/man/dispatch_benchmark.3">帮助页面</a>指出的，测量性能并非如看起来那样不重要。尤其是当比较并发代码和非并发代码时，你需要注意特定硬件上运行的特定计算带宽和内存带宽。不同的机器会很不一样。如果代码的性能与访问临界区有关，那么我们上面提到的锁竞争问题就会有所影响。</p>
-
-<p>不要把它放到发布代码中，事实上，这是无意义的，它是私有API。它只是在调试和性能分析上起作用。</p>
-
-<p>访问帮助界面：</p>
-
-<pre><code>curl "http://opensource.apple.com/source/libdispatch/libdispatch-84.5/man/dispatch_benchmark.3?txt" 
-  | /usr/bin/groffer --tty -T utf8
-</code></pre>
-
-<p><a id="atomic_operations" name="atomic_operations"> </a>  </p>
-
-<h2>原子操作</h2>
-
-<p>头文件 <code>libkern/OSAtomic.h</code> 里有许多强大的函数，专门用来底层多线程编程。尽管它是内核头文件的一部分，它也能够在内核之外来帮助编程。</p>
-
-<p>这些函数都是很底层的，并且你需要知道一些额外的事情。就算你已经这样做了，你还可能会发现一两件你不能做，或者不易做的事情。当你正在为编写高性能代码或者正在实现无锁的和无等待的算法工作时，这些函数会吸引你。</p>
-
-<p>这些函数在 <code>atomic(3)</code> 的帮助页里全部有概述——运行 <code>man 3 atomic</code> 命令以得到完整的文档。你会发现里面讨论到了内存屏障。查看维基百科中关于<a href="https://en.wikipedia.org/wiki/Memory_barrier">内存屏障</a>的文章。如果你还存在疑问，那么你很可能需要它。</p>
-
-<h3>计数器</h3>
-
-<p><code>OSAtomicIncrement</code> 和 <code>OSAtomicDecrement</code> 有一个很长的函数列表允许你以原子操作的方式去增加和减少一个整数值 —— 不必使用锁（或者队列）同时也是线程安全的。如果你需要让一个全局的计数器值增加，而这个计数器为了统计目的而由多个线程操作，使用原子操作是很有帮助的。如果你要做的仅仅是增加一个全局计数器，那么无屏障版本的 <code>OSAtomicIncrement</code> 是很合适的，并且当没有锁竞争时，调用它们的代价很小。</p>
-
-<p>类似的，<code>OSAtomicOr</code> ，<code>OSAtomicAnd</code>，<code>OSAtomicXor</code> 的函数能用来进行逻辑运算，而 <code>OSAtomicTest</code> 可以用来设置和清除位。</p>
-
-<h4 id="102">10.2、比较和交换</h4>
-
-<p><code>OSAtomicCompareAndSwap</code> 能用来做无锁的惰性初始化，如下：</p>
-
-<p><code>objc
-void * sharedBuffer(void)
-{
-    static void * buffer;
-    if (buffer == NULL) {
-        void * newBuffer = calloc(1, 1024);
-        if (!OSAtomicCompareAndSwapPtrBarrier(NULL, newBuffer, &amp;amp;buffer)) {
-            free(newBuffer);
-        }
-    }
-    return buffer;
-}
-</code></p>
-
-<p>如果没有 buffer，我们会创建一个，然后原子地将其写到 <code>buffer</code> 中如果 <code>buffer</code> 为NULL。在极少的情况下，其他人在当前线程同时设置了 <code>buffer</code> ，我们简单地将其释放掉。因为比较和交换方法是原子的，所以它是一个线程安全的方式去惰性初始化值。NULL的检测和设置 <code>buffer</code> 都是以原子方式完成的。</p>
-
-<p>明显的，使用 <code>dispatch_once()</code> 我们也可以完成类似的事情。</p>
-
-<h3>原子队列</h3>
-
-<p><code>OSAtomicEnqueue()</code> 和 <code>OSAtomicDequeue()</code> 可以让你以线程安全，无锁的方式实现一个LIFO队列(常见的就是栈)。对有潜在精确要求的代码来说，这会是强大的代码。</p>
-
-<p>还有  <code>OSAtomicFifoEnqueue()</code> 和 <code>OSAtomicFifoDequeue()</code> 函数是为了操作FIFO队列，但这些只有在头文件中才有文档 —— 使用他们的时候要小心。</p>
-
-<h3>自旋锁</h3>
-
-<p>最后，<code>OSAtomic.h</code> 头文件定义了使用自旋锁的函数：<code>OSSpinLock</code>。同样的，维基百科有深入的有关<a href="https://en.wikipedia.org/wiki/Spinlock">自旋锁</a>的信息。使用命令 <code>man 3 spinlock</code> 查看帮助页的 <code>spinlock(3)</code> 。当没有锁竞争时使用自旋锁代价很小。</p>
-
-<p>在合适的情况下，使用自旋锁对性能优化是很有帮助的。一如既往：先测量，然后优化。不要做乐观的优化。</p>
-
-<p>下面是 OSSpinLock 的一个例子：</p>
-
-<p>```objc
-@interface MyTableViewCell : UITableViewCell</p>
-
-<p>@property (readonly, nonatomic, copy) NSDictionary *amountAttributes;</p>
-
-<p>@end</p>
-
-<p>@implementation MyTableViewCell
-{
-    NSDictionary *_amountAttributes;
-}</p>
-
-<ul>
-  <li>(NSDictionary *)amountAttributes;
-{
-  if (_amountAttributes == nil) {
-      static __weak NSDictionary *cachedAttributes = nil;
-      static OSSpinLock lock = OS_SPINLOCK_INIT;
-      OSSpinLockLock(&amp;lock);
-      _amountAttributes = cachedAttributes;
-      if (_amountAttributes == nil) {
-          NSMutableDictionary *attributes = [[self subtitleAttributes] mutableCopy];
-          attributes[NSFontAttributeName] = [UIFont fontWithName:@”ComicSans” size:36];
-          attributes[NSParagraphStyleAttributeName] = [NSParagraphStyle defaultParagraphStyle];
-          _amountAttributes = [attributes copy];
-          cachedAttributes = _amountAttributes;
-      }
-      OSSpinLockUnlock(&amp;lock);
-  }
-  return _amountAttributes;
-}
-```</li>
-</ul>
-
-<p>就上面的例子而言，或许用不着这么麻烦，但它演示了一种理念。我们使用了ARC的 <code>__weak</code> 来确保一旦 <code>MyTableViewCell</code> 所有的实例都不存在， <code>amountAttributes</code> 会调用 <code>dealloc</code> 。因此在所有的实例中，我们可以持有字典的一个单独实例。</p>
-
-<p>这段代码运行良好的原因是我们不太可能访问到方法最里面的部分。这是很深奥的——除非你真正需要，不然不要在你的 App 中使用它。</p>
 
 <hr />
 
