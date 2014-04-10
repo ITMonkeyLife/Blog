@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Apr 10th, 2014 iOS Comments TextView的专有库TextKit iOS 7 的发布给开发者的案头带来了很多新工具。其中一个就是 TextKit。TextKit 由许多新的 UIKit 类组成，顾名思义，这些类就是用来处理文本的。在这里，我们将介绍 TextKit &hellip;">
+	<meta name="description" content="Apr 10th, 2014 iOS Comments UIKit-Dynamics基于物理引擎新特性 UIKit Dynamics 是 iOS 7 中基于物理动画引擎的一个新功能&#8211;它被特别设计使其能很好地与 collection views 配合工作，而后者是在 iOS 6 &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -98,6 +98,611 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-04-10T09:09:08+08:00" data-updated="true" itemprop="datePublished">Apr 10<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/" itemprop="url">UIKit-Dynamics基于物理引擎新特性</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>UIKit Dynamics 是 iOS 7 中基于物理动画引擎的一个新功能&#8211;它被特别设计使其能很好地与 collection views 配合工作，而后者是在 iOS 6 中才被引入的新特性。接下来，我们要好好看看如何将这两个特性结合在一起。 </p>
+
+<p>这篇文章将讨论两个结合使用 UIkit Dynamics 和 collection view 的例子。第一个例子展示了如何去实现像 iOS 7 里信息 app 中的消息泡泡的弹簧动效，然后再进一步结合平铺机制来实现布局的可伸缩性。第二个例子展现了如何用 UIKit Dynamics 来模拟<a href="http://zh.wikipedia.org/wiki/牛顿摆">牛顿摆</a>，这个例子中物体可以一个个地加入到 collection view 中，并和其他物体发生相互作用。</p>
+
+<p>在我们开始之前，我假定你们对 <code>UICollectionView</code> 是如何工作是有基本的了解——查看<a href="http://www.objccn.io/issue-3-3/">这篇 objc.io 文章</a>会有你想要的所有细节。我也假定你已经理解了 <code>UIKit Dynamics</code> 的工作原理&#8211;阅读这篇<a href="http://www.teehanlax.com/blog/introduction-to-uikit-dynamics/">博客</a>，可以了解更多 UIKit Dynamics 的知识。</p>
+
+<blockquote>
+  <p><span class="secondary radius label">编者注</span> 如果您阅读本篇文章感觉有点吃力的话，可以先来看看 <a href="http://im.onevcat.com">@onevcat</a> 的<a href="http://onevcat.com/2012/06/introducing-collection-views/">《UICollectionView 入门》</a> 和<a href="http://onevcat.com/2013/06/uikit-dynamics-started/">《UIKit Dynamics 入门》</a>这两篇入门文章，帮助您快速补充相关知识。</p>
+</blockquote>
+
+<p>文章中的两个例子项目都已经在 GitHub 中:</p>
+
+<ul>
+<li><a href="https://github.com/objcio/issue-5-springy-collection-view">ASHSpringyCollectionView</a>（基于 <a href="https://github.com/TeehanLax/UICollectionView-Spring-Demo">UICollectionView Spring Demo</a>）</li>
+<li><a href="https://github.com/objcio/issue-5-newtonian-collection-view">Newtownian UICollectionView</a></li>
+</ul>
+
+<h2 id="uidynamicanimator">关于 UIDynamicAnimator</h2>
+
+<p>支持 <code>UICollectionView</code> 实现 UIKit Dynamics 的最关键部分就是 <code>UIDynamicAnimator</code>。要实现这样的 UIKit Dynamics 的效果，我们需要自己自定义一个继承于 <code>UICollectionViewFlowLayout</code> 的子类，并且在这个子类对象里面持有一个 UIDynamicAnimator 的对象。</p>
+
+<p>当我们创建自定义的 dynamic animator 时，我们不会使用常用的初始化方法 <code>-initWithReferenceView:</code> ，因为我们不需要把这个 dynamic animator 关联一个 view ，而是给它关联一个 collection view layout。所以我们使用 <code>-initWithCollectionViewLayout:</code> 这个初始化方法，并把 collection view layout 作为参数传入。这很关键，当的 animator 的 behavior item 的属性应该被更新的时候，它必须能够确保 collection view 的 layout 失效。换句话说，dynamic animator 将会经常使旧的 layout 失效。</p>
+
+<p>我们很快就能看到这些事情是怎么连接起来的，但是在概念上理解 collection view 如何与 dynamic animator 相互作用是很重要的。</p>
+
+<p>Collection view layout 将会为 collection view 中的每个 <code>UICollectionViewLayoutAttributes</code> 添加 behavior（稍后我们会讨论平铺它们）。在将这些 behaviors 添加到 dynamic animator 之后，UIKit 将会向 collection view layout 询问 atrribute 的状态。我们此时可以直接将由 dynamic animator 所提供的 items 返回，而不需要自己做任何计算。Animator 将在模拟时禁用 layout。这会导致 UIKit 再次查询 layout，这个过程会一直持续到模拟满足设定条件而结束。</p>
+
+<p>所以重申一下，layout 创建了 dynamic animator，并且为其中每个 item 的 layout attribute 添加对应的 behaviors。当 collection view 需要 layout 信息时，由 dynamic animator 来提供需要的信息。</p>
+
+<h2 id="uicollectionviewflowlayout">继承 UICollectionViewFlowLayout</h2>
+
+<p>我们将要创建一个简单的例子来展示如何使用一个带 UIkit Dynamic 的 collection view layout。当然，我们需要做的第一件事就是，创建一个数据源去驱动我们的 collection view。我知道以你的能力完全可以独立实现一个数据源，但是为了完整性，我还是提供了一个给你:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">ASHCollectionViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span> <span class="n">CellIdentifier</span> <span class="o">=</span> <span class="s">@&quot;CellIdentifier&quot;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">viewDidLoad</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span> <span class="nl">registerClass:</span><span class="p">[</span><span class="n">UICollectionViewCell</span> <span class="n">class</span><span class="p">]</span>
+</span><span class="line">            <span class="nl">forCellWithReuseIdentifier:</span><span class="n">CellIdentifier</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">UIStatusBarStyle</span><span class="p">)</span><span class="nf">preferredStatusBarStyle</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">UIStatusBarStyleLightContent</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">animated</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">viewDidAppear:</span><span class="n">animated</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionViewLayout</span> <span class="n">invalidateLayout</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="cp">#pragma mark - UICollectionView Methods</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nf">collectionView:</span><span class="p">(</span><span class="n">UICollectionView</span> <span class="o">*</span><span class="p">)</span><span class="nv">collectionView</span>
+</span><span class="line">    <span class="nf">numberOfItemsInSection:</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">section</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="mi">120</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">UICollectionViewCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">collectionView:</span><span class="p">(</span><span class="n">UICollectionView</span> <span class="o">*</span><span class="p">)</span><span class="nv">collectionView</span>
+</span><span class="line">                 <span class="nf">cellForItemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UICollectionViewCell</span> <span class="o">*</span><span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">collectionView</span>
+</span><span class="line">        <span class="nl">dequeueReusableCellWithReuseIdentifier:</span><span class="n">CellIdentifier</span>
+</span><span class="line">                                  <span class="nl">forIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">backgroundColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">orangeColor</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们注意到当 view 第一次出现的时候，这个 layout 是被无效的。这是因为没有用 Storyboard 的结果（使用或不使用 Storyboard，调用 prepareLayout 方法的时机是不同的，苹果在 WWDC 的视频中并没有告诉我们这一点）。所以，当这些视图一出现我们就需要手动使这个 collection view layout 无效。当我们用平铺（后面会详细介绍）的时候，就不需要这样。</p>
+
+<p>现在来创建自定义的 collection view layout 吧，我们需要强引用一个 dynamic animator，并且使用它来驱动我们的 collcetion view layout 的 attribute。我们在实现文件里定义了一个私有属性：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ASHSpringyCollectionViewFlowLayout</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">UIDynamicAnimator</span> <span class="o">*</span><span class="n">dynamicAnimator</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们将在 layout 的初始化方法中初始化我们的 dynamic animator。还要设置一些属于父类 <code>UICollectionViewFlowLayout</code> 中的属性:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">]))</span> <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">minimumInteritemSpacing</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">minimumLineSpacing</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">itemSize</span> <span class="o">=</span> <span class="n">CGSizeMake</span><span class="p">(</span><span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">);</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">sectionInset</span> <span class="o">=</span> <span class="n">UIEdgeInsetsMake</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIDynamicAnimator</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithCollectionViewLayout:</span><span class="n">self</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们将实现的下一个方法是 prepareLayout。我们首先需要调用父类的方法。因为我们是继承 <code>UICollectionViewFlowLayout</code> 类，所以在调用父类的 prepareLayout 方法时，可以使 collection view layout 的各个 attribute 都放置在合适的位置。我们可以依靠父类的这个方法来提供一个默认的排布，并且能够使用 <code>[super layoutAttributesForElementsInRect:visibleRect];</code> 方法得到指定 rect 内的<em>所有</em> item 的 layout attributes。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">super</span> <span class="n">prepareLayout</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">CGSize</span> <span class="n">contentSize</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">contentSize</span><span class="p">;</span>
+</span><span class="line"><span class="n">NSArray</span> <span class="o">*</span><span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nl">layoutAttributesForElementsInRect:</span>
+</span><span class="line">    <span class="n">CGRectMake</span><span class="p">(</span><span class="mf">0.0f</span><span class="p">,</span> <span class="mf">0.0f</span><span class="p">,</span> <span class="n">contentSize</span><span class="p">.</span><span class="n">width</span><span class="p">,</span> <span class="n">contentSize</span><span class="p">.</span><span class="n">height</span><span class="p">)];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这<em>真的</em>是效率低下的代码。因为我们的 collection view 中可能会有成千上万个 cell，一次性加载所有的 cell 是一个可能会产生难以置信的内存紧张的操作。我们要在一段时间内遍历所有的元素，这也成为耗时的操作。这真的是效率的双重打击！别担心——我们是负责任的开发者，所以我们会很快解决这个问题的。我们先暂时继续使用简单、粗暴的实现方式。</p>
+
+<p>当加载完我们所有的 collection view layout attribute 之后，我们需要检查他们是否都已经被加载到我们的 animator 里了。如果一个 behavior 已经在 animator 中存在，那么我们就不能重新添加，否则就会得到一个非常难懂的运行异常提示:</p>
+
+<pre><code>&lt;UIDynamicAnimator: 0xa5ba280&gt; (0.004987s) in 
+&lt;ASHSpringyCollectionViewFlowLayout: 0xa5b9e60&gt; \{\{0, 0}, \{0, 0\}\}: 
+body &lt;PKPhysicsBody&gt; type:&lt;Rectangle&gt; representedObject:
+[&lt;UICollectionViewLayoutAttributes: 0xa281880&gt; 
+index path: (&lt;NSIndexPath: 0xa281850&gt; {length = 2, path = 0 - 0}); 
+frame = (10 10; 300 44); ] 0xa2877c0  
+PO:(159.999985,32.000000) AN:(0.000000) VE:(0.000000,0.000000) AV:(0.000000) 
+dy:(1) cc:(0) ar:(1) rs:(0) fr:(0.200000) re:(0.200000) de:(1.054650) gr:(0) 
+without representedObject for item &lt;UICollectionViewLayoutAttributes: 0xa3833e0&gt; 
+index path: (&lt;NSIndexPath: 0xa382410&gt; {length = 2, path = 0 - 0}); 
+frame = (10 10; 300 44);
+</code></pre>
+
+<p>如果看到了这个错误，那么这基本表明你添加了两个 behavior 给同一个 <code>UICollectionViewLayoutAttribute</code>，这使得系统不知道该怎么处理。</p>
+
+<p>无论如何，一旦我们已经检查好我们是否已经将 behavior 添加到 dynamic animator 之后，我们就需要遍历每个 collection view layout attribute 来创建和添加新的 dynamic animator：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span><span class="p">.</span><span class="n">behaviors</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">items</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">UIDynamicItem</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">obj</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">behaviour</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAttachmentBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItem:</span><span class="n">obj</span>
+</span><span class="line">                                                                    <span class="nl">attachedToAnchor:</span><span class="p">[</span><span class="n">obj</span> <span class="n">center</span><span class="p">]];</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">behaviour</span><span class="p">.</span><span class="n">length</span> <span class="o">=</span> <span class="mf">0.0f</span><span class="p">;</span>
+</span><span class="line">        <span class="n">behaviour</span><span class="p">.</span><span class="n">damping</span> <span class="o">=</span> <span class="mf">0.8f</span><span class="p">;</span>
+</span><span class="line">        <span class="n">behaviour</span><span class="p">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">addBehavior:</span><span class="n">behaviour</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段代码非常简单。我们为每个 item 创建了一个以物体的中心为附着点的 <code>UIAttachmentBehavior</code> 对象。然后又设置了我们的 attachment behavior 的 length 为 0 以便约束这个 cell 能一直以 behavior 的附着点为中心。然后又给 <code>damping</code> 和 <code>frequency</code> 这两个参数设置一个比较合适的值。</p>
+
+<p>这就是 <code>prepareLayout</code>。我们现在需要实现 <code>layoutAttributesForElementsInRect:</code> 和 <code>layoutAttributesForItemAtIndexPath:</code> 这两个方法，UIKit 会调用它们来询问 collection view 每一个 item 的布局信息。我们写的代码会把这些查询交给专门做这些事的 dynamic animator:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForElementsInRect:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">rect</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">itemsInRect:</span><span class="n">rect</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForItemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">layoutAttributesForCellAtIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h1>响应滚动事件</h1>
+
+<p>我们目前实现的代码给我们展示的只是一个在正常滑动下只有静态感觉的 <code>UICollectionView</code>，运行起来没什么特别的。看上去很好，但不是真的<em>动态</em>，不是么？</p>
+
+<p>为了使它表现地动态点，我们需要 layout 和 dynamic animator 能够对 collection view 中滑动位置的变化做出反应。幸好这里有个非常适合这个要求的方法 <code>shouldInvalidateLayoutForBoundsChange:</code>。这个方法会在 collection view 的 bound 发生改变的时候被调用，根据最新的 <a href="http://www.objccn.io/issue-3-2/">content offset</a> 调整我们的 dynamic animator 中的 behaviors 的参数。在重新调整这些 behavior 的 item 之后，我们在这个方法中返回 NO；因为 dynamic animator 会关心 layout 的无效问题，所以在这种情况下，它不需要去主动使其无效：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">shouldInvalidateLayoutForBoundsChange:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">newBounds</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIScrollView</span> <span class="o">*</span><span class="n">scrollView</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">newBounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">scrollView</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">touchLocation</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">panGestureRecognizer</span> <span class="nl">locationInView:</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span><span class="p">.</span><span class="n">behaviors</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">springBehaviour</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">yDistanceFromTouch</span> <span class="o">=</span> <span class="n">fabsf</span><span class="p">(</span><span class="n">touchLocation</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">springBehaviour</span><span class="p">.</span><span class="n">anchorPoint</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">xDistanceFromTouch</span> <span class="o">=</span> <span class="n">fabsf</span><span class="p">(</span><span class="n">touchLocation</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">springBehaviour</span><span class="p">.</span><span class="n">anchorPoint</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">scrollResistance</span> <span class="o">=</span> <span class="p">(</span><span class="n">yDistanceFromTouch</span> <span class="o">+</span> <span class="n">xDistanceFromTouch</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1500.0f</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">item</span> <span class="o">=</span> <span class="n">springBehaviour</span><span class="p">.</span><span class="n">items</span><span class="p">.</span><span class="n">firstObject</span><span class="p">;</span>
+</span><span class="line">        <span class="n">CGPoint</span> <span class="n">center</span> <span class="o">=</span> <span class="n">item</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
+</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="n">delta</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">MAX</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">delta</span><span class="o">*</span><span class="n">scrollResistance</span><span class="p">);</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">        <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">MIN</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">delta</span><span class="o">*</span><span class="n">scrollResistance</span><span class="p">);</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">        <span class="n">item</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">center</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">updateItemUsingCurrentState:</span><span class="n">item</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>让我们仔细查看这个代码的细节。首先我们得到了这个 scroll view（就是我们的 collection view ），然后计算它的 content offset 中 y 的变化（在这个例子中，我们的 collection view 是垂直滑动的）。一旦我们得到这个增量，我们需要得到用户接触的位置。这是非常重要的，因为我们希望离接触位置比较近的那些物体能移动地更迅速些，而离接触位置比较远的那些物体则应该滞后些。</p>
+
+<p>对于 dynamic animator 中的每个 behavior，我们将接触点到该 behavior 物体的 x 和 y 的距离之和除以 1500，1500 是我根据经验设的。分母越小，这个 collection view 的的交互就越有弹簧的感觉。一旦我们拿到了这个“滑动阻力”的值，我们就可以用它的增量乘上 <code>scrollResistance</code> 这个变量来指定这个 behavior 物体的中心点的 y 值。最后，我们在滑动阻力大于增量的情况下对增量和滑动阻力的结果进行了选择（这意味着物体开始往错误的方向移动了）。在本例我们用了这么大的分母，那么这种情况是不可能的，但是在一些更具弹性的 collection view layout 中还是需要注意的。</p>
+
+<p>就是这么一回事。以我的经验，这个方法对多达几百个物体的 collection view 来说也是是适用的。超过这个数量的话，一次性加载所有物体到内存中就会变成很大的负担，并且在滑动的时候就会开始卡顿了。</p>
+
+<p><img src="http://img.objccn.io/issue-5/springyCollectionView.gif" alt="Springy Collection View" /></p>
+
+<h2 id="tilingdynamicbehaviors">平铺（Tiling）你的 Dynamic Behaviors 来优化性能</h2>
+
+<p>当你的 collection view 中只有几百个 cell 的时候，他运行的很好，但当数据源超过这个范围的时候会发生什么呢？或者在运行的时你不能预测你的数据源有多大呢？我们的简单粗暴的方法就不管用了。</p>
+
+<p>除了在 <code>prepareLayout</code> 中加载<em>所有</em>的物体，如果我们能<em>更聪明地</em>知道哪些物体会加载那该多好啊。是的，就是仅加载显示的和即将显示的物体。这正是我们要采取的办法。</p>
+
+<p>我们需要做的第一件事就是是跟踪 dynamic animator 中的所有 behavior 物体的 index path。我在 collection view 中添加一个属性来做这件事:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">NSMutableSet</span> <span class="o">*</span><span class="n">visibleIndexPathsSet</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们用 set 是因为它具有常数复杂度的查找效率，并且我们<em>经常</em>地查找 <code>visibleIndexPathsSet</code> 中是否已经包含了某个 index path。</p>
+
+<p>在我们实现全新的 <code>prepareLayout</code> 方法之前——有一个问题就是什么是<strong>平铺 behavior</strong> —— 理解平铺的意思是非常重要的。当我们平铺behavior 的时候，我们会在这些 item 离开 collection view 的可视范围的时候删除对应的 behavior，在这些 item 进入可视范围的时候又添加对应的 behavior。这是一个大麻烦：我们需要在<em>滚动中</em>创建新的 behavior。这就意味着让人觉得创建它们就好像它们本来就已经在 dynamic animator 里了一样，并且它们是在 <code>shouldInvalidateLayoutForBoundsChange:</code> 方法被修改的。</p>
+
+<p>因为我们是在滚动中创建这些新的 behavior，所以我们需要维持现在 collection view 的一些状态。尤其我们需要跟踪最近一次我们 <code>bound</code> 变化的增量。我们会在滚动时用这个状态去创建我们的 behavior：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">assign</span><span class="p">)</span> <span class="n">CGFloat</span> <span class="n">latestDelta</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>添加完这个 property 后，我们将要在 <code>shouldInvalidateLayoutForBoundsChange:</code> 方法中添加下面这行代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span> <span class="o">=</span> <span class="n">delta</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这就是我们需要修改我们的方法来响应滚动事件。我们的这两个方法是为了将 collection view 中 items 的 layout 信息传给 dynamic animator，这种方式没有变化。事实上，当你的 collection view 实现了 dynamic animator 的大部分情况下，都需要实现我们上面提到的两个方法 <code>layoutAttributesForElementsInRect:</code> 和 <code>layoutAttributesForItemAtIndexPath:</code>。</p>
+
+<p>这里最难懂的部分就是平铺机制。我们将要完全重写我们的 prepareLayout。</p>
+
+<p>这个方法的第一步是将那些物体的 index path 已经不在屏幕上显示的 behavior 从 dynamic animator 上删除。第二步是添加那些即将显示的物体的 behavior。</p>
+
+<p>让我们先看一下第一步。</p>
+
+<p>像以前一样，我们要调用 <code>super prepareLayout</code>，这样我们就能依赖父类 <code>UICollectionViewFlowLayout</code> 提供的默认排布。还像以前一样，我们通过父类获取一个矩形内的所有元素的 layout attribute。不同的是我们不是获取整个 collection view 中的元素属性，而只是获取显示范围内的。</p>
+
+<p>所以我们需要计算这个显示矩形。但是别着急！有件事要记住。我们的用户可能会非常快地滑动 collection view，导致了 dynamic animator 不能跟上，所以我们需要稍微扩大显示范围，这样就能包含到那些将要显示的物体了。否则，在滑动很快的时候就会出现频闪现象了。让我们计算一下显示范围:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGRect</span> <span class="n">originalRect</span> <span class="o">=</span> <span class="p">(</span><span class="n">CGRect</span><span class="p">){.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">,</span> <span class="p">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">};</span>
+</span><span class="line"><span class="n">CGRect</span> <span class="n">visibleRect</span> <span class="o">=</span> <span class="n">CGRectInset</span><span class="p">(</span><span class="n">originalRect</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我确信在实际显示矩形上的每个方向都扩大100个像素对我的 demo 来说是可行的。仔细查看这些值是否适合你们的 collection view，尤其是当你们的 cell 很小的情况下。</p>
+
+<p>接下来我们就需要收集在显示范围内的 collection view layout attributes。还有它们的 index paths:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSArray</span> <span class="o">*</span><span class="n">itemsInVisibleRectArray</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nl">layoutAttributesForElementsInRect:</span><span class="n">visibleRect</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">NSSet</span> <span class="o">*</span><span class="n">itemsIndexPathsInVisibleRectSet</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSSet</span> <span class="nl">setWithArray:</span><span class="p">[</span><span class="n">itemsInVisibleRectArray</span> <span class="nl">valueForKey:</span><span class="s">@&quot;indexPath&quot;</span><span class="p">]];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>注意我们是在用一个 NSSet。这是因为它具有常数复杂度的查找效率，并且我们经常的查找 <code>visibleIndexPathsSet</code> 是否已经包含了某个 index path:</p>
+
+<p>接下来我们要做的就是遍历 dynamic animator 的 behaviors，过滤掉那些已经在 <code>itemsIndexPathsInVisibleRectSet</code> 中的 item。因为我们已经过滤掉我们的 behavior，所以我们将要遍历的这些 item 都是不在显示范围里的，我们就可以将这些 item 从 animator 中删除掉（连同 <code>visibleIndexPathsSet</code> 属性中的 index path）:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSPredicate</span> <span class="o">*</span><span class="n">predicate</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithBlock:</span><span class="o">^</span><span class="kt">BOOL</span><span class="p">(</span><span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">behaviour</span><span class="p">,</span> <span class="n">NSDictionary</span> <span class="o">*</span><span class="n">bindings</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">currentlyVisible</span> <span class="o">=</span> <span class="p">[</span><span class="n">itemsIndexPathsInVisibleRectSet</span> <span class="nl">member:</span><span class="p">[[[</span><span class="n">behaviour</span> <span class="n">items</span><span class="p">]</span> <span class="n">firstObject</span><span class="p">]</span> <span class="n">indexPath</span><span class="p">]]</span> <span class="o">!=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="o">!</span><span class="n">currentlyVisible</span><span class="p">;</span>
+</span><span class="line"><span class="p">}]</span>
+</span><span class="line"><span class="n">NSArray</span> <span class="o">*</span><span class="n">noLongerVisibleBehaviours</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span><span class="p">.</span><span class="n">behaviors</span> <span class="nl">filteredArrayUsingPredicate:</span><span class="n">predicate</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="p">[</span><span class="n">noLongerVisibleBehaviours</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="kt">id</span> <span class="n">obj</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">index</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">removeBehavior:</span><span class="n">obj</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">visibleIndexPathsSet</span> <span class="nl">removeObject:</span><span class="p">[[[</span><span class="n">obj</span> <span class="n">items</span><span class="p">]</span> <span class="n">firstObject</span><span class="p">]</span> <span class="n">indexPath</span><span class="p">]];</span>
+</span><span class="line"><span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>下一步就是要得到<em>新</em>出现 item 的 <code>UICollectionViewLayoutAttributes</code> 数组——那些 item 的 index path 在 <code>itemsIndexPathsInVisibleRectSet</code> 而不在 <code>visibleIndexPathsSet</code>：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSPredicate</span> <span class="o">*</span><span class="n">predicate</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithBlock:</span><span class="o">^</span><span class="kt">BOOL</span><span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">item</span><span class="p">,</span> <span class="n">NSDictionary</span> <span class="o">*</span><span class="n">bindings</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">currentlyVisible</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">visibleIndexPathsSet</span> <span class="nl">member:</span><span class="n">item</span><span class="p">.</span><span class="n">indexPath</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="o">!</span><span class="n">currentlyVisible</span><span class="p">;</span>
+</span><span class="line"><span class="p">}];</span>
+</span><span class="line"><span class="n">NSArray</span> <span class="o">*</span><span class="n">newlyVisibleItems</span> <span class="o">=</span> <span class="p">[</span><span class="n">itemsInVisibleRectArray</span> <span class="nl">filteredArrayUsingPredicate:</span><span class="n">predicate</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>一旦我们有新的 layout attribute 出现，我就可以遍历他们来创建新的 behavior，并且将他们的 index path 添加到 <code>visibleIndexPathsSet</code> 中。首先，无论如何，我都需要获取到用户手指触碰的位置。如果它是 <code>CGPointZero</code> 的话，那就表示这个用户没有在滑动 collection view，这时我就<em>假定</em>我们不需要在滚动时创建新的 behavior 了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGPoint</span> <span class="n">touchLocation</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">panGestureRecognizer</span> <span class="nl">locationInView:</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这是一个潜藏危险的假定。如果用户很快地滑动了 collection view 之后释放了他的手指呢？这个 collection view 就会一直滚动，但是我们的方法就不会在滚动时创建新的 behavior 了。但幸运的是，那也就意味这时 scroll view 滚动太快很难被注意到！好哇！但是，对于那些拥有大型 cell 的 collection view 来说，这仍然是个问题。那么在这种情况下，就需要增加你的可视范围的 bounds 来加载更多物体以解决这个问题。</p>
+
+<p>现在我们需要枚举我们刚显示的 item，为他们创建 behavior，再将他们的 index path 添加到 <code>visibleIndexPathsSet</code>。我们还需要在滚动时做些<a href="http://www.youtube.com/watch?v=gENVB6tjq_M">数学运算</a>来创建 behavior：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">newlyVisibleItems</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">item</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">center</span> <span class="o">=</span> <span class="n">item</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">springBehaviour</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAttachmentBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItem:</span><span class="n">item</span> <span class="nl">attachedToAnchor:</span><span class="n">center</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">springBehaviour</span><span class="p">.</span><span class="n">length</span> <span class="o">=</span> <span class="mf">0.0f</span><span class="p">;</span>
+</span><span class="line">    <span class="n">springBehaviour</span><span class="p">.</span><span class="n">damping</span> <span class="o">=</span> <span class="mf">0.8f</span><span class="p">;</span>
+</span><span class="line">    <span class="n">springBehaviour</span><span class="p">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">CGPointEqualToPoint</span><span class="p">(</span><span class="n">CGPointZero</span><span class="p">,</span> <span class="n">touchLocation</span><span class="p">))</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">yDistanceFromTouch</span> <span class="o">=</span> <span class="n">fabsf</span><span class="p">(</span><span class="n">touchLocation</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">springBehaviour</span><span class="p">.</span><span class="n">anchorPoint</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">xDistanceFromTouch</span> <span class="o">=</span> <span class="n">fabsf</span><span class="p">(</span><span class="n">touchLocation</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">springBehaviour</span><span class="p">.</span><span class="n">anchorPoint</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">scrollResistance</span> <span class="o">=</span> <span class="p">(</span><span class="n">yDistanceFromTouch</span> <span class="o">+</span> <span class="n">xDistanceFromTouch</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1500.0f</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">MAX</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span><span class="o">*</span><span class="n">scrollResistance</span><span class="p">);</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">        <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">MIN</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span><span class="o">*</span><span class="n">scrollResistance</span><span class="p">);</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">        <span class="n">item</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">center</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">addBehavior:</span><span class="n">springBehaviour</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">visibleIndexPathsSet</span> <span class="nl">addObject:</span><span class="n">item</span><span class="p">.</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line"><span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>大部分代码看起来还是挺熟悉的。大概有一半是来自没有实现平铺的 <code>prepareLayout</code>。另一半是来自 <code>shouldInvalidateLayoutForBoundsChange:</code> 这个方法。我们用 latestDelta 这个属性来表示 <code>bound</code> 变化的增量，适当地调整 <code>UICollectionViewLayoutAttributes</code> 使这些 cell 表现地就像被 attachment behavior “拉”着一样。</p>
+
+<p>就这样就完成了，真的！我已经在真机上测试过显示上千个 cell 的情况了，它运行地非常完美。<a href="https://github.com/objcio/issue-5-springy-collection-view">去试试吧</a>。</p>
+
+<h2>超越瀑布流布局</h2>
+
+<p>一般来说，当我们使用 <code>UICollectionView</code> 的时候，继承 <code>UICollectionViewFlowLayout</code> 会比直接继承 <code>UICollectionViewLayout</code> 更容易。这是因为 <em>flow</em> layout 会为我们做很多事。然而，瀑布流布局是严格基于它们的尺寸一个接一个的展现出来。如果你有一个布局不能适应这个标准怎么办？好的，如果你已经尝试用 <code>UICollectionViewFlowLayout</code> 来适应，而且你很确定它不能很好运行，那么就应该抛弃 <code>UICollectionViewFlowLayout</code> 这个定制性比较弱的子类，而应该直接在 <code>UICollectionViewLayout</code> 这个基类上进行定制。</p>
+
+<p>这个原则在处理 UIKit Dynamic 时也是适用的。</p>
+
+<p>让我们先创建 <code>UICollectionViewLayout</code> 的子类。当继承 <code>UICollectionViewLayout</code> 的时候需要实现 <code>collectionViewContentSize</code> 方法，这点非常重要。否则这个 collection view 就不知道如果去显示自己，也不会有显示任何东西。因为我们想要 collection view 不能滚动，所以这里要返回 collection view 的 frame 的 size，减去它的 <code>contentInset.top</code>：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">CGSize</span><span class="p">)</span><span class="nf">collectionViewContentSize</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">CGSizeMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">-</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">contentInset</span><span class="p">.</span><span class="n">top</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在这个（有点教学式）的例子中，我们的 collection view <em>总是会以零个cell开始</em>，物体通过 <code>performBatchUpdates:</code> 这个方法添加。这就意味着我们必须使用 <code>-[UICollectionViewLayout prepareForCollectionViewUpdates:]</code> 这个方法来添加我们的 behavior（即这个 collection view 的数据源总是以零开始）。</p>
+
+<p>除了给各个 item 添加 attachment behavior 外，我们还将保留另外两个 behavior：重力和碰撞。对于添加在这个 collection view 中的每个 item 来说，我们必须把这些 item 添加到我们的碰撞和 attachment behavior 中。最后一步就是设置这些 item 的初始位置为屏幕外的某些地方，这样就有被 attachment behavior 拉入到屏幕内的效果了:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">prepareForCollectionViewUpdates:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">updateItems</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">prepareForCollectionViewUpdates:</span><span class="n">updateItems</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">updateItems</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">UICollectionViewUpdateItem</span> <span class="o">*</span><span class="n">updateItem</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="n">updateItem</span><span class="p">.</span><span class="n">updateAction</span> <span class="o">==</span> <span class="n">UICollectionUpdateActionInsert</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">UICollectionViewLayoutAttributes</span>
+</span><span class="line">                <span class="nl">layoutAttributesForCellWithIndexPath:</span><span class="n">updateItem</span><span class="p">.</span><span class="n">indexPathAfterUpdate</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">            <span class="n">attributes</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="n">CGRectGetMaxX</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">frame</span><span class="p">)</span> <span class="o">+</span> <span class="n">kItemSize</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="n">kItemSize</span><span class="p">,</span> <span class="n">kItemSize</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">            <span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">attachmentBehaviour</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAttachmentBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItem:</span><span class="n">attributes</span>
+</span><span class="line">                                                                                  <span class="nl">attachedToAnchor:</span><span class="n">attachmentPoint</span><span class="p">];</span>
+</span><span class="line">            <span class="n">attachmentBehaviour</span><span class="p">.</span><span class="n">length</span> <span class="o">=</span> <span class="mf">300.0f</span><span class="p">;</span>
+</span><span class="line">            <span class="n">attachmentBehaviour</span><span class="p">.</span><span class="n">damping</span> <span class="o">=</span> <span class="mf">0.4f</span><span class="p">;</span>
+</span><span class="line">            <span class="n">attachmentBehaviour</span><span class="p">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="p">;</span>
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">addBehavior:</span><span class="n">attachmentBehaviour</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">gravityBehaviour</span> <span class="nl">addItem:</span><span class="n">attributes</span><span class="p">];</span>
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collisionBehaviour</span> <span class="nl">addItem:</span><span class="n">attributes</span><span class="p">];</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><img src="http://img.objccn.io/issue-5/newtonianCollectionView.gif" alt="Demo" /></p>
+
+<p>删除就有点复杂了。我们希望这些物体有“掉落”的效果而不是简单的消失。这就不仅仅是从 collection view 中删除个 cell 这么简单了，因为我们希望在它离开了屏幕之前还是保留它。我已经在代码中实现了这样的效果，但是做法有点取巧。</p>
+
+<p>基本上我们要做的是在 layout 中提供一个方法，在它删除 attachment behavior 两秒之后，将这个 cell 从 collection view 中删除。我们希望在这段时间里，这个 cell 能掉出屏幕，但是这不一定会发生。如果没有发生，也没关系。只要淡出就行了。然而，我们必须保证在这两秒内既没有新的 cell 被添加，也没有旧的 cell 被删除。（我说了有点取巧。）</p>
+
+<p>欢迎提交 pull request。</p>
+
+<p>这个方法是有局限性的。我将 cell 数量的上限设为 10，但是即使这样，在像 iPad2 这样比较旧的设备中，动画就会运行地很慢。当然，这个例子只是为了展示如何模拟有趣的动力学的一个方法——它并不是一个可以解决任何问题的万金油。你个人在实践中如何来进行模拟，包括性能等各个方面，都取决于你自己了。</p>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -4765,551 +5370,6 @@ Gróa
 <p>很多时候为了避免麻烦，你可能更愿意在主线程中完成你的工作，在你能这么做事，这确实让你的工作轻松不少，但是当你发现性能瓶颈时，你可以尝试尽可能用最简单的策略将那些繁重任务放到后台去做。</p>
 
 <p>我们在上面例子中所展示的方法对于其他任务来说也是安全的选择。在主队列中接收事件或者数据，然后用后台操作队列来执行实际操作，然后回到主队列去传递结果，遵循这样的原则来编写尽量简单的并行代码，将是保证高效正确的不二法则。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-04-09T15:29:37+08:00" data-updated="true" itemprop="datePublished">Apr 9<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/" itemprop="url">并发编程：API以及挑战</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p><a href="http://en.wikipedia.org/wiki/Concurrency_%28computer_science%29">并发</a>所描述的概念就是同时运行多个任务。这些任务可能是以在单核 CPU 上<a href="http://en.wikipedia.org/wiki/Preemption_%28computing%29">分时（时间共享）</a>的形式同时运行，也可能是在多核 CPU 上以真正的并行方式来运行。</p>
-
-<p>OS X 和 iOS 提供了几种不同的 API 来支持并发编程。每一个 API 都具有不同的功能和使用限制，这使它们适合不同的任务。同时，这些 API 处在不同的抽象层级上。我们有可能用其进行非常深入底层的操作，但是这也意味着背负起将任务进行良好处理的巨大责任。</p>
-
-<p>实际上，并发编程是一个很有挑战的主题，它有许多错综复杂的问题和陷阱。当开发者在使用类似 <code>Grand Central Dispatch</code>（GCD）或 <code>NSOperationQueue</code> 的 API 时，很容易遗忘这些问题和陷阱。本文首先对 OS X 和 iOS 中不同的并发编程 API 进行一些介绍，然后再深入了解并发编程中独立于与你所使用的特定 API 的一些内在挑战。</p>
-
-<h2 id="osxios">OS X 和 iOS 中的并发编程</h2>
-
-<p>苹果的移动和桌面操作系统中提供了相同的并发编程API。 本文会介绍 <code>pthread</code> 、 <code>NSThread</code> 、<code>GCD</code> 、<code>NSOperationQueue</code>，以及 <code>NSRunLoop</code>。实际上把 run loop 也列在其中是有点奇怪，因为它并不能实现真正的并行，不过因为它与并发编程有莫大的关系，因此值得我们进行一些深入了解。</p>
-
-<p>由于高层 API 是基于底层 API 构建的，所以我们首先将从底层的 API 开始介绍，然后逐步扩展到高层 API。不过在具体编程中，选择 API 的顺序刚好相反：因为大多数情况下，选择高层的 API 不仅可以完成底层 API 能完成的任务，而且能够让并发模型变得简单。</p>
-
-<p>如果你对我们为何坚持推荐使用高抽象层级以及简单的并行代码有所疑问的话，那么你可以看看这篇文章的第二部分<a href="#challenges">并发编程中面临的挑战</a>，以及 Peter Steinberger 写的关于<a href="http://objccn.io/issue-2-4/">线程安全</a>的文章。</p>
-
-<h3>线程</h3>
-
-<p><a href="http://zh.wikipedia.org/wiki/线程">线程</a>（thread）是组成进程的子单元，操作系统的调度器可以对线程进行单独的调度。实际上，所有的并发编程 API 都是构建于线程之上的 —— 包括 GCD 和操作队列（operation queues）。</p>
-
-<p>多线程可以在单核 CPU 上同时（或者至少看作同时）运行。操作系统将小的时间片分配给每一个线程，这样就能够让用户感觉到有多个任务在同时进行。如果 CPU 是多核的，那么线程就可以真正的以并发方式被执行，从而减少了完成某项操作所需要的总时间。</p>
-
-<p>你可以通过 Instrument 中的 <a href="http://developer.apple.com/library/mac/#documentation/DeveloperTools/Conceptual/InstrumentsUserGuide/AnalysingCPUUsageinYourOSXApp/AnalysingCPUUsageinYourOSXApp.html">CPU strategy view</a> 来观察你的代码或者你所使用的框架的代码被执行时，它们在多核 CPU 中的被调度的情况。</p>
-
-<p>需要重点关注的是，你无法控制你的代码在什么地方以及什么时候被调度，以及无法控制执行多长时间后将被暂停，以便轮换执行别的任务。这种线程调度是非常强大的一种技术，但是也非常复杂，我们稍后研究。</p>
-
-<p>先把线程调度的复杂情况放一边，开发者可以使用 <a href="http://en.wikipedia.org/wiki/POSIX_Threads">POSIX 线程</a> API，或者 Objective-C 中提供的对该 API 的封装 <code>NSThread</code>，来创建自己的线程。下面这个小示例利用 <code>pthread</code> 来在一百万个数字中查找最小值和最大值。其中并发执行了 4 个线程。从该示例复杂的代码中，应该可以看出为什么你不会希望直接使用 pthread 。</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-<span class="line-number">50</span>
-<span class="line-number">51</span>
-<span class="line-number">52</span>
-<span class="line-number">53</span>
-<span class="line-number">54</span>
-<span class="line-number">55</span>
-<span class="line-number">56</span>
-<span class="line-number">57</span>
-<span class="line-number">58</span>
-<span class="line-number">59</span>
-<span class="line-number">60</span>
-<span class="line-number">61</span>
-<span class="line-number">62</span>
-<span class="line-number">63</span>
-<span class="line-number">64</span>
-<span class="line-number">65</span>
-<span class="line-number">66</span>
-<span class="line-number">67</span>
-<span class="line-number">68</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">struct</span> <span class="n">threadInfo</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">uint32_t</span> <span class="o">*</span> <span class="n">inputValues</span><span class="p">;</span>
-</span><span class="line">    <span class="n">size_t</span> <span class="n">count</span><span class="p">;</span>
-</span><span class="line"><span class="p">};</span>
-</span><span class="line">
-</span><span class="line"><span class="k">struct</span> <span class="n">threadResult</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">uint32_t</span> <span class="n">min</span><span class="p">;</span>
-</span><span class="line">    <span class="n">uint32_t</span> <span class="n">max</span><span class="p">;</span>
-</span><span class="line"><span class="p">};</span>
-</span><span class="line">
-</span><span class="line"><span class="kt">void</span> <span class="o">*</span> <span class="nf">findMinAndMax</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">)</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">struct</span> <span class="n">threadInfo</span> <span class="k">const</span> <span class="o">*</span> <span class="k">const</span> <span class="n">info</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">threadInfo</span> <span class="o">*</span><span class="p">)</span> <span class="n">arg</span><span class="p">;</span>
-</span><span class="line">    <span class="n">uint32_t</span> <span class="n">min</span> <span class="o">=</span> <span class="n">UINT32_MAX</span><span class="p">;</span>
-</span><span class="line">    <span class="n">uint32_t</span> <span class="n">max</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">info</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">count</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">uint32_t</span> <span class="n">v</span> <span class="o">=</span> <span class="n">info</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">inputValues</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
-</span><span class="line">        <span class="n">min</span> <span class="o">=</span> <span class="n">MIN</span><span class="p">(</span><span class="n">min</span><span class="p">,</span> <span class="n">v</span><span class="p">);</span>
-</span><span class="line">        <span class="n">max</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span><span class="n">max</span><span class="p">,</span> <span class="n">v</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="n">free</span><span class="p">(</span><span class="n">arg</span><span class="p">);</span>
-</span><span class="line">    <span class="k">struct</span> <span class="n">threadResult</span> <span class="o">*</span> <span class="k">const</span> <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">threadResult</span> <span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">result</span><span class="p">));</span>
-</span><span class="line">    <span class="n">result</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">min</span> <span class="o">=</span> <span class="n">min</span><span class="p">;</span>
-</span><span class="line">    <span class="n">result</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">max</span> <span class="o">=</span> <span class="n">max</span><span class="p">;</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">size_t</span> <span class="k">const</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">1000000</span><span class="p">;</span>
-</span><span class="line">    <span class="n">uint32_t</span> <span class="n">inputValues</span><span class="p">[</span><span class="n">count</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="c1">// 使用随机数字填充 inputValues</span>
-</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">count</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">inputValues</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">arc4random</span><span class="p">();</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="c1">// 开始4个寻找最小值和最大值的线程</span>
-</span><span class="line">    <span class="n">size_t</span> <span class="k">const</span> <span class="n">threadCount</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-</span><span class="line">    <span class="n">pthread_t</span> <span class="n">tid</span><span class="p">[</span><span class="n">threadCount</span><span class="p">];</span>
-</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">threadCount</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">struct</span> <span class="n">threadInfo</span> <span class="o">*</span> <span class="k">const</span> <span class="n">info</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">threadInfo</span> <span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">info</span><span class="p">));</span>
-</span><span class="line">        <span class="n">size_t</span> <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">count</span> <span class="o">/</span> <span class="n">threadCount</span><span class="p">)</span> <span class="o">*</span> <span class="n">i</span><span class="p">;</span>
-</span><span class="line">        <span class="n">info</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">inputValues</span> <span class="o">=</span> <span class="n">inputValues</span> <span class="o">+</span> <span class="n">offset</span><span class="p">;</span>
-</span><span class="line">        <span class="n">info</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">count</span> <span class="o">=</span> <span class="n">MIN</span><span class="p">(</span><span class="n">count</span> <span class="o">-</span> <span class="n">offset</span><span class="p">,</span> <span class="n">count</span> <span class="o">/</span> <span class="n">threadCount</span><span class="p">);</span>
-</span><span class="line">        <span class="kt">int</span> <span class="n">err</span> <span class="o">=</span> <span class="n">pthread_create</span><span class="p">(</span><span class="n">tid</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">findMinAndMax</span><span class="p">,</span> <span class="n">info</span><span class="p">);</span>
-</span><span class="line">        <span class="n">NSCAssert</span><span class="p">(</span><span class="n">err</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s">@&quot;pthread_create() failed: %d&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="c1">// 等待线程退出</span>
-</span><span class="line">    <span class="k">struct</span> <span class="n">threadResult</span> <span class="o">*</span> <span class="n">results</span><span class="p">[</span><span class="n">threadCount</span><span class="p">];</span>
-</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">threadCount</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="kt">int</span> <span class="n">err</span> <span class="o">=</span> <span class="n">pthread_join</span><span class="p">(</span><span class="n">tid</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="kt">void</span> <span class="o">**</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;(</span><span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]));</span>
-</span><span class="line">        <span class="n">NSCAssert</span><span class="p">(</span><span class="n">err</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s">@&quot;pthread_join() failed: %d&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="c1">// 寻找 min 和 max</span>
-</span><span class="line">    <span class="n">uint32_t</span> <span class="n">min</span> <span class="o">=</span> <span class="n">UINT32_MAX</span><span class="p">;</span>
-</span><span class="line">    <span class="n">uint32_t</span> <span class="n">max</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">threadCount</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">min</span> <span class="o">=</span> <span class="n">MIN</span><span class="p">(</span><span class="n">min</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">min</span><span class="p">);</span>
-</span><span class="line">        <span class="n">max</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span><span class="n">max</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">max</span><span class="p">);</span>
-</span><span class="line">        <span class="n">free</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
-</span><span class="line">        <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;min = %u&quot;</span><span class="p">,</span> <span class="n">min</span><span class="p">);</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;max = %u&quot;</span><span class="p">,</span> <span class="n">max</span><span class="p">);</span>
-</span><span class="line">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>NSThread</code> 是 Objective-C 对 pthread 的一个封装。通过封装，在 Cocoa 环境中，可以让代码看起来更加亲切。例如，开发者可以利用 NSThread 的一个子类来定义一个线程，在这个子类的中封装需要在后台线程运行的代码。针对上面的那个例子，我们可以定义一个这样的 <code>NSThread</code> 子类：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">FindMinMaxThread</span> : <span class="nc">NSThread</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSUInteger</span> <span class="n">min</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSUInteger</span> <span class="n">max</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithNumbers:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">numbers</span><span class="p">;</span>
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">FindMinMaxThread</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">_numbers</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nl">initWithNumbers:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="n">numbers</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">_numbers</span> <span class="o">=</span> <span class="n">numbers</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">main</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSUInteger</span> <span class="n">min</span><span class="p">;</span>
-</span><span class="line">    <span class="n">NSUInteger</span> <span class="n">max</span><span class="p">;</span>
-</span><span class="line">    <span class="c1">// 进行相关数据的处理</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">min</span> <span class="o">=</span> <span class="n">min</span><span class="p">;</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">max</span> <span class="o">=</span> <span class="n">max</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>要想启动一个新的线程，需要创建一个线程对象，然后调用它的 <code>start</code> 方法：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSSet</span> <span class="o">*</span><span class="n">threads</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableSet</span> <span class="n">set</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSUInteger</span> <span class="n">numberCount</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">numbers</span><span class="p">.</span><span class="n">count</span><span class="p">;</span>
-</span><span class="line"><span class="n">NSUInteger</span> <span class="n">threadCount</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-</span><span class="line"><span class="k">for</span> <span class="p">(</span><span class="n">NSUInteger</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">threadCount</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">NSUInteger</span> <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">count</span> <span class="o">/</span> <span class="n">threadCount</span><span class="p">)</span> <span class="o">*</span> <span class="n">i</span><span class="p">;</span>
-</span><span class="line">    <span class="n">NSUInteger</span> <span class="n">count</span> <span class="o">=</span> <span class="n">MIN</span><span class="p">(</span><span class="n">numberCount</span> <span class="o">-</span> <span class="n">offset</span><span class="p">,</span> <span class="n">numberCount</span> <span class="o">/</span> <span class="n">threadCount</span><span class="p">);</span>
-</span><span class="line">    <span class="n">NSRange</span> <span class="n">range</span> <span class="o">=</span> <span class="n">NSMakeRange</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
-</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">subset</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">numbers</span> <span class="nl">subarrayWithRange:</span><span class="n">range</span><span class="p">];</span>
-</span><span class="line">    <span class="n">FindMinMaxThread</span> <span class="o">*</span><span class="kr">thread</span> <span class="o">=</span> <span class="p">[[</span><span class="n">FindMinMaxThread</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithNumbers:</span><span class="n">subset</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">threads</span> <span class="nl">addObject:</span><span class="kr">thread</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="kr">thread</span> <span class="n">start</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>现在，我们可以通过检测到线程的 <code>isFinished</code> 属性来检测新生成的线程是否已经结束，并获取结果。我们将这个练习留给感兴趣的读者，这主要是因为不论使用 <code>pthread</code> 还是 <code>NSThread</code> 来直接对线程操作，都是相对糟糕的编程体验，这种方式并不适合我们以写出良好代码为目标的编码精神。</p>
-
-<p>直接使用线程可能会引发的一个问题是，如果你的代码和所基于的框架代码都创建自己的线程时，那么活动的线程数量有可能以指数级增长。这在大型工程中是一个常见问题。例如，在 8 核 CPU 中，你创建了 8 个线程来完全发挥 CPU 性能。然而在这些线程中你的代码所调用的框架代码也做了同样事情（因为它并不知道你已经创建的这些线程），这样会很快产生成成百上千的线程。代码的每个部分自身都没有问题，然而最后却还是导致了问题。使用线程并不是没有代价的，每个线程都会消耗一些内存和内核资源。</p>
-
-<p>接下来，我们将介绍两个基于队列的并发编程 API ：GCD 和 operation queue 。它们通过集中管理一个被大家协同使用的<a href="http://en.wikipedia.org/wiki/Thread_pool_pattern">线程池</a>，来解决上面遇到的问题。</p>
-
-<h3 id="grandcentraldispatch">Grand Central Dispatch</h3>
-
-<p>为了让开发者更加容易的使用设备上的多核CPU，苹果在 OS X 10.6 和 iOS 4 中引入了 Grand Central Dispatch（GCD）。在下一篇关于<a href="http://objccn.io/issue-2-3/">底层并发 API</a> 的文章中，我们将更深入地介绍 GCD。</p>
-
-<p>通过 GCD，开发者不用再直接跟线程打交道了，只需要向队列中添加代码块即可，GCD 在后端管理着一个<a href="http://en.wikipedia.org/wiki/Thread_pool_pattern">线程池</a>。GCD 不仅决定着你的代码块将在哪个线程被执行，它还根据可用的系统资源对这些线程进行管理。这样可以将开发者从线程管理的工作中解放出来，通过集中的管理线程，来缓解大量线程被创建的问题。</p>
-
-<p>GCD 带来的另一个重要改变是，作为开发者可以将工作考虑为一个队列，而不是一堆线程，这种并行的抽象模型更容易掌握和使用。</p>
-
-<p>GCD 公开有 5 个不同的队列：运行在主线程中的 main queue，3 个不同优先级的后台队列，以及一个优先级更低的后台队列（用于 I/O）。 <br />
-另外，开发者可以创建自定义队列：串行或者并行队列。自定义队列非常强大，在自定义队列中被调度的所有 block 最终都将被放入到系统的全局队列中和线程池中。</p>
-
-<p><img src="http://img.objccn.io/issue-2/gcd-queues.png" alt="GCD queues" title="" /></p>
-
-<p>使用不同优先级的若干个队列乍听起来非常直接，不过，我们强烈建议，在绝大多数情况下使用默认的优先级队列就可以了。如果执行的任务需要访问一些共享的资源，那么在不同优先级的队列中调度这些任务很快就会造成不可预期的行为。这样可能会引起程序的完全挂起，因为低优先级的任务阻塞了高优先级任务，使它不能被执行。更多相关内容，在本文的<a href="#Priority-Inversion">优先级反转</a>部分中会有介绍。</p>
-
-<p>虽然 GCD 是一个低层级的 C API ，但是它使用起来非常的直接。不过这也容易使开发者忘记并发编程中的许多注意事项和陷阱。读者可以阅读本文后面的<a href="#challenges">并发编程中面临的挑战</a>，这样可以注意到一些潜在的问题。本期的另外一篇优秀文章：<a href="http://objccn.io/issue-2-3/">底层并发 API</a> 中，包含了很多深入的解释和一些有价值的提示。</p>
-
-<h3 id="operationqueues">Operation Queues</h3>
-
-<p>操作队列（operation queue）是由 GCD 提供的一个队列模型的 Cocoa 抽象。GCD 提供了更加底层的控制，而操作队列则在 GCD 之上实现了一些方便的功能，这些功能对于 app 的开发者来说通常是最好最安全的选择。</p>
-
-<p><code>NSOperationQueue</code> 有两种不同类型的队列：主队列和自定义队列。主队列运行在主线程之上，而自定义队列在后台执行。在两种类型中，这些队列所处理的任务都使用 <code>NSOperation</code> 的子类来表述。</p>
-
-<p>你可以通过重写 <code>main</code> 或者 <code>start</code> 方法 来定义自己的 <code>operations</code> 。前一种方法非常简单，开发者不需要管理一些状态属性（例如 <code>isExecuting</code> 和 <code>isFinished</code>），当 <code>main</code> 方法返回的时候，这个 operation 就结束了。这种方式使用起来非常简单，但是灵活性相对重写 <code>start</code> 来说要少一些。</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">YourOperation</span>
-</span><span class="line">    <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">main</span>
-</span><span class="line">    <span class="p">{</span>
-</span><span class="line">        <span class="c1">// 进行处理 ...</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>如果你希望拥有更多的控制权，以及在一个操作中可以执行异步任务，那么就重写 <code>start</code> 方法：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">YourOperation</span>
-</span><span class="line">    <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">start</span>
-</span><span class="line">    <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">isExecuting</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">isFinished</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
-</span><span class="line">        <span class="c1">// 开始处理，在结束时应该调用 finished ...</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">finished</span>
-</span><span class="line">    <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">isExecuting</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">isFinished</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>注意：这种情况下，你必须手动管理操作的状态。 为了让操作队列能够捕获到操作的改变，需要将状态的属性以配合 KVO 的方式进行实现。如果你不使用它们默认的 setter 来进行设置的话，你就需要在合适的时候发送合适的 KVO 消息。</p>
-
-<p>为了能使用操作队列所提供的取消功能，你需要在长时间操作中时不时地检查 <code>isCancelled</code> 属性：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">main</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">while</span> <span class="p">(</span><span class="n">notDone</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="o">!</span><span class="n">self</span><span class="p">.</span><span class="n">isCancelled</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="c1">// 进行处理</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>当你定义好 operation 类之后，就可以很容易的将一个 operation 添加到队列中：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">queue</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSOperationQueue</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="n">YourOperation</span> <span class="o">*</span><span class="n">operation</span> <span class="o">=</span> <span class="p">[[</span><span class="n">YourOperation</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="p">[</span><span class="n">queue</span>  <span class="nl">addOperation:</span><span class="n">operation</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>另外，你也可以将 block 添加到操作队列中。这有时候会非常的方便，比如你希望在主队列中调度一个一次性任务：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[[</span><span class="n">NSOperationQueue</span> <span class="n">mainQueue</span><span class="p">]</span> <span class="nl">addOperationWithBlock:</span><span class="o">^</span><span class="p">{</span>
-</span><span class="line">    <span class="c1">// 代码...</span>
-</span><span class="line"><span class="p">}];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>虽然通过这种的方式在队列中添加操作会非常方便，但是定义你自己的 NSOperation 子类会在调试时很有帮助。如果你重写 operation 的<code>description</code> 方法，就可以很容易的标示出在某个队列中当前被调度的所有操作 。</p>
-
-<p>除了提供基本的调度操作或 block 外，操作队列还提供了在 GCD 中不太容易处理好的特性的功能。例如，你可以通过 <code>maxConcurrentOperationCount</code> 属性来控制一个特定队列中可以有多少个操作参与并发执行。将其设置为 1 的话，你将得到一个串行队列，这在以隔离为目的的时候会很有用。</p>
-
-<p>另外还有一个方便的功能就是根据队列中 <code>operation</code> 的优先级对其进行排序，这不同于 GCD 的队列优先级，它只影响当前队列中所有被调度的 operation 的执行先后。如果你需要进一步在除了 5 个标准的优先级以外对 operation 的执行顺序进行控制的话，还可以在 operation 之间指定依赖关系，如下：</p>
-
-<pre><code>[intermediateOperation addDependency:operation1];
-[intermediateOperation addDependency:operation2];
-[finishedOperation addDependency:intermediateOperation];
-</code></pre>
-
-<p>这些简单的代码可以确保 <code>operation1</code> 和 <code>operation2</code> 在 <code>intermediateOperation</code> 之前执行，当然，也会在 <code>finishOperation</code> 之前被执行。对于需要明确的执行顺序时，操作依赖是非常强大的一个机制。它可以让你创建一些操作组，并确保这些操作组在依赖它们的操作被执行之前执行，或者在并发队列中以串行的方式执行操作。</p>
-
-<p>从本质上来看，操作队列的性能比 GCD 要低那么一点，不过，大多数情况下这点负面影响可以忽略不计，操作队列是并发编程的首选工具。</p>
-
-<h3 id="runloops">Run Loops</h3>
-
-<p>实际上，Run loop并不像 GCD 或者操作队列那样是一种并发机制，因为它并不能并行执行任务。不过在主 dispatch/operation 队列中， run loop 将直接配合任务的执行，它提供了一种异步执行代码的机制。</p>
-
-<p>Run loop 比起操作队列或者 GCD 来说容易使用得多，因为通过 run loop ，你不必处理并发中的复杂情况，就能异步地执行任务。</p>
-
-<p>一个 run loop 总是绑定到某个特定的线程中。main run loop 是与主线程相关的，在每一个 Cocoa 和 CocoaTouch 程序中，这个 main run loop 都扮演了一个核心角色，它负责处理 UI 事件、计时器，以及其它内核相关事件。无论你什么时候设置计时器、使用 <code>NSURLConnection</code> 或者调用 <code>performSelector:withObject:afterDelay:</code>，其实背后都是 run loop 在处理这些异步任务。</p>
-
-<p>无论何时你使用 run loop 来执行一个方法的时候，都需要记住一点：run loop 可以运行在不同的模式中，每种模式都定义了一组事件，供 run loop 做出响应。这在对应 main run loop 中暂时性的将某个任务优先执行这种任务上是一种聪明的做法。</p>
-
-<p>关于这点，在 iOS 中非常典型的一个示例就是滚动。在进行滚动时，run loop 并不是运行在默认模式中的，因此， run loop 此时并不会响应比如滚动前设置的计时器。一旦滚动停止了，run loop 会回到默认模式，并执行添加到队列中的相关事件。如果在滚动时，希望计时器能被触发，需要将其设为 <code>NSRunLoopCommonModes</code> 的模式，并添加到 run loop 中。</p>
-
-<p>主线程一般来说都已经配置好了 main run loop。然而其他线程默认情况下都没有设置 run loop。你也可以自行为其他线程设置 run loop ，但是一般来说我们很少需要这么做。大多数时间使用 main run loop 会容易得多。如果你需要处理一些很重的工作，但是又不想在主线程里做，你仍然可以在你的代码在 main run loop 中被调用后将工作分配给其他队列。Chris 在他关于<a href="http://objccn.io/issue-2-2/">常见的后台实践</a>的文章里阐述了一些关于这种模式的很好的例子。</p>
-
-<p>如果你真需要在别的线程中添加一个 run loop ，那么不要忘记在 run loop 中至少添加一个 input source 。如果 run loop 中没有设置好的 input source，那么每次运行这个 run loop ，它都会立即退出。</p>
-
-<p><a name="challenges" id="challenges"> </a></p>
-
-<h2>并发编程中面临的挑战</h2>
-
-<p>使用并发编程会带来许多陷阱。只要一旦你做的事情超过了最基本的情况，对于并发执行的多任务之间的相互影响的不同状态的监视就会变得异常困难。 问题往往发生在一些不确定性（不可预见性）的地方，这使得在调试相关并发代码时更加困难。</p>
-
-<p>关于并发编程的不可预见性有一个非常有名的例子：在1995年， NASA (美国宇航局)发送了开拓者号火星探测器，但是当探测器成功着陆在我们红色的邻居星球后不久，任务<a href="http://research.microsoft.com/en-us/um/people/mbj/Mars_Pathfinder/Mars_Pathfinder.html">嘎然而止</a>，火星探测器莫名其妙的不停重启，在计算机领域内，遇到的这种现象被定为为<a href="#Priority-Inversion">优先级反转</a>，也就是说低优先级的线程一直阻塞着高优先级的线程。稍后我们会看到关于这个问题的更多细节。在这里我们想说明的是，即使拥有丰富的资源和大量优秀工程师的智慧，并发也还是会在不少情况下反咬你你一口。</p>
-
-<h3>资源共享</h3>
-
-<p>并发编程中许多问题的根源就是在多线程中访问共享资源。资源可以是一个属性、一个对象，通用的内存、网络设备或者一个文件等等。在多线程中任何一个共享的资源都可能是一个潜在的冲突点，你必须精心设计以防止这种冲突的发生。</p>
-
-<p>为了演示这类问题，我们举一个关于资源的简单示例：比如仅仅用一个整型值来做计数器。在程序运行过程中，我们有两个并行线程 A 和 B，这两个线程都尝试着同时增加计数器的值。问题来了，你通过 C 语言或 Objective-C 写的代码大多数情况下对于 CPU 来说不会仅仅是一条机器指令。要想增加计数器的值，当前的必须被从内存中读出，然后增加计数器的值，最后还需要将这个增加后的值写回内存中。</p>
-
-<p>我们可以试着想一下，如果两个线程同时做上面涉及到的操作，会发生怎样的偶然。例如，线程 A 和 B 都从内存中读取出了计数器的值，假设为 <code>17</code> ，然后线程A将计数器的值加1，并将结果 <code>18</code> 写回到内存中。同时，线程B也将计数器的值加 1 ，并将结果 <code>18</code> 写回到内存中。实际上，此时计数器的值已经被破坏掉了，因为计数器的值 <code>17</code> 被加 1 了两次，而它的值却是 <code>18</code>。</p>
-
-<p><img src="http://img.objccn.io/issue-2/race-condition.png" alt="竞态条件" title="" /></p>
-
-<p>这个问题被叫做<a href="http://en.wikipedia.org/wiki/Race_conditions#Software">竞态条件</a>，在多线程里面访问一个共享的资源，如果没有一种机制来确保在线程 A 结束访问一个共享资源之前，线程 B 就不会开始访问该共享资源的话，资源竞争的问题就总是会发生。如果你所写入内存的并不是一个简单的整数，而是一个更复杂的数据结构，可能会发生这样的现象：当第一个线程正在写入这个数据结构时，第二个线程却尝试读取这个数据结构，那么获取到的数据可能是新旧参半或者没有初始化。为了防止出现这样的问题，多线程需要一种互斥的机制来访问共享资源。</p>
-
-<p>在实际的开发中，情况甚至要比上面介绍的更加复杂，因为现代 CPU 为了优化目的，往往会改变向内存读写数据的顺序（<a href="http://en.wikipedia.org/wiki/Out-of-order_execution">乱序执行</a>）。</p>
-
-<h3>互斥锁</h3>
-
-<p><a href="http://en.wikipedia.org/wiki/Mutex">互斥</a>访问的意思就是同一时刻，只允许一个线程访问某个特定资源。为了保证这一点，每个希望访问共享资源的线程，首先需要获得一个共享资源的<a href="http://en.wikipedia.org/wiki/Lock_%28computer_science%29">互斥锁</a>，一旦某个线程对资源完成了操作，就释放掉这个互斥锁，这样别的线程就有机会访问该共享资源了。</p>
-
-<p><img src="http://img.objccn.io/issue-2/locking.png" alt="互斥锁" title="" /></p>
-
-<p>除了确保互斥访问，还需要解决代码无序执行所带来的问题。如果不能确保 CPU 访问内存的顺序跟编程时的代码指令一样，那么仅仅依靠互斥访问是不够的。为了解决由 CPU 的优化策略引起的副作用，还需要引入<a href="http://en.wikipedia.org/wiki/Memory_barrier">内存屏障</a>。通过设置内存屏障，来确保没有无序执行的指令能跨过屏障而执行。</p>
-
-<p>当然，互斥锁自身的实现是需要没有竞争条件的。这实际上是非常重要的一个保证，并且需要在现代 CPU 上使用特殊的指令。更多关于原子操作（atomic operation）的信息，请阅读 Daniel 写的文章：<a href="http://objccn.io/issue-2-3/">底层并发技术</a>。</p>
-
-<p>从语言层面来说，在 Objective-C 中将属性以 atomic 的形式来声明，就能支持互斥锁了。事实上在默认情况下，属性就是 atomic 的。将一个属性声明为 atomic 表示每次访问该属性都会进行隐式的加锁和解锁操作。虽然最把稳的做法就是将所有的属性都声明为 atomic，但是加解锁这也会付出一定的代价。</p>
-
-<p>在资源上的加锁会引发一定的性能代价。获取锁和释放锁的操作本身也需要没有竞态条件，这在多核系统中是很重要的。另外，在获取锁的时候，线程有时候需要等待，因为可能其它的线程已经获取过资源的锁了。这种情况下，线程会进入休眠状态。当其它线程释放掉相关资源的锁时，休眠的线程会得到通知。所有这些相关操作都是非常昂贵且复杂的。</p>
-
-<p>锁也有不同的类型。当没有竞争时，有些锁在没有锁竞争的情况下性能很好，但是在有锁的竞争情况下，性能就会大打折扣。另外一些锁则在基本层面上就比较耗费资源，但是在竞争情况下，性能的恶化会没那么厉害。(<a href="http://en.wikipedia.org/wiki/Lock_%28computer_science%29#Granularity">锁的竞争</a>是这样产生的：当一个或者多个线程尝试获取一个已经被别的线程获取过了的锁)。</p>
-
-<p>在这里有一个东西需要进行权衡：获取和释放锁所是要带来开销的，因此你需要确保你不会频繁地进入和退出<a href="http://en.wikipedia.org/wiki/Critical_section">临界区段</a>（比如获取和释放锁）。同时，如果你获取锁之后要执行一大段代码，这将带来锁竞争的风险：其它线程可能必须等待获取资源锁而无法工作。这并不是一项容易解决的任务。</p>
-
-<p>我们经常能看到本来计划并行运行的代码，但实际上由于共享资源中配置了相关的锁，所以同一时间只有一个线程是处于激活状态的。对于你的代码会如何在多核上运行的预测往往十分重要，你可以使用 Instrument 的 <a href="http://developer.apple.com/library/mac/#documentation/DeveloperTools/Conceptual/InstrumentsUserGuide/AnalysingCPUUsageinYourOSXApp/AnalysingCPUUsageinYourOSXApp.html">CPU strategy view</a> 来检查是否有效的利用了 CPU 的可用核数，进而得出更好的想法，以此来优化代码。</p>
-
-<h3>死锁</h3>
-
-<p>互斥锁解决了竞态条件的问题，但很不幸同时这也引入了一些<a href="http://en.wikipedia.org/wiki/Lock_%28computer_science%29#The_problems_with_locks">其他问题</a>，其中一个就是<a href="http://en.wikipedia.org/wiki/Deadlock">死锁</a>。当多个线程在相互等待着对方的结束时，就会发生死锁，这时程序可能会被卡住。</p>
-
-<p><img src="http://img.objccn.io/issue-2/dead-lock.png" alt="死锁" title="" /></p>
-
-<p>看看下面的代码，它交换两个变量的值：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="kt">void</span> <span class="nf">swap</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">lock</span><span class="p">(</span><span class="n">lockA</span><span class="p">);</span>
-</span><span class="line">    <span class="n">lock</span><span class="p">(</span><span class="n">lockB</span><span class="p">);</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">b</span> <span class="o">=</span> <span class="n">B</span><span class="p">;</span>
-</span><span class="line">    <span class="n">A</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
-</span><span class="line">    <span class="n">B</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
-</span><span class="line">    <span class="n">unlock</span><span class="p">(</span><span class="n">lockB</span><span class="p">);</span>
-</span><span class="line">    <span class="n">unlock</span><span class="p">(</span><span class="n">lockA</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>大多数时候，这能够正常运行。但是当两个线程使用相反的值来同时调用上面这个方法时：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="n">swap</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">);</span> <span class="c1">// 线程 1</span>
-</span><span class="line"><span class="n">swap</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">X</span><span class="p">);</span> <span class="c1">// 线程 2</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>此时程序可能会由于死锁而被终止。线程 1 获得了 X 的一个锁，线程 2 获得了 Y 的一个锁。 接着它们会同时等待另外一把锁，但是永远都不会获得。</p>
-
-<p>再说一次，你在线程之间共享的资源越多，你使用的锁也就越多，同时程序被死锁的概率也会变大。这也是为什么我们需要尽量减少线程间资源共享，并确保共享的资源尽量简单的原因之一。建议阅读一下<a href="http://objccn.io/issue-2-3/">底层并发编程 API</a> 中的<a href="http://objccn.io/issue-2-3/#async">全部使用异步分发</a>一节。</p>
-
-<h3 id="starvation">资源饥饿（Starvation）</h3>
-
-<p>当你认为已经足够了解并发编程面临的问题时，又出现了一个新的问题。锁定的共享资源会引起<a href="http://en.wikipedia.org/wiki/Readers-writers_problem">读写问题</a>。大多数情况下，限制资源一次只能有一个线程进行读取访问其实是非常浪费的。因此，在资源上没有写入锁的时候，持有一个读取锁是被允许的。这种情况下，如果一个持有读取锁的线程在等待获取写入锁的时候，其他希望读取资源的线程则因为无法获得这个读取锁而导致<a href="http://en.wikipedia.org/wiki/Resource_starvation">资源饥饿</a>的发生。</p>
-
-<p>为了解决这个问题，我们需要使用一个比简单的读/写锁更聪明的方法，例如给定一个 <a href="http://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock">writer preference</a>，或者使用 <a href="http://en.wikipedia.org/wiki/Read-copy-update">read-copy-update</a> 算法。Daniel 在<a href="http://objccn.io/issue-2-3/#multiple-readers-single-writer">底层并发编程 API </a>中有介绍了如何用 GCD 实现一个多读取单写入的模式，这样就不会被写入资源饥饿的问题困扰了。</p>
-
-<p><a name="priority-inversion" id="priority-inversion"> </a></p>
-
-<h2>优先级反转</h2>
-
-<p>本节开头介绍了美国宇航局发射的开拓者号火星探测器在火星上遇到的并发问题。现在我们就来看看为什么开拓者号几近失败，以及为什么有时候我们的程序也会遇到相同的问题，该死的<a href="http://en.wikipedia.org/wiki/Priority_inversion">优先级反转</a>。</p>
-
-<p>优先级反转是指程序在运行时低优先级的任务阻塞了高优先级的任务，有效的反转了任务的优先级。由于 GCD 提供了拥有不同优先级的后台队列，甚至包括一个 I/O 队列，所以我们最好了解一下优先级反转的可能性。</p>
-
-<p>高优先级和低优先级的任务之间共享资源时，就可能发生优先级反转。当低优先级的任务获得了共享资源的锁时，该任务应该迅速完成，并释放掉锁，这样高优先级的任务就可以在没有明显延时的情况下继续执行。然而高优先级任务会在低优先级的任务持有锁的期间被阻塞。如果这时候有一个中优先级的任务(该任务不需要那个共享资源)，那么它就有可能会抢占低优先级任务而被执行，因为此时高优先级任务是被阻塞的，所以中优先级任务是目前所有可运行任务中优先级最高的。此时，中优先级任务就会阻塞着低优先级任务，导致低优先级任务不能释放掉锁，这也就会引起高优先级任务一直在等待锁的释放。</p>
-
-<p><img src="http://img.objccn.io/issue-2/priority-inversion.png" alt="优先级反转" title="" /></p>
-
-<p>在你的实际代码中，可能不会像发生在火星的事情那样戏剧性地不停重启。遇到优先级反转时，一般没那么严重。</p>
-
-<p>解决这个问题的方法，通常就是不要使用不同的优先级。通常最后你都会以让高优先级的代码等待低优先级的代码来解决问题。当你使用 GCD 时，总是使用默认的优先级队列（直接使用，或者作为目标队列）。如果你使用不同的优先级，很可能实际情况会让事情变得更糟糕。</p>
-
-<p>从中得到的教训是，使用不同优先级的多个队列听起来虽然不错，但毕竟是纸上谈兵。它将让本来就复杂的并行编程变得更加复杂和不可预见。如果你在编程中，遇到高优先级的任务突然没理由地卡住了，可能你会想起本文，以及那个美国宇航局的工程师也遇到过的被称为优先级反转的问题。</p>
-
-<h2>总结</h2>
-
-<p>我们希望通过本文你能够了解到并发编程带来的复杂性和相关问题。并发编程中，无论是看起来多么简单的 API ，它们所能产生的问题会变得非常的难以观测，而且要想调试这类问题往往也都是非常困难的。</p>
-
-<p>但另一方面，并发实际上是一个非常棒的工具。它充分利用了现代多核 CPU 的强大计算能力。在开发中，关键的一点就是尽量让并发模型保持简单，这样可以限制所需要的锁的数量。</p>
-
-<p>我们建议采纳的安全模式是这样的：从主线程中提取出要使用到的数据，并利用一个操作队列在后台处理相关的数据，最后回到主队列中来发送你在后台队列中得到的结果。使用这种方式，你不需要自己做任何锁操作，这也就大大减少了犯错误的几率。</p>
 
 <hr />
 <p class="post-footer">
