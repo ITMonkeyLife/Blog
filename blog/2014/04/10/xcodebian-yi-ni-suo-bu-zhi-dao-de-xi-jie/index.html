@@ -134,20 +134,19 @@ Build target objcio
 <p>针对工程中的每个 target，Xcode 都会执行一系列的操作，将相关的源码，根据所选定的平台，转换为机器可读的二进制文件。下面我们详细的了解一下第一个 target：SSZipArchive。</p>
 
 <p>在针对这个 target 输出的 log 信息中，我们可以看到每个任务被执行的详细情况。例如第一个任务是处理一个预编译头文件（为了增强 log 信息的可读性，我省略了许多细节）：</p>
-
 <pre><code>(1) ProcessPCH /.../Pods-SSZipArchive-prefix.pch.pch Pods-SSZipArchive-prefix.pch normal armv7 objective-c com.apple.compilers.llvm.clang.1_0.compiler
-    (2) cd /.../Dev/objcio/Pods
-        setenv LANG en_US.US-ASCII
-        setenv PATH "..."
-    (3) /.../Xcode.app/.../clang 
-            (4) -x objective-c-header 
-            (5) -arch armv7 
-            ... configuration and warning flags ...
-            (6) -DDEBUG=1 -DCOCOAPODS=1 
-            ... include paths and more ...
-            (7) -c 
-            (8) /.../Pods-SSZipArchive-prefix.pch 
-            (9) -o /.../Pods-SSZipArchive-prefix.pch.pch
+(2) cd /.../Dev/objcio/Pods
+	setenv LANG en_US.US-ASCII
+	setenv PATH "..."
+(3) /.../Xcode.app/.../clang 
+(4) -x objective-c-header 
+(5) -arch armv7 
+... configuration and warning flags ...
+(6) -DDEBUG=1 -DCOCOAPODS=1 
+... include paths and more ...
+(7) -c 
+(8) /.../Pods-SSZipArchive-prefix.pch 
+(9) -o /.../Pods-SSZipArchive-prefix.pch.pch
 </code></pre>
 
 <p>在 build 处理过程中，每个任务都会出现类似上面的这些 log 信息，我们就通过上面的 log 信息进一步了解详情。</p>
