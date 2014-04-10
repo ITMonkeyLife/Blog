@@ -689,7 +689,7 @@ tailrecurse._crit_edge:                           ; preds = %tailrecurse, %0
 <span class="line-number">23</span>
 <span class="line-number">24</span>
 <span class="line-number">25</span>
-</pre></td><td class="code"><pre><code class="c++"><span class="line"><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</pre></td><td class="code"><pre><code class="c++"><span class="line"><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>
 </span><span class="line"><span class="k">virtual</span> <span class="kt">bool</span> <span class="n">VisitObjCMessageExpr</span><span class="p">(</span><span class="n">ObjCMessageExpr</span> <span class="o">*</span><span class="n">E</span><span class="p">)</span> <span class="p">{</span>
 </span><span class="line">  <span class="k">if</span> <span class="p">(</span><span class="n">E</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">getReceiverKind</span><span class="p">()</span> <span class="o">==</span> <span class="n">ObjCMessageExpr</span><span class="o">::</span><span class="n">Class</span><span class="p">)</span> <span class="p">{</span>
 </span><span class="line">    <span class="n">QualType</span> <span class="n">ReceiverType</span> <span class="o">=</span> <span class="n">E</span><span class="o">-&amp;</span><span class="n">gt</span><span class="p">;</span><span class="n">getClassReceiver</span><span class="p">();</span>
@@ -713,7 +713,7 @@ tailrecurse._crit_edge:                           ; preds = %tailrecurse, %0
 </span><span class="line">  <span class="p">}</span>
 </span><span class="line">  <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
 </span><span class="line"><span class="p">}</span>
-</span><span class="line"><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class="line"><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>上面的这个方法首先查找消息表达式， 以 <code>Observer</code> 作为接收者， <code>observerWithTarget:action:</code> 作为 selector，然后检查 target 中是否存在相应的方法。虽然这个例子有点儿刻意，但如果你想要利用 AST 对自己的代码库做某些检查，按照上面的例子来就可以了。</p>
