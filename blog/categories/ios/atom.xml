@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-10T11:50:05+08:00</updated>
+  <updated>2014-04-10T14:33:27+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -488,7 +488,7 @@ tailrecurse._crit_edge:                           ; preds = %tailrecurse, %0
 </code></p>
 
 <p>接下来，我们想要检查一下每当这个类被调用的时候，在 <code>target</code> 对象中是否都有对应的 <code>action</code> 方法存在。可以写个 C++ 函数来做这件事（注意，这是我第一次写 C++ 程序，可能不那么严谨）：</p>
-<pre><code>
+<p><code>c++
 virtual bool VisitObjCMessageExpr(ObjCMessageExpr *E) {
   if (E-&gt;getReceiverKind() == ObjCMessageExpr::Class) {
     QualType ReceiverType = E-&gt;getClassReceiver();
@@ -512,7 +512,7 @@ virtual bool VisitObjCMessageExpr(ObjCMessageExpr *E) {
   }
   return true;
 }
-</code></pre>
+</code></p>
 
 <p>上面的这个方法首先查找消息表达式， 以 <code>Observer</code> 作为接收者， <code>observerWithTarget:action:</code> 作为 selector，然后检查 target 中是否存在相应的方法。虽然这个例子有点儿刻意，但如果你想要利用 AST 对自己的代码库做某些检查，按照上面的例子来就可以了。</p>
 
