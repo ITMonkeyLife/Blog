@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-15T18:11:42+08:00</updated>
+  <updated>2014-04-15T18:17:32+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -143,9 +143,9 @@ NSArray *sortedNumbers = [numbers sortedArrayUsingSelector:@selector(compare:)];
 
 <p>```objc
 typedef NS_OPTIONS(NSUInteger, NSBinarySearchingOptions) {
-    NSBinarySearchingFirstEqual     = (1UL &lt;&lt; 8),
-    NSBinarySearchingLastEqual      = (1UL &lt;&lt; 9),
-    NSBinarySearchingInsertionIndex = (1UL &lt;&lt; 10),
+    NSBinarySearchingFirstEqual     = (1UL « 8),
+    NSBinarySearchingLastEqual      = (1UL « 9),
+    NSBinarySearchingInsertionIndex = (1UL « 10),
 };</p>
 
 <ul>
