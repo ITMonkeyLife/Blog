@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Apr 9th, 2014 iOS Comments 并发程序开发测试 在开发高质量应用程序的过程中，测试是一个很重要的工具。在过去，当并发并不是应用程序架构中重要组成部分的时候，测试就相对简单。随着这几年的发展，使用并发设计模式已愈发重要了，想要测试好并发应用程序，已成了一个不小的挑战。 &hellip;">
+	<meta name="description" content="Apr 9th, 2014 iOS Comments 整洁的TableView代码 Table view 是 iOS 应用程序中非常通用的组件。许多代码和 table view 都有直接或间接的关系，随便举几个例子，比如提供数据、更新 table view，控制它的行为以及响应选择事件。 &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -98,6 +98,365 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-04-09T16:33:17+08:00" data-updated="true" itemprop="datePublished">Apr 9<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/" itemprop="url">整洁的TableView代码</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>Table view 是 iOS 应用程序中非常通用的组件。许多代码和 table view 都有直接或间接的关系，随便举几个例子，比如提供数据、更新 table view，控制它的行为以及响应选择事件。在这篇文章中，我们将会展示保持 table view 相关代码的整洁和良好组织的技术。</p>
+
+<h2 id="uitableviewcontrollervsuiviewcontroller">UITableViewController vs. UIViewController</h2>
+
+<p>Apple 提供了 <code>UITableViewController</code> 作为 table views 专属的 view controller 类。Table view controllers 实现了一些非常有用的特性，来帮你避免一遍又一遍地写那些死板的代码！但是话又说回来，table view controller 只限于管理一个全屏展示的 table view。大多数情况下，这就是你想要的，但如果不是，还有其他方法来解决这个问题，就像下面我们展示的那样。</p>
+
+<h3 id="tableviewcontrollers">Table View Controllers 的特性</h3>
+
+<p>Table view controllers 会在第一次显示 table view 的时候帮你加载其数据。另外，它还会帮你切换 table view 的编辑模式、响应键盘通知、以及一些小任务，比如闪现侧边的滑动提示条和清除选中时的背景色。为了让这些特性生效，当你在子类中覆写类似 <code>viewWillAppear:</code> 或者 <code>viewDidAppear:</code> 等事件方法时，需要调用 super 版本。</p>
+
+<p>Table view controllers 相对于标准 view controllers 的一个特别的好处是它支持 Apple 实现的“下拉刷新”。目前，文档中唯一的使用 <code>UIRefreshControl</code> 的方式就是通过 table view controller ，虽然通过努力在其他地方也能让它工作（<a href="http://stackoverflow.com/questions/12805003/uirefreshcontrol-issues">见此处</a>），但很可能在下一次 iOS 更新的时候就不行了。</p>
+
+<p>这些要素加一起，为我们提供了大部分 Apple 所定义的标准 table view 交互行为，如果你的应用恰好符合这些标准，那么直接使用 table view controllers 来避免写那些死板的代码是个很好的方法。</p>
+
+<h3 id="tableviewcontrollers">Table View Controllers 的限制</h3>
+
+<p>Table view controllers 的 view 属性永远都是一个 table view。如果你稍后决定在 table view 旁边显示一些东西（比如一个地图），如果不依赖于那些奇怪的 hacks，估计就没什么办法了。</p>
+
+<p>如果你是用代码或 .xib 文件来定义的界面，那么迁移到一个标准 view controller 将会非常简单。但是如果你使用了 storyboards，那么这个过程要多包含几个步骤。除非重新创建，否则你并不能在 storyboards 中将 table view controller 改成一个标准的 view controller。这意味着你必须将所有内容拷贝到新的 view controller，然后再重新连接一遍。</p>
+
+<p>最后，你需要把迁移后丢失的 table view controller 的特性给补回来。大多数都是 <code>viewWillAppear:</code> 或 <code>viewDidAppear:</code> 中简单的一条语句。切换编辑模式需要实现一个 action 方法，用来切换 table view 的 <code>editing</code> 属性。大多数工作来自重新创建对键盘的支持。</p>
+
+<p>在选择条路之前，其实还有一个更轻松的选择，它可以通过分离我们需要关心的功能（关注点分离），让你获得额外的好处：</p>
+
+<h3 id="childviewcontrollers">使用Child View Controllers</h3>
+
+<p>和完全抛弃 table view controller 不同，你还可以将它作为 child view controller 添加到其他 view controller 中（<a href="http://objccn.io/issue-1-4">关于此话题的文章</a>）。这样，parent view controller 在管理其他的你需要的新加的界面元素的同时，table view controller 还可以继续管理它的 table view。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addPhotoDetailsTableView</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">DetailsViewController</span> <span class="o">*</span><span class="n">details</span> <span class="o">=</span> <span class="p">[[</span><span class="n">DetailsViewController</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">photo</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">photo</span><span class="p">;</span>
+</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">delegate</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">addChildViewController:</span><span class="n">details</span><span class="p">];</span>
+</span><span class="line">    <span class="n">CGRect</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">bounds</span><span class="p">;</span>
+</span><span class="line">    <span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">110</span><span class="p">;</span>
+</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">addSubview:</span><span class="n">details</span><span class="p">.</span><span class="n">view</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">details</span> <span class="nl">didMoveToParentViewController:</span><span class="n">self</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>如果你使用这个解决方案，你就必须在 child view controller 和 parent view controller 之间建立消息传递的渠道。比如，如果用户选择了一个 table view 中的 cell，parent view controller 需要知道这个事件来推入其他 view controller。根据使用习惯，通常最清晰的方式是为这个 table view controller 定义一个 delegate protocol，然后到 parent view controller 中去实现。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">DetailsViewControllerDelegate</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">didSelectPhotoAttributeWithKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">PhotoViewController</span> <span class="p">()</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">PhotoViewController</span>
+</span><span class="line"><span class="c1">// ...</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">didSelectPhotoAttributeWithKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">DetailViewController</span> <span class="o">*</span><span class="n">controller</span> <span class="o">=</span> <span class="p">[[</span><span class="n">DetailViewController</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="n">controller</span><span class="p">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">navigationController</span> <span class="nl">pushViewController:</span><span class="n">controller</span> <span class="nl">animated:</span><span class="n">YES</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>就像你看到的那样，这种结构为 view controller 之间的消息传递带来了额外的开销，但是作为回报，代码封装和分离非常清晰，有更好的复用性。根据实际情况的不同，这既可能让事情变得更简单，也可能会更复杂，需要读者自行斟酌和决定。</p>
+
+<h2 id="separatingconcerns">分离关注点（Separating Concerns）</h2>
+
+<p>当处理 table views 的时候，有许多各种各样的任务，这些任务穿梭于 models，controllers 和 views 之间。为了避免让 view controllers 做所有的事，我们将尽可能地把这些任务划分到合适的地方，这样有利于阅读、维护和测试。</p>
+
+<p>这里描述的技术是文章<a href="http://objccn.io/issue-1-1">更轻量的 View Controllers</a> 中的概念的延伸，请参考这篇文章来理解如何重构 data source 和 model 的逻辑。结合 table views，我们来具体看看如何在 view controllers 和 views 之间分离关注点。</p>
+
+<h3 id="modelcells">搭建 Model 对象和 Cells 之间的桥梁</h3>
+
+<p>有时我们需要将想显示的 model 层中的数据传到 view 层中去显示。由于我们同时也希望让 model 和 view 之间明确分离，所以通常把这个任务转移到 table view 的 data source 中去处理：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UITableViewCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
+</span><span class="line">         <span class="nf">cellForRowAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">PhotoCell</span> <span class="o">*</span><span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">tableView</span> <span class="nl">dequeueReusableCellWithIdentifier:</span><span class="s">@&quot;PhotoCell&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">Photo</span> <span class="o">*</span><span class="n">photo</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">itemAtIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">photoTitleLabel</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">photo</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSString</span><span class="o">*</span> <span class="n">date</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dateFormatter</span> <span class="nl">stringFromDate:</span><span class="n">photo</span><span class="p">.</span><span class="n">creationDate</span><span class="p">];</span>
+</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">photoDateLabel</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">date</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>但是这样的代码会让 data source 变得混乱，因为它向 data source 暴露了 cell 的设计。最好分解出来，放到 cell 类的一个 category 中。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">PhotoCell</span> <span class="nl">(ConfigureForPhoto)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">configureForPhoto:</span><span class="p">(</span><span class="n">Photo</span> <span class="o">*</span><span class="p">)</span><span class="nv">photo</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">photoTitleLabel</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">photo</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSString</span><span class="o">*</span> <span class="n">date</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dateFormatter</span> <span class="nl">stringFromDate:</span><span class="n">photo</span><span class="p">.</span><span class="n">creationDate</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">photoDateLabel</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">date</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>有了上述代码后，我们的 data source 方法就变得简单了。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UITableViewCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
+</span><span class="line">         <span class="nf">cellForRowAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">PhotoCell</span> <span class="o">*</span><span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">tableView</span> <span class="nl">dequeueReusableCellWithIdentifier:</span><span class="n">PhotoCellIdentifier</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">cell</span> <span class="nl">configureForPhoto:</span><span class="p">[</span><span class="n">self</span> <span class="nl">itemAtIndexPath:</span><span class="n">indexPath</span><span class="p">]];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在我们的示例代码中，table view 的 data source 已经<a href="http://objccn.io/issue-1-1">分解到单独的类中了</a>，它用一个设置 cell 的 block 来初始化。这时，这个 block 就变得这样简单了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">TableViewCellConfigureBlock</span> <span class="n">block</span> <span class="o">=</span> <span class="o">^</span><span class="p">(</span><span class="n">PhotoCell</span> <span class="o">*</span><span class="n">cell</span><span class="p">,</span> <span class="n">Photo</span> <span class="o">*</span><span class="n">photo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">cell</span> <span class="nl">configureForPhoto:</span><span class="n">photo</span><span class="p">];</span>
+</span><span class="line"><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3 id="cells">让 Cells 可复用</h3>
+
+<p>有时多种 model 对象需要用同一类型的 cell 来表示，这种情况下，我们可以进一步让 cell 可以复用。首先，我们给 cell 定义一个 protocol，需要用这个 cell 显示的对象必须遵循这个 protocol。然后简单修改 category 中的设置方法，让它可以接受遵循这个 protocol 的任何对象。这些简单的步骤让 cell 和任何特殊的 model 对象之间得以解耦，让它可适应不同的数据类型。</p>
+
+<h3 id="cellcell">在 Cell 内部控制 Cell 的状态</h3>
+
+<p>如果你想自定义 table views 默认的高亮或选择行为，你可以实现两个 delegate 方法，把点击的 cell 修改成我们想要的样子。例如：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
+</span><span class="line">        <span class="nf">didHighlightRowAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">PhotoCell</span> <span class="o">*</span><span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">tableView</span> <span class="nl">cellForRowAtIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">photoTitleLabel</span><span class="p">.</span><span class="n">shadowColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">darkGrayColor</span><span class="p">];</span>
+</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">photoTitleLabel</span><span class="p">.</span><span class="n">shadowOffset</span> <span class="o">=</span> <span class="n">CGSizeMake</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
+</span><span class="line">        <span class="nf">didUnhighlightRowAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">PhotoCell</span> <span class="o">*</span><span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">tableView</span> <span class="nl">cellForRowAtIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">photoTitleLabel</span><span class="p">.</span><span class="n">shadowColor</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然而，这两个 delegate 方法的实现又基于了 view controller 知晓 cell 实现的具体细节。如果我们想替换或重新设计 cell，我们必须改写 delegate 代码。View 的实现细节和 delegate 的实现交织在一起了。我们应该把这些细节移到 cell 自身中去。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">PhotoCell</span>
+</span><span class="line"><span class="c1">// ...</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setHighlighted:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">highlighted</span> <span class="nf">animated:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">animated</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">setHighlighted:</span><span class="n">highlighted</span> <span class="nl">animated:</span><span class="n">animated</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">highlighted</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">photoTitleLabel</span><span class="p">.</span><span class="n">shadowColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">darkGrayColor</span><span class="p">];</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">photoTitleLabel</span><span class="p">.</span><span class="n">shadowOffset</span> <span class="o">=</span> <span class="n">CGSizeMake</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">photoTitleLabel</span><span class="p">.</span><span class="n">shadowColor</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>总的来说，我们在努力把 view 层和 controller 层的实现细节分离开。delegate 肯定得清楚一个 view 该显示什么状态，但是它不应该了解如何修改 view 结构或者给某些 subviews 设置某些属性以获得正确的状态。所有这些逻辑都应该封装到 view 内部，然后给外部提供一个简单地 API。</p>
+
+<h3 id="cell">控制多个 Cell 类型</h3>
+
+<p>如果一个 table view 里面有多种类型的 cell，data source 方法很快就难以控制了。在我们示例程序中，photo details table 有两种不同类型的 cell：一种用于显示几个星，另一种用来显示一个键值对。为了划分处理不同 cell 类型的代码，data source 方法简单地通过判断 cell 的类型，把任务派发给其他指定的方法。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UITableViewCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
+</span><span class="line">         <span class="nf">cellForRowAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">key</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">keys</span><span class="p">[(</span><span class="n">NSUInteger</span><span class="p">)</span> <span class="n">indexPath</span><span class="p">.</span><span class="n">row</span><span class="p">];</span>
+</span><span class="line">    <span class="kt">id</span> <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">photo</span> <span class="nl">valueForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line">    <span class="n">UITableViewCell</span> <span class="o">*</span><span class="n">cell</span><span class="p">;</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">key</span> <span class="nl">isEqual:</span><span class="n">PhotoRatingKey</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">cellForRating:</span><span class="n">value</span> <span class="nl">indexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">detailCellForKey:</span><span class="n">key</span> <span class="nl">value:</span><span class="n">value</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">RatingCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">cellForRating:</span><span class="p">(</span><span class="n">NSNumber</span> <span class="o">*</span><span class="p">)</span><span class="nv">rating</span>
+</span><span class="line">                    <span class="nf">indexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">// ...</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UITableViewCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">detailCellForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line">                                <span class="nf">value:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">// ...</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3 id="tableview">编辑 Table View</h3>
+
+<p>Table view 提供了易于使用的编辑特性，允许你对 cell 进行删除或重新排序。这些事件都可以让 table view 的 data source 通过 <a href="http://developer.apple.com/library/ios/#documentation/uikit/reference/UITableViewDataSource_Protocol/Reference/Reference.html#//apple_ref/occ/intfm/UITableViewDataSource/tableView:commitEditingStyle:forRowAtIndexPath:">delegate 方法</a>得到通知。因此，通常我们能在这些 delegate 方法中看到对数据的进行修改的操作。</p>
+
+<p>修改数据很明显是属于 model 层的任务。Model 应该为诸如删除或重新排序等操作暴露一个 API，然后我们可以在 data source 方法中调用它。这样，controller 就可以扮演 view 和 model 之间的协调者，而不需要知道 model 层的实现细节。并且还有额外的好处，model 的逻辑也变得更容易测试，因为它不再和 view controllers 的任务混杂在一起了。</p>
+
+<h2>总结</h2>
+
+<p>Table view controllers（以及其他的 controller 对象！）应该在 model 和 view 对象之间扮演<a href="http://developer.apple.com/library/mac/#documentation/General/Conceptual/DevPedia-CocoaCore/ControllerObject.html">协调者和调解者的角色</a>。它不应该关心明显属于 view 层或 model 层的任务。你应该始终记住这点，这样 delegate 和 data source 方法会变得更小巧，最多包含一些简单地样板代码。</p>
+
+<p>这不仅减少了 table view controllers 那样的大小和复杂性，而且还把业务逻辑和 view 的逻辑放到了更合适的地方。Controller 层的里里外外的实现细节都被封装成了简单地 API，最终，它变得更加容易理解，也更利于团队协作。</p>
+
+<h3>扩展阅读</h3>
+
+<ul>
+<li><a href="http://www.sebastianrehnby.com/blog/2013/01/01/skinnier-controllers-using-view-categories/">Blog: Skinnier Controllers using View Categories</a></li>
+<li><a href="http://developer.apple.com/library/ios/#documentation/userexperience/conceptual/tableview_iphone/AboutTableViewsiPhone/AboutTableViewsiPhone.html">Table View Programming Guide</a></li>
+<li><a href="http://developer.apple.com/library/mac/#documentation/General/Conceptual/DevPedia-CocoaCore/ControllerObject.html">Cocoa Core Competencies: Controller Object</a></li>
+</ul>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -4243,438 +4602,6 @@ R = S + D * (1 - Sa) = 0   + 0 * (1 - 0.5) = 0
 <li><a href="https://speakerdeck.com/trianglecocoa/unburdened-viewcontrollers-by-jay-thrash">Unburdened View Controllers</a></li>
 <li><a href="http://programmers.stackexchange.com/questions/177668/how-to-avoid-big-and-clumsy-uitableviewcontroller-on-ios">Stack Overflow: How to avoid big and clumsy <code>UITableViewControllers</code> on iOS</a></li>
 </ul>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-03-24T15:54:02+08:00" data-updated="true" itemprop="datePublished">Mar 24<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/03/24/%E4%BD%A0%E7%9C%9F%E7%9A%84%E6%87%82GCD%E5%90%97%3F/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/03/24/%E4%BD%A0%E7%9C%9F%E7%9A%84%E6%87%82GCD%E5%90%97%3F/" itemprop="url">你真的懂GCD吗?</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>GCD是什么，你知道吗？你知道了GCD，你确定你会使用吗？</p>
-<p> 这一篇文章是站在初学者角度去分析GCD，原因是这个很多iOS开发者根本就没用过，即使用过，不知道其中的原理。讲解之前认识一下什么是线程，为什么要介绍线程。是因为GCD是Grand Central Dispatch的缩写，是一系列的BSD层面的接口，在Mac 10.6 和iOS4.0以后才引入的，且现在NSOperation和NSOperationQueue的多线程的实现就是基于GCD的。目前这个特性也被移植到 FreeBSD上了，可以查看libdispatch这个开源项目。</p>
-<blockquote>
-	iPhone中的线程应用并不是无节制的，官方给出的资料显示iPhone  OS下的主线程的堆栈大小是1M，第二个线程开始都是512KB。并且该值不能通过编译器开关或线程API函数来更改。只有主线程有直接修改UI的能力。
-</blockquote>
-<h2>
-	一、线程的概述
-</h2>
-<p><br /></p>
-<p>有些程序是一条直线，起点到终点；有些程序是一个圆，不断循环，直到将它切断。直线的如简单的Hello World，运行打印完,它的生命周期便结束了，像昙花一现那样；圆如操作系统，一直运行直到你关机。 </p>
-<p>一个运行着的程序就是一个进程或者叫做一个任务，一个进程至少包含一个线程，线程就是程序的执行流。Mac和iOS中的程序启动，创建好一个进程的同时， 一个线程便开始运行，这个线程叫主线程。主线程在程序中的地位和其他线程不同，它是其他线程最终的父线程，且所有界面的显示操作即AppKit或 UIKit的操作必须在主线程进行。 </p>
-<p>系统中的每一个进程都有自己独立的虚拟内存空间，而同一个进程中的多个线程则共用进程的内存空间。每创建一个新的线程，都需要一些内存(如每个线程有自己的Stack空间)和消耗一定的CPU时间。另外当多个线程对同一个资源出现争夺的时候需要注意线程安全问题。</p>
-<h2>二、创建线程</h2>
-<p>创建一个新的线程就是给进程增加了一个执行流，执行流总得有要执行的代码吧，所以新建一个线程需要提供一个函数或者方法作为线程的入口。</p>
-<h3>1.使用NSThread</h3>
-<p>NSThread提供了创建线程的途径，还可以提供了检测当前线程是否是主线程的方法。 使用NSThread创建一个新的线程有两种方式：</p>
-<ul>
-<li>1.创建一个NSThread的对象，调用其start方法。对于这种方式的NSThread对象的创建，可以使用一个目标对象的方法初始化一个NSThread对象，或者创建一个继承NSThread类的子类，实现其main方法，然后在直接创建这个子类的对象。</li>
-<li>2.使用 detachNewThreadSelector:toTarget:withObject:这个类方法创建一个线程，这个比较直接了，直接使用目标对象的方法作为线程启动入口。</li>
-</ul>
-<h3>2.使用NSObject</h3>
-<p>其实NSObject直接就加入了多线程的支持，允许对象的某个方法在后台运行。如:</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">myObj</span> <span class="nl">performSelectorInBackground:</span><span class="k">@selector</span><span class="p">(</span><span class="n">doSomething</span><span class="p">)</span> <span class="nl">withObject:</span><span class="nb">nil</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<h3>3.POSIX Thread</h3>
-<p>由于Mac和iOS都是基于Darwin系统，Darwin系统的XUN内核，是基于Mach和BSD的，继承了BSD的POSIX接口，所以可以直接使用POSIX线程的相关接口来使用线程。</p>
-<p>创建线程的接口为 <code>pthread_create</code>，当然在创建之前可以通过相关函数设置好线程的属性。以下为POSIX线程使用简单的例子。</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="c1">//</span>
-</span><span class="line"><span class="c1">//  main.c</span>
-</span><span class="line"><span class="c1">//  pthread</span>
-</span><span class="line"><span class="c1">//</span>
-</span><span class="line"><span class="c1">//  Created by Rick on 3/23/14.</span>
-</span><span class="line"><span class="c1">//  Copyright (c) 2014 ISoftstone. All rights reserved.</span>
-</span><span class="line"><span class="c1">//</span>
-</span><span class="line">
-</span><span class="line"><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class="line"><span class="cp">#include &lt;pthread.h&gt;</span>
-</span><span class="line"><span class="cp">#include &lt;unistd.h&gt;</span>
-</span><span class="line">
-</span><span class="line"><span class="kt">void</span> <span class="o">*</span><span class="nf">pthreadRoutine</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">
-</span><span class="line"><span class="kt">int</span> <span class="nf">main</span> <span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">pthread_attr_t</span>  <span class="n">attr</span><span class="p">;</span>
-</span><span class="line">    <span class="n">pthread_t</span>       <span class="n">pthreadID</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">int</span>             <span class="n">returnVal</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">returnVal</span> <span class="o">=</span> <span class="n">pthread_attr_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">attr</span><span class="p">);</span>
-</span><span class="line">    <span class="n">returnVal</span> <span class="o">=</span> <span class="n">pthread_attr_setdetachstate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">attr</span><span class="p">,</span> <span class="n">PTHREAD_CREATE_DETACHED</span><span class="p">);</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">threadError</span> <span class="o">=</span> <span class="n">pthread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">pthreadID</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">attr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pthreadRoutine</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class="line">    <span class="n">returnVal</span> <span class="o">=</span> <span class="n">pthread_attr_destroy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">attr</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">threadError</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class="line">    <span class="p">{</span>
-</span><span class="line">        <span class="c1">// Report an error.</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line">
-</span><span class="line"><span class="kt">void</span> <span class="o">*</span><span class="nf">pthreadRoutine</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">data</span><span class="p">){</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line">    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;count = %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">count</span><span class="o">++</span><span class="p">);</span>
-</span><span class="line">        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p><br /></p>
-<h2>三、多线程进阶</h2>
-<p><code>NSOperation</code>&amp;<code>NSOperationQueue</code></p>
-<p>很多时候我们使用多线程，需要控制线程的并发数，毕竟线程也是消耗系统资源的，当程序中同时运行的线程过多时，系统必然变慢。
-所以很多时候我们会控制同时运行线程的数目。</p>
-<p>NSOperation可以封装我们的操作，然后将创建好的NSOperation对象放到NSOperationQueue中，OperationQueue便开始启动新的线程去执行队列中的操作，OperationQueue的并发度是可以通过如下方式进行设置:</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setMaxConcurrentOperationCount:</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">count</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<h3>GCD</h3>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">dispatch_queue_t</span> <span class="n">imageDownloadQueue</span> <span class="o">=</span> <span class="n">dispatch_get_global_queue</span><span class="p">(</span><span class="n">DISPATCH_QUEUE_PRIORITY_DEFAULT</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class="line"><span class="n">dispatch_async</span><span class="p">(</span><span class="n">imageDownloadQueue</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">        <span class="n">NSURL</span> <span class="o">*</span><span class="n">imageURL</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="s">@&quot;http://test.com/test.png&quot;</span><span class="p">];</span>
-</span><span class="line">       <span class="n">NSData</span> <span class="o">*</span><span class="n">imageData</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSData</span> <span class="nl">dataWithContentsOfURL:</span><span class="n">imageURL</span><span class="p">];</span>
-</span><span class="line">        <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIImage</span> <span class="nl">imageWithData:</span><span class="n">imageData</span><span class="p">];</span>
-</span><span class="line">       <span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">            <span class="p">[</span><span class="n">imageView</span> <span class="nl">setImage:</span><span class="n">image</span><span class="p">];</span><span class="c1">//UIKit必须在主线程执行</span>
-</span><span class="line">        <span class="p">});</span>
-</span><span class="line">    <span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>当然，GCD除了处理多线程外还有很多非常好的功能，其建立在强大的kqueue之上，效率也能够得到保障。</p>
-<p><br /></p>
-<h2>四.线程间通信</h2>
-<p>线程间通信和进程间通信从本质上讲是相似的。线程间通信就是在进程内的两个执行流之间进行数据的传递，就像两条并行的河流之间挖出了一道单向流动长沟，使得一条河流中的水可以流入另一条河流，物质得到了传递。</p>
-<h3>1.performSelect On The Thread</h3>
-<p>框架为我们提供了强制在某个线程中执行方法的途径,如果两个非主线程的线程需要相互间通信，可以先将自己的当前线程对象注册到某个全局的对象中去，这样相互之间就可以获取对方的线程对象，然后就可以使用下面的方法进行线程间的通信了，由于主线程比较特殊，所以框架直接提供了在出线程执行的方法。</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">NSObject</span> <span class="nl">(NSThreadPerformAdditions)</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">performSelectorOnMainThread:</span><span class="p">(</span><span class="kt">SEL</span><span class="p">)</span><span class="nv">aSelector</span> <span class="nf">withObject:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">arg</span> <span class="nf">waitUntilDone:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">wait</span> <span class="nf">modes:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">array</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">performSelectorOnMainThread:</span><span class="p">(</span><span class="kt">SEL</span><span class="p">)</span><span class="nv">aSelector</span> <span class="nf">withObject:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">arg</span> <span class="nf">waitUntilDone:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">wait</span><span class="p">;</span>
-</span><span class="line"><span class="c1">// equivalent to the first method with kCFRunLoopCommonModes</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">performSelector:</span><span class="p">(</span><span class="kt">SEL</span><span class="p">)</span><span class="nv">aSelector</span> <span class="nf">onThread:</span><span class="p">(</span><span class="n">NSThread</span> <span class="o">*</span><span class="p">)</span><span class="nv">thr</span> <span class="nf">withObject:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">arg</span> <span class="nf">waitUntilDone:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">wait</span> <span class="nf">modes:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">array</span> <span class="n">NS_AVAILABLE</span><span class="p">(</span><span class="mi">10</span><span class="n">_5</span><span class="p">,</span> <span class="mi">2</span><span class="n">_0</span><span class="p">);</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">performSelector:</span><span class="p">(</span><span class="kt">SEL</span><span class="p">)</span><span class="nv">aSelector</span> <span class="nf">onThread:</span><span class="p">(</span><span class="n">NSThread</span> <span class="o">*</span><span class="p">)</span><span class="nv">thr</span> <span class="nf">withObject:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">arg</span> <span class="nf">waitUntilDone:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">wait</span> <span class="n">NS_AVAILABLE</span><span class="p">(</span><span class="mi">10</span><span class="n">_5</span><span class="p">,</span> <span class="mi">2</span><span class="n">_0</span><span class="p">);</span>
-</span><span class="line"><span class="c1">// equivalent to the first method with kCFRunLoopCommonModes</span>
-</span><span class="line">    <span class="p">...</span>
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<h3>2.Mach Port</h3>
-<p>在苹果的Thread Programming Guide的Run Pool一节的Configuring a Port-Based Input Source
-这一段中就有使用Mach Port进行线程间通信的例子。
-其实质就是父线程创建一个NSMachPort对象，在创建子线程的时候以参数的方式将其传递给子线程，这样子线程中就可以向这个传过来的NSMachPort对象发送消息，如果想让父线程也可以向子线程发消息的话，那么子线程可以先向父线程发个特殊的消息，传过来的是自己创建的另一个NSMachPort对象，这样父线程便持有了子线程创建的port对象了，可以向这个子线程的port对象发送消息了。</p>
-<p>当然各自的port对象需要设置delegate以及schdule到自己所在线程的RunLoop中，这样来了消息之后，处理port消息的delegate方法会被调用，你就可以自己处理消息了。</p>
-<p><br /></p>
-<h2>五.RunLoop</h2>
-<p>RunLoop从字面上看是运行循环的意思，这一点也不错，它确实就是一个循环的概念，或者准确的说是线程中的循环。
-本文一开始就提到有些程序是一个圈，这个圈本质上就是这里的所谓的RunLoop，就是一个循环，只是这个循环里加入很多特性。 <br />
-首先循环体的开始需要检测是否有需要处理的事件，如果有则去处理，如果没有则进入睡眠以节省CPU时间。
-所以重点便是这个需要处理的事件，在RunLoop中，需要处理的事件分两类，一种是输入源，一种是定时器，定时器好理解就是那些需要定时执行的操作，输入源分三类：performSelector源，基于端口（Mach port）的源，以及自定义的源。编程的时候可以添加自己的源。RunLoop还有一个观察者Observer的概念，可以往RunLoop中加入自己的观察者以便监控着RunLoop的运行过程，CFRunLoop.h中定义了所有观察者的类型:</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">enum</span> <span class="n">CFRunLoopActivity</span> <span class="p">{</span>
-</span><span class="line">   <span class="n">kCFRunLoopEntry</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">),</span>
-</span><span class="line">   <span class="n">kCFRunLoopBeforeTimers</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">),</span>
-</span><span class="line">   <span class="n">kCFRunLoopBeforeSources</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span><span class="p">),</span>
-</span><span class="line">   <span class="n">kCFRunLoopBeforeWaiting</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">5</span><span class="p">),</span>
-</span><span class="line">   <span class="n">kCFRunLoopAfterWaiting</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">6</span><span class="p">),</span>
-</span><span class="line">   <span class="n">kCFRunLoopExit</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">7</span><span class="p">),</span>
-</span><span class="line">   <span class="n">kCFRunLoopAllActivities</span> <span class="o">=</span> <span class="mh">0x0FFFFFFF</span><span class="n">U</span>
-</span><span class="line"><span class="p">};</span>
-</span><span class="line"><span class="k">typedef</span> <span class="k">enum</span> <span class="n">CFRunLoopActivity</span> <span class="n">CFRunLoopActivity</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>如果你使用过select系统调用写过程序你便可以快速的理解runloop事件源的概念，本质上讲事件源的机制和select一样是一种多路复用IO的实现，在一个线程中我们需要做的事情并不单一，如需要处理定时钟事件，需要处理用户的触控事件，需要接受网络远端发过来的数据，将这些需要做的事情统统注册到事件源中，每一次循环的开始便去检查这些事件源是否有需要处理的数据，有的话则去处理。
-拿具体的应用举个例子，NSURLConnection网络数据请求，默认是异步的方式，其实现原理就是创建之后将其作为事件源加入到当前的RunLoop，而等待网络响应以及网络数据接受的过程则在一个新创建的独立的线程中完成，当这个线程处理到某个阶段的时候比如得到对方的响应或者接受完了网络数据之后便通知之前的线程去执行其相关的delegate方法。所以在Cocoa中经常看到<code>scheduleInRunLoop:forMode:</code>这样的方法，这个便是将其加入到事件源中，当检测到某个事件发生的时候，相关的delegate方法便被调用。对于CoreFoundation这一层而言，通常的模式是创建输入源，然后将输入源通过<code>CFRunLoopAddSource</code>函数加入到RunLoop中，相关事件发生后，相关的回调函数会被调用。如CFSocket的使用。
-另外RunLoop中还有一个运行模式的概念，每一个运行循环必然运行在某个模式下，而模式的存在是为了过滤事件源和观察者的，只有那些和当前RunLoop运行模式一致的事件源和观察者才会被激活。</p>
-
-<p>每一个线程都有其对应的RunLoop，但是默认非主线程的RunLoop是没有运行的，需要为RunLoop添加至少一个事件源，然后去run它。一般情况下我们是没有必要去启用线程的RunLoop的，除非你在一个单独的线程中需要长久的检测某个事件。</p>
-<h2>GCD使用攻略</h2>
-<p><strong>什么是GCD?</strong></p>
-<p>Grand Central Dispatch (GCD)是Apple开发的一个多核编程的解决方法。该方法在Mac OS X 10.6雪豹中首次推出，并随后被引入到了iOS4.0中。GCD是一个替代诸如NSThread, NSOperationQueue, NSInvocationOperation等技术的很高效和强大的技术，它看起来象就其它语言的闭包(Closure)一样，但苹果把它叫做<code>blocks</code>。</p>
-<p>当我们不使用GCD时，想要多线程处理。需要放在后台，避免阻塞主线程。</p>
-<p><strong>GCD的定义</strong></p>
-<p>简单GCD的定义有点象函数指针，差别是用 ^ 替代了函数指针的 * 号，如下所示：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// 申明变量 </span>
-</span><span class="line"> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">(</span><span class="o">^</span><span class="n">loggerBlock</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
-</span><span class="line"> <span class="c1">// 定义 </span>
-</span><span class="line"> <span class="n">loggerBlock</span> <span class="o">=</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">      <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Hello world&quot;</span><span class="p">);</span>
-</span><span class="line"> <span class="p">};</span>
-</span><span class="line"> <span class="c1">// 调用 </span>
-</span><span class="line"> <span class="n">loggerBlock</span><span class="p">();</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>但是大多数时候，我们通常使用内联的方式来定义它，即将它的程序块写在调用的函数里面，例如这样：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_global_queue</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">     <span class="c1">// something </span>
-</span><span class="line"><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>从上面大家可以看出，block有如下特点：</p>
-<ul>
-	<li>程序块可以在代码中以内联的方式来定义。</li>
-	<li>程序块可以访问在创建它的范围内的可用的变量。</li>
-</ul>
-<p><strong>系统提供的dispatch方法</strong></p>
-<p>为了方便地使用GCD，苹果提供了一些方法方便我们将block放在主线程 或 后台线程执行，或者延后执行。使用的例子如下：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">//  后台执行： </span>
-</span><span class="line"> <span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_global_queue</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">      <span class="c1">// something </span>
-</span><span class="line"> <span class="p">});</span>
-</span><span class="line"> <span class="c1">// 主线程执行： </span>
-</span><span class="line"> <span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">      <span class="c1">// something </span>
-</span><span class="line"> <span class="p">});</span>
-</span><span class="line"> <span class="c1">// 一次性执行： </span>
-</span><span class="line"> <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
-</span><span class="line"> <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">     <span class="c1">// code to be executed once </span>
-</span><span class="line"> <span class="p">});</span>
-</span><span class="line"> <span class="c1">// 延迟2秒执行： </span>
-</span><span class="line"> <span class="kt">double</span> <span class="n">delayInSeconds</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">;</span>
-</span><span class="line"> <span class="n">dispatch_time_t</span> <span class="n">popTime</span> <span class="o">=</span> <span class="n">dispatch_time</span><span class="p">(</span><span class="n">DISPATCH_TIME_NOW</span><span class="p">,</span> <span class="n">delayInSeconds</span> <span class="o">*</span> <span class="n">NSEC_PER_SEC</span><span class="p">);</span>
-</span><span class="line"> <span class="n">dispatch_after</span><span class="p">(</span><span class="n">popTime</span><span class="p">,</span> <span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">(</span><span class="kt">void</span><span class="p">){</span>
-</span><span class="line">     <span class="c1">// code to be executed on the main queue after delay </span>
-</span><span class="line"> <span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>dispatch_queue_t 也可以自己定义，如要要自定义queue，可以用dispatch_queue_create方法，示例如下：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">dispatch_queue_t</span> <span class="n">urls_queue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="s">&quot;blog.devtang.com&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class="line"><span class="n">dispatch_async</span><span class="p">(</span><span class="n">urls_queue</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">     <span class="c1">// your code </span>
-</span><span class="line"><span class="p">});</span>
-</span><span class="line"><span class="n">dispatch_release</span><span class="p">(</span><span class="n">urls_queue</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>另外，GCD还有一些高级用法，例如让后台2个线程并行执行，然后等2个线程都结束后，再汇总执行结果。这个可以用dispatch_group, dispatch_group_async 和 dispatch_group_notify来实现，示例如下：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">dispatch_group_t</span> <span class="n">group</span> <span class="o">=</span> <span class="n">dispatch_group_create</span><span class="p">();</span>
-</span><span class="line"><span class="n">dispatch_group_async</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">dispatch_get_global_queue</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">      <span class="c1">// 并行执行的线程一 </span>
-</span><span class="line"> <span class="p">});</span>
-</span><span class="line"> <span class="n">dispatch_group_async</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">dispatch_get_global_queue</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">      <span class="c1">// 并行执行的线程二 </span>
-</span><span class="line"> <span class="p">});</span>
-</span><span class="line"> <span class="n">dispatch_group_notify</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">dispatch_get_global_queue</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">      <span class="c1">// 汇总结果 </span>
-</span><span class="line"> <span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p><strong>修改block之外的变量</strong></p>
-<p>默认情况下，在程序块中访问的外部变量是复制过去的，即写操作不对原变量生效。但是你可以加上 __block来让其写操作生效，示例代码如下：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">__block</span> <span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line"><span class="kt">void</span>  <span class="p">(</span><span class="o">^</span><span class="n">foo</span><span class="p">)(</span><span class="kt">void</span><span class="p">)</span> <span class="o">=</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">     <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line"><span class="n">foo</span><span class="p">();</span>
-</span><span class="line"><span class="c1">// 这里，a的值被修改为1</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p><strong>后台运行</strong></p>
-<p>GCD的另一个用处是可以让程序在后台较长久的运行。在没有使用GCD时，当app被按home键退出后，app仅有最多5秒钟的时候做一些保存或清理资源的工作。但是在使用GCD后，app最多有10分钟的时间在后台长久运行。这个时间可以用来做清理本地缓存，发送统计数据等工作。</p>
-<p>让程序在后台长久运行的示例代码如下：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// AppDelegate.h文件 </span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">UIBackgroundTaskIdentifier</span> <span class="n">backgroundUpdateTask</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">// AppDelegate.m文件 </span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">applicationDidEnterBackground:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="nv">application</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">beingBackgroundUpdateTask</span><span class="p">];</span>
-</span><span class="line">    <span class="c1">// 在这里加上你需要长久运行的代码 </span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">endBackgroundUpdateTask</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">beingBackgroundUpdateTask</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">backgroundUpdateTask</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="nl">beginBackgroundTaskWithExpirationHandler:</span><span class="o">^</span><span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="n">endBackgroundUpdateTask</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">endBackgroundUpdateTask</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="nl">endBackgroundTask:</span> <span class="n">self</span><span class="p">.</span><span class="n">backgroundUpdateTask</span><span class="p">];</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">backgroundUpdateTask</span> <span class="o">=</span> <span class="n">UIBackgroundTaskInvalid</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<h2>总结</h2>
-<p>总体来说，GCD能够极大地方便开发者进行多线程编程。如果你的app不需要支持iOS4.0以下的系统，那么就应该尽量使用GCD来处理后台线程和UI线程的交互。</p>
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
