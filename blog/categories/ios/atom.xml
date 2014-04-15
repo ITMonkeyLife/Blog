@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-15T17:52:55+08:00</updated>
+  <updated>2014-04-15T18:11:42+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,609 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Foundation基础集合类]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/15/foundationji-chu-ji-he-lei/"/>
+    <updated>2014-04-15T17:55:48+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/15/foundationji-chu-ji-he-lei</id>
+    <content type="html"><![CDATA[<h2 id="nsarraynssetnsorderedsetnsdictionary">NSArray, NSSet, NSOrderedSet 和 NSDictionary</h2>
+
+<p>基础集合类是每一个 Mac/iOS 应用的基本组成部分。在本文中，我们将对”老类” (<code>NSArray</code>, <code>NSSet</code>)和”新类” (<code>NSMapTable</code>, <code>NSHashTable</code>, <code>NSPointerArray</code>) 进行一个深入的研究，探索每一个的效率细节，并讨论其使用场景。</p>
+
+<p>作者提示：本文包含一些参照结果，但它们并不意味着绝对精确，也没有进行均差分析及多次的测试。这些结果的目的是给出运行时统计，来帮助我们认识到通常来说用什么会更快。所有的测试基于 iPhone 5s，使用 Xcode 5.1b1 和 iOS 7.1b1 的 64 位程序。编译选项设置为 -Ofast 的发布构建。Vectorize loops 和 unroll loops (默认设置) 均设置为关闭。</p>
+
+<h2 id="o">大 O 符号，算法复杂度计量</h2>
+
+<p>首先，我们需要一些理论知识。效率通常用<a href="https://en.wikipedia.org/wiki/Big_O_notation">大 O 符号</a>描述。它定义了一个函数的<em>极限特征</em>，通常被用于描绘其算法效率。O 定义了函数增长率的上限。不同量级的差异非常巨大，可以看看通常使用的 O 符号的量级以及它们所对应需要的操作数的关系。</p>
+
+<p><img src="http://img.objccn.io/issue-7/big-o-notation.png" alt="" /></p>
+
+<p>例如，如果用算法复杂度为 O(n^2)的算法对一个有 50 个元素的数组排序，需要 2,500 步的操作。而且，还有内部的系统开销和方法调用 — 所以是 250 0个操作的时间常量。 O(1)是理想的复杂度，代表着恒定的时间。<a href="http://en.wikipedia.org/wiki/Sorting_algorithm#Comparison_of_algorithms">好的排序算法通常需要 O(n*log n) 的时间</a>。</p>
+
+<h3>可变性</h3>
+
+<p>大多数的集合类存在两个版本:可变和不可变(默认)。这和其他大多数的框架有非常大的不同，一开始会让人觉得有一点奇怪。然而其他的框架现在也应用了这一特性：就在几个月前，<a href="http://blogs.msdn.com/b/dotnet/archive/2013/09/25/immutable-collections-ready-for-prime-time.aspx">.NET公布了作为官方扩展的不可变集合</a>。</p>
+
+<p>最大的好处是什么？<strong>线程安全</strong>。不可变的集合完全是线程安全的，可以同时在多个线程中迭代，避免各种转变时出现异常的风险。你的 API <em>绝不</em>应该暴露一个可变的集合。</p>
+
+<p>当然从不可变到可变然后再回来是会有一定代价的 — 对象必须被拷贝两次，所有集合内的对象将被 retain/release。有时在内部使用一个可变的集合，而在访问时返回一个不可变的对象副本会更高效。</p>
+
+<p>与其他框架不同的是，苹果没有提供一个线程安全的可变集合，<code>NSCache</code> 是例外，但它真的算不上是集合类，因为它不是一个通用的容器。大多数时候，你不会需要在集合层级的同步特性。想象一段代码，作用是检查字典中一个 key 是否存在，并根据检查结果决定设置一个新的 key 或者返回某些值 — 你通常需要把多个操作归类，这时线程安全的可变集合并不能对你有所帮助。</p>
+
+<p>其实也有<em>一些</em>同步的，线程安全的可以使用的可变集合案例，它们往往只需要用几行代码，通过子类和组合的方法建立，比如这个 <a href="https://gist.github.com/steipete/7746843"><code>NSDictionary</code></a> 或这个 <a href="https://github.com/Cue/TheKitchenSync/blob/master/Classes/Collections/CueSyncArray.mm"><code>NSArray</code></a>。</p>
+
+<p>需要注意的是，一些较新的集合类，如 <code>NSHashTable</code>，<code>NSMapTable</code> 和 <code>NSPointerArray</code> 默认就是可变的，它们并没有对应的不可变的类。它们用于类的内部使用，你基本应该不会能找到需要它们的不可变版本的应用场景。</p>
+
+<h2 id="nsarray">NSArray</h2>
+
+<p><code>NSArray</code> 作为一个存储对象的有序集合，可能是被使用最多的集合类。这也是为什么它有自己的比原来的 <code>[NSArray arrayWithObjects:..., nil]</code> 简短得多的快速语法糖符号 <code>@[...]</code>。
+<code>NSArray</code> 实现了 <code>objectAtIndexedSubscript:</code>，因为我们可以使用类 C 的语法 <code>array[0]</code> 来代替原来的 <code>[array objectAtIndex:0]</code>。</p>
+
+<h3>性能特征</h3>
+
+<p>关于 <code>NSArray</code> 的内容比你想象的要多的多。基于存储对象的多少，它使用各种内部的变体。最有趣的部分是苹果对于个别的对象访问并不保证 O(1) 的访问时间 — 正如你在 <a href="http://www.opensource.apple.com/source/CF/CF-855.11/CFArray.h">CFArray.h CoreFoundation 头文件</a>中的关于算法复杂度的注解中可以读到的:</p>
+
+<blockquote>
+  <p>对于 array 中值的访问时间，不管是在现在还是将来，我们保证在任何一种实现下最坏情况是 O(lg N)。但是通常来说它会是 O(1) (常数时间)。线性搜索操作很可能在最坏情况下的复杂度为 O(N*lg N)，但通常来说上限会更小一些。插入和删除操作耗时通常和数组中的值的数量成线性关系。但在某些实现的最坏情况下会是 O(N*lg N) 。在数组中，没有对于性能上特别有优势的数据位置，也就是说，为了更快地访问到元素而将其设为在较低的 index 上，或者在较高的 index 上进行插入和删除，或者类似的一些做法，是没有必要的。</p>
+</blockquote>
+
+<p>在测量的时候，<code>NSArray</code> 产生了一些<a href="http://ridiculousfish.com/blog/posts/array.html">有趣的额外的性能特征</a>。在数组的开头和结尾插入/删除元素通常是一个 O(1)操作，而随机的插入/删除通常是 O(N) 的。</p>
+
+<h3>有用的方法</h3>
+
+<p><code>NSArray</code> 的大多数方法使用 <code>isEqual:</code> 来检查对象间的关系(例如 <code>containsObject:</code> 中)。有一个特别的方法 <code>indexOfObjectIdenticalTo:</code> 用来检查指针相等，如果你确保在同一个集合中搜索，那么这个方法可以很大的提升搜索速度。
+在 iOS 7 中，我们最终得到了与 <code>lastObject</code> 对应的公开的 <code>firstObject</code> 方法，对于空数组，这两个方法都会返回 <code>nil</code> — 而常规的访问方法会抛出一个 <code>NSRangeException</code> 异常。</p>
+
+<p>关于构造（可变）数组有一个漂亮的细节可以节省代码量。如果你通过一个可能为 nil 的数组创建一个可变数组，通常会这么写:</p>
+
+<p><code>objc
+NSMutableArray *mutableObjects = [array mutableCopy];
+if (!mutableObjects) {
+    mutableObjects = [NSMutableArray array];
+}
+</code></p>
+
+<p>或者通过更简洁的<a href="http://en.wikipedia.org/wiki/%3F:">三元运算符</a>:</p>
+
+<p><code>objc
+NSMutableArray *mutableObjects = [array mutableCopy] ?: [NSMutableArray array];
+</code></p>
+
+<p>更好的解决方案是使用<code>arrayWithArray:</code>，即使原数组为nil，该方法也会返回一个数组对象:</p>
+
+<p><code>objc
+NSMutableArray *mutableObjects = [NSMutableArray arrayWithArray:array];
+</code></p>
+
+<p>这两个操作在效率上几乎相等。使用 <code>copy</code> 会快一点点，不过话说回来，这不太可能是你应用的瓶颈所在。提醒：不要使用 <code>[@[] mutableCopy]</code>。经典的<code>[NSMutableArray array]</code>可读性更好。</p>
+
+<p>逆序一个数组非常简单：<code>array.reverseObjectEnumerator.allObjects</code>。我们使用系统提供的 <code>reverseObjectEnumerator</code>，每一个 <code>NSEnumerator</code> 都实现了 <code>allObjects</code>，该方法返回一个新数组。虽然没有原生的 <code>randomObjectEnumerator</code> 方法，你可以写一个自定义的打乱数组顺序的枚举器或者使用一些<a href="https://github.com/mattt/TTTRandomizedEnumerator/blob/master/TTTRandomizedEnumerator/TTTRandomizedEnumerator.m">出色的开源代码</a>。</p>
+
+<h3>数组排序</h3>
+
+<p>有很多各种各样的方法来对一个数组排序。如果数组存储的是字符串对象，<code>sortedArrayUsingSelector:</code>是第一选择:</p>
+
+<p><code>objc
+NSArray *array = @[@"John Appleseed", @"Tim Cook", @"Hair Force One", @"Michael Jurewitz"];
+NSArray *sortedArray = [array sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+</code></p>
+
+<p>下面的代码对存储数字的内容同样很好，因为 <code>NSNumber</code> 实现了 <code>compare:</code>:</p>
+
+<p><code>objc
+NSArray *numbers = @[@9, @5, @11, @3, @1];
+NSArray *sortedNumbers = [numbers sortedArrayUsingSelector:@selector(compare:)];
+</code></p>
+
+<p>如果想更可控，可以使用基于函数指针的排序方法:</p>
+
+<p><code>objc
+- (NSData *)sortedArrayHint;
+- (NSArray *)sortedArrayUsingFunction:(NSInteger (*)(id, id, void *))comparator
+                          context:(void *)context;
+- (NSArray *)sortedArrayUsingFunction:(NSInteger (*)(id, id, void *))comparator
+                          context:(void *)context hint:(NSData *)hint;
+</code></p>
+
+<p>苹果增加了一个方法来加速使用 <code>sortedArrayHint</code> 的排序。</p>
+
+<blockquote>
+  <p>hinted sort 方式在你有一个已排序的大数组 (N 个元素) 并且只改变其中一小部分（P 个添加和删除，这里 P远小于 N）时，会非常有效。你可以重用原来的排序结果，然后在 N 个老项目和 P 个新项目进行一个概念上的归并排序。为了得到合适的 hint，你应该在原来的数组排序后使用 sortedArrayHint 来在你需要的时候(比如在数组改变后想重新排序时)保证持有它。</p>
+</blockquote>
+
+<p>因为block的引入，也出现了一些基于block的排序方法:</p>
+
+<p><code>objc
+- (NSArray *)sortedArrayUsingComparator:(NSComparator)cmptr;
+- (NSArray *)sortedArrayWithOptions:(NSSortOptions)opts
+                usingComparator:(NSComparator)cmptr;
+</code></p>
+
+<p>性能上来说，不同的方法间并没有太多的不同。有趣的是，基于 selector 的方式是最快的。<a href="https://github.com/steipete/PSTFoundationBenchmark">你可以在 GitHub 上找到测试用的源代码</a>:</p>
+
+<blockquote>
+  <p>Sorting 1000000 elements. selector: 4947.90[ms] function: 5618.93[ms] block: 5082.98[ms].</p>
+</blockquote>
+
+<h3>二分查找</h3>
+
+<p><code>NSArray</code> 从 iOS 4 / Snow Leopard 开始内置了<a href="http://en.wikipedia.org/wiki/Binary_search_algorithm">二分查找</a></p>
+
+<p>```objc
+typedef NS_OPTIONS(NSUInteger, NSBinarySearchingOptions) {
+    NSBinarySearchingFirstEqual     = (1UL &lt;&lt; 8),
+    NSBinarySearchingLastEqual      = (1UL &lt;&lt; 9),
+    NSBinarySearchingInsertionIndex = (1UL &lt;&lt; 10),
+};</p>
+
+<ul>
+  <li>(NSUInteger)indexOfObject:(id)obj
+        inSortedRange:(NSRange)r
+              options:(NSBinarySearchingOptions)opts
+      usingComparator:(NSComparator)cmp;
+```</li>
+</ul>
+
+<p>为什么要使用这个方法？类似 <code>containsObject:</code> 和 <code>indexOfObject:</code> 这样的方法从 0 索引开始搜索每个对象直到找到目标 — 这样不需要数组被排序，但是却是 O(n)的效率特性。如果使用二分查找的话，需要数组事先被排序，但在查找时只需要 O(log n) 的时间。因此，对于 一百万条记录，二分查找法最多只需要 21 次比较，而传统的线性查找则平均需要 500,000 次的比较。</p>
+
+<p>这是个简单的衡量二分查找有多快的数据:</p>
+
+<pre><code>Time to search for 1000 entries within 1000000 objects. Linear: 54130.38[ms]. Binary: 7.62[ms]
+</code></pre>
+
+<p>作为比较，查找 <code>NSOrderedSet</code> 中的指定索引花费 0.23 毫秒 — 就算和二分查找相比也又快了 30 多倍。</p>
+
+<p>记住排序的开销也是昂贵的。苹果使用复杂度为 O(n*log n) 的归并排序，所以如果你执行一次 <code>indexOfObject:</code> 的话，就没有必要使用二分查找了。</p>
+
+<p>通过指定 <code>NSBinarySearchingInsertionIndex</code>，你可以获得正确的插入索引，以确保在插入元素后仍然可以保证数组的顺序。</p>
+
+<h3>枚举和总览</h3>
+
+<p>作为测试，我们来看一个普通的使用场景。从一个数组中过滤出一些元素组成另一个数组。这些测试都包括了枚举的方法以及使用 API 进行过滤的方式：</p>
+
+<p>```objc
+// 第一种方式，使用 <code>indexesOfObjectsWithOptions:passingTest:</code>.
+NSIndexSet *indexes = [randomArray indexesOfObjectsWithOptions:NSEnumerationConcurrent
+                                               passingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+    return testObj(obj);
+}];
+NSArray *filteredArray = [randomArray objectsAtIndexes:indexes];</p>
+
+<p>// 使用 predicate 过滤，包括 block 的方式和文本 predicate 的方式
+NSArray *filteredArray2 = [randomArray filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id obj, NSDictionary *bindings) {
+    return testObj(obj);
+}]];</p>
+
+<p>// 基于 block 的枚举
+NSMutableArray *mutableArray = [NSMutableArray array];
+[randomArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+    if (testObj(obj)) {
+        [mutableArray addObject:obj];
+    }
+}];</p>
+
+<p>// 传统的枚举
+NSMutableArray *mutableArray = [NSMutableArray array];
+for (id obj in randomArray) {
+    if (testObj(obj)) {
+        [mutableArray addObject:obj];
+    }
+}</p>
+
+<p>// 使用 NSEnumerator，传统学院派
+NSMutableArray *mutableArray = [NSMutableArray array];
+NSEnumerator *enumerator = [randomArray objectEnumerator];
+id obj = nil;
+while ((obj = [enumerator nextObject]) != nil) {
+    if (testObj(obj)) {
+        [mutableArray addObject:obj];
+    }
+}</p>
+
+<p>// 通过下标使用 objectAtIndex：
+NSMutableArray *mutableArray = [NSMutableArray array];
+for (NSUInteger idx = 0; idx &lt; randomArray.count; idx++) {
+    id obj = randomArray[idx];
+    if (testObj(obj)) {
+        [mutableArray addObject:obj];
+    }
+}
+```</p>
+
+<table><thead><tr><th style="text-align: left;padding-right:1em;">枚举方法 / 时间 [ms]</th><th style="text-align:right;padding-right:1em;">10.000.000 elements</th><th style="text-align:right;padding-right:1em;">10.000 elements</th></tr></thead><tbody><tr><td style="text-align: left;"><code>indexesOfObjects:</code>, concurrent</td><td style="text-align: right;padding-right:1em;">1844.73</td><td style="text-align: right;padding-right:1em;">2.25</td>  
+</tr><tr><td style="text-align: left;padding-right:1em;"><code>NSFastEnumeration</code> (<code>for in</code>)</td><td style="text-align: right;padding-right:1em;">3223.45</td><td style="text-align: right;padding-right:1em;">3.21</td>  
+</tr><tr><td style="text-align: left;padding-right:1em;"><code>indexesOfObjects:</code></td><td style="text-align: right;padding-right:1em;">4221.23</td><td style="text-align: right;padding-right:1em;">3.36</td>  
+</tr><tr><td style="text-align: left;padding-right:1em;"><code>enumerateObjectsUsingBlock:</code></td><td style="text-align: right;padding-right:1em;">5459.43</td><td style="text-align: right;padding-right:1em;">5.43</td>  
+</tr><tr><td style="text-align: left;padding-right:1em;"><code>objectAtIndex:</code></td><td style="text-align: right;padding-right:1em;">5282.67</td><td style="text-align: right;padding-right:1em;">5.53</td>  
+</tr><tr><td style="text-align: left;padding-right:1em;"><code>NSEnumerator</code></td><td style="text-align: right;padding-right:1em;">5566.92</td><td style="text-align: right;padding-right:1em;">5.75</td>  
+</tr><tr><td style="text-align: left;padding-right:1em;"><code>filteredArrayUsingPredicate:</code></td><td style="text-align: right;padding-right:1em;">6466.95</td><td style="text-align: right;padding-right:1em;">6.31</td>  
+</tr></tbody></table>
+
+<p>为了更好的理解这里的效率测量，我们首先看一下数组是如何迭代的。</p>
+
+<p><code>indexesOfObjectsWithOptions:passingTest:</code> 必须每次都执行一次 block 因此比传统的使用 <code>NSFastEnumeration</code> 技术的基于 for 循环的枚举要稍微低效一些。但是如果开启了并发枚举，那么前者的速度则会大大的超过后者几乎 2 倍。iPhone 5s 是双核的，所以这说得通。这里并没有体现出来的是 <code>NSEnumerationConcurrent</code> 只对大量的对象有意义，如果你的集合中的对象数量很少，用哪个方法就真的无关紧要。甚至 <code>NSEnumerationConcurrent</code> 上额外的线程管理实际上会使结果变得更慢。</p>
+
+<p>最大的输家是 <code>filteredArrayUsingPredicate:</code>。<code>NSPredicate</code> 需要在这里提及是因为，人们可以写出<a href="http://nshipster.com/nspredicate/">非常复杂的表达式</a>，尤其是用不基于 block 的变体。使用 Core Data 的用户应该会很熟悉。</p>
+
+<p>为了比较的完整，我们也加入了 <code>NSEnumerator</code> 作为比较 — 虽然没有任何理由再使用它了。然而它竟出人意料的快(至少还是比基于 <code>NSPredicate</code> 的过滤要快)，它的运行时消耗无疑比快速枚举更多 — 现在它只用于向后兼容。甚至没有优化过的 <code>objectAtIndex:</code> 都要更快些。</p>
+
+<h3 id="nsfastenumeration">NSFastEnumeration</h3>
+
+<p>在OSX 10.5和iOS的最初版本中，苹果增加了 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/NSFastEnumeration_protocol/Reference/NSFastEnumeration.html"><code>NSFastEnumeration</code></a>。在此之前，只有每次返回一个元素的 <code>NSEnumeration</code> ，每次迭代都有运行时开销。而快速枚举，苹果通过 <code>countByEnumeratingWithState:objects:count:</code> 返回一个数据块。该数据块被解析成 <code>id</code> 类型的 C 数组。这就是更快的速度的原因；迭代一个 C 数组要快得多，而且可以被编译器更深一步的优化。手动的实现快速枚举是十分难办的，所以苹果的 <a href="https://developer.apple.com/library/ios/samplecode/FastEnumerationSample/Introduction/Intro.html">FastEnumerationSample</a> 是一个不错的开始，还有一篇 <a href="http://www.mikeash.com/pyblog/friday-qa-2010-04-16-implementing-fast-enumeration.html">Mike Ash 的文章</a>也很不错。</p>
+
+<h3 id="arraywithcapacity">应该用arrayWithCapacity:吗?</h3>
+
+<p>初始化<code>NSArray</code>的时候，可以选择指定数组的预期大小。在检测的时候，结果是在效率上没有差别 — 至少在统计误差范围内的测量的时间几乎相等。有消息透漏说实际上苹果根本没有使用这个参数。然而使用 <code>arrayWithCapacity:</code> 仍然好处，它可以作为一种隐性的文档来帮助你理解代码:</p>
+
+<blockquote>
+  <p>Adding 10.000.000 elements to NSArray. no count 1067.35[ms] with count: 1083.13[ms].</p>
+</blockquote>
+
+<h3>子类化注意事项</h3>
+
+<p>很少有理由去子类化基础集合类。大多数时候，使用 CoreFoundation 级别的类并且自定义回调函数定制自定义行为是更好的解决方案。
+创建一个大小写不敏感的字典，一种方法是子类化 <code>NSDictionary</code> 并且自定义访问方法，使其将字符串始终变为小写(或大写)，并对排序也做类似的修改。更快更好的解决方案是提供一组不同的 <code>CFDictionaryKeyCallBacks</code> 集，你可以提供自定义的 <code>hash</code> 和 <code>isEqual:</code> 回调。你可以在<a href="https://gist.github.com/steipete/7739473">这里</a>找到一个例子。这种方法的优美之处应该归功于 <a href="https://developer.apple.com/library/ios/documentation/General/Conceptual/CocoaEncyclopedia/Toll-FreeBridgin/Toll-FreeBridgin.html">toll-free 桥接</a>)，它仍然是一个简单的字典，因此可以被任何使用 <code>NSDictionary</code> 作为参数的API接受。</p>
+
+<p>子类作用的一个例子是有序字典的用例。.NET 提供了一个 <code>SortedDictionary</code>，Java 有 <code>TreeMap</code>，C++ 有 <code>std::map</code>。虽然你<em>可以</em>使用 C++ 的 STL 容器，但却无法使它自动的 <code>retain/release</code> ，这会让使用起来笨拙得多。因为 <code>NSDictionary</code> 是一个<a href="https://developer.apple.com/library/ios/documentation/general/conceptual/CocoaEncyclopedia/ClassClusters/ClassClusters.html">类簇</a>，所以子类化跟人们想象的相比非常不同。这已经超过了本文的讨论范畴，<a href="https://github.com/nicklockwood/OrderedDictionary/blob/master/OrderedDictionary/OrderedDictionary.m">这里</a>有一个真实的有序字典的例子。</p>
+
+<h2 id="nsdictionary">NSDictionary</h2>
+
+<p>一个字典存储任意的对象键值对。 由于历史原因，初始化方法 <code>[NSDictionary dictionaryWithObjectsAndKeys:object, key, nil]</code> 使用了相反的值到键的顺序，而新的快捷语法则从 key 开始，<code>@{key : value, ...}</code>。</p>
+
+<p><code>NSDictionary</code> 中的键是被拷贝的并且需要是不变的。如果在一个键在被用于在字典中放入一个值后被改变的话，那么这个值就会变得无法获取了。一个有趣的细节是，在 <code>NSDictionary</code> 中键是被 copy 的，但是在使用一个 toll-free 桥接的 <code>CFDictionary</code> 时却只会被 retain。CoreFoundation 类没有通用的拷贝对象的方法，因此这时拷贝是不可能的(*)。这只适用于你使用 <code>CFDictionarySetValue()</code> 的时候。如果你是通过 <code>setObject:forKey</code> 来使用一个 toll-free 桥接的 <code>CFDictionary</code> 的话，苹果会为其增加额外处理逻辑，使得键被拷贝。但是反过来这个结论则不成立 — 使用已经转换为 <code>CFDictionary</code> 的 <code>NSDictionary</code> 对象，并用对其使用 <code>CFDictionarySetValue()</code> 方法，还是会导致调用回 <code>setObject:forKey</code> 并对键进行拷贝。</p>
+
+<blockquote>
+  <p>(*)其实有一个现成的键的回调函数 <code>kCFCopyStringDictionaryKeyCallBacks</code> 可以拷贝字符串，因为对于 ObjC对象来说， <code>CFStringCreateCopy()</code> 会调用 <code>[NSObject copy]</code>，我们可以巧妙使用这个回调来创建一个能进行键拷贝的 <code>CFDictionary</code>。</p>
+</blockquote>
+
+<h3>性能特征</h3>
+
+<p>苹果在定义字典的计算复杂度时显得相当低调。唯一的信息可以在 <a href="http://www.opensource.apple.com/source/CF/CF-855.11/CFDictionary.h"><code>CFDictionary</code> 的头文件</a>中找到:</p>
+
+<blockquote>
+  <p>对于字典中值的访问时间，不管是在现在还是将来，我们保证在任何一种实现下最坏情况是 O(N)。但通常来说它会是 O(1) (常数时间)。插入和删除操作一般来说也会是常数时间，但是在某些实现中最坏情况将为 O(N*N)。通过键来访问值将比直接访问值要快（如果你有这样的操作要做的话）。对于同样数目的值，字典需要花费比数组多得多的内存空间。</p>
+</blockquote>
+
+<p>跟数组相似的，字典根据尺寸的不同使用不同的实现，并在其中无缝切换。</p>
+
+<h3>枚举和总览</h3>
+
+<p>过滤字典有几个不同的方法:</p>
+
+<p>```objc
+// 使用 keysOfEntriesWithOptions:passingTest:，可并行
+NSSet *matchingKeys = [randomDict keysOfEntriesWithOptions:NSEnumerationConcurrent
+                                               passingTest:^BOOL(id key, id obj, BOOL *stop)
+{
+    return testObj(obj);
+}];
+NSArray *keys = matchingKeys.allObjects;
+NSArray *values = [randomDict objectsForKeys:keys notFoundMarker:NSNull.null];
+__unused NSDictionary *filteredDictionary = [NSDictionary dictionaryWithObjects:values
+                                                                        forKeys:keys];</p>
+
+<p>// 基于 block 的枚举
+NSMutableDictionary *mutableDictionary = [NSMutableDictionary dictionary];
+[randomDict enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+    if (testObj(obj)) {
+        mutableDictionary[key] = obj;
+    }
+}];</p>
+
+<p>// NSFastEnumeration
+NSMutableDictionary *mutableDictionary = [NSMutableDictionary dictionary];
+for (id key in randomDict) {
+    id obj = randomDict[key];
+    if (testObj(obj)) {
+        mutableDictionary[key] = obj;
+    }
+}</p>
+
+<p>// NSEnumeration
+ NSMutableDictionary *mutableDictionary = [NSMutableDictionary dictionary];
+ NSEnumerator *enumerator = [randomDict keyEnumerator];
+ id key = nil;
+ while ((key = [enumerator nextObject]) != nil) {
+       id obj = randomDict[key];
+       if (testObj(obj)) {
+           mutableDictionary[key] = obj;
+       }
+ }</p>
+
+<p>// 基于 C 数组，通过 getObjects:andKeys: 枚举
+NSMutableDictionary *mutableDictionary = [NSMutableDictionary dictionary];
+id __unsafe_unretained objects[numberOfEntries];
+id __unsafe_unretained keys[numberOfEntries];
+[randomDict getObjects:objects andKeys:keys];
+for (int i = 0; i &lt; numberOfEntries; i++) {
+    id obj = objects[i];
+    id key = keys[i];
+    if (testObj(obj)) {
+       mutableDictionary[key] = obj;
+    }
+ }
+```</p>
+
+<table><thead><tr><th style="text-align: left;min-width:22em;">过滤/枚举方法</th><th style="text-align: right;">Time [ms], 50.000 elements</th><th style="text-align: right;">1.000.000 elements</th></tr></thead><tbody><tr><td style="text-align: left;"><code>keysOfEntriesWithOptions:</code>, concurrent</td><td style="text-align: right;">16.65</td><td style="text-align: right;">425.24</td>  
+</tr><tr><td style="text-align: left;"><code>getObjects:andKeys:</code></td><td style="text-align: right;">30.33</td><td style="text-align: right;">798.49*</td>  
+</tr><tr><td style="text-align: left;"><code>keysOfEntriesWithOptions:</code></td><td style="text-align: right;">30.59</td><td style="text-align: right;">856.93</td>  
+</tr><tr><td style="text-align: left;"><code>enumerateKeysAndObjectsUsingBlock:</code></td><td style="text-align: right;">36.33</td><td style="text-align: right;">882.93</td>  
+</tr><tr><td style="text-align: left;"><code>NSFastEnumeration</code></td><td style="text-align: right;">41.20</td><td style="text-align: right;">1043.42</td>  
+</tr><tr><td style="text-align: left;"><code>NSEnumeration</code></td><td style="text-align: right;">42.21</td><td style="text-align: right;">1113.08</td>  
+</tr></tbody></table>
+
+<p>(*)使用 <code>getObjects:andKeys:</code> 时需要注意。在上面的代码例子中，我们使用了<a href="http://gcc.gnu.org/onlinedocs/gcc/Variable-Length.html">可变长度数组</a>这一 C99 特性(通常，数组的数量需要是一个固定值)。这将在栈上分配内存，虽然更方便一点，但却有其限制。上面的代码在元素数量很多的时候会崩溃掉，所以我们使用基于 <code>malloc/calloc</code> 的分配 (和 <code>free</code>) 以确保安全。</p>
+
+<p>为什么这次 <code>NSFastEnumeration</code> 这么慢？迭代字典通常需要键和值两者，快速枚举只能枚举键，我们必须每次都自己获取值。使用基于 block 的 <code>enumerateKeysAndObjectsUsingBlock:</code> 更高效，因为两者都可以更高效的被提前获取。</p>
+
+<p>这次测试的胜利者又是通过 <code>keysOfEntriesWithOptions:passingTest:</code> 和 <code>objectsForKeys:notFoundMarker:</code> 的并发迭代。代码稍微多了一点，但是可以用 category 进行漂亮的封装。</p>
+
+<h3 id="dictionarywithcapacity">应该用 dictionaryWithCapacity: 吗?</h3>
+
+<p>到现在你应该已经知道该如何测试了，简单的回答是不，<code>count</code> 参数没有改变任何事情:</p>
+
+<blockquote>
+  <p>Adding 10000000 elements to NSDictionary. no count 10786.60[ms] with count: 10798.40[ms].</p>
+</blockquote>
+
+<h3>排序</h3>
+
+<p>关于字典排序没有太多可说的。你只能将键数组排序为一个新对象，因此你可以使用任何正规的 <code>NSArray</code> 的排序方法:</p>
+
+<p><code>objc
+- (NSArray *)keysSortedByValueUsingSelector:(SEL)comparator;
+- (NSArray *)keysSortedByValueUsingComparator:(NSComparator)cmptr;
+- (NSArray *)keysSortedByValueWithOptions:(NSSortOptions)opts
+                      usingComparator:(NSComparator)cmptr;
+</code></p>
+
+<h3>共享键</h3>
+
+<p>从 iOS 6 和 OS X 10.8 开始，新建的字典可以使用一个预先生成好的键集，使用 <code>sharedKeySetForKeys:</code> 从一个数组中创建键集，然后用 <code>dictionaryWithSharedKeySet:</code> 创建字典。共享键集会复用对象，以节省内存。根据 <a href="https://developer.apple.com/library/mac/releasenotes/Foundation/RN-FoundationOlderNotes/">Foundation Release Notes</a>，<code>sharedKeySetForKeys:</code> 中会计算一个最小完美哈希，这个哈希值可以取代字典查找过程中探索循环的需要，因此使键的访问更快。</p>
+
+<p>虽然在我们有限的测试中没有法线苹果在 <code>NSJSONSerialization</code> 中使用这个特性，但毫无疑问，在处理 JSON 的解析工作时这个特性可以发挥得淋漓尽致。(使用共享键集创建的字典是 <code>NSSharedKeyDictionary</code> 的子类；通常的字典是 <code>__NSDictionaryI</code> / <code>__NSDictionaryM</code>，I / M 表明可变性；可变和不可变的的字典在 toll-free 桥接后对应的都是 <code>_NSCFDictionary</code> 类。)</p>
+
+<p><strong>有趣的细节：</strong>共享键字典<strong>始终是可变的</strong>，即使对它们执行了”copy”命令后也是。这个行为文档中并没有说明，但很容易被测试:</p>
+
+<p><code>objc
+id sharedKeySet = [NSDictionary sharedKeySetForKeys:@[@1, @2, @3]]; 
+// 返回 NSSharedKeySet
+NSMutableDictionary *test = [NSMutableDictionary dictionaryWithSharedKeySet:sharedKeySet];
+test[@4] = @"First element (not in the shared key set, but will work as well)";
+NSDictionary *immutable = [test copy];
+NSParameterAssert(immutable.count == 1);
+((NSMutableDictionary *)immutable)[@5] = @"Adding objects to an immutable collection should throw an exception.";
+NSParameterAssert(immutable.count == 2);
+</code></p>
+
+<h2 id="nsset">NSSet</h2>
+
+<p><code>NSSet</code> 和它的可变变体 <code>NSMutableSet</code> 是无序对象集合。检查一个对象是否存在通常是一个 O(1) 的操作，使得比 <code>NSArray</code> 快很多。<code>NSSet</code> 只在被使用的哈希方法平衡的情况下能高效的工作；如果所有的对象都在同一个哈希筐内，<code>NSSet</code> 在查找对象是否存在时并不比 <code>NSArray</code> 快多少。</p>
+
+<p><code>NSSet</code> 还有变体 <code>NSCountedSet</code>，以及非 toll-free 计数变体 <code>CFBag</code> / <code>CFMutableBag</code>。</p>
+
+<p><code>NSSet</code> 会 retain 它其中的对象，但是根据 set 的规定，对象应该是不可变的。添加一个对象到 set 中随后改变它会导致一些奇怪的问题并破坏 set 的状态。</p>
+
+<p><code>NSSet</code> 的方法比 <code>NSArray</code> 少的多。没有排序方法，但有一些方便的枚举方法。重要的方法有 <code>allObjects</code>，将对象转化为 <code>NSArray</code>，<code>anyObject</code> 则返回任意的对象，如果 set 为空，则返回 nil。</p>
+
+<h3 id="set">Set 操作</h3>
+
+<p><code>NSMutableSet</code> 有几个很强大的方法，例如 <code>intersectSet:</code>，<code>minusSet:</code> 和 <code>unionSet:</code>。</p>
+
+<p><img src="http://img.objccn.io/issue-7/set.png" alt="img" /></p>
+
+<h3 id="setwithcapacity">应该用setWithCapacity:吗?</h3>
+
+<p>我们再一次测试当创建 set 时给定容量大小是否会有显著的速度差异:</p>
+
+<blockquote>
+  <p>Adding 1.000.000 elements to NSSet. no count 2928.49[ms] with count: 2947.52[ms].</p>
+</blockquote>
+
+<p>在统计误差范围内，结果没有显著差异。有一份证据表明<a href="http://www.cocoawithlove.com/2008/08/nsarray-or-nsset-nsdictionary-or.html">至少在上一个 runtime 版本中，有很多的性能上的影响</a>。</p>
+
+<h3 id="nsset">NSSet 性能特征</h3>
+
+<p>苹果在 <a href="http://www.opensource.apple.com/source/CF/CF-855.11/CFSet.h">CFSet 头文件</a>中没有提供任何关于算法复杂度的注释。</p>
+
+<table><thead><tr><th style="text-align: left;">类 / 时间 [ms]</th><th style="text-align: right;">1.000.000 elements</th></tr></thead><tbody><tr><td style="text-align: left;"><code>NSMutableSet</code>, adding</td><td style="text-align: right;">2504.38</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableArray</code>, adding</td><td style="text-align: right;">1413.38</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableSet</code>, random access</td><td style="text-align: right;">4.40</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableArray</code>, random access</td><td style="text-align: right;">7.95</td>  
+</tr></tbody></table>
+
+<p>这个检测非常符合我们的预期：<code>NSSet</code> 在每一个被添加的对象上执行 <code>hash</code> 和 <code>isEqual:</code> 方法并管理一系列哈希值，所以在添加元素时耗费了更多的时间。set的随机访问比较难以测试，因为这里执行的都是 <code>anyObject</code>。</p>
+
+<p>这里没有必要包含 <code>containsObject:</code> 的测试，set 要快几个数量级，毕竟这是它的特点。</p>
+
+<h3 id="nsorderedset">NSOrderedSet</h3>
+
+<p><code>NSOrderedSet</code> 在 iOS 5 和 Mac OS X 10.7 中第一次被引入，除了 Core Data，几乎没有直接使用它的 API。看上去它综合了 <code>NSArray</code> 和 <code>NSSet</code> 两者的好处，对象查找，对象唯一性，和快速随机访问。</p>
+
+<p><code>NSOrderedSet</code> 有着优秀的 API 方法，使得它可以很便利的与其他 set 或者有序 set 对象合作。合并，交集，差集，就像 <code>NSSet</code> 支持的那样。它有 <code>NSArray</code> 中除了比较陈旧的基于函数的排序方法和二分查找以外的大多数排序方法。毕竟 <code>containsObject:</code> 非常快，所以没有必要再用二分查找了。</p>
+
+<p><code>NSOrderedSet</code> 的 <code>array</code> 和 <code>set</code> 方法分别返回一个 <code>NSArray</code> 和 <code>NSSet</code>，这些对象表面上是不可变的对象，但实际上在 NSOrderedSet 更新的时候，它们也会更新自己。如果你在不同线程上使用这些对象并发生了诡异异常的时候，知道这一点是非常有好处的。本质上，这些类使用的是 <code>__NSOrderedSetSetProxy</code> 和 <code>__NSOrderedSetArrayProxy</code>。</p>
+
+<p>附注：如果你想知道为什么 <code>NSOrderedSet</code> 不是 <code>NSSet</code> 的子类，<a href="http://nshipster.com/nsorderedset/">NSHipster 上有一篇非常好的文章解释了可变/不可变类簇的缺点</a>。</p>
+
+<h3 id="nsorderedset">NSOrderedSet 性能特征</h3>
+
+<p>如果你看到这份测试，你就会知道 <code>NSOrderedSet</code> 代价高昂了，毕竟天下没有免费的午餐:</p>
+
+<table><thead><tr><th style="text-align: left;">类 / 时间 [ms]</th><th style="text-align: right;">1.000.000 elements</th></tr></thead><tbody><tr><td style="text-align: left;"><code>NSMutableOrderedSet</code>, adding</td><td style="text-align: right;"><strong>3190.52</strong></td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableSet</code>, adding</td><td style="text-align: right;">2511.96</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableArray</code>, adding</td><td style="text-align: right;">1423.26</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableOrderedSet</code>, random access</td><td style="text-align: right;"><strong>10.74</strong></td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableSet</code>, random access</td><td style="text-align: right;">4.47</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableArray</code>, random access</td><td style="text-align: right;">8.08</td>  
+</tr></tbody></table>
+
+<p>这个测试在每一个集合类中添加自定义字符串，随后随机访问它们。</p>
+
+<p><code>NSOrderedSet</code> 比 <code>NSSet</code> 和 <code>NSArray</code> 占用更多的内存，因为它需要同时维护哈希值和索引。</p>
+
+<h3 id="nshashtable">NSHashTable</h3>
+
+<p><code>NSHashTable</code> 效仿了 <code>NSSet</code>，但在对象/内存处理时更加的灵活。可以通过自定义 <code>CFSet</code> 的回调获得 <code>NSHashTable</code> 的一些特性，哈希表可以保持对对象的弱引用并在对象被销毁之后正确的将其移除，有时候如果手动在 NSSet 中添加的话，想做到这个是挺恶心的一件事。它是默认可变的 — 并且这个类没有相应的不可变版本。</p>
+
+<p><code>NSHashTable</code> 有 ObjC 和原始的 C API，C API 可以用来存储任意对象。苹果在 10.5 Leopard 系统中引入了这个类，但是 iOS 的话直到最近的 iOS 6 中才被加入。足够有趣的是它们只移植了 ObjC API；更多强大的 C API 没有包括在 iOS 中。</p>
+
+<p><code>NSHashTable</code> 可以通过 <code>initWithPointerFunctions:capacity:</code> 进行大量的设置 — 我们只选取使用预先定义的 <code>hashTableWithOptions:</code> 这一最普遍的使用场景。其中最有用的选项有利用 <code>weakObjectsHashTable</code> 来使用其自身的构造函数。</p>
+
+<h3 id="nspointerfunctions">NSPointerFunctions</h3>
+
+<p>这些指针函数可以被用在 <code>NSHashTable</code>，<code>NSMapTable</code>和 <code>NSPointerArray</code> 中，定义了对存储在这个集合中的对象的获取和保留行为。这里只介绍最有用的选项。完整列表参见 <code>NSPointerFunctions.h</code>。</p>
+
+<p>有两组选项。内存选项决定了内存管理，个性化定义了哈希和相等。</p>
+
+<p><code>NSPointerFunctionsStrongMemory</code> 创建了一个r etain/release 对象的集合，非常像常规的 <code>NSSet</code> 或 <code>NSArray</code>。</p>
+
+<p><code>NSPointerFunctionsWeakMemory</code> 使用和 <code>__weak</code> 等价的方式来存储对象并自动移除被销毁的对象。</p>
+
+<p><code>NSPointerFunctionsCopyIn</code> 在对象被加入到集合前拷贝它们。</p>
+
+<p><code>NSPointerFunctionsObjectPersonality</code> 使用对象的 <code>hash</code> 和 <code>isEqual:</code> (默认)。</p>
+
+<p><code>NSPointerFunctionsObjectPointerPersonality</code> 对于 <code>isEqual:</code> 和 <code>hash</code> 使用直接的指针比较。</p>
+
+<h3 id="nshashtable">NSHashTable 性能特征</h3>
+
+<table><thead><tr><th style="text-align: left;">类 / 时间 [ms]</th><th style="text-align: right;">1.000.000 elements</th></tr></thead><tbody><tr><td style="text-align: left;"><code>NSHashTable</code>, adding</td><td style="text-align: right;">2511.96</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableSet</code>, adding</td><td style="text-align: right;">1423.26</td>  
+</tr><tr><td style="text-align: left;"><code>NSHashTable</code>, random access</td><td style="text-align: right;">3.13</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableSet</code>, random access</td><td style="text-align: right;">4.39</td>  
+</tr><tr><td style="text-align: left;"><code>NSHashTable</code>, containsObject</td><td style="text-align: right;">6.56</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableSet</code>, containsObject</td><td style="text-align: right;">6.77</td>  
+</tr><tr><td style="text-align: left;"><code>NSHashTable</code>, NSFastEnumeration</td><td style="text-align: right;">39.03</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableSet</code>, NSFastEnumeration</td><td style="text-align: right;">30.43</td>  
+</tr></tbody></table>
+
+<p>如果你只是需要 <code>NSSet</code> 的特性，请坚持使用 <code>NSSet</code>。<code>NSHashTable</code> 在添加对象时花费了将近2倍的时间，但是其他方面的效率却非常相近。</p>
+
+<h3 id="nsmaptable">NSMapTable</h3>
+
+<p><code>NSMapTable</code> 和 <code>NSHashTable</code> 相似，但是效仿的是 <code>NSDictionary</code>。因此，我们可以通过 <code>mapTableWithKeyOptions:valueOptions:</code> 分别控制键和值的对象获取/保留行为。存储弱引用是 <code>NSMapTable</code> 最有用的特性，这里有4个方便的构造函数:</p>
+
+<ul>
+<li><code>strongToStrongObjectsMapTable</code></li>
+<li><code>weakToStrongObjectsMapTable</code></li>
+<li><code>strongToWeakObjectsMapTable</code></li>
+<li><code>weakToWeakObjectsMapTable</code></li>
+</ul>
+
+<p>注意，除了使用 <code>NSPointerFunctionsCopyIn</code>，任何的默认行为都会 retain (或弱引用)键对象而不会拷贝它，这与 <code>CFDictionary</code> 的行为相同而与 <code>NSDictionary</code> 不同。当你需要一个字典，它的键没有实现 <code>NSCopying</code> 协议的时候（比如像 <code>UIView</code>），这会非常有用。</p>
+
+<p>如果你好奇为什么苹果”忘记”为 <code>NSMapTable</code> 增加下标，你现在知道了。下标访问需要一个 <code>id&lt;NSCopying&gt;</code> 作为 key，对 <code>NSMapTable</code> 来说这不是强制的。如果不通过一个非法的 API 协议或者移除 <code>NSCopying</code> 协议来削弱全局下标，是没有办法给它增加下标的。</p>
+
+<p>你可以通过 <code>dictionaryRepresentation</code> 把内容转换为普通的 <code>NSDictionary</code>。不像 <code>NSOrderedSet</code>，这个方法返回的是一个常规的字典而不是一个代理。</p>
+
+<h3 id="nsmaptable">NSMapTable 性能特征</h3>
+
+<table><thead><tr><th style="text-align: left;">类 / 时间 [ms]</th><th style="text-align: right;">1.000.000 elements</th></tr></thead><tbody><tr><td style="text-align: left;"><code>NSMapTable</code>, adding</td><td style="text-align: right;">2958.48</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableDictionary</code>, adding</td><td style="text-align: right;">2522.47</td>  
+</tr><tr><td style="text-align: left;"><code>NSMapTable</code>, random access</td><td style="text-align: right;">13.25</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableDictionary</code>, random access</td><td style="text-align: right;">9.18</td>  
+</tr></tbody></table>
+
+<p><code>NSMapTable</code> 只比 <code>NSDictionary</code> 略微慢一点。如果你需要一个不 retain 键的字典，放弃 <code>CFDictionary</code> 而使用它吧。</p>
+
+<h3 id="nspointerarray">NSPointerArray</h3>
+
+<p><code>NSPointerArray</code>类是一个稀疏数组，工作起来与 <code>NSMutableArray</code> 相似，但可以存储 <code>NULL</code> 值，并且 <code>count</code> 方法会反应这些空点。可以用 <code>NSPointerFunctions</code> 对其进行各种设置，也有应对常见的使用场景的快捷构造函数 <code>strongObjectsPointerArray</code> 和 <code>weakObjectsPointerArray</code>。</p>
+
+<p>在能使用 <code>insertPointer:atIndex:</code> 之前，我们需要通过直接设置 <code>count</code> 属性来申请空间，否则会产生一个异常。另一种选择是使用 <code>addPointer:</code>，这个方法可以自动根据需要增加数组的大小。</p>
+
+<p>你可以通过 <code>allObjects</code> 将一个 <code>NSPointerArray</code> 转换成常规的 <code>NSArray</code>。这时所有的 <code>NULL</code> 值会被去掉，只有真正存在的对象被加入到数组 — 因此数组的对象索引很有可能会跟指针数组的不同。注意：如果向指针数组中存入任何非对象的东西，试图执行 <code>allObjects</code> 都会造成 <code>EXC_BAD_ACCESS</code> 崩溃，因为它会一个一个地去 retain ”对象”。</p>
+
+<p>从调试的角度讲，<code>NSPointerArray</code>没有受到太多欢迎。<code>description</code>方法只是简单的返回了<code>&lt;NSConcretePointerArray: 0x17015ac50&gt;</code>。为了得到所有的对象需要执行<code>[pointerArray allObjects]</code>，当然，如果存在<code>NULL</code>的话会改变索引。</p>
+
+<h2 id="nspointerarray">NSPointerArray 性能特征</h2>
+
+<p>在性能方面，    <code>NSPointerArray</code> 真的非常非常慢，所以当你打算在一个很大的数据集合上使用它的时候一定要三思。在本测试中我们比较了使用 <code>NSNull</code> 作为空标记的 <code>NSMutableArray</code> ，而对 <code>NSPointerArray</code> 我们用 <code>NSPointerFunctionsStrongMemory</code> 来进行设置 (这样对象会被适当的 retain)。在一个有 10,000 个元素的数组中，我们每隔十个插入一个字符串 ”Entry %d”。此测试包括了用 <code>NSNull.null</code> 填充 <code>NSMutableArray</code> 的总时间。对于 <code>NSPointerArray</code>，我们使用 <code>setCount:</code> 来代替:</p>
+
+<table><thead><tr><th style="text-align: left;">类 / 时间 [ms]</th><th style="text-align: right;">10.000 elements</th></tr></thead><tbody><tr><td style="text-align: left;"><code>NSMutableArray</code>, adding</td><td style="text-align: right;">15.28</td>  
+</tr><tr><td style="text-align: left;"><code>NSPointerArray</code>, adding</td><td style="text-align: right;"><strong>3851.51</strong></td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableArray</code>, random access</td><td style="text-align: right;">0.23</td>  
+</tr><tr><td style="text-align: left;"><code>NSPointerArray</code>, random access</td><td style="text-align: right;">0.34</td>  
+</tr></tbody></table>
+
+<p>注意 <code>NSPointerArray</code> 需要的时间比 <code>NSMutableArray</code> 多了超过<em>* 250 倍(!)</em>* 。这非常奇怪和意外。跟踪内存是比较困难的，所以按理说 <code>NSPointerArray</code> 会更高效才对。不过由于我们使用的是同一个 <code>NSNull</code> 来标记空对象，所以除了指针也没有什么更多的消耗。</p>
+
+<h2 id="nscache">NSCache</h2>
+
+<p><code>NSCache</code> 是一个非常奇怪的集合。在 iOS 4 / Snow Leopard 中加入，默认为可变并且线程安全的。这使它很适合缓存那些创建起来代价高昂的对象。它自动对内存警告做出反应并基于可设置的”成本”清理自己。与 <code>NSDictionary</code> 相比，键是被 retain 而不是被 copy 的。</p>
+
+<p><code>NSCache</code> 的回收方法是不确定的，在文档中也没有说明。向里面放一些类似图片那样超大的对象并不是一个好主意，有可能它在能回收之前就更快地把你的 cache 给填满了。(这是在 <a href="http://pspdfkit.com/">PSPDFKit</a> 中很多跟内存有关的 crash 的原因，在使用自定义的基于 LRU 的链表缓存的代码之前，我们起初使用了 <code>NSCache</code> 存储事先渲染的图片。)</p>
+
+<p>可以对 <code>NSCache</code> 进行设置，这样它就能自动回收那些实现了 <code>NSDiscardableContent</code> 协议的对象。实现了该属性的一个比较常用的类是同时间加入的 <code>NSPurgeableData</code>，但是<a href="https://developer.apple.com/library/mac/releasenotes/Foundation/RN-Foundation/index.html#//apple_ref/doc/uid/TP30000742">在 OS X 10.9 之前，它是非完全线程安全的 (也没有信息表明这个变化也影响到了 iOS，或者说在 iOS 7 中被修复了)</a>。</p>
+
+<h3 id="nscache">NSCache 性能</h3>
+
+<p>那么相比起 <code>NSMutableDictionary</code> 来说，<code>NSCache</code> 表现如何呢？加入的线程安全必然会带来一些消耗。处于好奇，我也加入了一个自定义的线程安全的字典的子类 (<a href="https://gist.github.com/steipete/5928916">PSPDFThreadSafeMutableDictionary</a>)，它通过 <code>OSSpinLock</code> 实现同步的访问。</p>
+
+<table><thead><tr><th style="text-align: left;min-width:28em;">类 / 时间 [ms]</th><th style="text-align: right;">1.000.000 elements</th><th style="text-align: right;">iOS 7x64 Simulator</th><th style="text-align: right;">iPad Mini iOS 6</th></tr></thead><tbody><tr><td style="text-align: left;"><code>NSMutableDictionary</code>, adding</td><td style="text-align: right;">195.35</td><td style="text-align: right;">51.90</td><td style="text-align: right;">921.02</td>  
+</tr><tr><td style="text-align: left;"><code>PSPDFThreadSafeMutableDictionary</code>, adding</td><td style="text-align: right;">248.95</td><td style="text-align: right;">57.03</td><td style="text-align: right;">1043.79</td>  
+</tr><tr><td style="text-align: left;"><code>NSCache</code>, adding</td><td style="text-align: right;">557.68</td><td style="text-align: right;">395.92</td><td style="text-align: right;">1754.59</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableDictionary</code>, random access</td><td style="text-align: right;">6.82</td><td style="text-align: right;">2.31</td><td style="text-align: right;">23.70</td>  
+</tr><tr><td style="text-align: left;"><code>PSPDFThreadSafeMutableDictionary</code>, random access</td><td style="text-align: right;">9.09</td><td style="text-align: right;">2.80</td><td style="text-align: right;">32.33</td>  
+</tr><tr><td style="text-align: left;"><code>NSCache</code>, random access</td><td style="text-align: right;">9.01</td><td style="text-align: right;"><strong>29.06</strong></td><td style="text-align: right;">53.25</td>  
+</tr></tbody></table>
+
+<p><code>NSCache</code> 表现的相当好，随机访问跟我们自定义的线程安全字典一样快。如我们预料的，添加更慢一些，因为 <code>NSCache</code> 要多维护一个决定何时回收对象的成本系数。就这一点来看这不是一个非常公平的比较。有趣的是，在模拟器上运行效率要慢了几乎 10 倍。无论对 32 或 64 位的系统都是这样。而且看起来这个类已经在 iOS 7 中优化过，或者是受益于 64 位 runtime 环境。当在老的设备上测试时，使用 <code>NSCache</code> 的性能消耗就明显得多。</p>
+
+<p>iOS 6(32 bit) 和 iOS 7(64 bit) 的区别也很明显，因为 64 位运行时使用<a href="http://www.mikeash.com/pyblog/friday-qa-2012-07-27-lets-build-tagged-pointers.html">标签指针 (tagged pointer)</a>，因此我们的 <code>@(idx)</code> boxing 要更为高效。</p>
+
+<h2 id="nsindexset">NSIndexSet</h2>
+
+<p>有些使用场景下 <code>NSIndexSet</code> (和它的可变变体，<code>NSMutableIndexSet</code>) 真的非常出色，对它的使用贯穿在 Foundation 中。它可以用一种非常高效的方法存储一组无符号整数的集合，尤其是如果只是一个或少量范围的时候。正如 set 这个名字已经暗示的那样，每一个 <code>NSUInteger</code> 要么在索引 set 中，要么不在。如果你需要存储任意非唯一的数的时候，最好使用 <code>NSArray</code>。</p>
+
+<p>下面是如何把一个整数数组转换为 <code>NSIndexSet</code>:</p>
+
+<p><code>objc
+NSIndexSet *PSPDFIndexSetFromArray(NSArray *array) {
+    NSMutableIndexSet *indexSet = [NSMutableIndexSet indexSet];
+    for (NSNumber *number in array) {
+        [indexSet addIndex:[number unsignedIntegerValue]];
+    }
+    return [indexSet copy];
+}   
+</code></p>
+
+<p>如果不使用block，从索引set中拿到所有的索引有点麻烦，<code>getIndexes:maxCount:inIndexRange:</code> 是最快的方法，其次是使用 <code>firstIndex</code> 并迭代直到 <code>indexGreaterThanIndex:</code> 返回 <code>NSNotFound</code>。随着 block 的到来，使用 <code>NSIndexSet</code> 工作变得方便的多:</p>
+
+<p><code>objc
+NSArray *PSPDFArrayFromIndexSet(NSIndexSet *indexSet) {
+    NSMutableArray *indexesArray = [NSMutableArray arrayWithCapacity:indexSet.count];
+    [indexSet enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+       [indexesArray addObject:@(idx)];
+    }];
+    return [indexesArray copy];
+}
+</code></p>
+
+<h3 id="nsindexset">NSIndexSet性能</h3>
+
+<p>Core Foundation 中没有和 <code>NSIndexSet</code> 相当的类，苹果也没有对性能做出任何承诺。<code>NSIndexSet</code> 和 <code>NSSet</code> 之间的比较也相对的不公平，因为常规的 set 需要对数字进行包装。为了缓解这个影响，这里的测试准备了实现包装好的 <code>NSUintegers</code> ，并且在两个循环中都会执行 <code>unsignedIntegerValue</code>:</p>
+
+<table><thead><tr><th style="text-align: left;min-width:28em;">类 / 时间 [ms]</th><th style="text-align: right;">1.000.000 elements</th><th style="text-align: right;">iOS 7x64 Simulator</th><th style="text-align: right;">iPad Mini iOS 6</th></tr></thead><tbody><tr><td style="text-align: left;"><code>NSMutableDictionary</code>, adding</td><td style="text-align: right;">195.35</td><td style="text-align: right;">51.90</td><td style="text-align: right;">921.02</td>  
+</tr><tr><td style="text-align: left;"><code>PSPDFThreadSafeMutableDictionary</code>, adding</td><td style="text-align: right;">248.95</td><td style="text-align: right;">57.03</td><td style="text-align: right;">1043.79</td>  
+</tr><tr><td style="text-align: left;"><code>NSCache</code>, adding</td><td style="text-align: right;">557.68</td><td style="text-align: right;">395.92</td><td style="text-align: right;">1754.59</td>  
+</tr><tr><td style="text-align: left;"><code>NSMutableDictionary</code>, random access</td><td style="text-align: right;">6.82</td><td style="text-align: right;">2.31</td><td style="text-align: right;">23.70</td>  
+</tr><tr><td style="text-align: left;"><code>PSPDFThreadSafeMutableDictionary</code>, random access</td><td style="text-align: right;">9.09</td><td style="text-align: right;">2.80</td><td style="text-align: right;">32.33</td>  
+</tr><tr><td style="text-align: left;"><code>NSCache</code>, random access</td><td style="text-align: right;">9.01</td><td style="text-align: right;"><strong>29.06</strong></td><td style="text-align: right;">53.25</td>  
+</tr></tbody></table>
+
+<p>我们看到在一百万左右对象的时候，<code>NSIndexSet</code> 开始变得比 <code>NSSet</code> 慢，但只是因为新的运行时和标签指针。在 iOS 6 上运行相同的测试表明，甚至在更高数量级实体的条件下，<code>NSIndexSet</code> 更快。实际上，在大多数应用中，你不会添加太多的整数到索引 set 中。还有一点这里没有测试，就是 <code>NSIndexSet</code> 跟 <code>NSSet</code> 比无疑有更好的内存优化。</p>
+
+<h2>结论</h2>
+
+<p>本文提供了一些真实的测试，使你在使用基础集合类的时候做出有根据的选择。除了上面讨论的类，还有一些不常用但确实有用的类，尤其是 <code>NSCountedSet</code>，<a href="http://nshipster.com/cfbag/"><code>CFBag</code></a>，<a href="https://developer.apple.com/library/mac/documentation/corefoundation/Reference/CFTreeRef/Reference/reference.html"><code>CFTree</code></a>，<a href="https://developer.apple.com/library/mac/documentation/corefoundation/Reference/CFBitVectorRef/Reference/reference.html"><code>CFBitVector</code></a>和<a href="https://developer.apple.com/library/mac/documentation/corefoundation/Reference/CFBinaryHeapRef/Reference/reference.html"><code>CFBinaryHeap</code></a>。</p>
+
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[提高Xcode编译器效率]]></title>
@@ -1594,298 +2197,6 @@ self.textView.textContainer.exclusionPaths = @[ovalPath]; } ```
 <p>[^2]:   <em>字形（Glyphs）</em>：如果说字符是一个字母的“语义”表达，字形则是它的可视化表达。取决于所使用的字体，字形要么是贝塞尔路径，或者位图图像，它定义了要绘制出来的形状。也请参考卓越的 Wikipedia 上关于字形的<a href="http://en.wikipedia.org/wiki/Glyph">这篇文章</a>。</p>
 
 <p>[^3]:   在一个类簇中，只有一个抽象的父类是公共的。分配一个实例实际上就是创建其中一个私有类的对象。因此，你总是为一个抽象类创建子类，并且需要实现所有的方法。也请参考 <a href="https://developer.apple.com/library/ios/documentation/general/conceptual/CocoaEncyclopedia/ClassClusters/ClassClusters.html">class cluster documentation</a>。</p>
-
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[iOS7.0:隐藏技巧和变通之道]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/"/>
-    <updated>2014-04-09T17:16:22+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao</id>
-    <content type="html"><![CDATA[<p>当 iOS 7 刚发布的时候，全世界的苹果开发人员都立马尝试着去编译他们的 app，接着再花上数月的时间来修复任何出现的错误，甚至从头开始重建这个 app。这样的结果，使得人们根本无暇去探究 iOS 7 所带来的新思想。除开一些明显而细微的更新，比如说 NSArray 的 <code>firstObject</code> 方法——这个方法可追溯到 iOS 4 时代，现在被提为公有 API——还有很多隐藏的技巧等着我们去挖掘。</p>
-
-<h2>平滑淡入淡出动画</h2>
-
-<p>我在这里要讨论的并非新的弹性动画 API 或者 UIDynamics，而是一些更细微的东西。CALayer 增加了两个新方法：<code>allowsGroupOpacity</code> 和 <code>allowsEdgeAntialiasing</code>。现在，组不透明度（group opacity）不再是什么新鲜的东西了。iOS 会多次使用存在于 Info.plist 中的键 <code>UIViewGroupOpacity</code> 并可在应用程序范围内启用或禁用它。对于大多数 app 而言，这（译注：启用）并非所期望的，因为它会降低整体性能。在 iOS 7 中，用 SDK 7 所链接的程序，这项属性默认是启用的。当它被启用时，一些动画将会变得不流畅，它也可以在 layer 层上被控制。</p>
-
-<p>一个有趣的细节，如果 <code>allowsGroupOpacity</code> 启用的话，<code>_UIBackdropView</code>（被用作 <code>UIToolbar</code> 或者 <code>UIPopoverView</code> 的背景视图）不能对其模糊进行动画处理，所以当你做一个 alpha 转换时，你可能会临时禁用这项属性。因为这会降低动画体验，你可以回到旧的方式然后在动画期间临时启用 <code>shouldRasterize</code>。别忘了设置适当的 <code>rasterizationScale</code>，否则在 retina 的设备上这些视图会成锯齿状（pixelerated）。</p>
-
-<p>如果你想要复制 Safari 显示所有选项卡时的动画，那么边缘抗锯齿属性将变得非常有用。</p>
-
-<h2>阻塞动画</h2>
-
-<p>有一个小但是非常有用的新方法 <code>[UIView performWithoutAnimation:]</code>。它是一个简单的封装，先检查动画当前是否启用，如果是则停用动画，执行块语句，然后重新启用动画。一个需要说明的地方是，它并 <em>不会</em> 阻塞基于 CoreAnimation 的动画。因此，不用急于将你的方法调用从：</p>
-
-<p><code>objc
-    [CATransaction begin];
-    [CATransaction setDisableActions:YES];
-    view.frame = CGRectMake(...);
-    [CATransaction commit];
-</code></p>
-
-<p>替换成:</p>
-
-<p><code>objc
-    [UIView performWithoutAnimation:^{
-        view.frame = CGRectMake(...);
-    }];
-</code></p>
-
-<p>但是，绝大多数情况下这样也能工作得很好，只要你不直接跟 CALayer 打交道。</p>
-
-<p>iOS 7 中，我有很多代码路径（主要是 <code>UITableViewCells</code>）需要额外保护以防止意外的动画，例如，如果一个弹窗（popover）的大小调整了，与此同时其中的表视图将因为高度的变化而加载新的 cell。我通常的做法是将整个 <code>layoutSubviews</code> 的代码包扎到一个动画块中：</p>
-
-<p><code>objc
-- (void)layoutSubviews 
-{
-    // 否则在 iOS 7 的传统模式下弹窗动画会渗入我们的单元格
-    [UIView performWithoutAnimation:^{
-        [super layoutSubviews];
-        _renderView.frame = self.bounds;
-    }];
-}
-</code></p>
-
-<h2>处理长的表视图</h2>
-
-<p><code>UITableView</code> 非常快速高效，除非你开始使用 <code>tableView:heightForRowAtIndexPath:</code>，它会开始为你表中 <em>每一个</em> 元素调用此方法，即便没有可视对象——这是为了让其下层的 <code>UIScrollView</code> 能获取正确的 <code>contentSize</code>。此前有一些变通方法，但都不好用。iOS 7 中，苹果公司终于承认这一问题，并添加了  <code>tableView:estimatedHeightForRowAtIndexPath:</code>，这个方法把绝大部分计算成本推迟到实际滚动的时候。如果你完全不知道一个 cell 的大小，返回 <code>UITableViewAutomaticDimension</code> 就行了。</p>
-
-<p>对于段头/尾（section headers/footers），现在也有类似的 API 了。</p>
-
-<h2 id="uisearchdisplaycontroller">UISearchDisplayController</h2>
-
-<p>苹果的 search controller 使用了新的技巧来简化移动 search bar 到 navigation bar 的过程。启用 <code>displaysSearchBarInNavigationBar</code> 就可以了（除非你还在用 scope bar，那你就太不幸了）。我倒是很喜欢这么做，但遗憾的是，iOS 7 上的 <code>UISearchDisplayController</code> 貌似被破坏得相当严重，尤其在 iPad 上。苹果公司看上去像是没时间处理这个问题，对于显示的搜索结果并不会隐藏实际的表视图。在 iOS 7 之前，这不算问题，但是现在 <code>searchResultsTableView</code> 有一个透明的背景色，使它看上去相当糟糕。作为一种变通方法，你可以设置不透明背景色或者采取一些<a href="http://petersteinberger.com/blog/2013/fixing-uisearchdisplaycontroller-on-ios-7/">更富于技巧的手段</a>来获得你期望的效果。关于这个控件我碰到过各种各样的结果，当使用 <code>displaysSearchBarInNavigationBar</code> 时甚至 <em>根本</em> 不会显示搜索表视图。</p>
-
-<p>你的结果可能有所不同，但我依赖于一些手段（severe hacks）来让 <code>displaysSearchBarInNavigationBar</code> 工作：</p>
-
-<p>```objc
-- (void)restoreOriginalTableView 
-{
-    if (PSPDFIsUIKitFlatMode() &amp;&amp; self.originalTableView) {
-        self.view = self.originalTableView;
-    }
-}</p>
-
-<ul>
-  <li>
-    <p>(UITableView *)tableView 
-{
-  return self.originalTableView ?: [super tableView];
-}</p>
-  </li>
-  <li>
-    <p>(void)searchDisplayController:(UISearchDisplayController *)controller 
-didShowSearchResultsTableView:(UITableView *)tableView 
-{
-  // HACK: iOS 7 依赖于重度的变通来显示搜索表视图
-  if (PSPDFIsUIKitFlatMode()) {
-      if (!self.originalTableView) self.originalTableView = self.tableView;
-      self.view = controller.searchResultsTableView;
-      controller.searchResultsTableView.contentInset = UIEdgeInsetsZero; // 移除 64 像素的空白
-  }
-}</p>
-  </li>
-  <li>
-    <p>(void)searchDisplayController:(UISearchDisplayController *)controller 
-didHideSearchResultsTableView:(UITableView *)tableView 
-{
-  [self restoreOriginalTableView];
-}
-```</p>
-  </li>
-</ul>
-
-<p>另外，别忘了在 <code>viewWillDisappear</code> 中调用 <code>restoreOriginalTableView</code>，否则程序会 crash。
-记住这只是一种解决办法；可能还有不那么激进的方法，不用替换视图本身，但这个问题确实应该由苹果公司来修复。（TODO: RADAR!）</p>
-
-<h2>分页</h2>
-
-<p><code>UIWebView</code> 现在可以对带有 <code>paginationMode</code> 的网站进行自动分页。有一大堆与此功能相关的新属性：</p>
-
-<p><code>objc
-@property (nonatomic) UIWebPaginationMode paginationMode NS_AVAILABLE_IOS(7_0);
-@property (nonatomic) UIWebPaginationBreakingMode paginationBreakingMode NS_AVAILABLE_IOS(7_0);
-@property (nonatomic) CGFloat pageLength NS_AVAILABLE_IOS(7_0);
-@property (nonatomic) CGFloat gapBetweenPages NS_AVAILABLE_IOS(7_0);
-@property (nonatomic, readonly) NSUInteger pageCount NS_AVAILABLE_IOS(7_0);
-</code></p>
-
-<p>目前而言，虽然这不一定对大多数网站都有用，但它肯定是生成简单的电子书阅读器或者显示文本的一种更好的方式。加点乐子的话，请尝试将它设置为 <code>UIWebPaginationModeBottomToTop</code>。</p>
-
-<h2 id="popover">会飞的 Popover</h2>
-
-<p>想知道为什么你的 popover 疯了一样到处乱飞？在 <code>UIPopoverControllerDelegate</code> 协议中有一个新的代理方法让你能控制它：</p>
-
-<p><code>objc
--  (void)popoverController:(UIPopoverController *)popoverController
-  willRepositionPopoverToRect:(inout CGRect *)rect 
-                       inView:(inout UIView **)view
-</code></p>
-
-<p>当 popover 锚点是指向一个 <code>UIBarButtonItem</code> 时，<code>UIPopoverController</code> 会做出合适的展现，但是如果你让它在一个 view 或者 rect 中显示，你可能就需要实现此方法并正常返回。一个花费了我相当长时间来验证的问题——如果你通过改变 <code>preferredContentSize</code> 来动态调整你的 popover，那么这个方法就尤其需要实现。苹果公司现在对改变 popover 大小的请求更严格，如果没有预留足够的空间，popover 将会到处移动。</p>
-
-<h2>键盘支持</h2>
-
-<p>苹果公司不只为我们提供了<a href="https://developer.apple.com/library/ios/documentation/ServicesDiscovery/Conceptual/GameControllerPG/Introduction/Introduction.html">全新的 framework 用于游戏控制器</a>，它也给了我们这些键盘爱好者一些关注！你会发现新定义的公用键，比如  <code>UIKeyInputEscape</code> 或 <code>UIKeyInputUpArrow</code>，可以使用全新的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIKeyCommand_class/Reference/Reference.html#//apple_ref/occ/instp/UIKeyCommand/input"><code>UIKeyCommand</code></a> 类截查。在 iOS 7 之前，只能通过一些<a href="http://petersteinberger.com/blog/2013/adding-keyboard-shortcuts-to-uialertview/">难以言表的手段来处理键盘命令</a>，现在，就让我们操起蓝牙键盘试试看我们能用这个做什么！</p>
-
-<p>开始之前，你需要对响应链（responder chain）有个了解。你的 <code>UIApplication</code> 继承自  <code>UIResponder</code>，<code>UIView</code> 和 <code>UIViewController</code> 也是如此。如果你曾经处理过 <code>UIMenuItem</code>  并且没有使用<a href="https://github.com/steipete/PSMenuItem">我的基于块的包装</a>的话，那么你对此已经有所了解。事件先被发送到最上层的响应者，然后一级级往下传递直到 UIApplication。为了捕获按键命令，你需要告诉系统你关心哪些按键命令（而不是全捕获）。为了完成这个，你需要重写 <code>keyCommands</code> 这个新属性：</p>
-
-<p>```objc
-- (NSArray *)keyCommands 
-{
-    return @[[UIKeyCommand keyCommandWithInput:@”f”
-                                 modifierFlags:UIKeyModifierCommand<br />
-                                        action:@selector(searchKeyPressed:)]];
-}</p>
-
-<ul>
-  <li>(void)searchKeyPressed:(UIKeyCommand *)keyCommand 
-{
-  // 响应事件
-}
-```</li>
-</ul>
-
-<p><img src="http://img.objccn.io/issue-5/responder-chain.png" name="工作中的响应者链" width="472" height="548" /></p>
-
-<p>现在可别太激动，需要注意的是，这个方法只在键盘可见时有效（比如有类似 <code>UITextView</code> 这样的对象作为第一响应者时）。对于全局热键，你仍然需要用上面提到的 hack 方法。除去那些，这个解决途径还是很优雅的。不要覆盖类似 cmd-V 这种系统的快捷键，它会被自动映射到 <code>paste:</code> 方法。</p>
-
-<p>还有一些新的预定义的响应者行为：</p>
-
-<p><code>objc
-- (void)increaseSize:(id)sender NS_AVAILABLE_IOS(7_0);
-- (void)decreaseSize:(id)sender NS_AVAILABLE_IOS(7_0);
-</code></p>
-
-<p>它们分别对应 cmd+ 和 cmd- 命令，用来放大/缩小内容。</p>
-
-<h2>匹配键盘背景</h2>
-
-<p>苹果公司终于公开了 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIInputView_class/Reference/Reference.html"><code>UIInputView</code></a>，其中提供了一种方式——使用 <code>UIInputViewStyleKeyboard</code> 来匹配键盘样式。这使得你能编写自定义的键盘或者适应默认样式的默认键盘的扩展（工具条）。这个类<a href="https://github.com/nst/iOS-Runtime-Headers/commits/master/Frameworks/UIKit.framework/UIInputView.h">一开始</a>就存在了，不过现在我们终于可以绕过私有API的方式来使用它了。</p>
-
-<p>如果 <code>UIInputView</code> 是一个 <code>inputView</code> 或者 <code>inputAccessoryView</code> 的<em>根视图</em>，它将只显示一个背景，否则它将是透明的。遗憾的是，这并不能让你实现一个未填充的分离态的键盘，但它仍然比用一个简单的 UIToolbar 要好。我还没看到苹果在何处使用这个新 API，看上去 Safari 里仍然使用着 <code>UIToolbar</code>。</p>
-
-<h2>了解你的无线电通信</h2>
-
-<p>虽然早在 iOS 4 的时候，大部分的运营商信息已经在 CTTelephony 暴露了，但它通常只用于特定场景并非十分有用。iOS 7 中，苹果公司为其添加了一个方法，其中最有用的：<code>currentRadioAccessTechnology</code>。这个方法能告诉你手机是处于较慢的 GPRS 还是高速的 LTE 或者介于其中。目前还没有方法得到连接速度（当然手机本身也无法获取这个），但是这足以用来优化一个下载管理器，让其在 EDGE 下不用尝试 <em>同时</em> 去下载6张图片了。</p>
-
-<p>现在还没有 <code>currentRadioAccessTechnology</code> 的相关文档，为了让它工作，会遇到一些麻烦和错误。当你想要获取当前网络信号值，你应当注册一个 <code>CTRadioAccessTechnologyDidChangeNotification</code> 通知而不是去轮询这个属性。为了确切的使 iOS 发送这些通知，你需要持有一个 <code>CTTelephonyNetworkInfo</code> 的实例，但不要在通知中创建  <code>CTTelephonyNetworkInfo</code> 的实例，否则会 crash。</p>
-
-<p>在这个简单的例子中，因为在 block 中捕获 <code>telephonyInfo</code> 将会持有它，所以我就这么用了：</p>
-
-<p><code>objc
-CTTelephonyNetworkInfo *telephonyInfo = [CTTelephonyNetworkInfo new];
-NSLog(@"Current Radio Access Technology: %@", telephonyInfo.currentRadioAccessTechnology);
-[NSNotificationCenter.defaultCenter addObserverForName:CTRadioAccessTechnologyDidChangeNotification 
-                                                object:nil 
-                                                 queue:nil 
-                                            usingBlock:^(NSNotification *note) 
-{
-    NSLog(@"New Radio Access Technology: %@", telephonyInfo.currentRadioAccessTechnology);
-}];
-</code></p>
-
-<p>当手机从 Edge 环境切换到 3G，日志输出应该像这样：</p>
-
-<pre><code>iOS7Tests[612:60b] Current Radio Access Technology: CTRadioAccessTechnologyEdge
-iOS7Tests[612:1803] New Radio Access Technology: (null)
-iOS7Tests[612:1803] New Radio Access Technology: CTRadioAccessTechnologyHSDPA
-</code></pre>
-
-<p>苹果导出了所有字符串符号，因此可以很简单的比较和检测当前的网络信息。</p>
-
-<h2 id="corefoundationautorelease">Core Foundation，Autorelease 和你</h2>
-
-<p>Core Foundation 中出现了一个新的辅助方法，它被用于私有调用已有数年时间：</p>
-
-<p><code>objc
-CFTypeRef CFAutorelease(CFTypeRef CF_RELEASES_ARGUMENT arg)
-</code></p>
-
-<p>它的确做了你所期望的事，让人费解的是苹果花了这么长时间才把它公开。ARC 下，大多数人在处理返回 Core Foundation 对象时是通过转换成对等的 NS 对象来完成的，如返回一个  <code>NSDictionary</code>，虽然它是一个 <code>CFDictionaryRef</code>，简单地使用 <code>CFBridgingRelease()</code> 就行了。这样通常没问题，除非你返回的没有可用的对等 NS 对象，如 <code>CFBagRef</code>。你要么使用 id，这样会失去类型安全性，要么你将你的方法重命名为 <code>createMethod</code> 并考虑所有的内存语义，最后使用 CFRelease。还有一些手段，比如<a href="http://favstar.fm/users/AndrePang/status/18099774996">这个</a>，使用 non-ARC-file 参数你才能编译它，但终归得使用 CFAutorelease()。另外：不要编写使用苹果公司命名空间的代码，所有这些自定义的 CF-宏将来都会被打破的。</p>
-
-<h2>图片解压缩</h2>
-
-<p>当通过 <code>UIImage</code> 展示一张图片时，在显示之前需要解压缩（除非图片源已经像素缓存了）。对于 JPG/PNG 文件这会占用相当可观的时间并会造成卡顿。iOS 6 以前，通常是通过创建一个位图上下文，然后在其中画图来解决。<a href="https://github.com/AFNetworking/AFNetworking/blob/09658b352a496875c91cc33dd52c3f47b9369945/AFNetworking/AFURLResponseSerialization.m#L442-518">（参见 AFNetworking 如何处理这个问题）</a>。</p>
-
-<p>从 iOS 7 开始，你可以使用 <code>kCGImageSourceShouldCacheImmediately</code>: 强制图片在创建时直接解压缩：</p>
-
-<p>```objc
-+ (UIImage *)decompressedImageWithData:(NSData *)data 
-{
-    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
-    CGImageRef cgImage = CGImageSourceCreateImageAtIndex(source, 0, (__bridge CFDictionaryRef)@{(id)kCGImageSourceShouldCacheImmediately: @YES});</p>
-
-<pre><code>UIImage *image = [UIImage imageWithCGImage:cgImage];
-CGImageRelease(cgImage);
-CFRelease(source);
-return image; } ```
-</code></pre>
-
-<p>刚发现这一点时我很很兴奋，但不要高兴得太早。在我的测试中，开启即时缓存后性能实际上有所 <em>降低</em>。要么这个方法最终是在主线程中被调用的（好像不太可能），要么感官上的性能下降是因为其在方法 <code>copyImageBlockSetJPEG</code> 中锁住了，因为这个方法也被用在主线程显示非加密的图片时。在我的 app 中，我在主线程中加载小的预览图，在后台线程中加载大型图，使用了 <code>kCGImageSourceShouldCacheImmediately</code> 后小小的解压缩阻塞了主线程，同时在后台处理大量开销昂贵的操作。    </p>
-
-<p><img src="http://img.objccn.io/issue-5/image-decompression.png" name="Image Decompression Stack Trace" width="662" height="1008" /></p>
-
-<p>还有更多关于图片解压缩的却不是 iOS 7 中的新东西，像 <code>kCGImageSourceShouldCache</code>，它用来控制系统自动卸载解压缩图片数据的能力。确保你将它设置为 YES，否则所有的工作都将没有意义。有趣的是，苹果在 64-bit 运行时的系统中将 <code>kCGImageSourceShouldCache</code> 的 <em>默认值</em> 从 NO 改为了 YES。</p>
-
-<h2>盗版检查</h2>
-
-<p>苹果添加了一个方式，通过 NSBunble 上的新方法 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Classes/NSBundle_Class/Reference/Reference.html#//apple_ref/occ/instm/NSBundle/appStoreReceiptURL"><code>appStoreReceiptURL</code></a> 来获取和验证 Lion 系统上 App Store 的收据，现在终于也移植到了 iOS 上了。这使得你可以检查你的应用是合法购买的还是被破解了的。检查收据还有另一个重要的原因，它包含了 <em>初始购买日期</em>，这点对于把你的应用从付费模式迁移到免费+应用内付费模式很有帮助。你可以根据这个初始购买日期来决定额外内容对于你的用户是免费（因为他们已经付过费了）还是收费的。</p>
-
-<p>收据还允许你检查应用程序是否通过批量购买计划购买以及该许可证是否仍有效，有一个名为  <code>SKReceiptPropertyIsVolumePurchase</code> 的属性标示了该值。</p>
-
-<p>当你调用 <code>appStoreReceiptURL</code> 时，你需要特别注意，因为在 iOS 6 上，它还是一个私有 API，你应该在用户代码中先调用 <code>doesNotRecognizeSelector:</code>，在调用前检查运行（基础）版本。在开发期间，这个方法返回的 URL 不会指向一个文件。你可能需要使用 StoreKit 的 <a href="https://developer.apple.com/library/ios/documentation/StoreKit/Reference/SKReceiptRefreshRequest_ClassRef/SKReceiptRefreshRequest.html"><code>SKReceiptRefreshRequest</code></a>，这也是 iOS 7 中的新东西，用它来下载证书。使用一个至少有过一次购买的测试用户，否则它将没法工作：</p>
-
-<p><code>objc
-// 刷新收据
-SKReceiptRefreshRequest *request = [[SKReceiptRefreshRequest alloc] init];
-[request setDelegate:self];
-[request start];
-</code></p>
-
-<p>验证收据需要大量的代码。你需要使用 OpenSSL 和内嵌的<a href="http://www.apple.com/certificateauthority/">苹果根证书</a>，并且你还要了解一些基本的东西像是证书、<a href="http://en.wikipedia.org/wiki/PKCS">PCKS 容器</a>以及 <a href="http://de.wikipedia.org/wiki/Abstract_Syntax_Notation_One">ASN.1</a>。这里有一些<a href="https://github.com/rmaddy/VerifyStoreReceiptiOS">样例代码</a>，但是你不应该让它这么简单——尤其是对那些有“高尚意图”的人，别只是拷贝现有的验证方法，至少做点修改或者编写你自己的，你应该不希望一个普通的补丁程序就能在数秒内瓦解你的努力吧。</p>
-
-<p>你绝对应该读读苹果的指南——<a href="https://developer.apple.com/library/mac/releasenotes/General/ValidateAppStoreReceipt/index.html#//apple_ref/doc/uid/TP40010573-CH1-SW6">验证 Mac App 商店收据</a>，这里面的大多数都适用于 iOS。苹果在 <a href="https://developer.apple.com/wwdc/videos/">WWDC 2013 的 Session 308 “Using Receipts to Protect Your Digital Sales”</a> 中详述了通过新加入的“Grand Unified Receipt”而带来的变动。</p>
-
-<h2 id="comicsansms">Comic Sans MS</h2>
-
-<p>承认吧，你是怀念 Comic Sans MS 的。在 iOS 7 中，Comic Sans MS 终于回来了。iOS 6 中添加了可下载字体，但那时的字体列表很少也不见得有趣。在 iOS 7 中苹果添加了不少字体，包括 “famous”，它和 <a href="http://www.fontsquirrel.com/fonts/PT-Sans">PT Sans</a> 或 <a href="http://sixrevisions.com/graphics-design/comic-sans-the-font-everyone-loves-to-hate/">Comic Sans MS</a> 有些类似。<code>kCTFontDownloadableAttribute</code> 并没有在 iOS 6 中声明，所以 iOS 7 之前它并不真正可用，但苹果确是在 iOS 6 的时候就已经做了私有声明了。</p>
-
-<p><img src="http://img.objccn.io/issue-5/comic-sans-ms.png" name="Who doesn't love Comic Sans MS" width="414" height="559" /></p>
-
-<p>字体列表是<a href="http://mesu.apple.com/assets/com_apple_MobileAsset_Font/com_apple_MobileAsset_Font.xml">动态变化</a>的，以后可能就会发生变动。苹果在 <a href="http://support.apple.com/kb/HT5484">Tech Note HT5484</a> 中罗列了一些可用的字体，但这个文档已经过时了，并不能反映 iOS 7 的变化。</p>
-
-<p>这里显示了你该如何获取一个用 <code>CTFontDescriptorRef</code> 标示的可下载的字体数组：</p>
-
-<p><code>objc
-CFDictionary *descriptorOptions = @{(id)kCTFontDownloadableAttribute : @YES};
-CTFontDescriptorRef descriptor = CTFontDescriptorCreateWithAttributes((CFDictionaryRef)descriptorOptions);
-CFArrayRef fontDescriptors = CTFontDescriptorCreateMatchingFontDescriptors(descriptor, NULL);
-</code></p>
-
-<p>系统不会检查字体是否已存在于磁盘上而将直接返回同样的列表。另外，这个方法可能会启用网络并造成阻塞，你不应该在主线程中使用它。</p>
-
-<p>使用如下基于块的 API 来下载字体：    </p>
-
-<p><code>objc
-bool CTFontDescriptorMatchFontDescriptorsWithProgressHandler(
-         CFArrayRef                          descriptors,
-         CFSetRef                            mandatoryAttributes,
-         CTFontDescriptorProgressHandler     progressBlock)
-</code></p>
-
-<p>这个方法能操作网络并传递下载进度信息来调用你的 <code>progressBlock</code> 方法直到下载成功或者失败。参考苹果的 <a href="https://developer.apple.com/library/ios/samplecode/DownloadFont/Listings/DownloadFont_ViewController_m.html">DownloadFont 样例</a>看看如何使用它。    </p>
-
-<p>有一些值得注意的地方，这里的字体只在当前程序运行时有效，下次运行将被重新载入内存。因为字体存放在共享空间中，你不能依赖于它们是否可用。很有可能但不能保证地说，系统会清理这个目录，或者你的程序被拷贝到没有这个字体的新设备中，同时你又没有网络。在 Mac 或是模拟器上，你能根据 <code>kCTFontURLAttribute</code> 获得字体的绝对路径，加载速度也会提升，但是在 iOS 上是不行的，因为这个目录在你的程序之外，你需要再次调用 <code>CTFontDescriptorMatchFontDescriptorsWithProgressHandler</code>。</p>
-
-<p>你也可以注册新的 <code>kCTFontManagerRegisteredFontsChangedNotification</code> 通知来跟踪新字体在何时被载入到了字体注册表中。你可以在 <a href="https://developer.apple.com/wwdc/videos/">WWDC 2013 的 Session 223 “Using Fonts with TextKit”</a>中查找更多信息。</p>
-
-<h2>这还不够?</h2>
-
-<p>没关系，iOS 7 的新东西远不止如此！了解一下 <a href="http://nshipster.com/ios7/">NSHipster</a> 你将明白语音合成相关的东西，base64、全新的 <code>NSURLComponents</code>、<code>NSProgress</code>、条形码扫描、阅读列表以及 <code>CIDetectorEyeBlink</code>。还有很多我们没有涵盖到的，比如苹果的 <a href="https://developer.apple.com/library/ios/releasenotes/General/iOS70APIDiffs/index.html#//apple_ref/doc/uid/TP40013203">iOS 7 API 变化</a>，<a href="https://developer.apple.com/library/ios/releasenotes/General/WhatsNewIniOS/Articles/iOS7.html">What's new in iOS</a>指南以及 <a href="https://developer.apple.com/library/prerelease/mac/releasenotes/Foundation/RN-Foundation/index.html#//apple_ref/doc/uid/TP30000742">Foundation Release Notes</a>（这些都是基于 OS X的，但是代码都是共享的，很多也同样适用于 iOS）。很多新方法都还没形成文档，等着你来探究和写成博客。</p>
 
 <hr />
 
