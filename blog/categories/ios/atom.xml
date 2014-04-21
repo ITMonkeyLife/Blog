@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-21T10:40:57+08:00</updated>
+  <updated>2014-04-21T17:58:09+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,664 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Mac可执行文件]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/21/macke-zhi-xing-wen-jian/"/>
+    <updated>2014-04-21T17:51:10+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/21/macke-zhi-xing-wen-jian</id>
+    <content type="html"><![CDATA[<p>我们用 Xcode 构建一个程序的过程中，会把源文件 (<code>.m</code> 和 <code>.h</code>) 文件转换为一个可执行文件。这个可执行文件中包含的字节码会将被 CPU (iOS 设备中的 ARM 处理器或 Mac 上的 Intel 处理器) 执行。</p>
+
+<p>本文将介绍一下上面的过程中编译器都做了些什么，同时深入看看可执行文件内部是怎样的。实际上里面的东西要比我们第一眼看到的多得多。</p>
+
+<p>这里我们把 Xcode 放一边，将使用命令行工具 (command-line tools)。当我们用 Xcode 构建一个程序时，Xcode 只是简单的调用了一系列的工具而已。Florian 对工具调用是如何工作的做了更详细的讨论。本文我们就直接调用这些工具，并看看它们都做了些什么。</p>
+
+<p>真心希望本文能帮助你更好的理解 iOS 或 OS X 中的一个可执行文件 (也叫做 <em>Mach-O executable</em>) 是如何执行，以及怎样组装起来的。</p>
+
+<h2 id="xcrun">xcrun</h2>
+
+<p>先来看一些基础性的东西：这里会大量使用一个名为 <code>xcrun</code> 的命令行工具。看起来可能会有点奇怪，不过它非常的出色。这个小工具用来调用别的一些工具。原先，我们在终端执行如下命令：</p>
+
+<pre><code>% clang -v
+</code></pre>
+
+<p>现在我们用下面的命令代替：</p>
+
+<pre><code>% xcrun clang -v
+</code></pre>
+
+<p>在这里 <code>xcrun</code> 做的是定位到 <code>clang</code>，并执行它，附带输入 <code>clang</code> 后面的参数。</p>
+
+<p>我们为什么要这样做呢？看起来没有什么意义。不过 <code>xcode</code> 允许我们: (1) 使用多个版本的 Xcode，以及使用某个特定 Xcode 版本中的工具。(2) 针对某个特定的 SDK (software development kit) 使用不同的工具。如果你有 Xcode 4.5 和 Xcode 5，通过 <code>xcode-select</code> 和 <code>xcrun</code> 可以选择使用 Xcode 5 中 iOS SDK 的工具，或者 Xcode 4.5 中的 OS X 工具。在许多其它平台中，这是不可能做到的。查阅 <code>xcrun</code> 和 <code>xcode-select</code> 的主页内容可以了解到详细内容。不用安装 <em>Command Line Tools</em>，就能使用命令行中的开发者工具。</p>
+
+<h2 id="idehelloworld">不使用 IDE 的 Hello World</h2>
+
+<p>回到终端 (Terminal)，创建一个包含一个 C 文件的文件夹：</p>
+
+<pre><code>% mkdir ~/Desktop/objcio-command-line
+% cd !$
+% touch helloworld.c
+</code></pre>
+
+<p>接着使用你喜欢的文本编辑器来编辑这个文件 -- 例如 TextEdit.app：</p>
+
+<pre><code>% open -e helloworld.c
+</code></pre>
+
+<p>输入如下代码：</p>
+
+<p><code>c
+#include &lt;stdio.h&gt;
+int main(int argc, char *argv[])
+{
+    printf("Hello World!\n");
+    return 0;
+}
+</code></p>
+
+<p>保存并返回到终端，然后运行如下命令：</p>
+
+<pre><code>% xcrun clang helloworld.c
+% ./a.out
+</code></pre>
+
+<p>现在你能够在终端上看到熟悉的 <code>Hello World!</code>。这里我们编译并运行 C 程序，全程没有使用 IDE。深呼吸一下，高兴高兴。</p>
+
+<p>上面我们到底做了些什么呢？我们将 <code>helloworld.c</code> 编译为一个名为 <code>a.out</code> 的 Mach-O 二进制文件。注意，如果我们没有指定名字，那么编译器会默认的将其指定为 a.out。</p>
+
+<p>这个二进制文件是如何生成的呢？实际上有许多内容需要观察和理解。我们先看看编译器吧。</p>
+
+<h3 id="helloworld">Hello World 和编译器</h3>
+
+<p>时下 Xcode 中编译器默认选择使用 <code>clang</code>(读作 /klæŋ/)。<a href="http://objccn.io/issue-6-2/">关于编译器</a>，Chris 写了更详细的文章。</p>
+
+<p>简单的说，编译器处理过程中，将 <code>helloworld.c</code> 当做输入文件，并生成一个可执行文件 <code>a.out</code>。这个过程有多个步骤/阶段。我们需要做的就是正确的执行它们。</p>
+
+<h5>预处理</h5>
+
+<ul>
+<li>符号化 (Tokenization)</li>
+<li>宏定义的展开</li>
+<li><code>#include</code> 的展开</li>
+</ul>
+
+<h5>语法和语义分析</h5>
+
+<ul>
+<li>将符号化后的内容转化为一棵解析树 (parse tree)</li>
+<li>解析树做语义分析</li>
+<li>输出一棵<em>抽象语法树</em>（Abstract Syntax Tree* (AST)）</li>
+</ul>
+
+<h5>生成代码和优化</h5>
+
+<ul>
+<li>将 AST 转换为更低级的中间码 (LLVM IR)</li>
+<li>对生成的中间码做优化</li>
+<li>生成特定目标代码</li>
+<li>输出汇编代码</li>
+</ul>
+
+<h5>汇编器</h5>
+
+<ul>
+<li>将汇编代码转换为目标对象文件。</li>
+</ul>
+
+<h5>链接器</h5>
+
+<ul>
+<li>将多个目标对象文件合并为一个可执行文件 (或者一个动态库)</li>
+</ul>
+
+<p>我们来看一个关于这些步骤的简单的例子。</p>
+
+<h4>预处理</h4>
+
+<p>编译过程中，编译器首先要做的事情就是对文件做处理。预处理结束之后，如果我们停止编译过程，那么我们可以让编译器显示出预处理的一些内容：</p>
+
+<pre><code>% xcrun clang -E helloworld.c
+</code></pre>
+
+<p>喔喔。 上面的命令输出的内容有 413 行。我们用编辑器打开这些内容，看看到底发生了什么：</p>
+
+<pre><code>% xcrun clang -E helloworld.c | open -f
+</code></pre>
+
+<p>在顶部可以看到的许多行语句都是以 <code>#</code> 开头 (读作 <code>hash</code>)。这些被称为 <em>行标记</em> 的语句告诉我们后面跟着的内容来自哪里。如果再回头看看 <code>helloworld.c</code> 文件，会发现第一行是：</p>
+
+<p><code>c
+#include &lt;stdio.h&gt;
+</code></p>
+
+<p>我们都用过 <code>#include</code> 和 <code>import</code>。它们所做的事情是告诉预处理器将文件 <code>stdio.h</code> 中的内容插入到 <code>#include</code> 语句所在的位置。这是一个递归的过程：<code>stdio.h</code> 可能会包含其它的文件。</p>
+
+<p>由于这样的递归插入过程很多，所以我们需要确保记住相关行号信息。为了确保无误，预处理器在发生变更的地方插入以 <code>#</code> 开头的 <code>行标记</code>。跟在 <code>#</code> 后面的数字是在源文件中的行号，而最后的数字是在新文件中的行号。回到刚才打开的文件，紧跟着的是系统头文件，或者是被看做为封装了 <code>extern "C"</code> 代码块的文件。</p>
+
+<p>如果滚动到文件末尾，可以看到我们的 <code>helloworld.c</code> 代码：</p>
+
+<p><code>c
+# 2 "helloworld.c" 2
+int main(int argc, char *argv[])
+{
+ printf("Hello World!\n");
+ return 0;
+}
+</code></p>
+
+<p>在 Xcode 中，可以通过这样的方式查看任意文件的预处理结果：<strong>Product</strong> -&gt; <strong>Perform Action</strong> -&gt; <strong>Preprocess</strong>。注意，编辑器加载预处理后的文件需要花费一些时间 -- 接近 100,000 行代码。</p>
+
+<h4>编译</h4>
+
+<p>下一步：分析和代码生成。我们可以用下面的命令让 <code>clang</code> 输出汇编代码：</p>
+
+<pre><code>% xcrun clang -S -o - helloworld.c | open -f
+</code></pre>
+
+<p>我们来看看输出的结果。首先会看到有一些以点 <code>.</code> 开头的行。这些就是汇编指令。其它的则是实际的 x86_64 汇编代码。最后是一些标记 (label)，与 C 语言中的类似。</p>
+
+<p>我们先看看前三行：</p>
+
+<pre><code>    .section    __TEXT,__text,regular,pure_instructions
+    .globl  _main
+    .align  4, 0x90
+</code></pre>
+
+<p>这三行是汇编指令，不是汇编代码。<code>.section</code> 指令指定接下来会执行哪一个段。</p>
+
+<p>第二行的 <code>.globl</code> 指令说明 <code>_main</code> 是一个外部符号。这就是我们的 <code>main()</code> 函数。这个函数对于二进制文件外部来说是可见的，因为系统要调用它来运行可执行文件。</p>
+
+<p><code>.align</code> 指令指出了后面代码的对齐方式。在我们的代码中，后面的代码会按照 16(2^4) 字节对齐，如果需要的话，用 <code>0x90</code> 补齐。</p>
+
+<p>接下来是 main 函数的头部：</p>
+
+<pre><code>_main:                                  ## @main
+    .cfi_startproc
+## BB#0:
+    pushq   %rbp
+Ltmp2:
+    .cfi_def_cfa_offset 16
+Ltmp3:
+    .cfi_offset %rbp, -16
+    movq    %rsp, %rbp
+Ltmp4:
+    .cfi_def_cfa_register %rbp
+    subq    $32, %rsp
+</code></pre>
+
+<p>上面的代码中有一些与 C 标记工作机制一样的一些标记。它们是某些特定部分的汇编代码的符号链接。首先是 <code>_main</code> 函数真正开始的地址。这个符号会被 export。二进制文件会有这个位置的一个引用。</p>
+
+<p><code>.cfi_startproc</code> 指令通常用于函数的开始处。CFI 是调用帧信息 (Call Frame Information) 的缩写。这个调用 <code>帧</code> 以松散的方式对应着一个函数。当开发者使用 debugger 和 <em>step in</em> 或 <em>step out</em> 时，实际上是 stepping in/out 一个调用帧。在 C 代码中，函数有自己的调用帧，当然，别的一些东西也会有类似的调用帧。<code>.cfi_startproc</code> 指令给了函数一个 <code>.eh_frame</code> 入口，这个入口包含了一些调用栈的信息（抛出异常时也是用其来展开调用帧堆栈的）。这个指令也会发送一些和具体平台相关的指令给 CFI。它与后面的 <code>.cfi_endproc</code> 相匹配，以此标记出 <code>main()</code> 函数结束的地方。</p>
+
+<p>接着是另外一个 label <code>## BB#0:</code>。然后，终于，看到第一句汇编代码：<code>pushq %rbp</code>。从这里开始事情开始变得有趣。在 OS X上，我们会有 X86_64 的代码，对于这种架构，有一个东西叫做 <em>ABI</em> ( 应用二进制接口 application binary interface)，ABI 指定了函数调用是如何在汇编代码层面上工作的。在函数调用期间，ABI 会让 <code>rbp</code> 寄存器 (基础指针寄存器 base pointer register) 被保护起来。当函数调用返回时，确保 <code>rbp</code> 寄存器的值跟之前一样，这是属于 main 函数的职责。<code>pushq %rbp</code> 将 <code>rbp</code> 的值 push 到栈中，以便我们以后将其 pop 出来。</p>
+
+<p>接下来是两个 CFI 指令：<code>.cfi_def_cfa_offset 16</code> 和 <code>.cfi_offset %rbp, -16</code>。这将会输出一些关于生成调用堆栈展开和调试的信息。我们改变了堆栈和基础指针，而这两个指令可以告诉编译器它们都在哪儿，或者更确切的，它们可以确保之后调试器要使用这些信息时，能找到对应的东西。</p>
+
+<p>接下来，<code>movq %rsp, %rbp</code> 将把局部变量放置到栈上。<code>subq $32, %rsp</code> 将栈指针移动 32 个字节，也就是函数会调用的位置。我们先将老的栈指针存储到 <code>rbp</code> 中，然后将此作为我们局部变量的基址，接着我们更新堆栈指针到我们将会使用的位置。</p>
+
+<p>之后，我们调用了 <code>printf()</code>：</p>
+
+<pre><code>leaq    L_.str(%rip), %rax
+movl    $0, -4(%rbp)
+movl    %edi, -8(%rbp)
+movq    %rsi, -16(%rbp)
+movq    %rax, %rdi
+movb    $0, %al
+callq   _printf
+</code></pre>
+
+<p>首先，<code>leaq</code> 会将 <code>L_.str</code> 的指针加载到 <code>rax</code> 寄存器中。留意 <code>L_.str</code> 标记在后面的汇编代码中是如何定义的。它就是 C 字符串<code>"Hello World!\n"</code>。 <code>edi</code> 和 <code>rsi</code> 寄存器保存了函数的第一个和第二个参数。由于我们会调用别的函数，所以首先需要将它们的当前值保存起来。这就是为什么我们使用刚刚存储的 <code>rbp</code> 偏移32个字节的原因。第一个 32 字节的值是 0，之后的 32 字节的值是 <code>edi</code> 寄存器的值 (存储了 <code>argc</code>)。然后是 64 字节 的值：<code>rsi</code> 寄存器的值 (存储了 <code>argv</code>)。我们在后面并没有使用这些值，但是编译器在没有经过优化处理的时候，它们还是会被存下来。</p>
+
+<p>现在我们把第一个函数 <code>printf()</code> 的参数 <code>rax</code> 设置给第一个函数参数寄存器 <code>edi</code> 中。<code>printf()</code> 是一个可变参数的函数。ABI 调用约定指定，将会把使用来存储参数的寄存器数量存储在寄存器 <code>al</code> 中。在这里是 0。最后 <code>callq</code> 调用了 <code>printf()</code> 函数。</p>
+
+<pre><code>    movl    $0, %ecx
+    movl    %eax, -20(%rbp)         ## 4-byte Spill
+    movl    %ecx, %eax
+</code></pre>
+
+<p>上面的代码将 <code>ecx</code> 寄存器设置为 0，并把 <code>eax</code> 寄存器的值保存至栈中，然后将 <code>ect</code> 中的 0 拷贝至 <code>eax</code> 中。ABI 规定 <code>eax</code> 将用来保存一个函数的返回值，或者此处 <code>main()</code> 函数的返回值 0：</p>
+
+<pre><code>    addq    $32, %rsp
+    popq    %rbp
+    ret
+    .cfi_endproc
+</code></pre>
+
+<p>函数执行完成后，将恢复堆栈指针 —— 利用上面的指令 <code>subq $32, %rsp</code> 把堆栈指针 <code>rsp</code> 上移 32 字节。最后，把之前存储至 <code>rbp</code> 中的值从栈中弹出来，然后调用 <code>ret</code> 返回调用者， <code>ret</code> 会读取出栈的返回地址。 <code>.cfi_endproc</code> 平衡了 <code>.cfi_startproc</code> 指令。</p>
+
+<p>接下来是输出字符串 <code>"Hello World!\n"</code>:</p>
+
+<pre><code>    .section    __TEXT,__cstring,cstring_literals
+L_.str:                                 ## @.str
+    .asciz   "Hello World!\n"
+</code></pre>
+
+<p>同样，<code>.section</code> 指令指出下面将要进入的段。<code>L_.str</code> 标记运行在实际的代码中获取到字符串的一个指针。<code>.asciz</code> 指令告诉编译器输出一个以 ‘\0’ (null) 结尾的字符串。</p>
+
+<p><code>__TEXT __cstring</code> 开启了一个新的段。这个段中包含了 C 字符串：</p>
+
+<pre><code>L_.str:                                 ## @.str
+    .asciz     "Hello World!\n"
+</code></pre>
+
+<p>上面两行代码创建了一个 null 结尾的字符串。注意 <code>L_.str</code> 是如何命名，之后会通过它来访问字符串。</p>
+
+<p>最后的 <code>.subsections_via_symbols</code> 指令是静态链接编辑器使用的。</p>
+
+<p>更过关于汇编指令的资料可以在 苹果的 <a href="https://developer.apple.com/library/mac/documentation/DeveloperTools/Reference/Assembler/">OS X Assembler Reference</a> 中看到。AMD 64 网站有关于 <a href="http://www.x86-64.org/documentation/abi.pdf">ABI for x86 的文档</a>。另外还有 <a href="http://www.x86-64.org/documentation/assembly.html">Gentle Introduction to x86-64 Assembly</a>。</p>
+
+<p>重申一下，通过下面的选择操作，我们可以用 Xcode 查看任意文件的汇编输出结果：<strong>Product</strong> -&gt; <strong>Perform Action</strong> -&gt; <strong>Assemble</strong>.</p>
+
+<h4>汇编器</h4>
+
+<p>汇编器将可读的汇编代码转换为机器代码。它会创建一个目标对象文件，一般简称为 <em>对象文件</em>。这些文件以 <code>.o</code> 结尾。如果用 Xcode 构建应用程序，可以在工程的 <em>derived data</em> 目录中，<code>Objects-normal</code> 文件夹下找到这些文件。</p>
+
+<h4>链接器</h4>
+
+<p>稍后我们会对链接器做更详细的介绍。这里简单介绍一下：链接器解决了目标文件和库之间的链接。什么意思呢？还记得下面的语句吗：</p>
+
+<pre><code>callq   _printf
+</code></pre>
+
+<p><code>printf()</code> 是 <em>libc</em> 库中的一个函数。无论怎样，最后的可执行文件需要能需要知道 <code>printf()</code> 在内存中的具体位置：例如，<code>_printf</code> 的地址符号是什么。链接器会读取所有的目标文件 (此处只有一个) 和库 (此处是 <em>libc</em>)，并解决所有未知符号 (此处是 <code>_printf</code>) 的问题。然后将它们编码进最后的可执行文件中  （可以在 <em>libc</em> 中找到符号 <code>_printf</code>），接着链接器会输出可以运行的执行文件：<code>a.out</code>。</p>
+
+<h2 id="section">Section</h2>
+
+<p>就像我们上面提到的一样，这里有些东西叫做 section。一个可执行文件包含多个段，也就是多个 section。可执行文件不同的部分将加载进不同的 section，并且每个 section 会转换进某个 segment 里。这个概念对于所有的可执行文件都是成立的。</p>
+
+<p>我们来看看 <code>a.out</code> 二进制中的 section。我们可以使用 <code>size</code> 工具来观察：</p>
+
+<pre><code>% xcrun size -x -l -m a.out 
+Segment __PAGEZERO: 0x100000000 (vmaddr 0x0 fileoff 0)
+Segment __TEXT: 0x1000 (vmaddr 0x100000000 fileoff 0)
+    Section __text: 0x37 (addr 0x100000f30 offset 3888)
+    Section __stubs: 0x6 (addr 0x100000f68 offset 3944)
+    Section __stub_helper: 0x1a (addr 0x100000f70 offset 3952)
+    Section __cstring: 0xe (addr 0x100000f8a offset 3978)
+    Section __unwind_info: 0x48 (addr 0x100000f98 offset 3992)
+    Section __eh_frame: 0x18 (addr 0x100000fe0 offset 4064)
+    total 0xc5
+Segment __DATA: 0x1000 (vmaddr 0x100001000 fileoff 4096)
+    Section __nl_symbol_ptr: 0x10 (addr 0x100001000 offset 4096)
+    Section __la_symbol_ptr: 0x8 (addr 0x100001010 offset 4112)
+    total 0x18
+Segment __LINKEDIT: 0x1000 (vmaddr 0x100002000 fileoff 8192)
+total 0x100003000
+</code></pre>
+
+<p>如上代码所示，我们的 <code>a.out</code> 文件有 4 个 segment。有些 segment 中有多个 section。</p>
+
+<p>当运行一个可执行文件时，虚拟内存 (VM - virtual memory) 系统将 segment 映射到进程的地址空间上。映射完全不同于我们一般的认识，如果你对虚拟内存系统不熟悉，可以简单的想象虚拟内存系统将整个可执行文件加载进内存 -- 虽然在实际上不是这样的。VM 使用了一些技巧来避免全部加载。</p>
+
+<p>当虚拟内存系统进行映射时，segment 和 section 会以不同的参数和权限被映射。</p>
+
+<p>上面的代码中，<code>__TEXT</code> segment 包含了被执行的代码。它被以只读和可执行的方式映射。进程被允许执行这些代码，但是不能修改。这些代码也不能对自己做出修改，因此这些被映射的页从来不会被改变。</p>
+
+<p><code>__DATA</code> segment 以可读写和不可执行的方式映射。它包含了将会被更改的数据。</p>
+
+<p>第一个 segment 是 <code>__PAGEZERO</code>。它的大小为 4GB。这 4GB 并不是文件的真实大小，但是规定了进程地址空间的前 4GB 被映射为 不可执行、不可写和不可读。这就是为什么当读写一个 <code>NULL</code> 指针或更小的值时会得到一个 <code>EXC_BAD_ACCESS</code> 错误。这是操作系统在尝试防止<a href="http://www.xkcd.com/371/">引起系统崩溃</a>。</p>
+
+<p>在 segment中，一般都会有多个 section。它们包含了可执行文件的不同部分。在 <code>__TEXT</code> segment 中，<code>__text</code> section 包含了编译所得到的机器码。<code>__stubs</code> 和 <code>__stub_helper</code> 是给动态链接器 (<code>dyld</code>) 使用的。通过这两个 section，在动态链接代码中，可以允许延迟链接。<code>__const</code> (在我们的代码中没有) 是常量，不可变的，就像 <code>__cstring</code> (包含了可执行文件中的字符串常量 -- 在源码中被双引号包含的字符串) 常量一样。</p>
+
+<p><code>__DATA</code> segment 中包含了可读写数据。在我们的程序中只有 <code>__nl_symbol_ptr</code> 和 <code>__la_symbol_ptr</code>，它们分别是 <em>non-lazy</em> 和 <em>lazy</em> 符号指针。延迟符号指针用于可执行文件中调用未定义的函数，例如不包含在可执行文件中的函数，它们将会延迟加载。而针对非延迟符号指针，当可执行文件被加载同时，也会被加载。</p>
+
+<p>在 <code>_DATA</code> segment 中的其它常见 section 包括 <code>__const</code>，在这里面会包含一些需要重定向的常量数据。例如 <code>char * const p = "foo";</code> -- <code>p</code> 指针指向的数据是可变的。<code>__bss</code> section 没有被初始化的静态变量，例如 <code>static int a;</code> -- ANSI C 标准规定静态变量必须设置为 0。并且在运行时静态变量的值是可以修改的。<code>__common</code> section 包含未初始化的外部全局变量，跟 <code>static</code> 变量类似。例如在函数外面定义的 <code>int a;</code>。最后，<code>__dyld</code> 是一个 section 占位符，被用于动态链接器。</p>
+
+<p>苹果的 <a href="https://developer.apple.com/library/mac/documentation/DeveloperTools/Reference/Assembler/">OS X Assembler Reference</a> 文档有更多关于 section 类型的介绍。</p>
+
+<h3 id="section">Section 中的内容</h3>
+
+<p>下面，我们用 <code>otool(1)</code> 来观察一个 section 中的内容：</p>
+
+<pre><code>% xcrun otool -s __TEXT __text a.out 
+a.out:
+(__TEXT,__text) section
+0000000100000f30 55 48 89 e5 48 83 ec 20 48 8d 05 4b 00 00 00 c7 
+0000000100000f40 45 fc 00 00 00 00 89 7d f8 48 89 75 f0 48 89 c7 
+0000000100000f50 b0 00 e8 11 00 00 00 b9 00 00 00 00 89 45 ec 89 
+0000000100000f60 c8 48 83 c4 20 5d c3 
+</code></pre>
+
+<p>上面是我们 app 中的代码。由于 <code>-s __TEXT __text</code> 很常见，<code>otool</code> 对其设置了一个缩写 <code>-t</code> 。我们还可以通过添加 <code>-v</code> 来查看反汇编代码：</p>
+
+<pre><code>% xcrun otool -v -t a.out
+a.out:
+(__TEXT,__text) section
+_main:
+0000000100000f30    pushq   %rbp
+0000000100000f31    movq    %rsp, %rbp
+0000000100000f34    subq    $0x20, %rsp
+0000000100000f38    leaq    0x4b(%rip), %rax
+0000000100000f3f    movl    $0x0, 0xfffffffffffffffc(%rbp)
+0000000100000f46    movl    %edi, 0xfffffffffffffff8(%rbp)
+0000000100000f49    movq    %rsi, 0xfffffffffffffff0(%rbp)
+0000000100000f4d    movq    %rax, %rdi
+0000000100000f50    movb    $0x0, %al
+0000000100000f52    callq   0x100000f68
+0000000100000f57    movl    $0x0, %ecx
+0000000100000f5c    movl    %eax, 0xffffffffffffffec(%rbp)
+0000000100000f5f    movl    %ecx, %eax
+0000000100000f61    addq    $0x20, %rsp
+0000000100000f65    popq    %rbp
+0000000100000f66    ret
+</code></pre>
+
+<p>上面的内容是一样的，只不过以反汇编形式显示出来。你应该感觉很熟悉，这就是我们在前面编译时候的代码。唯一的不同就是，在这里我们没有任何的汇编指令在里面。这是纯粹的二进制执行文件。</p>
+
+<p>同样的方法，我们可以查看别的 section：</p>
+
+<pre><code>% xcrun otool -v -s __TEXT __cstring a.out
+a.out:
+Contents of (__TEXT,__cstring) section
+0x0000000100000f8a  Hello World!\n
+</code></pre>
+
+<p>或:</p>
+
+<pre><code>% xcrun otool -v -s __TEXT __eh_frame a.out 
+a.out:
+Contents of (__TEXT,__eh_frame) section
+0000000100000fe0    14 00 00 00 00 00 00 00 01 7a 52 00 01 78 10 01 
+0000000100000ff0    10 0c 07 08 90 01 00 00 
+</code></pre>
+
+<h4>性能上需要注意的事项</h4>
+
+<p>从侧面来讲，<code>__DATA</code> 和 <code>__TEXT</code> segment对性能会有所影响。如果你有一个很大的二进制文件，你可能得去看看苹果的文档：<a href="https://developer.apple.com/library/mac/documentation/Performance/Conceptual/CodeFootprint/Articles/MachOOverview.html">关于代码大小性能指南</a>。将数据移至 <code>__TEXT</code> 是个不错的选择，因为这些页从来不会被改变。</p>
+
+<h4>任意的片段</h4>
+
+<p>使用链接符号 <code>-sectcreate</code> 我们可以给可执行文件以 section 的方式添加任意的数据。这就是如何将一个 Info.plist 文件添加到一个独立的可执行文件中的方法。Info.plist 文件中的数据需要放入到 <code>__TEXT</code> segment 里面的一个 <code>__info_plist</code> section 中。可以将 <code>-sectcreate segname sectname file</code> 传递给链接器（通过将下面的内容传递给 clang）：</p>
+
+<pre><code>-Wl,-sectcreate,__TEXT,__info_plist,path/to/Info.plist
+</code></pre>
+
+<p>同样，<code>-sectalign</code> 规定了对其方式。如果你添加的是一个全新的 segment，那么需要通过 <code>-segprot</code> 来规定 segment 的保护方式 (读/写/可执行)。这些所有内容在链接器的帮助文档中都有，例如 <code>ld(1)</code>。</p>
+
+<p>我们可以利用定义在 <code>/usr/include/mach-o/getsect.h</code> 中的函数 <code>getsectdata()</code> 得到 section，例如 <code>getsectdata()</code> 可以得到指向 section 数据的一个指针，并返回相关 section 的长度。</p>
+
+<h3 id="macho">Mach-O</h3>
+
+<p>在 OS X 和 iOS 中可执行文件的格式为 <a href="https://en.wikipedia.org/wiki/Mach-o">Mach-O</a>：</p>
+
+<pre><code>% file a.out 
+a.out: Mach-O 64-bit executable x86_64
+</code></pre>
+
+<p>对于 GUI 程序也是一样的：</p>
+
+<pre><code>% file /Applications/Preview.app/Contents/MacOS/Preview 
+/Applications/Preview.app/Contents/MacOS/Preview: Mach-O 64-bit executable x86_64
+</code></pre>
+
+<p>关于 <a href="https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/MachORuntime/index.html">Mach-O 文件格式</a> 苹果有详细的介绍。</p>
+
+<p>我们可以使用 <code>otool(1)</code> 来观察可执行文件的头部 -- 规定了这个文件是什么，以及文件是如何被加载的。通过 <code>-h</code> 可以打印出头信息：</p>
+
+<pre><code>% otool -v -h a.out           a.out:
+Mach header
+      magic cputype cpusubtype  caps    filetype ncmds sizeofcmds      flags
+MH_MAGIC_64  X86_64        ALL LIB64     EXECUTE    16       1296   NOUNDEFS DYLDLINK TWOLEVEL PIE
+</code></pre>
+
+<p><code>cputype</code> 和 <code>cpusubtype</code> 规定了这个可执行文件能够运行在哪些目标架构上。<code>ncmds</code> 和 <code>sizeofcmds</code> 是加载命令，可以通过 <code>-l</code> 来查看这两个加载命令：</p>
+
+<pre><code>% otool -v -l a.out | open -f
+a.out:
+Load command 0
+      cmd LC_SEGMENT_64
+  cmdsize 72
+  segname __PAGEZERO
+   vmaddr 0x0000000000000000
+   vmsize 0x0000000100000000
+...
+</code></pre>
+
+<p>加载命令规定了文件的逻辑结构和文件在虚拟内存中的布局。<code>otool</code> 打印出的大多数信息都是源自这里的加载命令。看一下 <code>Load command 1</code> 部分，可以找到 <code>initprot r-x</code>，它规定了之前提到的保护方式：只读和可执行。</p>
+
+<p>对于每一个 segment，以及segment 中的每个 section，加载命令规定了它们在内存中结束的位置，以及保护模式等。例如，下面是 <code>__TEXT __text</code> section 的输出内容：</p>
+
+<pre><code>Section
+  sectname __text
+   segname __TEXT
+      addr 0x0000000100000f30
+      size 0x0000000000000037
+    offset 3888
+     align 2^4 (16)
+    reloff 0
+    nreloc 0
+      type S_REGULAR
+attributes PURE_INSTRUCTIONS SOME_INSTRUCTIONS
+ reserved1 0
+ reserved2 0
+</code></pre>
+
+<p>上面的代码将在 0x100000f30 处结束。它在文件中的偏移量为 3888。如果看一下之前 <code>xcrun otool -v -t a.out</code> 输出的反汇编代码，可以发现代码实际位置在 0x100000f30。</p>
+
+<p>我们同样看看在可执行文件中，动态链接库是如何使用的：</p>
+
+<pre><code>% otool -v -L a.out
+a.out:
+    /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 169.3.0)
+    time stamp 2 Thu Jan  1 01:00:02 1970
+</code></pre>
+
+<p>上面就是我们可执行文件将要找到 <code>_printf</code> 符号的地方。</p>
+
+<h2>一个更复杂的例子</h2>
+
+<p>我们来看看有三个文件的复杂例子：</p>
+
+<p><code>Foo.h</code>:</p>
+
+<p>```objc
+#import &lt;Foundation/Foundation.h&gt;</p>
+
+<p>@interface Foo : NSObject</p>
+
+<ul>
+  <li>(void)run;</li>
+</ul>
+
+<p>@end
+```</p>
+
+<p><code>Foo.m</code>:</p>
+
+<p>```objc
+#import “Foo.h”</p>
+
+<p>@implementation Foo</p>
+
+<ul>
+  <li>(void)run
+{
+  NSLog(@”%@”, NSFullUserName());
+}</li>
+</ul>
+
+<p>@end
+```</p>
+
+<p><code>helloworld.m</code>:</p>
+
+<p>```objc
+#import “Foo.h”</p>
+
+<p>int main(int argc, char *argv[])
+{
+    @autoreleasepool {
+        Foo *foo = [[Foo alloc] init];
+        [foo run];
+        return 0;
+    }
+}
+```</p>
+
+<h3>编译多个文件</h3>
+
+<p>在上面的示例中，有多个源文件。所以我们需要让 clang 对输入每个文件生成对应的目标文件：</p>
+
+<pre><code>% xcrun clang -c Foo.m
+% xcrun clang -c helloworld.m
+</code></pre>
+
+<p>我们从来不编译头文件。头文件的作用就是在被编译的实现文件中对代码做简单的共享。<code>Foo.m</code> 和 <code>helloworld.m</code> 都是通过 <code>#import</code> 语句将 <code>Foo.h</code> 文件中的内容添加到实现文件中的。</p>
+
+<p>最终得到了两个目标文件：</p>
+
+<pre><code>% file helloworld.o Foo.o
+helloworld.o: Mach-O 64-bit object x86_64
+Foo.o:        Mach-O 64-bit object x86_64
+</code></pre>
+
+<p>为了生成一个可执行文件，我们需要将这两个目标文件和 Foundation framework 链接起来：</p>
+
+<pre><code>xcrun clang helloworld.o Foo.o -Wl,`xcrun --show-sdk-path`/System/Library/Frameworks/Foundation.framework/Foundation
+</code></pre>
+
+<p>现在可以运行我们的程序了:</p>
+
+<pre><code>% ./a.out 
+2013-11-03 18:03:03.386 a.out[8302:303] Daniel Eggert
+</code></pre>
+
+<h3>符号表和链接</h3>
+
+<p>我们这个简单的程序是将两个目标文件合并到一起的。<code>Foo.o</code> 目标文件包含了 <code>Foo</code> 类的实现，而 <code>helloworld.o</code> 目标文件包含了 <code>main()</code> 函数，以及调用/使用 <code>Foo</code> 类。</p>
+
+<p>另外，这两个目标对象都使用了 Foundation framework。<code>helloworld.o</code> 目标文件使用了它的 autorelease pool，并间接的使用了  <code>libobjc.dylib</code> 中的 Objective-C 运行时。它需要运行时函数来进行消息的调用。<code>Foo.o</code> 目标文件也有类似的原理。</p>
+
+<p>所有的这些东西都被形象的称之为符号。我们可以把符号看成是一些在运行时将会变成指针的东西。虽然实际上并不是这样的。</p>
+
+<p>每个函数、全局变量和类等都是通过符号的形式来定义和使用的。当我们将目标文件链接为一个可执行文件时，链接器 (<code>ld(1)</code>) 在目标文件盒动态库之间对符号做了解析处理。</p>
+
+<p>可执行文件和目标文件有一个符号表，这个符号表规定了它们的符号。如果我们用 <code>nm(1)</code> 工具观察一下 <code>helloworld.0</code> 目标文件，可以看到如下内容：</p>
+
+<pre><code>% xcrun nm -nm helloworld.o
+                 (undefined) external _OBJC_CLASS_$_Foo
+0000000000000000 (__TEXT,__text) external _main
+                 (undefined) external _objc_autoreleasePoolPop
+                 (undefined) external _objc_autoreleasePoolPush
+                 (undefined) external _objc_msgSend
+                 (undefined) external _objc_msgSend_fixup
+0000000000000088 (__TEXT,__objc_methname) non-external L_OBJC_METH_VAR_NAME_
+000000000000008e (__TEXT,__objc_methname) non-external L_OBJC_METH_VAR_NAME_1
+0000000000000093 (__TEXT,__objc_methname) non-external L_OBJC_METH_VAR_NAME_2
+00000000000000a0 (__DATA,__objc_msgrefs) weak private external l_objc_msgSend_fixup_alloc
+00000000000000e8 (__TEXT,__eh_frame) non-external EH_frame0
+0000000000000100 (__TEXT,__eh_frame) external _main.eh
+</code></pre>
+
+<p>上面就是那个目标文件的所有符号。<code>_OBJC_CLASS_$_Foo</code> 是 <code>Foo</code> Objective-C 类的符号。该符号是 <em>undefined, external</em> 。<em>External</em> 的意思是指对于这个目标文件该类并不是私有的，相反，<code>non-external</code> 的符号则表示对于目标文件是私有的。我们的 <code>helloworld.o</code> 目标文件引用了类 <code>Foo</code>，不过这并没有实现它。因此符号表中将其标示为 undefined。</p>
+
+<p>接下来是 <code>_main</code> 符号，它是表示 <code>main()</code> 函数，同样为 <em>external</em>，这是因为该函数需要被调用，所以应该为可见的。由于在 <code>helloworld.o</code> 文件中实现了 这个 main 函数。这个函数地址位于 0处，并且需要转入到  <code>__TEXT,__text</code> section。接着是 4 个 Objective-C 运行时函数。它们同样是 undefined的，需要链接器进行符号解析。</p>
+
+<p>如果我们转而观察 <code>Foo.o</code> 目标文件，可以看到如下输出：</p>
+
+<pre><code>% xcrun nm -nm Foo.o
+0000000000000000 (__TEXT,__text) non-external -[Foo run]
+                 (undefined) external _NSFullUserName
+                 (undefined) external _NSLog
+                 (undefined) external _OBJC_CLASS_$_NSObject
+                 (undefined) external _OBJC_METACLASS_$_NSObject
+                 (undefined) external ___CFConstantStringClassReference
+                 (undefined) external __objc_empty_cache
+                 (undefined) external __objc_empty_vtable
+000000000000002f (__TEXT,__cstring) non-external l_.str
+0000000000000060 (__TEXT,__objc_classname) non-external L_OBJC_CLASS_NAME_
+0000000000000068 (__DATA,__objc_const) non-external l_OBJC_METACLASS_RO_$_Foo
+00000000000000b0 (__DATA,__objc_const) non-external l_OBJC_$_INSTANCE_METHODS_Foo
+00000000000000d0 (__DATA,__objc_const) non-external l_OBJC_CLASS_RO_$_Foo
+0000000000000118 (__DATA,__objc_data) external _OBJC_METACLASS_$_Foo
+0000000000000140 (__DATA,__objc_data) external _OBJC_CLASS_$_Foo
+0000000000000168 (__TEXT,__objc_methname) non-external L_OBJC_METH_VAR_NAME_
+000000000000016c (__TEXT,__objc_methtype) non-external L_OBJC_METH_VAR_TYPE_
+00000000000001a8 (__TEXT,__eh_frame) non-external EH_frame0
+00000000000001c0 (__TEXT,__eh_frame) non-external -[Foo run].eh
+</code></pre>
+
+<p>第五行至最后一行显示了 <code>_OBJC_CLASS_$_Foo</code> 已经定义了，并且对于 <code>Foo.o</code> 是一个外部符号 -- ·Foo.o· 包含了这个类的实现。</p>
+
+<p><code>Foo.o</code> 同样有 undefined 的符号。首先是使用了符号 <code>NSFullUserName()</code>，<code>NSLog()</code>和 <code>NSObject</code>。</p>
+
+<p>当我们将这两个目标文件和 Foundation framework (是一个动态库) 进行链接处理时，链接器会尝试解析所有的 undefined 符号。它可以解析  <code>_OBJC_CLASS_$_Foo</code>。另外，它将使用 Foundation framework。</p>
+
+<p>当链接器通过动态库 (此处是 Foundation framework) 解析成功一个符号时，它会在最终的链接图中记录这个符号是通过动态库进行解析的。链接器会记录输出文件是依赖于哪个动态链接库，并连同其路径一起进行记录。在我们的例子中，<code>_NSFullUserName</code>，<code>_NSLog</code>，<code>_OBJC_CLASS_$_NSObject</code>，<code>_objc_autoreleasePoolPop</code> 等符号都是遵循这个过程。</p>
+
+<p>我们可以看一下最终可执行文件 <code>a.out</code> 的符号表，并注意观察链接器是如何解析所有符号的：</p>
+
+<pre><code>% xcrun nm -nm a.out 
+                 (undefined) external _NSFullUserName (from Foundation)
+                 (undefined) external _NSLog (from Foundation)
+                 (undefined) external _OBJC_CLASS_$_NSObject (from CoreFoundation)
+                 (undefined) external _OBJC_METACLASS_$_NSObject (from CoreFoundation)
+                 (undefined) external ___CFConstantStringClassReference (from CoreFoundation)
+                 (undefined) external __objc_empty_cache (from libobjc)
+                 (undefined) external __objc_empty_vtable (from libobjc)
+                 (undefined) external _objc_autoreleasePoolPop (from libobjc)
+                 (undefined) external _objc_autoreleasePoolPush (from libobjc)
+                 (undefined) external _objc_msgSend (from libobjc)
+                 (undefined) external _objc_msgSend_fixup (from libobjc)
+                 (undefined) external dyld_stub_binder (from libSystem)
+0000000100000000 (__TEXT,__text) [referenced dynamically] external __mh_execute_header
+0000000100000e50 (__TEXT,__text) external _main
+0000000100000ed0 (__TEXT,__text) non-external -[Foo run]
+0000000100001128 (__DATA,__objc_data) external _OBJC_METACLASS_$_Foo
+0000000100001150 (__DATA,__objc_data) external _OBJC_CLASS_$_Foo
+</code></pre>
+
+<p>可以看到所有的 Foundation 和 Objective-C 运行时符号依旧是 undefined，不过现在的符号表中已经多了如何解析它们的信息，例如在哪个动态库中可以找到对应的符号。</p>
+
+<p>可执行文件同样知道去哪里找到所需库：</p>
+
+<pre><code>% xcrun otool -L a.out
+a.out:
+    /System/Library/Frameworks/Foundation.framework/Versions/C/Foundation (compatibility version 300.0.0, current version 1056.0.0)
+    /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1197.1.1)
+    /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 855.11.0)
+    /usr/lib/libobjc.A.dylib (compatibility version 1.0.0, current version 228.0.0)
+</code></pre>
+
+<p>在运行时，动态链接器  <code>dyld(1)</code> 可以解析这些 undefined 符号，<code>dyld</code> 将会确定好 <code>_NSFullUserName</code> 等符号，并指向它们在 Foundation 中的实现等。</p>
+
+<p>我们可以针对 Foundation 运行 <code>nm(1)</code>，并检查这些符号的定义情况： </p>
+
+<pre><code>% xcrun nm -nm `xcrun --show-sdk-path`/System/Library/Frameworks/Foundation.framework/Foundation | grep NSFullUserName
+0000000000007f3e (__TEXT,__text) external _NSFullUserName 
+</code></pre>
+
+<h3>动态链接编辑器</h3>
+
+<p>有一些环境变量对于 <code>dyld</code> 的输出信息非常有用。首先，如果设置了 <code>DYLD_PRINT_LIBRARIES</code>，那么 <code>dyld</code> 将会打印出什么库被加载了：</p>
+
+<pre><code>% (export DYLD_PRINT_LIBRARIES=; ./a.out )
+dyld: loaded: /Users/deggert/Desktop/command_line/./a.out
+dyld: loaded: /System/Library/Frameworks/Foundation.framework/Versions/C/Foundation
+dyld: loaded: /usr/lib/libSystem.B.dylib
+dyld: loaded: /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation
+dyld: loaded: /usr/lib/libobjc.A.dylib
+dyld: loaded: /usr/lib/libauto.dylib
+[...]
+</code></pre>
+
+<p>上面将会显示出在加载 Foundation 时，同时会加载的 70 个动态库。这是由于 Foundation 依赖于另外一些动态库。运行下面的命令：</p>
+
+<pre><code>% xcrun otool -L `xcrun --show-sdk-path`/System/Library/Frameworks/Foundation.framework/Foundation
+</code></pre>
+
+<p>可以看到 Foundation 使用了 15 个动态库。</p>
+
+<h3 id="dyld">dyld 的共享缓存</h3>
+
+<p>当你构建一个真正的程序时，将会链接各种各样的库。它们又会依赖其他一些 framework 和 动态库。需要加载的动态库会非常多。而对于相互依赖的符号就更多了。可能将会有上千个符号需要解析处理，这将花费很长的时间：一般是好几秒钟。</p>
+
+<p>为了缩短这个处理过程所花费时间，在 OS X 和 iOS 上的动态链接器使用了共享缓存，共享缓存存于 <code>/var/db/dyld/</code>。对于每一种架构，操作系统都有一个单独的文件，文件中包含了绝大多数的动态库，这些库都已经链接为一个文件，并且已经处理好了它们之间的符号关系。当加载一个 Mach-O 文件 (一个可执行文件或者一个库) 时，动态链接器首先会检查 <em>共享缓存</em> 看看是否存在其中，如果存在，那么就直接从共享缓存中拿出来使用。每一个进程都把这个共享缓存映射到了自己的地址空间中。这个方法大大优化了 OS X 和 iOS 上程序的启动时间。</p>
+
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Foundation基础集合类]]></title>
@@ -1787,416 +2445,6 @@ if (!CGPointEqualToPoint(CGPointZero, touchLocation)) {
 <p>欢迎提交 pull request。</p>
 
 <p>这个方法是有局限性的。我将 cell 数量的上限设为 10，但是即使这样，在像 iPad2 这样比较旧的设备中，动画就会运行地很慢。当然，这个例子只是为了展示如何模拟有趣的动力学的一个方法——它并不是一个可以解决任何问题的万金油。你个人在实践中如何来进行模拟，包括性能等各个方面，都取决于你自己了。</p>
-
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[TextView的专有库TextKit]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/10/textviewde-zhuan-you-ku-textkit/"/>
-    <updated>2014-04-10T08:54:06+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/10/textviewde-zhuan-you-ku-textkit</id>
-    <content type="html"><![CDATA[<p>iOS 7 的发布给开发者的案头带来了很多新工具。其中一个就是 <em>TextKit</em>。TextKit 由许多新的 UIKit 类组成，顾名思义，这些类就是用来处理文本的。在这里，我们将介绍 TextKit 的来由、它的组成，以及通过几个例子解释开发者怎样将它派上大用场。</p>
-
-<p>但是首先我们得先阐明一个观点：TextKit 可能是近期对 UIKit <em>最重要</em>的补充了。iOS 7 的新界面用纯文本按钮替换了大量的图标和边框。总的来说，文本和文本布局在新 OS 系统的视觉效果中所占有的重要性大大提高了。iOS7 的重新设计完全是被文本驱动，这样说也许并不夸张——而文本全部是 TextKit 来处理的。</p>
-
-<p>告诉你这个变动到底有多大吧：iOS7 之前的所有版本，（几乎）所有的文本都是 WebKit 来处理的。对：WebKit，web 浏览器引擎。所有 <code>UILabel</code>、<code>UITextField</code>，以及 <code>UITextView</code> 都在后台以某种方式使用 web views 来进行文本布局和渲染。为了新的界面风格，它们全都被重新设计以使用 TextKit。</p>
-
-<h2 id="ios">iOS 上文本的简短历史</h2>
-
-<p>这些新类并不是用来替换开发者以前使用的类。对 SDK 来说，TextKit 提供的是全新的功能。iOS 7 之前，TextKit 提供的功能必须都手动完成。这是现有框架缺失的功能。</p>
-
-<p>长期以来，只有一个基本的文本布局和渲染框架：<em>CoreText</em>。同样也只有一个途径读取用户的键盘输入：<code>UITextInput</code> 协议。在 iOS6 中，为了简单地获取系统的文本选择，也只有一个选择：继承 <code>UITextView</code>。</p>
-
-<p>（这可能就是为什么我要公开自己十年开发文本编辑器的经验的原因了）在渲染文本和读取键盘输入之间存在着巨大（跟我读：巨大）的缺口。这个缺口可能也是导致很少有富文本或者语法高亮编辑器的原因了——毫无疑问，开发一个好用的文本编辑器得耗费几个月的时间。</p>
-
-<p>就这样——如下是 iOS 文本（不那么）简短历史的简短概要：</p>
-
-<p><strong>iOS 2</strong>：这是第一个公开的 SDK，包括一个简单的文本显示组件（<code>UILabel</code>），一个简单的文本输入组件（<code>UITextField</code>），以及一个简单的、可滚动、可编辑的并且支持更大量文本的组件：<code>UITextView</code>。这些组件都只支持纯文本，没有文本选择支持（仅支持插入点），除了设置字体和文本颜色外几乎没有其他可定制功能。</p>
-
-<p><strong>iOS 3</strong>：新特性有复制和粘贴，以及复制粘贴所需要的文本选择功能。数据探测器（Data Detector）为文本视图提供了一个高亮电话号码和链接的方法。然而，除了打开或关闭这些特性外，开发者基本上没有什么别的事情可以做。</p>
-
-<p><strong>iOS 3.2</strong>：iPad 的出现带来了 CoreText，也就是前面提到的低级文本布局和渲染引擎（从Mac OS X 10.5 移植过来的），以及 <code>UITextInput</code>，就是前面也提到的键盘存取协议。Apple 将 Pages 作为移动设备上文本编辑功能的样板工程[^1]。然而，由于我前面提到的框架缺口，只有很少的应用使用它们。</p>
-
-<p><strong>iOS 4</strong>：iOS 3.2 发布仅仅几个月后就发布了，文本方面没有一丁点新功能。<em>（个人经历：在 WWDC，我走近工程师们，告诉他们我想要一个完善的 iOS 文本布局系统。回答是：“哦…提交个请求。”不出所料…）</em></p>
-
-<p><strong>iOS 5</strong>：文本方面没啥变化。<em>（个人经历：在 WWDC，我和工程师们谈及 iOS 上文本系统。回答是：“我们没有看到太多这方面的请求…” 靠！）</em></p>
-
-<p><strong>iOS 6</strong>：有些动作了：属性文本编辑被加入了 <code>UITextView</code>。很不幸的是，它很难定制。默认的 UI 有粗体、斜体和下划线。用户可以设置字体大小和颜色。粗看起来相当不错，但还是没法控制布局或者提供一个便利的途径来定制文本属性。然而对于（文本编辑）开发者，有一个大的新功能：可以继承 <code>UITextView</code> 了，这样的话，除了以前版本提供的键盘输入外，开发者可以“免费”获得文本选择功能。而在这以前，开发者必须实现一个完全自定义的文本选择功能，这可能是很多非纯文本工具的开发半途而废的原因。<em>（个人经历：我，WWDC，工程师们。我想要一个 iOS 的文本系统。回答：“嗯。吖。是的。也许？看，它只是不执行…” 所以毕竟还是有希望，对吧？）</em></p>
-
-<p><strong>iOS 7</strong>：终于来了，TextKit。</p>
-
-<h2>功能</h2>
-
-<p>所以我们来了。iOS7 带着 TextKit 登陆了。咱们看看它可以做什么！深入之前，我还想提一下，严格来说，这些新功能中的大部分以前都<em>可以</em>实现。如果你有大量的资源和时间来用 CoreText 构建一个文本引擎，这些都是可以实现的。但是在以前，构建一个完善的富文本编辑器可能花费你<em>几个月</em>的时间，现在却非常简单。你只需要到在 Xcode 里打开一个界面文件，然后将 <code>UITextView</code> 拖到你的试图控制器，就可以获得所有以下这些功能：</p>
-
-<p><strong>字距调整（Kerning）</strong>：所有的字符都有一个矩形的外边框，这些边框必须彼此相邻来放置，这样的想法已经过时了。例如，现代文本布局会考虑到一个大写的“T”的“两翼”下面有一些空白，所以它会把后面的小写字母向左移让它们更靠近点。这样做的结果大大提高了文本的易读性，特别是在更长的文字中：</p>
-
-<p><img src="http://img.objccn.io/issue-5/kerning.png" alt="Kerning: the bounding box of the letter “a” (blue rect) clearly overlap the capital “T” when kerning is enabled." title="" /></p>
-
-<p><strong>连写</strong>：我认为这主要是个艺术功能，但当某些字符组合（如“f”后面是“l”）使用组合符号（所谓的字形(glyph)）绘制时，有些文本确实看起来更好（更美观）。</p>
-
-<p><img src="http://img.objccn.io/issue-5/ligature.png" alt="Ligatures: the “Futura” font family contains special symbols for character combinations like “fl”." title="" /></p>
-
-<p><strong>图像附件</strong>：现在可以向 Text View 中添加图像了。</p>
-
-<p><strong>断字</strong>：编辑文本时没那么重要，但如果要以好看易读的方式展现文本时，这就相当重要。断字意味着在行边界处分割单词，从而为整体文本创建一个更整齐的排版和外观。<em>个人经历：</em> iOS 7 之前，开发者必须直接使用 CoreText。像这样：首先以句子为基础检测文本语言，然后获取句子中每个单词可能的断字点，然后在每一个可能的断字点上插入定制的连字占位字符。准备好之后，运行 CoreText 的布局方法并手动将连字符插入到断行。如果你想得到好的效果，之后你得检查带有连字符的文本没有超出行边界，如果超出了，在运行一次行的布局方法，这一次不要使用上次使用的断字点。使用 TextKit 的话，就非常简单了，设置 <code>hyphenationFactor</code> 属性就可以启用断字。</p>
-
-<p><img src="http://img.objccn.io/issue-5/Screen%20Shot%202013-09-29%20at%2022.19.58.png" alt="The text in this view would have looked much more compartmentalized without hyphenation." title="" /></p>
-
-<p><strong>可定制性</strong>：对我来说，甚至比改进过的排版还多，这是个<em>全新</em>的功能。以前开发者必须在使用现有的功能和自己全部重头写之间做出选择。现在提供了一整套类，它们有代理协议，或者可以被覆盖从而改变<em>部分</em>行为。例如，不必重写整个文本组件，你现在就可以改变指定单词的断行行为。我认为这是个胜利。</p>
-
-<p><strong>更多的富文本属性</strong>：现在可以设置不同的下划线样式（双线、粗线、虚线、点线，或者它们的组合）。提高文本的基线非常容易，这可用来设置上标数字。开发者也不再需要自己为定制渲染的文本绘制背景颜色了（CoreText 不支持这些功能）。</p>
-
-<p><strong>序列化</strong>：过去没有内置的方法从磁盘读取带文本属性的字符串。或者再写回磁盘。现在有了。</p>
-
-<p><strong>文本样式</strong>：iOS 7 的界面引入了一个全局预定义的文本类型的新概念。这些文本类型分配了一个全局预定义的外观。理想情况下，这可以让整个系统的标题和连续文本具有一致的风格。通过设置应用，用户可以定义他们的阅读习惯（例如文本大小），那些使用文本样式的应用将自动拥有正确的文本大小和外观。</p>
-
-<p><strong>文本效果</strong>：最后也是最不重要的。iOS 7 有且仅有一个文本效果：凸版。使用此效果的文本看起来像是盖在纸上面一样。内阴影，等等。<em>个人观点：真的？靠…？在一个已经完全彻底不可饶恕地枪毙了所有无用的<a href="http://en.wikipedia.org/wiki/Skeuomorph">怀旧装饰（skeuomorphism）</a>的 iOS 系统上，谁会需要这个像文本盖在纸上的效果？</em></p>
-
-<h2>结构</h2>
-
-<p>可能概览一个系统最好的方法是画一幅图。这是 UIKit 文本系统——TextKit 的简图：</p>
-
-<p><img src="http://img.objccn.io/issue-5/TextKit.png" alt="The structure of all essential TextKit classes. Highlighted with a “New” badge are classes introduced in iOS 7." title="" /></p>
-
-<p>从上图可以看出来，要让一个文本引擎工作，需要几个参与者。我们将从外到里介绍它们：</p>
-
-<p><strong>字符串（String）</strong>：要绘制文本，那么必然在某个地方有个字符串来存储这段文本。在默认的结构中，<code>NSTextStorage</code> 保存并管理这个字符串，在这种情况中，它可以远离绘制。但并不一定非得这样。使用 TextKit 时，文本可以来自任何适合的来源。例如，对于一个代码编辑器，字符串可以是一棵包含所有显示的代码的结构信息的注释语法树（annotated syntax tree，缩写为 AST）。使用一个自定义的 <code>NSTextStorage</code> 就可以让文本在稍后动态地添加字体或颜色高亮等文本属性装饰。这是第一次，开发者可以直接为文本组件使用自己的模型。要想实现这个功能，我们需要一个特别设计的 <code>NSTextStorage</code>，即：</p>
-
-<p><code>NSTextStorage</code>：如果你把文本系统看做一个模型-视图-控制器（MVC）架构，这个类代表的是模型。<code>NSTextStorage</code> 是一个中枢，它管理所有的文本和属性信息。系统只提供了两个存取器方法存取它们，并另外提供了两个方法来分别修改文本和属性。后面我们将进一步了解这些方法。现在重要的是你得理解 <code>NSTextStorage</code> 是从它的父类 <code>NSAttributedString</code> 继承了这些方法。这就很清楚了，<code>NSTextStorage</code>——从文本系统看来——仅仅是一个带有属性的字符串，附带一些扩展。这两者唯一的重大不同点是 <code>NSTextStorage</code> 包含了一个方法，可以把所有对其内容进行的修改以通知的形式发送出来。我们等一下会介绍这部分内容。</p>
-
-<p><code>UITextView</code>：堆栈的另一头是实际的视图。在 TextKit 中，有两个目的：第一，它是文本系统用来绘制的视图。文本视图它自己并<em>不</em>会做任何绘制；它仅仅提供一个供其它类绘制的区域。作为视图层级机构中唯一的组件，第二个目的是处理所有的用户交互。具体来说，Text View 实现 <code>UITextInput</code> 的协议来处理键盘事件，它为用户提供了一种途径来设置一个插入点或选择文本。它并不对文本做任何实际上的改变，仅仅将这些改变请求转发给刚刚讨论的 Text Storage。</p>
-
-<p><code>NSTextContainer</code>：每个 Text View 定义了一个文本可以绘制的区域。为此，每个 Text View 都有一个 Text Container，它精确地描述了这个可用的区域。在简单的情况下，这是一个垂直的无限大的矩形区域。文本被填充到这个区域，并且 Text View 允许用户滚动它。然而，在更高级的情况下，这个区域可能是一个无限大的矩形。例如，当渲染一本书时，每一页都有最大的高度和宽度。 Text Container 会定义这个大小，并且不接受任何超出的文本。相同情况下，一幅图像可能占据了页面的一部分，文本应该沿着它的边缘重新排版。这也是由 Text Container 来处理的，我们会在后面的例子中看到这一点。</p>
-
-<p><code>NSLayoutManager</code>：Layout Manager 是中心组件，它把所有组件粘合在一起：</p>
-
-<ol>
-<li>这个管理器监听 Text Storage 中文本或属性改变的通知，一旦接收到通知就触发布局进程。  </li>
-<li>从 Text Storage 提供的文本开始，它将所有的字符翻译为字形（Glyph）[^2]。  </li>
-<li>一旦字形全部生成，这个管理器向它的 Text Containers 查询文本可用以绘制的区域。  </li>
-<li>然后这些区域被行逐步填充，而行又被字形逐步填充。一旦一行填充完毕，下一行开始填充。  </li>
-<li>对于每一行，布局管理器必须考虑断行行为（放不下的单词必须移到下一行）、连字符、内联的图像附件等等。  </li>
-<li>当布局完成，文本的当前显示状态被设为无效，然后 Layout Manager 将前面几步排版好的文本设给 Text View。</li>
-</ol>
-
-<p><strong>CoreText</strong>：没有直接包含在 TextKit 中，CoreText 是进行实际排版的库。对于布局管理器的每一步，CoreText 被这样或那样的方式调用。它提供了从字符到字形的翻译，用它们来填充行，以及建议断字点。</p>
-
-<h3 id="cocoa">Cocoa 文本系统</h3>
-
-<p>创建像 TextKit 这样庞大复杂的系统肯定不是件简单快速的事情，而且肯定需要丰富的经验和知识。在 iOS 的前面 6 个主版本中，一直没有提供一个“真正的”文本组件，这也说明了这一点。Apple 把它视为一个大的新特性，当然没啥问题。但是它真的是全新的吗？</p>
-
-<p>这里有个数字：在 <a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIKit_Framework/_index.html">UIKit 的 131 个公共类</a>中，只有 9 个的名字没有使用UI作为前缀。这 9 个类使用的是旧系统的的、旧世界的（跟我读：Mac OS）前缀 NS。而且这九个类里面，有七个是用来处理文本的。巧合？好吧…</p>
-
-<p>这是 Cocoa 文本系统的简图。不妨和上面 TextKit 的那幅图作一下对比。</p>
-
-<p><img src="http://img.objccn.io/issue-5/CocoaTextSystem.png" alt="The structure of all essential classes of the Cocoa Text System as present on Mac OS today." title="" /></p>
-
-<p>惊人地相似。很明显，最起码主要部分，两者是相同的。很明显——除了右边部分以及 <code>NSTextView</code> 和 <code>UITextView</code> ——主要的类全部相同。TextKit 是（起码部分是）从 Cocoa 文本系统移植到 iOS。<em>（我之前一直请求的那个，耶！）</em></p>
-
-<p>进一步比较还是能看出一些不同的。最值得注意的有：</p>
-
-<ul>
-<li><p>在 iOS 上没有 <code>NSTypesetter</code> 和 <code>NSGlyphGenerator</code> 这两个类。在 Mac OS 上有很多方法来定制排版，在 iOS 中被极大地简化了，去掉了一些抽象概念，并将这个过程合并到 <code>NSLayoutManager</code> 中来。保留下来的是少数的代理方法，以用来更改文本布局和断行行为。</p></li>
-<li><p>这些 Cocoa 的类移植到 iOS 系统后新增了几个非常便利的功能。在 Cocoa 中，必须手工地将确定的区域从 Text Container 分离出来（见上）。而 UIKit 类提供了一个简单的 <code>exclusionPaths</code> 属性就可以做到这一点。</p></li>
-<li><p>有些功能未能提供，比如，内嵌表格，以及对非图像的附件的支持。</p></li>
-</ul>
-
-<p>尽管有这些区别，总的来说系统还是一样的。<code>NSTextStorage</code> 在两个系统是是一模一样的，<code>NSLayoutManager</code> 和 <code>NSTextContainer</code> 也没有太大的不同。这些变动，在没有太多去除对一些特例的支持的情况下，看来（某些情况下大大地）使文本系统的使用变得更为容易。我认为这是件好事。</p>
-
-<p><em>事后回顾我从 Apple 工程师那里得到的关于将 Cocoa 文本系统移植到 iOS 的答案，我们可以得到一些背景信息。拖到现在并削减功能的原因很简单：性能、性能、性能。文本布局可能是极度昂贵的任务——内存方面、电量方面以及时间方面——特别是在移动设备上。Apple 必须采用更简单的解决方案，并等到处理能力能够至少部分支持一个完善的文本布局引擎。</em></p>
-
-<h2>示例</h2>
-
-<p>为了说明 TextKit 的能力，我创建了一个小的演示项目，你可以<a href="https://github.com/objcio/issue-5-textkit">在 GitHub 上找到它</a>。在这个演示程序中，我只完成了一些以前不容易完成的功能。我必须承认写这些代码只花了我礼拜天的一个上午的时间；如果以前要做同样的事情，我得花几天甚至几个星期。</p>
-
-<p>TextKit 包括了超过 100 个方法，一篇文章根本没办法尽数涉及。而事实上，大多数时候，你需要的仅仅是一个正确的方法，TextKit 的使用和定制性也仍有待探索。所以我决定做四个更小的演示程序，而非一个大的演示程序来展示所有功能。每个演示程序中，我试着演示针对不同的方面和不同的类进行定制。</p>
-
-<h3 id="1">演示程序1：配置</h3>
-
-<p>让我们从最简单的开始：配置文本系统。正如你在上面 TextKit 简图中看到的，<code>NSTextStorage</code>、<code>NSLayoutManager</code> 和 <code>NSTextContainer</code> 之间的箭头都是有两个头的。我试图描述它们的关系是 1 对 N 的关系。就是那样：一个 Text Storage 可以拥有多个 Layout Manager，一个 Layout Manager 也可以拥有多个 Text Container。这些多重性带来了很好的特性：</p>
-
-<ul>
-<li>将多个 Layout Manager 附加到同一个 Text Storage 上，可以产生<em>相同文本的多种视觉表现</em>，而且可以把它们放到一起来显示。每一个表现都有独立的位置和大小。如果相应的 Text View 可编辑，那么在某个 Text View 上做的所有修改都会马上反映到所有 Text View 上。</li>
-<li>将多个 Text Container 附加到同一个 Layout Manager 上，这样可以将<em>一个文本分布到多个视图</em>展现出来。很有用的一个例子，基于页面的布局：每个页面包含一个单独的 Text View。所有这些视图的 Text Container 都引用同一个 Layout Manager，这时这个 Layout Manager 就可以将文本分布到这些视图上来显示。</li>
-</ul>
-
-<p>在 Storyboard 或者 Interface 文件中实例化 <code>UITextView</code> 时，它会预配置一个文本系统：一个 Text Storage，引用一个 Layout Manager，而后者又引用一个 Text Container。同样地，一个文本系统栈也可以通过代码直接创建：</p>
-
-<p>```objc
-NSTextStorage *textStorage = [NSTextStorage new];</p>
-
-<p>NSLayoutManager *layoutManager = [NSLayoutManager new];
-[textStorage addLayoutManager: layoutManager];</p>
-
-<p>NSTextContainer *textContainer = [NSTextContainer new];
-[layoutManager addTextContainer: textContainer];</p>
-
-<p>UITextView *textView = [[UITextView alloc] initWithFrame:someFrame
-                                                                     textContainer:textContainer];
-```</p>
-
-<p>这是最简单的方式。手工创建一个文本系统，唯一需要记住的事情是你的 View Controller 必须 retain 这个 Text Storage。在栈底的 Text View 只保留了对 Text Storage 和 Layout Manager 的弱引用。当 Text Storage 被释放时，Layout Manager 也被释放了，这样留给 Text View 的就只有一个断开的 Text Container 了。</p>
-
-<p>这个规则有一个例外。只有从一个 interface 文件或 storyboard 实例化一个 Text View 时，Text View 确实会<em>自动</em> retain Text Storage。框架使用了一些黑魔法以确保所有的对象都被 retain，而无需手动建立一个 retain 环。</p>
-
-<p>记住这些之后，创建一个更高级的设置也非常简单。假设在一个视图里面依旧有一个从 nib 实例化的 Text View，叫做 <code>originalTextView</code>。增加对相同文本的第二个文本视图只需要复制上面的代码，并重用 <code>originalTextView</code> 的 Text Storage：</p>
-
-<p>```objc
-NSTextStorage *sharedTextStorage = originalTextView.textStorage;</p>
-
-<p>NSLayoutManager *otherLayoutManager = [NSLayoutManager new];
-[sharedTextStorage addLayoutManager: otherLayoutManager];</p>
-
-<p>NSTextContainer *otherTextContainer = [NSTextContainer new];
-[otherLayoutManager addTextContainer: otherTextContainer];</p>
-
-<p>UITextView *otherTextView = [[UITextView alloc] initWithFrame:someFrame
-                                                textContainer:otherTextContainer];
-```</p>
-
-<p>将第二个 Text Container 附加到 Layout Manager 也差不多。比方说我们希望上面例子中的文本填充<em>两个</em> Text View，而非一个。简单：</p>
-
-<p>```objc
-NSTextContainer *thirdTextContainer = [NSTextContainer new];
-[otherLayoutManager addTextContainer: thirdTextContainer];</p>
-
-<p>UITextView *thirdTextView = [[UITextView alloc] initWithFrame:someFrame
-                                                textContainer:thirdTextContainer];
-```</p>
-
-<p>但有一点需要注意：由于在 otherTextView 中的 Text Container 可以无限地调整大小，<code>thirdTextView</code> 永远不会得到任何文本。因此，我们必须指定文本应该从一个视图回流到其它视图，而不应该调整大小或者滚动：</p>
-
-<p><code>objc
-otherTextView.scrollEnabled = NO;
-</code></p>
-
-<p>不幸的是，看来将多个 Text Container 附加到一个 Layout Manager 会禁用编辑功能。如果必须保留编辑功能的话，那么一个 Text Container 只能附加到一个 Layout Manager 上。</p>
-
-<p>想要一个这个配置的可运行的例子的话，请在前面提到的 <a href="https://github.com/objcio/issue-5-textkit">TextKitDemo</a> 中查看 “Configuration” 标签页。</p>
-
-<h2 id="2">演示程序2：语法高亮</h2>
-
-<p>如果配置 Text View 不是那么令人激动，那么这里有更有趣的：语法高亮！</p>
-
-<p>看看 TextKit 组件的责任划分，就很清楚语法高亮应该由 Text Storage 实现。因为 <code>NSTextStorage</code> 是一个类簇[^3]，创建它的子类需要做不少工作。我的想法是建立一个复合对象：实现所有的方法，但只是将对它们的调用转发给一个实际的实例，将输入输出参数或者结果修改为希望的样子。</p>
-
-<p><code>NSTextStorage</code> 继承自 <code>NSMutableAttributedString</code>，并且必须实现以下四个方法——两个 getter 和两个 setter：</p>
-
-<p><code>objc
-- (NSString *)string;
-- (NSDictionary *)attributesAtIndex:(NSUInteger)location
-                     effectiveRange:(NSRangePointer)range;
-- (void)replaceCharactersInRange:(NSRange)range withString:(NSString *)str;
-- (void)setAttributes:(NSDictionary *)attrs range:(NSRange)range;
-</code></p>
-
-<p>一个类簇的子类的复合对象的实现也相当简单。首先，找到一个满足所有要求的<em>最简单</em>的类。在我们的例子中，它是 <code>NSMutableAttributedString</code>，我们用它作为实现自定义存储的实现：</p>
-
-<p>```objc
-@implementation TKDHighlightingTextStorage
-{
-    NSMutableAttributedString *_imp;
-}</p>
-
-<ul>
-  <li>(id)init
-{
-  self = [super init];
-  if (self) {
-      _imp = [NSMutableAttributedString new];
-  }
-  return self;
-}
-```</li>
-</ul>
-
-<p>有了这个对象，只需要一行代码就可以实现两个 getter 方法：</p>
-
-<p>```objc
-- (NSString *)string
-{
-    return _imp.string;
-}</p>
-
-<ul>
-  <li>(NSDictionary *)attributesAtIndex:(NSUInteger)location effectiveRange:(NSRangePointer)range
-{
-  return [_imp attributesAtIndex:location effectiveRange:range];
-}
-```</li>
-</ul>
-
-<p>实现两个 setter 方法也几乎同样简单。但也有一个小麻烦：Text Storage 需要通知它的 Layout Manager 变化发生了。因此 settter 方法必须也要调用 <code>-edited:range:changeInLegth:</code> 并传给它变化的描述。听起来更糟糕，实现变成：</p>
-
-<p>```objc
-- (void)replaceCharactersInRange:(NSRange)range withString:(NSString *)str
-{
-    [_imp replaceCharactersInRange:range withString:str];
-    [self edited:NSTextStorageEditedCharacters range:range
-                                      changeInLength:(NSInteger)str.length - (NSInteger)range.length];
-}</p>
-
-<ul>
-  <li>(void)setAttributes:(NSDictionary *)attrs range:(NSRange)range
-{
-  [_imp setAttributes:attrs range:range];
-  [self edited:NSTextStorageEditedAttributes range:range changeInLength:0];
-}
-```</li>
-</ul>
-
-<p>就这样，我们在文本系统栈里面有了一个 Text Storage 的全功能替换版本。在从 Interface 文件中载入时，可以像这样将它插入文本视图——但是记住从一个实例变量引用 Text Storage：</p>
-
-<p><code>objc
-_textStorage = [TKDHighlightingTextStorage new];
-[_textStorage addLayoutManager: self.textView.layoutManager];
-</code></p>
-
-<p>到目前为止，一切都很好。我们设法插入了一个自定义的文本存储，接下来我们需要真正高亮文本的某些部分了。现在，一个简单的高亮应该就是够了：我们希望将所有 iWords 的颜色变成红色——也就是那些以小写“i”开头，后面跟着一个大写字母的单词。</p>
-
-<p>一个方便实现高亮的办法是覆盖 <code>-processEditing</code>。每次文本存储有修改时，这个方法都自动被调用。每次编辑后，<code>NSTextStorage</code> 会用这个方法来清理字符串。例如，有些字符无法用选定的字体显示时，Text Storage 使用一个可以显示它们的字体来进行替换。</p>
-
-<p>和其它一样，为 iWords 增加一个简单的高亮也相当简单。我们覆盖 <code>-processEditing</code>，调用父类的实现，并设置一个正则表达式来查找单词：</p>
-
-<p>```objc
-- (void)processEditing
-{
-    [super processEditing];</p>
-
-<pre><code>static NSRegularExpression *iExpression;
-NSString *pattern = @"i[\p{Alphabetic}&amp;amp;amp;&amp;amp;amp;\p{Uppercase}][\p{Alphabetic}]%2B";
-iExpression = iExpression ?: [NSRegularExpression regularExpressionWithPattern:pattern
-                                                                       options:0
-                                                                         error:NULL]; }																			  ```
-</code></pre>
-
-<p>然后，首先清除之前的所有高亮：</p>
-
-<p><code>objc
-    NSRange paragaphRange = [self.string paragraphRangeForRange: self.editedRange];
-    [self removeAttribute:NSForegroundColorAttributeName range:paragaphRange];
-</code></p>
-
-<p>其次遍历所有的样式匹配项并高亮它们：</p>
-
-<p><code>objc
-    [iExpression enumerateMatchesInString:self.string
-                                  options:0 range:paragaphRange
-                               usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop)
-    {
-        [self addAttribute:NSForegroundColorAttributeName value:[UIColor redColor] range:result.range];
-    }];
-}
-</code></p>
-
-<p>就是这样。我们创建了一个支持语法高亮的动态 Text View。当用户键入时，高亮将被<em>实时</em>应用。而且这只需几行代码。酷吧？</p>
-
-<p><img src="http://img.objccn.io/issue-5/SyntaxHighlighting.png" alt="A screenshot from the TextKitDemo project showing the text view with iWords highlighted." title="" /></p>
-
-<p>请注意仅仅使用 <em>edited range</em> 是不够的。例如，当手动键入 iWords，只有一个单词的第三个字符被键入后，正则表达式才开始匹配。但那时 <code>editedRange</code> 仅包含第三个字符，因此所有的处理只会影响这一个字符。通过重新处理整个段落可以解决这个问题，这样既完成高亮功能，又不会太过影响性能。</p>
-
-<p>想要一个可以运行的 Demo 的话，请在前面提到的 <a href="https://github.com/objcio/issue-5-textkit">TextKitDemo</a> 中查看“Highlighting”标签页。</p>
-
-<h2 id="3">演示程序3：布局修改</h2>
-
-<p>如前所述，Layout Manager 是核心的布局主力。Mac OS 上 <code>NSTypesetter</code> 的高度可定制功能被并入 iOS 上的 <code>NSLayoutManager</code>。虽然 TextKit 不具备像 Cocoa 文本系统那样的完全可定制性，但它提供很多代理方法来允许做一些调整。如前所述，TextKit 与 CoreText 更紧密地集成在一起，主要是基于性能方面的考虑。但是两个文本系统的理念在一定程度上是不一样的：</p>
-
-<p><strong>Cocoa 文本系统</strong>：在 Mac OS上，性能不是问题，设计考量的全部是灵活性。可能是这样：“这个东西可以做这个事情。如果你想的话，你可以覆盖它。性能不是问题。你也可以提供完全由自己实现的字符到字形的转换，去做吧…”</p>
-
-<p><strong>TextKit</strong>：性能看来真是个问题。理念（起码现在）更多的是像这样：“我们用简单但是高性能的方法实现了这个功能。这是结果，但是我们给你一个机会去更改它的一些东西。但是你只能在不太损害性能的地方进行修改。”</p>
-
-<p>理念的东西就讲这么多，现在让我们来搞些实际的东西。例如，调整行高如何？听起来不可思议，但是在之前的 iOS 发布版上调整行高需要<a href="http://stackoverflow.com/questions/3760924/set-line-height-in-uitextview/3914228">使用黑科技或者私有 API</a>。幸运的是，现在（再一次）不用那么费脑子了。设置 Layout Manager 的代理并实现仅仅一个方法即可：</p>
-
-<p><code>objc
-- (CGFloat)      layoutManager:(NSLayoutManager *)layoutManager
-  lineSpacingAfterGlyphAtIndex:(NSUInteger)glyphIndex
-  withProposedLineFragmentRect:(CGRect)rect
-{
-    return floorf(glyphIndex / 100);
-}
-</code></p>
-
-<p>在以上的代码中，我修改了行间距，让它与文本长度同时增长。这导致顶部的行比底部的行排列得更紧密。我承认这没什么实际的用处，但是它是可以做到的（而且肯定会有更实用的用例的）。</p>
-
-<p>好，来一个更现实的场景。假设你的文本中有链接，你不希望这些链接被断行分割。如果可能的话，一个 URL 应该始终显示为一个整体，一个单一的文本片段。没有什么比这更简单的了。</p>
-
-<p>首先，就像前面讨论过的那样，我们使用自定义的 Text Storage。但是，它寻找链接并将其标记，而不是检测 iWords，如下：</p>
-
-<p>```objc
-static NSDataDetector *linkDetector;
-linkDetector = linkDetector ?: [[NSDataDetector alloc] initWithTypes:NSTextCheckingTypeLink error:NULL];</p>
-
-<p>NSRange paragaphRange = [self.string paragraphRangeForRange: NSMakeRange(range.location, str.length)];
-[self removeAttribute:NSLinkAttributeName range:paragaphRange];</p>
-
-<p>[linkDetector enumerateMatchesInString:self.string
-                               options:0
-                                 range:paragaphRange
-                            usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop)
-{
-    [self addAttribute:NSLinkAttributeName value:result.URL range:result.range];
-}];
-```</p>
-
-<p>有了这个，改变断行行为就只需要实现一个 Layout Manager 的代理方法：</p>
-
-<p>```objc
-- (BOOL)layoutManager:(NSLayoutManager *)layoutManager shouldBreakLineByWordBeforeCharacterAtIndex:(NSUInteger)charIndex
-{
-    NSRange range;
-    NSURL *linkURL = [layoutManager.textStorage attribute:NSLinkAttributeName
-                                                  atIndex:charIndex
-                                           effectiveRange:&amp;amp;range];</p>
-
-<pre><code>return !(linkURL &amp;amp;amp;&amp;amp;amp; charIndex &amp;amp;gt; range.location &amp;amp;amp;&amp;amp;amp; charIndex    ```
-</code></pre>
-
-<p>想要一个可运行的例子的话，请在前面提到的 <a href="https://github.com/objcio/issue-5-textkit">TextKitDemo</a> 中查看“Layout”标签页。以下是截屏：</p>
-
-<p><img src="http://img.objccn.io/issue-5/LineBreaking.png" alt="A screenshot from the TextKitDemo project showing altered line break behavior for link URLs." title="" /></p>
-
-<p>顺便说一句，上面截屏里面的绿色轮廓线是无法用 TextKit 实现的。在这个演示程序中，我用了个小技巧来在 Layout Manager 的子类中给文本画轮廓线。以特定的方法来扩展 TextKit 的绘制功能也不是件难事，你一定要看看！</p>
-
-<h3 id="4">演示程序4：文本交互</h3>
-
-<p>前面已经涉及到了 <code>NSTextStorage</code> 和 <code>NSLayoutManager</code>，最后一个演示程序将涉及 <code>NSTextContainer</code>。这个类并不复杂，而且它除了指定文本可不可以放置在某个地方外，什么都没做。</p>
-
-<p>不要将文本放置在某些区域，这是很常见的需求，例如，在杂志应用中。对于这种情况，iOS 上的 <code>NSTextContainer</code> 提供了一个 Mac 开发者梦寐以求的属性：<code>exclusionPaths</code>，它允许开发者设置一个 <code>NSBezierPath</code> 数组来指定不可填充文本的区域。要了解这到底是什么东西，看一眼下面的截屏：</p>
-
-<p><img src="http://img.objccn.io/issue-5/ReflowingTextAndClippy.png" alt="A screenshot from the TextKitDemo project showing text revolving around an excluded oval view" title="" /></p>
-
-<p>正如你所看到的，所有的文本都放置在蓝色椭圆外面。在 Text View 里面实现这个行为很简单，但是有个小麻烦：Bezier Path 的坐标必须使用容器的坐标系。以下是转换方法：</p>
-
-<p>```objc
-- (void)updateExclusionPaths 
-{
-CGRect ovalFrame = [self.textView convertRect:self.circleView.bounds 
-                                                      fromView:self.circleView];</p>
-
-<pre><code>ovalFrame.origin.x -= self.textView.textContainerInset.left;
-ovalFrame.origin.y -= self.textView.textContainerInset.top;
-
-UIBezierPath *ovalPath = [UIBezierPath bezierPathWithOvalInRect:ovalFrame];
-self.textView.textContainer.exclusionPaths = @[ovalPath]; } ```
-</code></pre>
-
-<p>在这个例子中，我使用了一个用户可移动的视图，它可以被自由移动，而文本会实时地围绕着它重新排版。我们首先将它的 bounds（<code>self.circleView.bounds</code>）转换到 Text View 的坐标系统。</p>
-
-<p>因为没有 inset，文本会过于靠近视图边界，所以 <code>UITextView</code> 会在离边界还有几个点的距离的地方插入它的文本容器。因此，要得到以容器坐标表示的路径，必须从 origin 中减去这个插入点的坐标。</p>
-
-<p>在此之后，只需将 Bezier Path 设置给 Text Container 即可将对应的区域排除掉。其它的过程对你来说是透明的，TextKit 会自动处理。</p>
-
-<p>想要一个可运行的例子的话，请在前面提到的 <a href="https://github.com/objcio/issue-5-textkit">TextKitDemo</a> 中查看“Interaction”标签页。作为一个小噱头，它也包含了一个跟随当前文本选择的视图。因为，你也知道，没有一个小小的丑陋的烦人的回形针挡住你的话，那还是一个好的文本编辑器演示程序吗？</p>
-
-<p>[^1]:   Pages 确实——据 Apple 声称——绝对没有使用私有 API。<em>咳</em> 我的理论：它要么使用了一个 TextKit 的史前版本，要么复制了 UIKit 一半的私有源程序。或者两者的混合。</p>
-
-<p>[^2]:   <em>字形（Glyphs）</em>：如果说字符是一个字母的“语义”表达，字形则是它的可视化表达。取决于所使用的字体，字形要么是贝塞尔路径，或者位图图像，它定义了要绘制出来的形状。也请参考卓越的 Wikipedia 上关于字形的<a href="http://en.wikipedia.org/wiki/Glyph">这篇文章</a>。</p>
-
-<p>[^3]:   在一个类簇中，只有一个抽象的父类是公共的。分配一个实例实际上就是创建其中一个私有类的对象。因此，你总是为一个抽象类创建子类，并且需要实现所有的方法。也请参考 <a href="https://developer.apple.com/library/ios/documentation/general/conceptual/CocoaEncyclopedia/ClassClusters/ClassClusters.html">class cluster documentation</a>。</p>
 
 <hr />
 
