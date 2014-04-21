@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-21T17:58:09+08:00</updated>
+  <updated>2014-04-21T18:07:44+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,202 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[深入理解CocoaPods]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/21/shen-ru-li-jie-cocoapods/"/>
+    <updated>2014-04-21T18:06:50+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/21/shen-ru-li-jie-cocoapods</id>
+    <content type="html"><![CDATA[<p>CocoaPods 是开发 OS X 和 iOS 应用程序的一个第三方库的依赖管理工具。利用 CocoaPods，可以定义自己的依赖关系 (称作 <code>pods</code>)，并且随着时间的变化，以及在整个开发环境中对第三方库的版本管理非常方便。</p>
+
+<p>CocoaPods 背后的理念主要体现在两个方面。首先，在工程中引入第三方代码会涉及到许多内容。针对 Objective-C 初级开发者来说，工程文件的配置会让人很沮丧。在配置 build phases 和 linker flags 过程中，会引起许多人为因素的错误。CocoaPods 简化了这一切，它能够自动配置编译选项。</p>
+
+<p>其次，通过 CocoaPods，可以很方便的查找到新的第三方库。当然，这并不是说你可以简单的将别人提供的库拿来拼凑成一个应用程序。它的真正作用是让你能够找到真正好用的库，以此来缩短我们的开发周期和提升软件的质量。</p>
+
+<p>本文中，我们将通过分析 <code>pod 安装 (</code>pod install<code>)</code> 的过程，一步一步揭示 CocoaPods 背后的技术。</p>
+
+<h2>核心组件</h2>
+
+<p>CocoaPods是用 Ruby 写的，并由若干个 Ruby 包 (gems) 构成的。在解析整合过程中，最重要的几个 gems 分别是： <a href="https://github.com/CocoaPods/CocoaPods/">CocoaPods/CocoaPods</a>, <a href="https://github.com/CocoaPods/Core">CocoaPods/Core</a>, 和 <a href="https://github.com/CocoaPods/Xcodeproj">CocoaPods/Xcodeproj</a> (是的，CocoaPods 是一个依赖管理工具 -- 利用依赖管理进行构建的！)。</p>
+
+<blockquote>
+  <p><p><span class="secondary radius label">编者注</span> CocoaPods 是一个 objc 的依赖管理工具，而其本身是利用 ruby 的依赖管理 gem 进行构建的</p>
+
+
+<h3 id="cocoapodscocoapod">CocoaPods/CocoaPod</h3>
+
+<p>这是是一个面向用户的组件，每当执行一个 <code>pod</code> 命令时，这个组件都将被激活。该组件包括了所有使用 CocoaPods 涉及到的功能，并且还能通过调用所有其它的 gems 来执行任务。</p>
+
+<h3 id="cocoapodscore">CocoaPods/Core</h3>
+
+<p>Core 组件提供支持与 CocoaPods 相关文件的处理，文件主要是 Podfile 和 podspecs。</p>
+
+<h5 id="podfile">Podfile</h5>
+
+<p>Podfile 是一个文件，用于定义项目锁需要使用的第三方库。该文件支持高度定制，你可以根据个人喜好对其做出定制。更多相关信息，请查阅 <a href="http://guides.cocoapods.org/syntax/podfile.html">Podfile 指南</a>。</p>
+
+<h4 id="podspec">Podspec</h4>
+
+<p><code>.podspec</code> 也是一个文件，该文件描述了一个库是怎样被添加到工程中的。它支持的功能有：列出源文件、framework、编译选项和某个库所需要的依赖等。</p>
+
+<h3 id="cocoapodsxcodeproj">CocoaPods/Xcodeproj</h3>
+
+<p>这个 gem 组件负责所有工程文件的整合。它能够对创建并修改 <code>.xcodeproj</code> 和 <code>.xcworkspace</code> 文件。它也可以作为单独的一个 gem 包使用。如果你想要写一个脚本来方便的修改工程文件，那么可以使用这个 gem。</p>
+
+<h2 id="podinstall">运行 <code>pod install</code> 命令</h2>
+
+<p>当运行 <code>pod install</code> 命令时会引发许多操作。要想深入了解这个命令执行的详细内容，可以在这个命令后面加上 <code>--verbose</code>。现在运行这个命令 <code>pod install --verbose</code>，可以看到类似如下的内容：</p>
+
+<pre><code>$ pod install --verbose
+
+Analyzing dependencies
+
+Updating spec repositories
+Updating spec repo `master`
+  $ /usr/bin/git pull
+  Already up-to-date.
+
+
+Finding Podfile changes
+  - AFNetworking
+  - HockeySDK
+
+Resolving dependencies of `Podfile`
+Resolving dependencies for target `Pods' (iOS 6.0)
+  - AFNetworking (= 1.2.1)
+  - SDWebImage (= 3.2)
+    - SDWebImage/Core
+
+Comparing resolved specification to the sandbox manifest
+  - AFNetworking
+  - HockeySDK
+
+Downloading dependencies
+
+-&gt; Using AFNetworking (1.2.1)
+
+-&gt; Using HockeySDK (3.0.0)
+  - Running pre install hooks
+    - HockeySDK
+
+Generating Pods project
+  - Creating Pods project
+  - Adding source files to Pods project
+  - Adding frameworks to Pods project
+  - Adding libraries to Pods project
+  - Adding resources to Pods project
+  - Linking headers
+  - Installing libraries
+    - Installing target `Pods-AFNetworking` iOS 6.0
+      - Adding Build files
+      - Adding resource bundles to Pods project
+      - Generating public xcconfig file at `Pods/Pods-AFNetworking.xcconfig`
+      - Generating private xcconfig file at `Pods/Pods-AFNetworking-Private.xcconfig`
+      - Generating prefix header at `Pods/Pods-AFNetworking-prefix.pch`
+      - Generating dummy source file at `Pods/Pods-AFNetworking-dummy.m`
+    - Installing target `Pods-HockeySDK` iOS 6.0
+      - Adding Build files
+      - Adding resource bundles to Pods project
+      - Generating public xcconfig file at `Pods/Pods-HockeySDK.xcconfig`
+      - Generating private xcconfig file at `Pods/Pods-HockeySDK-Private.xcconfig`
+      - Generating prefix header at `Pods/Pods-HockeySDK-prefix.pch`
+      - Generating dummy source file at `Pods/Pods-HockeySDK-dummy.m`
+    - Installing target `Pods` iOS 6.0
+      - Generating xcconfig file at `Pods/Pods.xcconfig`
+      - Generating target environment header at `Pods/Pods-environment.h`
+      - Generating copy resources script at `Pods/Pods-resources.sh`
+      - Generating acknowledgements at `Pods/Pods-acknowledgements.plist`
+      - Generating acknowledgements at `Pods/Pods-acknowledgements.markdown`
+      - Generating dummy source file at `Pods/Pods-dummy.m`
+  - Running post install hooks
+  - Writing Xcode project file to `Pods/Pods.xcodeproj`
+  - Writing Lockfile in `Podfile.lock`
+  - Writing Manifest in `Pods/Manifest.lock`
+
+Integrating client project
+</code></pre>
+
+<p>可以上到，整个过程执行了很多操作，不过把它们分解之后，再看看，会发现它们都很简单。让我们逐步来分析一下。</p>
+
+<h3 id="podfile">读取 Podfile 文件</h3>
+
+<p>你是否对 Podfile 的语法格式感到奇怪过，那是因为这是用 Ruby 语言写的。相较而言，这要比现有的其他格式更加简单好用一些。</p>
+
+<p>在安装期间，第一步是要弄清楚显示或隐式的声明了哪些第三方库。在加载 podspecs 过程中，CocoaPods 就建立了包括版本信息在内的所有的第三方库的列表。Podspecs 被存储在本地路径 <code>~/.cocoapods</code> 中。</p>
+
+<h4>版本控制和冲突</h4>
+
+<p>CocoaPods 使用<a href="http://semver.org/">语义版本控制 - Semantic Versioning</a> 命名约定来解决对版本的依赖。由于冲突解决系统建立在非重大变更的补丁版本之间，这使得解决依赖关系变得容易很多。例如，两个不同的 pods 依赖于 CocoaLumberjack 的两个版本，假设一个依赖于 <code>2.3.1</code>，另一个依赖于 <code>2.3.3</code>，此时冲突解决系统可以使用最新的版本 <code>2.3.3</code>，因为这个可以向后与 <code>2.3.1</code> 兼容。</p>
+
+<p>但这并不总是有效。有许多第三方库并不使用这样的约定，这让解决方案变得非常复杂。</p>
+
+<p>当然，总会有一些冲突需要手动解决。如果一个库依赖于 CocoaLumberjack 的 <code>1.2.5</code>，另外一个库则依赖于 <code>2.3.1</code>，那么只有最终用户通过明确指定使用某个版本来解决冲突。</p>
+
+<h3>加载源文件</h3>
+
+<p>CocoaPods 执行的下一步是加载源码。每个 <code>.podspec</code> 文件都包含一个源代码的索引，这些索引一般包裹一个 git 地址和 git tag。它们以 commit SHAs 的方式存储在 <code>~/Library/Caches/CocoaPods</code> 中。这个路径中文件的创建是由 Core gem 负责的。</p>
+
+<p>CocoaPods 将依照 <code>Podfile</code>、<code>.podspec</code> 和缓存文件的信息将源文件下载到 <code>Pods</code> 目录中。</p>
+
+<h3 id="podsxcodeproj">生成 Pods.xcodeproj</h3>
+
+<p>每次 <code>pod install</code> 执行，如果检测到改动时，CocoaPods 会利用 Xcodeproj gem 组件对 <code>Pods.xcodeproj</code> 进行更新。如果该文件不存在，则用默认配置生成。否则，会将已有的配置项加载至内存中。</p>
+
+<h3>安装第三方库</h3>
+
+<p>当 CocoaPods 往工程中添加一个第三方库时，不仅仅是添加代码这么简单，还会添加很多内容。由于每个第三方库有不同的 target，因此对于每个库，都会有几个文件需要添加，每个 target 都需要：</p>
+
+<ul>
+<li>一个包含编译选项的 <code>.xcconfig</code> 文件</li>
+<li>一个同时包含编译设置和 CocoaPods 默认配置的私有 <code>.xcconfig</code> 文件</li>
+<li>一个编译所必须的 <code>prefix.pch</code> 文件</li>
+<li>另一个编译必须的文件 <code>dummy.m</code></li>
+</ul>
+
+<p>一旦每个 pod 的 target 完成了上面的内容，整个 <code>Pods</code> target 就会被创建。这增加了相同文件的同时，还增加了另外几个文件。如果源码中包含有资源 bundle，将这个 bundle 添加至程序 target 的指令将被添加到 <code>Pods-Resources.sh</code> 文件中。还有一个名为 <code>Pods-environment.h</code> 的文件，文件中包含了一些宏，这些宏可以用来检查某个组件是否来自 pod。最后，将生成两个认可文件，一个是 <code>plist</code>，另一个是 <code>markdown</code>，这两个文件用于给最终用户查阅相关许可信息。</p>
+
+<h3>写入至磁盘</h3>
+
+<p>直到现在，许多工作都是在内存中进行的。为了让这些成果能被重复利用，我们需要将所有的结果保存到一个文件中。所以 <code>Pods.xcodeproj</code> 文件被写入磁盘，另外两个非常重要的文件：<code>Podfile.lock</code> 和 <code>Manifest.lock</code> 都将被写入磁盘。</p>
+
+<h4 id="podfilelock">Podfile.lock</h4>
+
+<p>这是 CocoaPods 创建的最重要的文件之一。它记录了需要被安装的 pod 的每个已安装的版本。如果你想知道已安装的 pod 是哪个版本，可以查看这个文件。推荐将 Podfile.lock 文件加入到版本控制中，这有助于整个团队的一致性。</p>
+
+<h4 id="manifestlock">Manifest.lock</h4>
+
+<p>这是每次运行 <code>pod install</code> 命令时创建的 <code>Podfile.lock</code> 文件的副本。如果你遇见过这样的错误 <code>沙盒文件与 Podfile.lock 文件不同步 (The sandbox is not in sync with the Podfile.lock)</code>，这是因为 Manifest.lock 文件和 <code>Podfile.lock</code> 文件不一致所引起。由于 <code>Pods</code> 所在的目录并不总在版本控制之下，这样可以保证开发者运行 app 之前都能更新他们的 pods，否则 app 可能会 crash，或者在一些不太明显的地方编译失败。</p>
+
+<h3 id="xcproj">xcproj</h3>
+
+<p>如果你已经依照我们的建议在系统上安装了 <a href="https://github.com/0xced/xcproj">xcproj</a>，它会对 <code>Pods.xcodeproj</code> 文件执行一下 <code>touch</code> 以将其转换成为旧的 ASCII plist 格式的文件。为什么要这么做呢？虽然在很久以前就不被其它软件支持了，但是 Xcode 仍然依赖于这种格式。如果没有 xcproj，你的 <code>Pods.xcodeproj</code> 文件将会以 XML 格式的 plist 文件存储，当你用 Xcode 打开它时，它会被改写，并造成大量的文件改动。</p>
+
+<h2>结果</h2>
+
+<p>运行 <code>pod install</code> 命令的最终结果是许多文件被添加到你的工程和系统中。这个过程通常只需要几秒钟。当然没有 Cocoapods 这些事也都可以完成。只不过所花的时间就不仅仅是几秒而已了。</p>
+
+<h2>补充：持续集成</h2>
+
+<p>CocoaPods 和持续集成在一起非常融洽。虽然持续集成很大程度上取决于你的项目配置，但 Cocoapods 依然能很容易地对项目进行编译。</p>
+
+<h3 id="pods">Pods 文件夹的版本控制</h3>
+
+<p>如果 Pods 文件夹和里面的所有内容都在版本控制之中，那么你不需要做什么特别的工作，就能够持续集成。我们只需要给 <code>.xcworkspace</code> 选择一个正确的 scheme 即可。</p>
+
+<h3 id="pods">不受版本控制的 Pods 文件夹</h3>
+
+<p>如果你的 <code>Pods</code> 文件夹不受版本控制，那么你需要做一些额外的步骤来保证持续集成的顺利进行。最起码，<code>Podfile</code> 文件要放入版本控制之中。另外强烈建议将生成的 <code>.xcworkspace</code> 和 <code>Podfile.lock</code> 文件纳入版本控制，这样不仅简单方便，也能保证所使用 Pod 的版本是正确的。</p>
+
+<p>一旦配置完毕，在持续集成中运行 CocoaPods 的关键就是确保每次编译之前都执行了 <code>pod install</code> 命令。在大多数系统中，例如 Jenkins 或 Travis，只需要定义一个编译步骤即可 (实际上，Travis 会自动执行 <code>pod install</code> 命令)。对于 <a href="https://groups.google.com/d/msg/cocoapods/eYL8QB3XjyQ/10nmCRN8YxoJ">Xcode Bots，在书写这篇文章时我们还没能找到非常流畅的方式</a>，不过我们正朝着解决方案努力，一旦成功，我们将会立即分享。</p>
+
+<h2>结束语</h2>
+
+<p>CocoaPods 简化了 Objective-C 的开发流程，我们的目标是让第三方库更容易被发现和添加。了解 CocoaPods 的原理能让你做出更好的应用程序。我们沿着 CocoaPods 的整个执行过程，从载入 specs 文件和源代码、创建 <code>.xcodeproj</code> 文件和所有组件，到将所有文件写入磁盘。所以接下来，我们运行 <code>pod install --verbose</code>，静静观察 CocoaPods 的魔力如何显现。</p>
+
+<hr />
+</p></blockquote>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Mac可执行文件]]></title>
@@ -2046,405 +2242,6 @@ commit=`git rev-parse --short HEAD`
 <p>当今的软件是都用其它复杂的一些软件和资源开发出来的，例如 library 和 build 工具等。反过来，这些工具是构建于底层架构的，这犹如剥洋葱一样，一层包着一层。虽然这样一层一层的，给人感觉太复杂，但是你完全可以去深入了解它们，这非常有助于你对软件的深入理解，实际上当你了解之后，这并没有想象中的那么神奇，只不过它是一层一层堆砌起来的，每一层都是基于下一层构建起来的。</p>
 
 <p>本文所探索 build system 的内部机制犹如剥掉洋葱的一层。其实当我们点击 Xcode 中的运行按钮时，我们并没必要理解这个动作涉及到的所有内容。我们只是深入理解某一层，然后找到一个有组织的、并且可控的调用其它工具的顺序，如果我们愿意的话，可以做进一步的探索。我建议你阅读本期中的其它文章，以进一步了解这个洋葱的下一层内容！</p>
-
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[UIKit-Dynamics基于物理引擎新特性]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/"/>
-    <updated>2014-04-10T09:09:08+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing</id>
-    <content type="html"><![CDATA[<p>UIKit Dynamics 是 iOS 7 中基于物理动画引擎的一个新功能--它被特别设计使其能很好地与 collection views 配合工作，而后者是在 iOS 6 中才被引入的新特性。接下来，我们要好好看看如何将这两个特性结合在一起。 </p>
-
-<p>这篇文章将讨论两个结合使用 UIkit Dynamics 和 collection view 的例子。第一个例子展示了如何去实现像 iOS 7 里信息 app 中的消息泡泡的弹簧动效，然后再进一步结合平铺机制来实现布局的可伸缩性。第二个例子展现了如何用 UIKit Dynamics 来模拟<a href="http://zh.wikipedia.org/wiki/牛顿摆">牛顿摆</a>，这个例子中物体可以一个个地加入到 collection view 中，并和其他物体发生相互作用。</p>
-
-<p>在我们开始之前，我假定你们对 <code>UICollectionView</code> 是如何工作是有基本的了解——查看<a href="http://www.objccn.io/issue-3-3/">这篇 objc.io 文章</a>会有你想要的所有细节。我也假定你已经理解了 <code>UIKit Dynamics</code> 的工作原理--阅读这篇<a href="http://www.teehanlax.com/blog/introduction-to-uikit-dynamics/">博客</a>，可以了解更多 UIKit Dynamics 的知识。</p>
-
-<blockquote>
-  <p><span class="secondary radius label">编者注</span> 如果您阅读本篇文章感觉有点吃力的话，可以先来看看 <a href="http://im.onevcat.com">@onevcat</a> 的<a href="http://onevcat.com/2012/06/introducing-collection-views/">《UICollectionView 入门》</a> 和<a href="http://onevcat.com/2013/06/uikit-dynamics-started/">《UIKit Dynamics 入门》</a>这两篇入门文章，帮助您快速补充相关知识。</p>
-</blockquote>
-
-<p>文章中的两个例子项目都已经在 GitHub 中:</p>
-
-<ul>
-<li><a href="https://github.com/objcio/issue-5-springy-collection-view">ASHSpringyCollectionView</a>（基于 <a href="https://github.com/TeehanLax/UICollectionView-Spring-Demo">UICollectionView Spring Demo</a>）</li>
-<li><a href="https://github.com/objcio/issue-5-newtonian-collection-view">Newtownian UICollectionView</a></li>
-</ul>
-
-<h2 id="uidynamicanimator">关于 UIDynamicAnimator</h2>
-
-<p>支持 <code>UICollectionView</code> 实现 UIKit Dynamics 的最关键部分就是 <code>UIDynamicAnimator</code>。要实现这样的 UIKit Dynamics 的效果，我们需要自己自定义一个继承于 <code>UICollectionViewFlowLayout</code> 的子类，并且在这个子类对象里面持有一个 UIDynamicAnimator 的对象。</p>
-
-<p>当我们创建自定义的 dynamic animator 时，我们不会使用常用的初始化方法 <code>-initWithReferenceView:</code> ，因为我们不需要把这个 dynamic animator 关联一个 view ，而是给它关联一个 collection view layout。所以我们使用 <code>-initWithCollectionViewLayout:</code> 这个初始化方法，并把 collection view layout 作为参数传入。这很关键，当的 animator 的 behavior item 的属性应该被更新的时候，它必须能够确保 collection view 的 layout 失效。换句话说，dynamic animator 将会经常使旧的 layout 失效。</p>
-
-<p>我们很快就能看到这些事情是怎么连接起来的，但是在概念上理解 collection view 如何与 dynamic animator 相互作用是很重要的。</p>
-
-<p>Collection view layout 将会为 collection view 中的每个 <code>UICollectionViewLayoutAttributes</code> 添加 behavior（稍后我们会讨论平铺它们）。在将这些 behaviors 添加到 dynamic animator 之后，UIKit 将会向 collection view layout 询问 atrribute 的状态。我们此时可以直接将由 dynamic animator 所提供的 items 返回，而不需要自己做任何计算。Animator 将在模拟时禁用 layout。这会导致 UIKit 再次查询 layout，这个过程会一直持续到模拟满足设定条件而结束。</p>
-
-<p>所以重申一下，layout 创建了 dynamic animator，并且为其中每个 item 的 layout attribute 添加对应的 behaviors。当 collection view 需要 layout 信息时，由 dynamic animator 来提供需要的信息。</p>
-
-<h2 id="uicollectionviewflowlayout">继承 UICollectionViewFlowLayout</h2>
-
-<p>我们将要创建一个简单的例子来展示如何使用一个带 UIkit Dynamic 的 collection view layout。当然，我们需要做的第一件事就是，创建一个数据源去驱动我们的 collection view。我知道以你的能力完全可以独立实现一个数据源，但是为了完整性，我还是提供了一个给你:</p>
-
-<p>```objc
-@implementation ASHCollectionViewController</p>
-
-<p>static NSString * CellIdentifier = @”CellIdentifier”;</p>
-
-<p>-(void)viewDidLoad 
-{
-    [super viewDidLoad];
-    [self.collectionView registerClass:[UICollectionViewCell class] 
-            forCellWithReuseIdentifier:CellIdentifier];
-}</p>
-
-<p>-(UIStatusBarStyle)preferredStatusBarStyle 
-{
-    return UIStatusBarStyleLightContent;
-}</p>
-
-<p>-(void)viewDidAppear:(BOOL)animated 
-{
-    [super viewDidAppear:animated];
-    [self.collectionViewLayout invalidateLayout];
-}</p>
-
-<h1 id="pragma-mark---uicollectionview-methods">pragma mark - UICollectionView Methods</h1>
-
-<p>-(NSInteger)collectionView:(UICollectionView *)collectionView 
-    numberOfItemsInSection:(NSInteger)section 
-{
-    return 120;
-}</p>
-
-<p>-(UICollectionViewCell *)collectionView:(UICollectionView *)collectionView 
-                 cellForItemAtIndexPath:(NSIndexPath *)indexPath 
-{
-    UICollectionViewCell *cell = [collectionView 
-        dequeueReusableCellWithReuseIdentifier:CellIdentifier 
-                                  forIndexPath:indexPath];</p>
-
-<pre><code>cell.backgroundColor = [UIColor orangeColor];
-return cell; }
-</code></pre>
-
-<p>@end
-```</p>
-
-<p>我们注意到当 view 第一次出现的时候，这个 layout 是被无效的。这是因为没有用 Storyboard 的结果（使用或不使用 Storyboard，调用 prepareLayout 方法的时机是不同的，苹果在 WWDC 的视频中并没有告诉我们这一点）。所以，当这些视图一出现我们就需要手动使这个 collection view layout 无效。当我们用平铺（后面会详细介绍）的时候，就不需要这样。</p>
-
-<p>现在来创建自定义的 collection view layout 吧，我们需要强引用一个 dynamic animator，并且使用它来驱动我们的 collcetion view layout 的 attribute。我们在实现文件里定义了一个私有属性：</p>
-
-<p>```objc
-@interface ASHSpringyCollectionViewFlowLayout ()</p>
-
-<p>@property (nonatomic, strong) UIDynamicAnimator *dynamicAnimator;</p>
-
-<p>@end
-```</p>
-
-<p>我们将在 layout 的初始化方法中初始化我们的 dynamic animator。还要设置一些属于父类 <code>UICollectionViewFlowLayout</code> 中的属性:</p>
-
-<p>```objc
-- (id)init 
-{
-    if (!(self = [super init])) return nil;</p>
-
-<pre><code>self.minimumInteritemSpacing = 10;
-self.minimumLineSpacing = 10;
-self.itemSize = CGSizeMake(44, 44);
-self.sectionInset = UIEdgeInsetsMake(10, 10, 10, 10);
-
-self.dynamicAnimator = [[UIDynamicAnimator alloc] initWithCollectionViewLayout:self];
-
-return self; } ```
-</code></pre>
-
-<p>我们将实现的下一个方法是 prepareLayout。我们首先需要调用父类的方法。因为我们是继承 <code>UICollectionViewFlowLayout</code> 类，所以在调用父类的 prepareLayout 方法时，可以使 collection view layout 的各个 attribute 都放置在合适的位置。我们可以依靠父类的这个方法来提供一个默认的排布，并且能够使用 <code>[super layoutAttributesForElementsInRect:visibleRect];</code> 方法得到指定 rect 内的<em>所有</em> item 的 layout attributes。</p>
-
-<p>```objc
-[super prepareLayout];</p>
-
-<p>CGSize contentSize = self.collectionView.contentSize;
-NSArray *items = [super layoutAttributesForElementsInRect:
-    CGRectMake(0.0f, 0.0f, contentSize.width, contentSize.height)];
-```</p>
-
-<p>这<em>真的</em>是效率低下的代码。因为我们的 collection view 中可能会有成千上万个 cell，一次性加载所有的 cell 是一个可能会产生难以置信的内存紧张的操作。我们要在一段时间内遍历所有的元素，这也成为耗时的操作。这真的是效率的双重打击！别担心——我们是负责任的开发者，所以我们会很快解决这个问题的。我们先暂时继续使用简单、粗暴的实现方式。</p>
-
-<p>当加载完我们所有的 collection view layout attribute 之后，我们需要检查他们是否都已经被加载到我们的 animator 里了。如果一个 behavior 已经在 animator 中存在，那么我们就不能重新添加，否则就会得到一个非常难懂的运行异常提示:</p>
-
-<pre><code>&lt;UIDynamicAnimator: 0xa5ba280&gt; (0.004987s) in 
-&lt;ASHSpringyCollectionViewFlowLayout: 0xa5b9e60&gt; \{\{0, 0}, \{0, 0\}\}: 
-body &lt;PKPhysicsBody&gt; type:&lt;Rectangle&gt; representedObject:
-[&lt;UICollectionViewLayoutAttributes: 0xa281880&gt; 
-index path: (&lt;NSIndexPath: 0xa281850&gt; {length = 2, path = 0 - 0}); 
-frame = (10 10; 300 44); ] 0xa2877c0  
-PO:(159.999985,32.000000) AN:(0.000000) VE:(0.000000,0.000000) AV:(0.000000) 
-dy:(1) cc:(0) ar:(1) rs:(0) fr:(0.200000) re:(0.200000) de:(1.054650) gr:(0) 
-without representedObject for item &lt;UICollectionViewLayoutAttributes: 0xa3833e0&gt; 
-index path: (&lt;NSIndexPath: 0xa382410&gt; {length = 2, path = 0 - 0}); 
-frame = (10 10; 300 44);
-</code></pre>
-
-<p>如果看到了这个错误，那么这基本表明你添加了两个 behavior 给同一个 <code>UICollectionViewLayoutAttribute</code>，这使得系统不知道该怎么处理。</p>
-
-<p>无论如何，一旦我们已经检查好我们是否已经将 behavior 添加到 dynamic animator 之后，我们就需要遍历每个 collection view layout attribute 来创建和添加新的 dynamic animator：</p>
-
-<p>```objc
-if (self.dynamicAnimator.behaviors.count == 0) {
-    [items enumerateObjectsUsingBlock:^(id&lt;UIDynamicItem&gt; obj, NSUInteger idx, BOOL *stop) {
-        UIAttachmentBehavior *behaviour = [[UIAttachmentBehavior alloc] initWithItem:obj 
-                                                                    attachedToAnchor:[obj center]];</p>
-
-<pre><code>    behaviour.length = 0.0f;
-    behaviour.damping = 0.8f;
-    behaviour.frequency = 1.0f;
-
-    [self.dynamicAnimator addBehavior:behaviour];
-}]; } ```
-</code></pre>
-
-<p>这段代码非常简单。我们为每个 item 创建了一个以物体的中心为附着点的 <code>UIAttachmentBehavior</code> 对象。然后又设置了我们的 attachment behavior 的 length 为 0 以便约束这个 cell 能一直以 behavior 的附着点为中心。然后又给 <code>damping</code> 和 <code>frequency</code> 这两个参数设置一个比较合适的值。</p>
-
-<p>这就是 <code>prepareLayout</code>。我们现在需要实现 <code>layoutAttributesForElementsInRect:</code> 和 <code>layoutAttributesForItemAtIndexPath:</code> 这两个方法，UIKit 会调用它们来询问 collection view 每一个 item 的布局信息。我们写的代码会把这些查询交给专门做这些事的 dynamic animator:</p>
-
-<p>```objc
--(NSArray *)layoutAttributesForElementsInRect:(CGRect)rect 
-{
-    return [self.dynamicAnimator itemsInRect:rect];
-}</p>
-
-<p>-(UICollectionViewLayoutAttributes *)layoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath 
-{
-    return [self.dynamicAnimator layoutAttributesForCellAtIndexPath:indexPath];
-}
-```</p>
-
-<h1>响应滚动事件</h1>
-
-<p>我们目前实现的代码给我们展示的只是一个在正常滑动下只有静态感觉的 <code>UICollectionView</code>，运行起来没什么特别的。看上去很好，但不是真的<em>动态</em>，不是么？</p>
-
-<p>为了使它表现地动态点，我们需要 layout 和 dynamic animator 能够对 collection view 中滑动位置的变化做出反应。幸好这里有个非常适合这个要求的方法 <code>shouldInvalidateLayoutForBoundsChange:</code>。这个方法会在 collection view 的 bound 发生改变的时候被调用，根据最新的 <a href="http://www.objccn.io/issue-3-2/">content offset</a> 调整我们的 dynamic animator 中的 behaviors 的参数。在重新调整这些 behavior 的 item 之后，我们在这个方法中返回 NO；因为 dynamic animator 会关心 layout 的无效问题，所以在这种情况下，它不需要去主动使其无效：</p>
-
-<p>```objc
--(BOOL)shouldInvalidateLayoutForBoundsChange:(CGRect)newBounds 
-{
-    UIScrollView *scrollView = self.collectionView;
-    CGFloat delta = newBounds.origin.y - scrollView.bounds.origin.y;</p>
-
-<pre><code>CGPoint touchLocation = [self.collectionView.panGestureRecognizer locationInView:self.collectionView];
-
-[self.dynamicAnimator.behaviors enumerateObjectsUsingBlock:^(UIAttachmentBehavior *springBehaviour, NSUInteger idx, BOOL *stop) {
-    CGFloat yDistanceFromTouch = fabsf(touchLocation.y - springBehaviour.anchorPoint.y);
-    CGFloat xDistanceFromTouch = fabsf(touchLocation.x - springBehaviour.anchorPoint.x);
-    CGFloat scrollResistance = (yDistanceFromTouch + xDistanceFromTouch) / 1500.0f;
-
-    UICollectionViewLayoutAttributes *item = springBehaviour.items.firstObject;
-    CGPoint center = item.center;
-    if (delta &amp;lt; 0) {
-        center.y += MAX(delta, delta*scrollResistance);
-    }
-    else {
-        center.y += MIN(delta, delta*scrollResistance);
-    }
-    item.center = center;
-
-    [self.dynamicAnimator updateItemUsingCurrentState:item];
-}];
-
-return NO; } ```
-</code></pre>
-
-<p>让我们仔细查看这个代码的细节。首先我们得到了这个 scroll view（就是我们的 collection view ），然后计算它的 content offset 中 y 的变化（在这个例子中，我们的 collection view 是垂直滑动的）。一旦我们得到这个增量，我们需要得到用户接触的位置。这是非常重要的，因为我们希望离接触位置比较近的那些物体能移动地更迅速些，而离接触位置比较远的那些物体则应该滞后些。</p>
-
-<p>对于 dynamic animator 中的每个 behavior，我们将接触点到该 behavior 物体的 x 和 y 的距离之和除以 1500，1500 是我根据经验设的。分母越小，这个 collection view 的的交互就越有弹簧的感觉。一旦我们拿到了这个“滑动阻力”的值，我们就可以用它的增量乘上 <code>scrollResistance</code> 这个变量来指定这个 behavior 物体的中心点的 y 值。最后，我们在滑动阻力大于增量的情况下对增量和滑动阻力的结果进行了选择（这意味着物体开始往错误的方向移动了）。在本例我们用了这么大的分母，那么这种情况是不可能的，但是在一些更具弹性的 collection view layout 中还是需要注意的。</p>
-
-<p>就是这么一回事。以我的经验，这个方法对多达几百个物体的 collection view 来说也是是适用的。超过这个数量的话，一次性加载所有物体到内存中就会变成很大的负担，并且在滑动的时候就会开始卡顿了。</p>
-
-<p><img src="http://img.objccn.io/issue-5/springyCollectionView.gif" alt="Springy Collection View" /></p>
-
-<h2 id="tilingdynamicbehaviors">平铺（Tiling）你的 Dynamic Behaviors 来优化性能</h2>
-
-<p>当你的 collection view 中只有几百个 cell 的时候，他运行的很好，但当数据源超过这个范围的时候会发生什么呢？或者在运行的时你不能预测你的数据源有多大呢？我们的简单粗暴的方法就不管用了。</p>
-
-<p>除了在 <code>prepareLayout</code> 中加载<em>所有</em>的物体，如果我们能<em>更聪明地</em>知道哪些物体会加载那该多好啊。是的，就是仅加载显示的和即将显示的物体。这正是我们要采取的办法。</p>
-
-<p>我们需要做的第一件事就是是跟踪 dynamic animator 中的所有 behavior 物体的 index path。我在 collection view 中添加一个属性来做这件事:</p>
-
-<p><code>objc
-@property (nonatomic, strong) NSMutableSet *visibleIndexPathsSet;
-</code></p>
-
-<p>我们用 set 是因为它具有常数复杂度的查找效率，并且我们<em>经常</em>地查找 <code>visibleIndexPathsSet</code> 中是否已经包含了某个 index path。</p>
-
-<p>在我们实现全新的 <code>prepareLayout</code> 方法之前——有一个问题就是什么是<strong>平铺 behavior</strong> —— 理解平铺的意思是非常重要的。当我们平铺behavior 的时候，我们会在这些 item 离开 collection view 的可视范围的时候删除对应的 behavior，在这些 item 进入可视范围的时候又添加对应的 behavior。这是一个大麻烦：我们需要在<em>滚动中</em>创建新的 behavior。这就意味着让人觉得创建它们就好像它们本来就已经在 dynamic animator 里了一样，并且它们是在 <code>shouldInvalidateLayoutForBoundsChange:</code> 方法被修改的。</p>
-
-<p>因为我们是在滚动中创建这些新的 behavior，所以我们需要维持现在 collection view 的一些状态。尤其我们需要跟踪最近一次我们 <code>bound</code> 变化的增量。我们会在滚动时用这个状态去创建我们的 behavior：</p>
-
-<p><code>objc
-@property (nonatomic, assign) CGFloat latestDelta;
-</code></p>
-
-<p>添加完这个 property 后，我们将要在 <code>shouldInvalidateLayoutForBoundsChange:</code> 方法中添加下面这行代码：</p>
-
-<p><code>objc
-self.latestDelta = delta;
-</code></p>
-
-<p>这就是我们需要修改我们的方法来响应滚动事件。我们的这两个方法是为了将 collection view 中 items 的 layout 信息传给 dynamic animator，这种方式没有变化。事实上，当你的 collection view 实现了 dynamic animator 的大部分情况下，都需要实现我们上面提到的两个方法 <code>layoutAttributesForElementsInRect:</code> 和 <code>layoutAttributesForItemAtIndexPath:</code>。</p>
-
-<p>这里最难懂的部分就是平铺机制。我们将要完全重写我们的 prepareLayout。</p>
-
-<p>这个方法的第一步是将那些物体的 index path 已经不在屏幕上显示的 behavior 从 dynamic animator 上删除。第二步是添加那些即将显示的物体的 behavior。</p>
-
-<p>让我们先看一下第一步。</p>
-
-<p>像以前一样，我们要调用 <code>super prepareLayout</code>，这样我们就能依赖父类 <code>UICollectionViewFlowLayout</code> 提供的默认排布。还像以前一样，我们通过父类获取一个矩形内的所有元素的 layout attribute。不同的是我们不是获取整个 collection view 中的元素属性，而只是获取显示范围内的。</p>
-
-<p>所以我们需要计算这个显示矩形。但是别着急！有件事要记住。我们的用户可能会非常快地滑动 collection view，导致了 dynamic animator 不能跟上，所以我们需要稍微扩大显示范围，这样就能包含到那些将要显示的物体了。否则，在滑动很快的时候就会出现频闪现象了。让我们计算一下显示范围:</p>
-
-<p><code>objc
-CGRect originalRect = (CGRect){.origin = self.collectionView.bounds.origin, .size = self.collectionView.frame.size};
-CGRect visibleRect = CGRectInset(originalRect, -100, -100);
-</code></p>
-
-<p>我确信在实际显示矩形上的每个方向都扩大100个像素对我的 demo 来说是可行的。仔细查看这些值是否适合你们的 collection view，尤其是当你们的 cell 很小的情况下。</p>
-
-<p>接下来我们就需要收集在显示范围内的 collection view layout attributes。还有它们的 index paths:</p>
-
-<p>```objc
-NSArray *itemsInVisibleRectArray = [super layoutAttributesForElementsInRect:visibleRect];</p>
-
-<p>NSSet *itemsIndexPathsInVisibleRectSet = [NSSet setWithArray:[itemsInVisibleRectArray valueForKey:@”indexPath”]];
-```</p>
-
-<p>注意我们是在用一个 NSSet。这是因为它具有常数复杂度的查找效率，并且我们经常的查找 <code>visibleIndexPathsSet</code> 是否已经包含了某个 index path:</p>
-
-<p>接下来我们要做的就是遍历 dynamic animator 的 behaviors，过滤掉那些已经在 <code>itemsIndexPathsInVisibleRectSet</code> 中的 item。因为我们已经过滤掉我们的 behavior，所以我们将要遍历的这些 item 都是不在显示范围里的，我们就可以将这些 item 从 animator 中删除掉（连同 <code>visibleIndexPathsSet</code> 属性中的 index path）:</p>
-
-<p>```objc
-NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(UIAttachmentBehavior *behaviour, NSDictionary *bindings) {
-    BOOL currentlyVisible = [itemsIndexPathsInVisibleRectSet member:[[[behaviour items] firstObject] indexPath]] != nil;
-    return !currentlyVisible;
-}]
-NSArray *noLongerVisibleBehaviours = [self.dynamicAnimator.behaviors filteredArrayUsingPredicate:predicate];</p>
-
-<p>[noLongerVisibleBehaviours enumerateObjectsUsingBlock:^(id obj, NSUInteger index, BOOL *stop) {
-    [self.dynamicAnimator removeBehavior:obj];
-    [self.visibleIndexPathsSet removeObject:[[[obj items] firstObject] indexPath]];
-}];
-```</p>
-
-<p>下一步就是要得到<em>新</em>出现 item 的 <code>UICollectionViewLayoutAttributes</code> 数组——那些 item 的 index path 在 <code>itemsIndexPathsInVisibleRectSet</code> 而不在 <code>visibleIndexPathsSet</code>：</p>
-
-<p><code>objc
-NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(UICollectionViewLayoutAttributes *item, NSDictionary *bindings) {
-    BOOL currentlyVisible = [self.visibleIndexPathsSet member:item.indexPath] != nil;
-    return !currentlyVisible;
-}];
-NSArray *newlyVisibleItems = [itemsInVisibleRectArray filteredArrayUsingPredicate:predicate];
-</code></p>
-
-<p>一旦我们有新的 layout attribute 出现，我就可以遍历他们来创建新的 behavior，并且将他们的 index path 添加到 <code>visibleIndexPathsSet</code> 中。首先，无论如何，我都需要获取到用户手指触碰的位置。如果它是 <code>CGPointZero</code> 的话，那就表示这个用户没有在滑动 collection view，这时我就<em>假定</em>我们不需要在滚动时创建新的 behavior 了：</p>
-
-<p><code>objc
-CGPoint touchLocation = [self.collectionView.panGestureRecognizer locationInView:self.collectionView];
-</code></p>
-
-<p>这是一个潜藏危险的假定。如果用户很快地滑动了 collection view 之后释放了他的手指呢？这个 collection view 就会一直滚动，但是我们的方法就不会在滚动时创建新的 behavior 了。但幸运的是，那也就意味这时 scroll view 滚动太快很难被注意到！好哇！但是，对于那些拥有大型 cell 的 collection view 来说，这仍然是个问题。那么在这种情况下，就需要增加你的可视范围的 bounds 来加载更多物体以解决这个问题。</p>
-
-<p>现在我们需要枚举我们刚显示的 item，为他们创建 behavior，再将他们的 index path 添加到 <code>visibleIndexPathsSet</code>。我们还需要在滚动时做些<a href="http://www.youtube.com/watch?v=gENVB6tjq_M">数学运算</a>来创建 behavior：</p>
-
-<p>```objc
-[newlyVisibleItems enumerateObjectsUsingBlock:^(UICollectionViewLayoutAttributes *item, NSUInteger idx, BOOL *stop) {
-    CGPoint center = item.center;
-    UIAttachmentBehavior *springBehaviour = [[UIAttachmentBehavior alloc] initWithItem:item attachedToAnchor:center];</p>
-
-<pre><code>springBehaviour.length = 0.0f;
-springBehaviour.damping = 0.8f;
-springBehaviour.frequency = 1.0f;
-
-if (!CGPointEqualToPoint(CGPointZero, touchLocation)) {
-    CGFloat yDistanceFromTouch = fabsf(touchLocation.y - springBehaviour.anchorPoint.y);
-    CGFloat xDistanceFromTouch = fabsf(touchLocation.x - springBehaviour.anchorPoint.x);
-    CGFloat scrollResistance = (yDistanceFromTouch + xDistanceFromTouch) / 1500.0f;
-
-    if (self.latestDelta &amp;lt; 0) {
-        center.y += MAX(self.latestDelta, self.latestDelta*scrollResistance);
-    }
-    else {
-        center.y += MIN(self.latestDelta, self.latestDelta*scrollResistance);
-    }
-    item.center = center;
-}
-
-[self.dynamicAnimator addBehavior:springBehaviour];
-[self.visibleIndexPathsSet addObject:item.indexPath]; }]; ```
-</code></pre>
-
-<p>大部分代码看起来还是挺熟悉的。大概有一半是来自没有实现平铺的 <code>prepareLayout</code>。另一半是来自 <code>shouldInvalidateLayoutForBoundsChange:</code> 这个方法。我们用 latestDelta 这个属性来表示 <code>bound</code> 变化的增量，适当地调整 <code>UICollectionViewLayoutAttributes</code> 使这些 cell 表现地就像被 attachment behavior “拉”着一样。</p>
-
-<p>就这样就完成了，真的！我已经在真机上测试过显示上千个 cell 的情况了，它运行地非常完美。<a href="https://github.com/objcio/issue-5-springy-collection-view">去试试吧</a>。</p>
-
-<h2>超越瀑布流布局</h2>
-
-<p>一般来说，当我们使用 <code>UICollectionView</code> 的时候，继承 <code>UICollectionViewFlowLayout</code> 会比直接继承 <code>UICollectionViewLayout</code> 更容易。这是因为 <em>flow</em> layout 会为我们做很多事。然而，瀑布流布局是严格基于它们的尺寸一个接一个的展现出来。如果你有一个布局不能适应这个标准怎么办？好的，如果你已经尝试用 <code>UICollectionViewFlowLayout</code> 来适应，而且你很确定它不能很好运行，那么就应该抛弃 <code>UICollectionViewFlowLayout</code> 这个定制性比较弱的子类，而应该直接在 <code>UICollectionViewLayout</code> 这个基类上进行定制。</p>
-
-<p>这个原则在处理 UIKit Dynamic 时也是适用的。</p>
-
-<p>让我们先创建 <code>UICollectionViewLayout</code> 的子类。当继承 <code>UICollectionViewLayout</code> 的时候需要实现 <code>collectionViewContentSize</code> 方法，这点非常重要。否则这个 collection view 就不知道如果去显示自己，也不会有显示任何东西。因为我们想要 collection view 不能滚动，所以这里要返回 collection view 的 frame 的 size，减去它的 <code>contentInset.top</code>：</p>
-
-<p><code>objc
--(CGSize)collectionViewContentSize 
-{
-    return CGSizeMake(self.collectionView.frame.size.width, 
-        self.collectionView.frame.size.height - self.collectionView.contentInset.top);
-}
-</code></p>
-
-<p>在这个（有点教学式）的例子中，我们的 collection view <em>总是会以零个cell开始</em>，物体通过 <code>performBatchUpdates:</code> 这个方法添加。这就意味着我们必须使用 <code>-[UICollectionViewLayout prepareForCollectionViewUpdates:]</code> 这个方法来添加我们的 behavior（即这个 collection view 的数据源总是以零开始）。</p>
-
-<p>除了给各个 item 添加 attachment behavior 外，我们还将保留另外两个 behavior：重力和碰撞。对于添加在这个 collection view 中的每个 item 来说，我们必须把这些 item 添加到我们的碰撞和 attachment behavior 中。最后一步就是设置这些 item 的初始位置为屏幕外的某些地方，这样就有被 attachment behavior 拉入到屏幕内的效果了:</p>
-
-<p>```objc
--(void)prepareForCollectionViewUpdates:(NSArray *)updateItems
-{
-    [super prepareForCollectionViewUpdates:updateItems];</p>
-
-<pre><code>[updateItems enumerateObjectsUsingBlock:^(UICollectionViewUpdateItem *updateItem, NSUInteger idx, BOOL *stop) {
-    if (updateItem.updateAction == UICollectionUpdateActionInsert) {
-        UICollectionViewLayoutAttributes *attributes = [UICollectionViewLayoutAttributes 
-            layoutAttributesForCellWithIndexPath:updateItem.indexPathAfterUpdate];
-
-        attributes.frame = CGRectMake(CGRectGetMaxX(self.collectionView.frame) + kItemSize, 300, kItemSize, kItemSize);
-
-        UIAttachmentBehavior *attachmentBehaviour = [[UIAttachmentBehavior alloc] initWithItem:attributes 
-                                                                              attachedToAnchor:attachmentPoint];
-        attachmentBehaviour.length = 300.0f;
-        attachmentBehaviour.damping = 0.4f;
-        attachmentBehaviour.frequency = 1.0f;
-        [self.dynamicAnimator addBehavior:attachmentBehaviour];
-
-        [self.gravityBehaviour addItem:attributes];
-        [self.collisionBehaviour addItem:attributes];
-    }
-}]; } ```
-</code></pre>
-
-<p><img src="http://img.objccn.io/issue-5/newtonianCollectionView.gif" alt="Demo" /></p>
-
-<p>删除就有点复杂了。我们希望这些物体有“掉落”的效果而不是简单的消失。这就不仅仅是从 collection view 中删除个 cell 这么简单了，因为我们希望在它离开了屏幕之前还是保留它。我已经在代码中实现了这样的效果，但是做法有点取巧。</p>
-
-<p>基本上我们要做的是在 layout 中提供一个方法，在它删除 attachment behavior 两秒之后，将这个 cell 从 collection view 中删除。我们希望在这段时间里，这个 cell 能掉出屏幕，但是这不一定会发生。如果没有发生，也没关系。只要淡出就行了。然而，我们必须保证在这两秒内既没有新的 cell 被添加，也没有旧的 cell 被删除。（我说了有点取巧。）</p>
-
-<p>欢迎提交 pull request。</p>
-
-<p>这个方法是有局限性的。我将 cell 数量的上限设为 10，但是即使这样，在像 iPad2 这样比较旧的设备中，动画就会运行地很慢。当然，这个例子只是为了展示如何模拟有趣的动力学的一个方法——它并不是一个可以解决任何问题的万金油。你个人在实践中如何来进行模拟，包括性能等各个方面，都取决于你自己了。</p>
 
 <hr />
 
