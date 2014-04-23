@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-22T14:10:41+08:00</updated>
+  <updated>2014-04-23T17:55:26+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,94 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[为 iOS7重新设计App]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/23/wei-ios7zhong-xin-she-ji-app/"/>
+    <updated>2014-04-23T17:52:36+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/23/wei-ios7zhong-xin-she-ji-app</id>
+    <content type="html"><![CDATA[<p>在 WWDC 上看到 iOS 7 系统的发布后，我们重新审视了自己的应用 <a href="http://appstore.com/grocerylistpx">Grocery List</a>，并且意识到：iOS 7 对于开发者来说是一个全新的开始，就像七年前 iPhone 首次发布一样。现在仅仅简单地改变设计是不够的，我们不得不重新思考并重构整个 app，从而让它适合 iOS 7 全新的环境。我们也的确是这么做的。</p>
+
+<p>根据用户的反馈和我们自己的使用情况，我们意识到，虽然不能改变 app 基本的操作，但是应该对软件的操作流程进行一些优化。比如在旧版本中，添加产品的数量和单位是一个多步骤的操作过程，需要在多个 controller 之间进行导航。在 <em>Grocery List 2</em> 中，用户不用离开当前屏幕就能在恰当的位置设置数值。</p>
+
+<p>在实现这个目标的过程中，遇到了一些我们觉得值得分享的问题。我们将会从动画和手势开始讲起，然后是界面、色彩以及字体等问题。接下来，为了吸引用户打开 app，我们将不得不思考如何针对 iOS 7 重新设计 app 的图标。最后，我们将分享在我们看来，苹果这次更新的意义何在。</p>
+
+<h2>动画</h2>
+
+<p>现在随着更新换代，移动设备的性能正变得越来越强大。与此同时，由于可以实时计算物品的物理属性，动画效果也变得愈加真实。在 iOS 7 中，我们不需要在界面中使用阴影和渐变这些效果了，而是应该更关注用户的感觉、手势以及交互的影响。凭借 iOS 7，你可以创建一个新世界而不是模仿旧有的世界。</p>
+
+<p>新 SDK 可以让你简单地创建并使用自定义的动画效果。在 iOS 7 之前，开发者需要做大量额外的工作才能改变 view controller 之间的转场效果。iOS 7 可以让你简单地添加自己的动画，以帮助用户在不同屏幕之间切换的同时还不会丢失关注焦点。</p>
+
+<p>在 <em>Grocery List</em> 中，我们在显示一个 modal view controller 时使用了轻度定制的转场动画。但是大部分的动画和转场效果都是使用系统默认的。我们本可以使用新的 API 来给 <em>Grocery List 2</em> 添加更多自定义的动画，但其实苹果提供的默认转场动画对于大多数情况来说已经是个不错的解决方案了，这也是为什么我们 app 中的不同 view controller 之间的转场效果和苹果官方的 app 是一样的。正如前边提到的那样，我们 app 的部分操作流程已经明显地发生了改变。所以，我们将会使用自定义动画从而更好地保持用户的关注焦点。</p>
+
+<p><img alt="Comparison of the Grocery List and the default view controller push" src="http://img.objccn.io/issue-5/redesign-animations.gif" /></p>
+
+<p>大多数用户对于 iOS 7 上默认的动画的感觉，是既新鲜又自然，你不需要做很多工作就可以使用这些动画来取悦用户。但是在合适的地方添加一些自定义动画将会提高整个 app 的用户体验。只是请小心不要使用过度。</p>
+
+<h2>手势</h2>
+
+<p>在拥有了数年的触屏设备的经验后，苹果发现大量使用手势对于用户来说正变得愈加自然。所以在 iOS 7 中，对手势的广泛使用比以前有了更多的可能性。比如在 table view cell 上滑动来显示隐藏的菜单，或者从左向右滑动来返回先前的 view controller，这些手势操作我们已经非常熟悉了，以至于如果一款应用不支持这些手势的话，我们马上就会非常想念它们。在合适的地方，这些直接的手势操作可以帮助用户更高效地完成任务而不会失去关注焦点。</p>
+
+<p>在 <em>Grocery List</em> 中，我们并没有使用任何自定义手势，但是为了在下个版本中改进用户的操作流程，我们支持在 cell 上进行左右两个方向的滑动来分别展示产品的不同选项。你可以简单地从屏幕的右边缘向左滑动来快速访问菜单以进行列表或者模版的相关设置，而不用在导航栏一层层地返回。</p>
+
+<p><img alt="Grocery List 2 gestures" src="http://img.objccn.io/issue-5/redesign-gestures.png" /></p>
+
+<p>按钮和链接对于用户来说是可见的，也是可识别的，但手势不是。如果你打算用手势来实现某个功能，很好！但是如果 app 中那些依赖手势的功能没有一个等效的可见的控件，那要为用户提供一个好的方法来发现这些手势。一个好的用户界面通常应当是不言自明的。如果你需要一个类似使用说明一样的界面或者视频来描述 app 中的基本功能，那这里面很可能就有问题了。</p>
+
+<h2>界面</h2>
+
+<p>在正式发布前，大家对于 iOS 7 最大的争论莫过于扁平化和拟物化（<a href="http://zh.wikipedia.org/wiki/仿制品">skeuomorphic</a>）这两种设计风格间的区别。iOS 7 完全摒弃了设计上对真实世界的依赖，但最大程度地保留了为大众所熟知的交互模式。新的纤细的工具栏图标可以帮助内容脱颖而出，但是别忘了，这样做的后果是这些图标本身变地不容易识别而且语义不明。尤其是当图标的下方没有说明其行为的文字标签时，情况更是如此。</p>
+
+<p>我们发现争论的重点并不完全在于是设计上是应该再造还是移除所有实物的外观，而是说哪种设计可以更好地突显内容。如果在导航栏中增加细微的阴影可以突出内容的话，那也没必要一定不使用阴影。最重要的事情还是在需要的时候增加对比度，并且以一种方便用户使用的方式来展示你的内容。</p>
+
+<p><em>Grocery List</em> 在设计上非常依赖于真实世界的物品。比如以黑板为背景，类似纸张上的单元格，所有框架都是有光泽的木质效果。这种设计看起来很好看，但是在这个狭小的空间内如何放置用户交互的控件也会是个不小的挑战，增加新功能时也同样要考虑这个问题。在 iOS 7 这种更轻量的设计中，我们不必像之前那样关注如何更逼真地拟物化，而是可以把关注点放在如何提升交互，以便用户达成自己的目标。<em>Grocery List 2</em> 一定会使用这个新的设计语言，同时也会保持自己的风格。</p>
+
+<p><img alt="Comparison of the Grocery List and Grocery List 2 interface" src="http://img.objccn.io/issue-5/redesign-interface.png" /></p>
+
+<p>在 iOS 7 的设备上使用几周后，明显感觉到现在的交互变得比之前版本更方便。新的动画、手势以及减少对拟物化元素的使用让用户更好地关注内容。</p>
+
+<h2>颜色</h2>
+
+<p>iOS 6 和 iOS 7 的主要区别之一是色彩整体给人的感觉。外观的颜色从暗色转变为更鲜亮的色彩。iOS 7 使用了更为生机勃勃和高饱和度的颜色，以支持频繁使用的半透明设计和背景模糊设计。</p>
+
+<p>考虑到 <em>Grocery List</em> 对拟物化设计的依赖，所以不可能过分调整用色。颜色是由我们想要模仿的材质所决定的。尽管我们喜欢 iOS 7 中更加友好的外观，像大多数内置的 app 一样大体上是白色，但是 <em>Grocery List 2</em> 这个 app 的外观将主要由符合「采购（Grocery）」这一主题的配色方案来决定。我们不希望我们的 app 看起来就仅仅是另外一个 iOS 7 风格的 app，而是希望创造独一无二的外观。</p>
+
+<p><img alt="Comparison of colors in a build-in iOS 7 app and Grocery List 2" src="http://img.objccn.io/issue-5/redesign-colors.png" /></p>
+
+<p>色彩可以影响用户对 app 的感觉。不要让你的 app 像内置的应用一样满是白色。相反要创造你自己独一无二的个性颜色。得益于 iOS 7 全新的设计风格刚和对拟物化使用的节制，你可以用各种出挑的色彩来表达你的 app 希望传递给用户的讯息。</p>
+
+<h2>字体</h2>
+
+<p>从 iOS 7 中对文本系统框架的重构这一点上就可以看出来，苹果认识到了字体的重要性。Lable 和 text field 现在直接使用 core text 提供的所有排版相关的功能，这里面就包括字体。连字（<a href="http://zh.wikipedia.org/wiki/合字">Ligature</a>），文字装饰符（<a href="http://baike.baidu.com/view/1155820.htm">swoosh</a>）等功能在新的框架下都可以简单地来实现。通过获取 text style 中的字体对象，你的 app 可以根据用户选择的字体大小来展示内容。想了解更详细的内容，可以看看这篇非常棒的关于 iOS 7 中的字体的<a href="http://typographica.org/on-typography/beyond-helvetica-the-real-story-behind-fonts-in-ios-7/">文章</a>。</p>
+
+<p>由于「实际」按钮的缺失以及文本周围描边的减少，文字本身获得了更多关注。由于在之前 iOS 7 的 beta 版本中大量使用 <em>Helvetica Neue</em> 的纤细体而受到排版专家的批评，苹果最终又换回了可读性更强的标准体。</p>
+
+<p>在 <em>Grocery List</em> 中，我们使用 slab-serif 字体以配合拟物化风格。当 app 运行在 iOS 7 的设备上时，我们发现这个字体不是一个最佳选择。所以我们决定使用定制的 sans-serif 字体，这款字体可以更好地契合 app 整体的外观。</p>
+
+<p><img alt="Comparison of the Grocery List and Grocery List 2 fonts" src="http://img.objccn.io/issue-5/redesign-fonts.png" /></p>
+
+<p>内容是 app 的基础，提升文字的可读性非常重要，而可读性的关键在于字体。虽然苹果默认的 <em>Helvetica Neue</em> 字体适合大部分情景，但自定义字体也是值得考虑的——尤其是当你的 app 需要呈现大量文本的时候。</p>
+
+<h2 id="appicon">App icon</h2>
+
+<p>苹果并不仅仅改变了 icon 的大小和轮廓，还改变了视觉氛围。App icon 不再使用光泽效果，并且大多数内置程序的 icon 是和网格对齐的。另外，icon 变得更简单了，移除了仿现实主义的效果，并且大多数只是在多彩的背景上展示简单的概念图标。这是从照相写实主义（<a href="http://en.wikipedia.org/wiki/Photorealism">photorealistic</a>）风格的插图到阐述 icon 的本义——图示（<a href="http://en.wikipedia.org/wiki/Iconographic">Iconographic</a>）的一次转变。</p>
+
+<p>从一个有着黑板背景和木质纹理的拟物化的 app icon，转变为一个更加简洁的多彩的有着清晰符号的 icon，<em>Grocery List</em> 并不是真的完全适合新的主屏幕。下个版本中，我们把 icon 简化为一个购物篮符号，并选择一个背景色，这个背景色同样可以用作 app 的主色。这样的多种方法组合使用可以让 icon 更时尚和流行。</p>
+
+<p><img alt="Comparison of the Grocery List and Grocery List 2 app icons" src="http://img.objccn.io/issue-5/redesign-app-icon.png" /></p>
+
+<p>在 iOS 7 中，icon 会自动会缩放到新的尺寸，导致图像变模糊。由于 iOS 7 中使用了弧度超级大的圆角来遮盖你的 icon，阴影和高光效果看起来会非常奇怪。如果你不打算让你的 app 适配 iOS 7 的风格，那么至少更新一下你的 icon 的尺寸。</p>
+
+<h2>结论</h2>
+
+<p>虽然 iOS 7 给人整体的感觉是既新鲜又精致，但是很多概念都是保留下来的，比如从第一个版本就一直存在的导航功能，在列表和表格中查看数据，接收推送通知等等，用户对这类操作已经非常熟悉了，所以颜色和字体的更改以及移除拟物化设计元素等一系列的改变并没有打断用户所熟知的这一套操作流程。</p>
+
+<p>在这个层面上，苹果并没有强迫你改变 app，但是我们建议你应该总是不断地尝试与时俱进，并始终把一点牢记于心：用户至上。</p>
+
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[深入理解CocoaPods]]></title>
@@ -1992,257 +2080,6 @@ virtual bool VisitObjCMessageExpr(ObjCMessageExpr *E) {
 <li><a href="http://getoffmylawnentertainment.com/blog/2011/10/01/clang-plugin-development-tutorial/">Clang Plugin Tutorial</a></li>
 <li><a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html">LLVM blog: What every C programmer should know (I)</a> , <a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know_14.html">(II)</a> 和 <a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know_21.html">(III)</a></li>
 </ul>
-
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Xcode编译你所不知道的细节]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/"/>
-    <updated>2014-04-10T11:09:26+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie</id>
-    <content type="html"><![CDATA[<p>近些日子我们被宠坏了 -- 我们只需要单击 Xcode 中的一个按钮（这个按钮看起来有点像是在播放一些音乐的动作），过几秒钟之后，我们的程序就会运行起来了，直到遇到一些错误，这非常的神奇。</p>
-
-<p>在本文中，我们将从更高级别的角度来解读 Build 过程，并探索一下在 Xcode 界面中暴露出的 project setting 信息与 Build 过程有什么关系。为了更加深入的探索 Build 过程中，每一步实际执行的工作，我都会在本文中引入一些别的文章。</p>
-
-<h2 id="build">解密 Build 日志</h2>
-
-<p>为了了解 Xcode build 过程的内部工作原理，我们首先把突破口瞄准完整的 log 文件上。打开 Log Navigator ，从列表中选择一个 Build ，Xcode 会将 log 文件很完美的展现出来。</p>
-
-<p><img src="http://img.objccn.io/issue-6/build-log.png" alt="Xcode build log navigator" /></p>
-
-<p>默认情况下，上面的 Xcode 界面中隐藏了大量的信息，我们通过选择任务，然后点击右边的展开按钮，就能看到每个任务的详细信息。另外一种可选的方案就是选中列表中的一个或者多个任务，然后选择组合键 Cmd-C，这将会把所有的纯文本信息拷贝至粘贴板。最后，我们还可以选择 Editor 菜单中的 "Copy transcript for shown results"，以此将所有的 log 信息拷贝到粘贴板中。</p>
-
-<p>本文给出的示例中，log 信息将近有 10,000 行（其实大多数的 log 信息是编译 OpenSSL 时生成的，并不是我们自己所写的代码生成的）。下面我们就开始吧！</p>
-
-<p>注意观察输出的 log 信息，首先会发现 log 信息被分为不同的几大块，它们与我们工程中的targets相互对应着：</p>
-
-<pre><code>Build target Pods-SSZipArchive
-...
-Build target Makefile-openssl
-...
-Build target Pods-AFNetworking
-...
-Build target crypto
-...
-Build target Pods
-...
-Build target ssl
-...
-Build target objcio
-</code></pre>
-
-<p>本文涉及到的工程有几个依赖项：其中 AFNetworking 和 SSZipArchive 包含在 Pods 中，而 OpenSSL 则以子工程的形式包含在工程中。</p>
-
-<p>针对工程中的每个 target，Xcode 都会执行一系列的操作，将相关的源码，根据所选定的平台，转换为机器可读的二进制文件。下面我们详细的了解一下第一个 target：SSZipArchive。</p>
-
-<p>在针对这个 target 输出的 log 信息中，我们可以看到每个任务被执行的详细情况。例如第一个任务是处理一个预编译头文件（为了增强 log 信息的可读性，我省略了许多细节）：</p>
-<pre><code>(1) ProcessPCH /.../Pods-SSZipArchive-prefix.pch.pch Pods-SSZipArchive-prefix.pch normal armv7 objective-c com.apple.compilers.llvm.clang.1_0.compiler
-(2) cd /.../Dev/objcio/Pods
-	setenv LANG en_US.US-ASCII
-	setenv PATH "..."
-(3) /.../Xcode.app/.../clang 
-(4) -x objective-c-header 
-(5) -arch armv7 
-... configuration and warning flags ...
-(6) -DDEBUG=1 -DCOCOAPODS=1 
-... include paths and more ...
-(7) -c 
-(8) /.../Pods-SSZipArchive-prefix.pch 
-(9) -o /.../Pods-SSZipArchive-prefix.pch.pch
-</code></pre>
-
-<p>在 build 处理过程中，每个任务都会出现类似上面的这些 log 信息，我们就通过上面的 log 信息进一步了解详情。</p>
-
-<ol>
-<li>类似上面的每个 log 信息块都会利用一行 log 信息来描述相关的任务作为起点。  </li>
-<li>接着输出带缩进的3行 log 信息，列出了该任务执行的语句。此处，工作目录发生了改变，并对PANG和PATH环境变量进行设置。  </li>
-<li>这里是发生奇迹的地方。为了处理一个<code>.pch</code>文件，调用了 clang，并附带了许多可选项。下面跟着输出的 log 信息显示了显示了完整的调用过程，以及所有的参数。我们看看其中的几个参数...  </li>
-<li><code>-x</code> 标示符用来指定所使用的语言，此处是 <code>objective-c-header</code>。  </li>
-<li>目标架构指定为 <code>armv7</code>。  </li>
-<li>暗示 <code>#defines</code> 的内容已经被添加了。  </li>
-<li><code>-c</code> 标示符用来告诉 clang 具体该如何做。<code>-c</code> 表示：运行预处理器、词法分析器、类型检查、LLVM 的生成和优化，以及 target 指定汇编代码的生成阶段，最后，运行汇编器以产出一个<code>.o</code>的目标文件。  </li>
-<li>输入文件。  </li>
-<li>输出文件。</li>
-</ol>
-
-<p>虽然有大量的 log 信息，不过我不会对每个任务做详细的介绍。我们的重点是让你全面的了解在整个 build 过程中，哪些工具会被调用，以及背后会使用到了哪些参数。</p>
-
-<p>针对这个 target ，虽然只有一个 <code>.pch</code> 文件，但实际上这里对 <code>objective-c-header</code> 文件的处理有两个任务。通过观察具体输出的 log 信息，我们可以知道详情：</p>
-
-<pre><code>ProcessPCH /.../Pods-SSZipArchive-prefix.pch.pch Pods-SSZipArchive-prefix.pch normal armv7 objective-c ...
-ProcessPCH /.../Pods-SSZipArchive-prefix.pch.pch Pods-SSZipArchive-prefix.pch normal armv7s objective-c ...
-</code></pre>
-
-<p>从上面的 log 信息中，可以明显的看出 target 针对两种架构做了 build -- armv7 和 armv7s -- 因此 clang 对文件做了两次处理，每次针对一种架构。</p>
-
-<p>在处理预编译头文件之后，可以看到针对 SSZipArchive target 有另外的几个任务类型。</p>
-
-<pre><code>CompileC ...
-Libtool ...
-CreateUniversalBinary ...
-</code></pre>
-
-<p>顾名思义：<code>CompileC</code> 用来编译 <code>.m</code> 和 <code>.c</code> 文件，<code>Libtool</code> 用来从目标文件中构建 library，而 <code>CreateUniversalBinary</code> 则将上一阶段产生的两个 <code>.a</code> 文件（每个文件对应一种架构）合并为一个通用的二进制文件，这样就能同时在 armv7 和 armv7s 上面运行。</p>
-
-<p>接着，在工程中其它一些依赖项也会发生于此类似的步骤。AFNetworking 被编译之后，会与 SSZipArchive 进行链接，以当做 pod library。OpenSSL 编译之后，会接着处理 crypto 和 ssl target。</p>
-
-<p>当所有的依赖项都 build 完成之后，就轮到我们程序的 target 了。Build 该 target 时，输出的 log 信息会包含一些非常有价值，并且之前没有出现过的内容：</p>
-
-<pre><code>PhaseScriptExecution ...
-DataModelVersionCompile ...
-Ld ...
-GenerateDSYMFile ...
-CopyStringsFile ...
-CpResource ...
-CopyPNGFile ...
-CompileAssetCatalog ...
-ProcessInfoPlistFile ...
-ProcessProductPackaging /.../some-hash.mobileprovision ...
-ProcessProductPackaging objcio/objcio.entitlements ...
-CodeSign ...
-</code></pre>
-
-<p>在上面的任务列表中，根据名称不能区分的唯一任务可能就是 <code>Ld</code>，<code>Ld</code> 是一个 linker 工具的名称，与 <code>libtool</code> 非常相似。实际上，<code>libtool</code>也是简单的调用 <code>ld</code> 和 <code>lipo</code>。'ld'被用来构建可执行文件，而<code>libtool</code>则用来构建 library 文件。阅读<a href="http://www.objccn.io/issue-6-3">Daniel</a> 和 <a href="http://www.objccn.io/issue-6-2">Chris</a>两篇文章，可以了解到更多关于编译和链接的工作原理。</p>
-
-<p>上面每一个步骤，实际上都会调用相关的命令行工具来做实际的工作，这跟之前我们看到的的 <code>ProcessPCH</code> 类似。至此，我将不会继续介绍这些 log 信息了，我将带领大家从另外一个不同的角度来继续探索这些任务：Xcode 是如何知道哪些任务需要被执行？</p>
-
-<h2 id="build">Build过程的控制</h2>
-
-<p>当你选择 Xcode 5 中的一个工程时，会在 project editor 顶部显示出 6 个 tabs：General, Capabilities, Info, Build Settings, Build Phases 以及 Build Rules。</p>
-
-<p><img src="http://img.objccn.io/issue-6/project-editor-tabs.png" alt="Xcode project editor tabs" /></p>
-
-<p>对于我们理解 build 过程来说，其中最后 3 项与 build 过程紧密相连。</p>
-
-<h3 id="buildphases">Build Phases</h3>
-
-<p>Build Phases 代表着将代码转变为可执行文件的最高级别规则。里面描述了 build 过程中必须执行的不同类型规则。</p>
-
-<p><img src="http://img.objccn.io/issue-6/build-phases.png" alt="Xcode build phases" /></p>
-
-<p>首先是 target 依赖项的构建。这里会告诉 build 系统，build 当前的 target 之前，必须先对这里的依赖性进行 build。实际上这并不属于真正的 build phase，在这里，Xcode 只不过将其与 build phase 显示到一块罢了。</p>
-
-<p>接着在 build phase中是一个 CocoaPods 相关的脚本 <em>script execution</em> -- 更多 CocoaPods 相关信息和 它的 build 过程可以查看<a href="http://www.objc.io/issue-6-4">Michele的文章</a> -- 接着在 <code>Compile Sources</code> section 中规定了所有必须参与编译的文件。需要留意的是，这里并没有指明这些文件是<em>如何</em>被编译处理的。关于处理这些文件的更多内容，我们将在研究 build rules 和 build settings 时学习到。此处列出的所有文件将根据相关的 rules 和 settings 被处理。</p>
-
-<p>当编译结束之后，接下来就是将编译所生成的目标文件链接到一块。注意观察，Xcode 中的 build phase 之后是："Link Binary with Libraries." 这里面列出了所有的静态库和动态库，这些库会参与上面编译阶段生成的目标文件进行链接。静态库和动态库的处理过程有非常大的区别，相关内容请参考 Daniel的文章 <a href="http://www.objccn.io/issue-6-3">Mach-O 可执行文件</a>。</p>
-
-<p>当链接完成之后，build phase 中最后需要处理的就是将静态资源（例如图片和字体）拷贝到 app bundle 中。需要注意的是，如果图片资源是PNG格式，那么不仅仅对其进行拷贝，还会做一些优化（如果 build settings 中的 PNG 优化是打开的话）。</p>
-
-<p>虽然静态资源的拷贝是 build phase 中的最后一步，但 build 还没有完成。例如，还没有进行 code signing （这并不是 build phase 考虑的范畴），code signing 属于 build 步骤中的最后一步 "Packaging"。</p>
-
-<h3 id="buildphases">定制Build Phases</h3>
-
-<p>至此，如果不考虑默认设置的话，你已经可以完全掌握了上面介绍的 build phases。例如，你可以在 build phases 中添加运行自定义脚本，就像<a href="http://www.objccn.io/issue-6-4/">CocoaPods</a>使用的一样，来做额外的工作。当然也可以添加一些资源的拷贝任务，当你需要将某些确定的资源拷贝到指定的 target 目录中，这非常有用。</p>
-
-<p>另外定制 build phases 有一个非常好用的功能：添加带有水印（包括版本号和 commit hash）的 app icon -- 只需要在 build phase 中添加一个 "Run Script"，并用下面的命令来获取版本号和 commit hash：</p>
-
-<pre><code>version=`/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "${INFOPLIST_FILE}"`
-commit=`git rev-parse --short HEAD`
-</code></pre>
-
-<p>然后使用 ImageMagick 来修改 app icon。这里有一个<a href="https://github.com/krzysztofzablocki/IconOverlaying">完整的示例</a>，可以参考。</p>
-
-<p>如果你希望自己或者别人编写的代码看起来比较简洁点，可以添加一个 "Run Script"：如果一个源文件超过指定行数，就发出警告。如下代码所示，设置的行数为 200。</p>
-
-<pre><code>find "${SRCROOT}" \( -name "*.h" -or -name "*.m" \) -print0 | xargs -0 wc -l | awk '$1 &gt; 200 &amp;&amp; $2 != "total" { print $2 ":1: warning: file more than 200 lines" }'
-</code></pre>
-
-<h3 id="buildrules">Build Rules</h3>
-
-<p>Build rules 指定了不同的文件类型该如何编译。一般来说，开发者并不需要修改这里面的内容。如果你需要对特定类型的文件添加处理方法，那么可以在此处添加一条新的规则。</p>
-
-<p>一条 build rule 指定了其应用于哪种类型文件，该类型文件是如何被处理的，以及输出的内容该如何处置。比方说，我们创建了一条预处理规则，该规则将 Objective-C 的实现文件当做输入，解析文件中的注释内容，最后再输出一个 <code>.m</code> 文件，文件中包含了生成的代码。由于我们不能将 <code>.m</code> 文件既当做输入又当做输出，所以我使用了 <code>.mal</code> 后缀，定制的 build rule 如下所示：</p>
-
-<p><img src="http://img.objccn.io/issue-6/custom-build-rule.png" alt="Custom build rule" /></p>
-
-<p>上面的规则应用于所有后缀为 <code>*.mal</code> 的文件，这些文件会被自定义的脚本处理（调用我们的预处理器，并附带上输入和输出参数）。最后，该规则告诉 build system 在哪里可以找到此规则的输出文件。</p>
-
-<p>在脚本中，我使用了少量的变量来指定正确的路径和文件名。在苹果的 <a href="https://developer.apple.com/library/mac/documentation/DeveloperTools/Reference/XcodeBuildSettingRef/1-Build_Setting_Reference/build_setting_ref.html#//apple_ref/doc/uid/TP40003931-CH3-SW105">Build Setting Reference</a> 文档中可以找到所有可用的变量。build 过程中，要想观察所有已存在的环境变量，你可以在 build phase 中添加一个 "Run Script"，并勾选上 "Show environment variables in build log"。</p>
-
-<h3 id="buildsettings">Build Settings</h3>
-
-<p>至此，我们已经了解到在 build phases 中是如何定义 build 处理的过程，以及 build rules 是如何指定哪些文件类型在编译阶段需要被预处理。在 build settings 中，我们可以配置每个任务（之前在 build log 输出中看到的任务）的详细内容。</p>
-
-<p>你会发现 build 过程的每一个阶段，都有许多选项：从编译、链接一直到 code signing 和 packaging。注意，settings 是如何被分割为不同的部分 -- 其实这大部分会与 build phases 有关联，有时候也会指定编译的文件类型。</p>
-
-<p>这些选项基本都有很好的文档介绍，你可以在右边面板中的 quick help inspector 或者 <a href="https://developer.apple.com/library/mac/documentation/DeveloperTools/Reference/XcodeBuildSettingRef/1-Build_Setting_Reference/build_setting_ref.html#//apple_ref/doc/uid/TP40003931-CH3-SW105">Build Setting Reference</a> 中查看到。</p>
-
-<h2>工程文件</h2>
-
-<p>上面我们介绍的所有内容都被保存在工程文件（<code>.pbxproj</code>）中，除了其它一些工程相关信息（例如 file groups），我们很少会深入该文件内部，除非在代码 merge 时发生冲突，或许会进去看看。</p>
-
-<p>建议你用文本编辑器打开一个工程文件，从头到尾看一遍里面的内容。它的可读性非常高，里面的许多内容一看就知道什么意思了，不会存在太大的问题。通过阅读并完全理解工程文件，这对于合并工程文件的冲突非常有帮助。</p>
-
-<p>首先，我们来看看文件中叫做 <code>rootObject</code> 的条目。在我的工程中，如下所示：</p>
-
-<pre><code>rootObject = 1793817C17A9421F0078255E /* Project object */;
-</code></pre>
-
-<p>根据这个 ID（<code>1793817C17A9421F0078255E</code>），我们可以找到 main 工程的定义：</p>
-
-<pre><code>/* Begin PBXProject section */
-    1793817C17A9421F0078255E /* Project object */ = {
-        isa = PBXProject;
-...
-</code></pre>
-
-<p>在这部分中有一些 keys，顺从这些 key，我们可以了解到更多关于这个工程文件的组成。例如，<code>mainGroup</code> 指向了 root file group。如果你按照这个思路，你可以快速了解到在 <code>.pbxproj</code> 文件中工程的结构。下面我要来介绍一些与 build 过程相关的内容。其中 <code>target</code> key 指向了 build target 的定义：</p>
-
-<pre><code>targets = (
-    1793818317A9421F0078255E /* objcio */,
-    170E83CE17ABF256006E716E /* objcio Tests */,
-);
-</code></pre>
-
-<p>根据第一个内容，我们找到一个 target 的定义：</p>
-
-<pre><code>1793818317A9421F0078255E /* objcio */ = {
-    isa = PBXNativeTarget;
-    buildConfigurationList = 179381B617A9421F0078255E /* Build configuration list for PBXNativeTarget "objcio" */;
-    buildPhases = (
-        F3EB8576A1C24900A8F9CBB6 /* Check Pods Manifest.lock */,
-        1793818017A9421F0078255E /* Sources */,
-        1793818117A9421F0078255E /* Frameworks */,
-        1793818217A9421F0078255E /* Resources */,
-        FF25BB7F4B7D4F87AC7A4265 /* Copy Pods Resources */,
-    );
-    buildRules = (
-    );
-    dependencies = (
-        1769BED917CA8239008B6F5D /* PBXTargetDependency */,
-        1769BED717CA8236008B6F5D /* PBXTargetDependency */,
-    );
-    name = objcio;
-    productName = objcio;
-    productReference = 1793818417A9421F0078255E /* objcio.app */;
-    productType = "com.apple.product-type.application";
-};
-</code></pre>
-
-<p>其中 <code>buildConfigurationList</code> 指向了可用的配置项，一般是 <code>Debug</code> 和 <code>Release</code>。根据 debug 对应的 id，我们可以找到 build setting tab 中所有选项存储的位置：</p>
-
-<pre><code>179381B717A9421F0078255E /* Debug */ = {
-    isa = XCBuildConfiguration;
-    baseConfigurationReference = 05D234D6F5E146E9937E8997 /* Pods.xcconfig */;
-    buildSettings = {
-        ALWAYS_SEARCH_USER_PATHS = YES;
-        ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-        CODE_SIGN_ENTITLEMENTS = objcio/objcio.entitlements;
-...
-</code></pre>
-
-<p><code>buildPhases</code> 属性则简单的列出了在 Xcode 中定义的所有 build phases。这非常容易识别出来（Xcode 中的参数使用了它们原本真正的名字，并以 C 风格进行注释）。<code>buildRules</code> 属性是空的：因为在该工程中，我没有自定义 build rules。<code>dependencies</code> 列出了在 Xcode build phase tab 中列出的 target 依赖项。</p>
-
-<p>没那么吓人，不是吗？工程中剩下的内容就留给你去当做练习来了解吧。只需要顺着对象的 ID 走，即可，一旦你找到了敲门，理解了Xcode中工程设置的不同 section ，那么对于 merge 工程文件的冲突时，将变得非常简单。甚至可以在 GitHub 中就能阅读工程文件，而不用将工程文件 clone 到本地，并用 Xcode 打开。</p>
-
-<h2>小结</h2>
-
-<p>当今的软件是都用其它复杂的一些软件和资源开发出来的，例如 library 和 build 工具等。反过来，这些工具是构建于底层架构的，这犹如剥洋葱一样，一层包着一层。虽然这样一层一层的，给人感觉太复杂，但是你完全可以去深入了解它们，这非常有助于你对软件的深入理解，实际上当你了解之后，这并没有想象中的那么神奇，只不过它是一层一层堆砌起来的，每一层都是基于下一层构建起来的。</p>
-
-<p>本文所探索 build system 的内部机制犹如剥掉洋葱的一层。其实当我们点击 Xcode 中的运行按钮时，我们并没必要理解这个动作涉及到的所有内容。我们只是深入理解某一层，然后找到一个有组织的、并且可控的调用其它工具的顺序，如果我们愿意的话，可以做进一步的探索。我建议你阅读本期中的其它文章，以进一步了解这个洋葱的下一层内容！</p>
 
 <hr />
 
