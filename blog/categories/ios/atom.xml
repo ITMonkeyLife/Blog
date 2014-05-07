@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-04-23T17:55:26+08:00</updated>
+  <updated>2014-05-08T00:15:06+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,226 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[CocoaPods安装和使用教程]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/"/>
+    <updated>2014-05-08T00:10:43+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng</id>
+    <content type="html"><![CDATA[<h2>目录</h2>
+
+<ul>
+<li><a href="#cocoapods">CocoaPods是什么？</a></li>
+<li><a href="#install">如何下载和安装CocoaPods？</a></li>
+<li><a href="#usage">如何使用CocoaPods？</a>
+
+    <ul>
+        <li><a href="#usage1">场景1：利用CocoaPods，在项目中导入AFNetworking类库</a></li>
+        <li><a href="#usage2">场景2：如何正确编译运行一个包含CocoPods类库的项目</a></li>
+    </ul>
+</li>
+</ul>
+
+<h2 id="cocoapods">CocoaPods是什么？</h2>
+
+<p>当你开发iOS应用时，会经常使用到很多第三方开源类库，比如JSONKit，AFNetWorking等等。可能某个类库又用到其他类库，所以要使用它，必须得另外下载其他类库，而其他类库又用到其他类库，“子子孙孙无穷尽也”，这也许是比较特殊的情况。总之小编的意思就是，手动一个个去下载所需类库十分麻烦。另外一种常见情况是，你项目中用到的类库有更新，你必须得重新下载新版本，重新加入到项目中，十分麻烦。如果能有什么工具能解决这些恼人的问题，那将“善莫大焉”。所以，你需要 CocoaPods。</p>
+
+<p>CocoaPods应该是iOS最常用最有名的类库管理工具了，上述两个烦人的问题，通过cocoaPods，只需要一行命令就可以完全解决，当然前提是你必须正确设置它。重要的是，绝大部分有名的开源类库，都支持CocoaPods。所以，作为iOS程序员的我们，掌握CocoaPods的使用是必不可少的基本技能了。</p>
+
+<h2 id="install">如何下载和安装CocoaPods？</h2>
+
+<p>在安装CocoaPods之前，首先要在本地安装好Ruby环境。至于如何在Mac中安装好Ruby环境，请google一下，本文不再涉及。</p>
+
+<p>假如你在本地已经安装好Ruby环境，那么下载和安装CocoaPods将十分简单，只需要一行命令。在Terminator（也就是终端）中输入以下命令（注意，本文所有命令都是在终端中输入并运行的。什么，你不知道什么是终端？那请小编吃饭，小编告诉你）：</p>
+
+<pre><code>sudo gem install cocoapods
+</code></pre>
+
+<p>但是，且慢。如果你在天朝，在终端中敲入这个命令之后，会发现半天没有任何反应。原因无他，因为那堵墙阻挡了cocoapods.org。（你会问，我靠，这都要墙！是的，小编也纳闷。）</p>
+
+<p>但是，是的，又但是（不过是个可喜的“但是”）。我们可以用淘宝的Ruby镜像来访问cocoapods。按照下面的顺序在终端中敲入依次敲入命令：</p>
+
+<pre><code>$ gem sources --remove https://rubygems.org/
+//等有反应之后再敲入以下命令
+$ gem sources -a http://ruby.taobao.org/
+</code></pre>
+
+<p>为了验证你的Ruby镜像是并且仅是taobao，可以用以下命令查看：</p>
+
+<pre><code>$ gem sources -l
+</code></pre>
+
+<p>只有在终端中出现下面文字才表明你上面的命令是成功的：</p>
+
+<pre><code>*** CURRENT SOURCES ***
+
+http://ruby.taobao.org/
+</code></pre>
+
+<p>上面所有的命令完成之时，在小编的终端上是这个的样子：</p>
+
+<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_1.png" alt="Figure 1" /></p>
+
+<p>这时候，你再次在终端中运行：</p>
+
+<pre><code>$ sudo gem install cocoapods
+</code></pre>
+
+<p>等上十几秒钟，CocoaPods就可以在你本地下载并且安装好了，不再需要其他设置。</p>
+
+<p>敲入以上命令时，小编终端上是这个样子的（由于太长，仅截取前面一部分）：</p>
+
+<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_11.png" alt="Figure 2" /></p>
+
+<p>看到这里，你心里会不会说，我靠！太爽了，这么容易就可以下载并且安装好了！是的，小编也是这么想的。CocoPods就是这么简单，使用也十分简单。继续往下看吧。</p>
+
+<h2 id="usage">如何使用CocoaPods？</h2>
+
+<p>好了，安装好CocoPods之后，接下来就是使用它。所幸，使用CocoPods和安装它一样简单，也是通过一两行命令就可以搞定。</p>
+
+<p>小编在这里用两种使用场景来具体说明如何使用CocoaPods。</p>
+
+<h3 id="usage1">场景1：利用CocoaPods，在项目中导入AFNetworking类库</h3>
+
+<p>AFNetworking类库在GitHub地址是：<a href="https://github.com/AFNetworking/AFNetworking">https://github.com/AFNetworking/AFNetworking</a></p>
+
+<p>为了确定AFNetworking是否支持CocoaPods，可以用CocoaPods的搜索功能验证一下。在终端中输入：</p>
+
+<pre><code>$ pod search AFNetworking
+</code></pre>
+
+<p>过几秒钟之后，你会在终端中看到关于AFNetworking类库的一些信息。比如：</p>
+
+<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_12.png" alt="Figure 3" /></p>
+
+<p>这说明，AFNetworking是支持CocoaPods，所以我们可以利用CocoaPods将AFNetworking导入你的项目中。</p>
+
+<p>首先，我们需要在我们的项目中加入CocoaPods的支持。你可以跟随小编的步骤，先利用Xcode创建一个名字CocoaPodsDemo的项目，用于以下的教程。创建好之后，在继续下一步之前，小编先截图，看看项目没有支持CocoaPods时的项目Xcode目录结构：</p>
+
+<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_13.png" alt="Figure 4" /></p>
+
+<p>上图等一下要跟项目支持CocoaPods之后的项目Xcode目录结构做对比。</p>
+
+<p>你看到这里也许会问，CocoaPods为什么能下载AFNetworking呢，而不是下载其他类库呢？这个问题的答案是，有个文件来控制CocoaPods该下载什么。这个文件就叫做“Podfile”（注意，一定得是这个文件名，而且没有后缀）。你创建一个Podfile文件，然后在里面添加你需要下载的类库，也就是告诉CocoaPods，“某某和某某和某某某，快到碗里来！”。每个项目只需要一个Podfile文件。</p>
+
+<p>好吧，废话少说，我们先创建这个神奇的PodFile。在终端中进入（cd命令）你项目所在目录，然后在当前目录下，利用vim创建Podfile，运行：</p>
+
+<pre><code>$ vim Podfile
+</code></pre>
+
+<p>然后在Podfile文件中输入以下文字：</p>
+
+<pre><code>platform :ios, '7.0'
+pod "AFNetworking", "~&gt; 2.0"
+</code></pre>
+
+<p>注意，这段文字不是小编凭空生成的，可以在AFNetworking的github页面找到。这两句文字的意思是，当前AFNetworking支持的iOS最高版本是iOS 7.0, 要下载的AFNetworking版本是2.0。</p>
+
+<p>然后保存退出。vim环境下，保存退出命令是：</p>
+
+<pre><code>:wq
+</code></pre>
+
+<p>这时候，你会发现你的项目目录中，出现一个名字为Podfile的文件，而且文件内容就是你刚刚输入的内容。注意，Podfile文件应该和你的工程文件.xcodeproj在同一个目录下。</p>
+
+<p>这时候，你就可以利用CocoPods下载AFNetworking类库了。还是在终端中的当前项目目录下，运行以下命令：</p>
+
+<pre><code>$ pod install 
+</code></pre>
+
+<p>因为是在你的项目中导入AFNetworking，这就是为什么这个命令需要你进入你的项目所在目录中运行。</p>
+
+<p>运行上述命令之后，小编的终端出现以下信息：</p>
+
+<pre><code>EricmatoMacBook-Pro:CocoaPodsDemo ericwang$ pod install
+Analyzing dependencies
+Downloading dependencies
+Installing AFNetworking (2.0.2)
+Generating Pods project
+Integrating client project
+
+[!] From now on use `CocoaPodsDemo.xcworkspace`.
+</code></pre>
+
+<p>注意最后一句话，意思是：以后打开项目就用 CocoaPodsDemo.xcworkspace 打开，而不是之前的.xcodeproj文件。</p>
+
+<p>你也许会郁闷，为什么会出现.xcodeproj文件呢。这正是你刚刚运行<code>$ pod install</code>命令产生的新文件。除了这个文件，你会发现还多了另外一个文件“Podfile.lock”和一个文件夹“Pods”。
+点击 CocoaPodsDemo.xcworkspace 打开之后工程之后，项目Xcode目录结构如下图：</p>
+
+<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_14.png" alt="Figure 5" /></p>
+
+<p>你会惊喜地发现，AFNetwoking已经成功导入项目了（红框部分）！</p>
+
+<p>现在，你就可以开始使用AFNetworking.h啦。可以稍微测试一下，在你的项目任意代码文件中输入：</p>
+
+<pre><code>#import &lt;AFNetworking.h&gt;
+或者
+#import "AFNetworking.h"
+</code></pre>
+
+<p>然后编译，看看是否出错。如果你严格按照小编上述的步骤来，是不可能出错的啦。</p>
+
+<p>至此，CocoPods的第一个应用场景讲述完毕。别看小编写了这么多，其实过程是十分简单的。总结一下就是：</p>
+
+<ol>
+<li>先在项目中创建Podfile，Podfile的内容是你想导入的类库。一般类库的原作者会告诉你导入该类库应该如何写Podfile；</li>
+<li>运行命令：<code>`$ pod install</code>.</li>
+</ol>
+
+<p>下面，小编继续讲述第二种使用场景。</p>
+
+<h3 id="usage2">场景2：如何正确编译运行一个包含CocoPods类库的项目</h3>
+
+<p>你也许曾经遇到过（特别是新手iOS开发者）这种情况，好不容易在GitHub上找到一份代码符合自己想需求，兴冲冲下载下来，一编译，傻眼了，发现有各种各样错误。一看，原来是缺失了各种其他第三方类库。这时候莫慌，你再仔细一看，会发现你下载的代码包含了Podfile。没错，这意味着你可以用CocoaPods很方便下载所需要的类库。</p>
+
+<p>下面，小编以代码 <a href="https://github.com/UrbanApps/UAAppReviewManager">UAAppReviewManager</a> 为例来说明如何正确编译运行一个包含CocoPods类库的项目。</p>
+
+<p>UAAppReviewManager是一个能够让你方便地将提醒用户评分的功能加入你的应用中。当你去UAAppReviewManager的GitHub地址下载这份代码之后，打开Example工程（UAAppReviewManagerExample），编译，你会发现Xcode报告一大堆错误，基本都是说你编译的这份代码找不到某某头文件，这就意味着你要成功编译UAAppReviewManager的Example代码，必须先导入一些第三方类库。同时你会发现在UAAppReviewManagerExample文件夹下面有三个跟CocosPods相关的文件（文件夹）：Podfile，Podfile.lock和Pods，如下图：</p>
+
+<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_15.png" alt="Figure 6" /></p>
+
+<p>用</p>
+
+<p>这时候，打开终端，进入UAAppReviewManagerExample所在的目录，也就是和Podfile在同一目录下，和场景1一样，输入以下命令（由于已经有Podfile，所以不需要再创建Podfile）：</p>
+
+<pre><code>$ pod update
+</code></pre>
+
+<p>过几秒（也许需要十几秒，取决于你的网络状况）之后，终端出现：</p>
+
+<pre><code>Analyzing dependencies
+Fetching podspec for `UAAppReviewManager` from `../`
+Downloading dependencies
+Installing UAAppReviewManager (0.1.6)
+Generating Pods project
+Integrating client project
+
+[!] From now on use `UAAppReviewManagerExample.xcworkspace`.
+</code></pre>
+
+<p>这时候，再回到UAAppReviewManagerExample文件夹看一看，会看到多了一个文件UAAppReviewManagerExample.xcworkspace：</p>
+
+<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_16.png" alt="Figure 7" /></p>
+
+<p>根据终端的信息提示，你以后就需用新产生的UAAppReviewManagerExample.xcworkspace来运行这个Example代码了。</p>
+
+<p>打开UAAppReviewManagerExample.xcworkspace，编译运行，成功！如下图：</p>
+
+<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_17.png" alt="Figure 8" /></p>
+
+<p>注意，这里有个小问题，如果刚刚你不是输入<code>$ pod update</code>，而是输入<code>$ pod install</code>，会发现类库导入不成功，并且终端出现下面提示：</p>
+
+<pre><code>[!] Required version (UAAppReviewManager (from `../`)) not found for `UAAppReviewManager`.
+Available versions: 0.1.6
+</code></pre>
+
+<p>这里的意思大概是Podfile文件过期，类库有升级，但是Podfile没有更改。<code>$ pod install</code>只会按照Podfile的要求来请求类库，如果类库版本号有变化，那么将获取失败。但是 <code>$ pod update</code>会更新所有的类库，获取最新版本的类库。而且你会发现，如果用了 <code>$ pod update</code>，再用 <code>$ pod install</code> 就成功了。</p>
+
+<p>那你也许会问，什么时候用 <code>$ pod install</code>，什么时候用 <code>$ pod update</code> 呢，我又不知道类库有没有新版本。好吧，那你每次直接用 <code>$ pod update</code> 算了。或者先用 <code>$ pod install</code>，如果不行，再用 <code>$ pod update</code>。</p>
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[为 iOS7重新设计App]]></title>
@@ -1553,533 +1773,6 @@ NSArray *PSPDFArrayFromIndexSet(NSIndexSet *indexSet) {
 <h2>结论</h2>
 
 <p>本文提供了一些真实的测试，使你在使用基础集合类的时候做出有根据的选择。除了上面讨论的类，还有一些不常用但确实有用的类，尤其是 <code>NSCountedSet</code>，<a href="http://nshipster.com/cfbag/"><code>CFBag</code></a>，<a href="https://developer.apple.com/library/mac/documentation/corefoundation/Reference/CFTreeRef/Reference/reference.html"><code>CFTree</code></a>，<a href="https://developer.apple.com/library/mac/documentation/corefoundation/Reference/CFBitVectorRef/Reference/reference.html"><code>CFBitVector</code></a>和<a href="https://developer.apple.com/library/mac/documentation/corefoundation/Reference/CFBinaryHeapRef/Reference/reference.html"><code>CFBinaryHeap</code></a>。</p>
-
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[提高Xcode编译器效率]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/10/ti-gao-xcodebian-yi-qi-xiao-lu/"/>
-    <updated>2014-04-10T11:21:11+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/10/ti-gao-xcodebian-yi-qi-xiao-lu</id>
-    <content type="html"><![CDATA[<h2>编译器做些什么？</h2>
-
-<p>本文主要探讨一下编译器主要做些什么，以及如何有效的利用编译器。</p>
-
-<p>简单的说，编译器有两个职责：把 Objective-C 代码转化成低级代码，以及对代码做分析，确保代码中没有任何明显的错误。</p>
-
-<p>现在，Xcode 的默认编译器是 clang。本文中我们提到的编译器都表示 clang。clang 的功能是首先对 Objective-C 代码做分析检查，然后将其转换为低级的类汇编代码：LLVM Intermediate Representation(LLVM 中间表达码)。接着 LLVM 会执行相关指令将 LLVM IR 编译成目标平台上的本地字节码，这个过程的完成方式可以是即时编译 (Just-in-time)，或在编译的时候完成。</p>
-
-<p>LLVM 指令的一个好处就是可以在支持 LLVM 的任意平台上生成和运行 LLVM 指令。例如，你写的一个 iOS app, 它可以自动的运行在两个完全不同的架构(Inter 和 ARM)上，LLVM 会根据不同的平台将 IR 码转换为对应的本地字节码。</p>
-
-<p>LLVM 的优点主要得益于它的三层式架构 -- 第一层支持多种语言作为输入(例如 C, ObjectiveC, C++ 和 Haskell)，第二层是一个共享式的优化器(对 LLVM IR 做优化处理)，第三层是许多不同的目标平台(例如 Intel, ARM 和 PowerPC)。在这三层式的架构中，如果你想要添加一门语言到 LLVM 中，那么可以把重要精力集中到第一层上，如果想要增加另外一个目标平台，那么你没必要过多的考虑输入语言。在书 <em>The Architecture of Open Source Applications</em> 中 LLVM 的创建者 (Chris Lattner) 写了一章很棒的内容：关于 <a href="http://www.aosabook.org/en/llvm.html">LLVM 架构</a>。</p>
-
-<p>在编译一个源文件时，编译器的处理过程分为几个阶段。要想查看编译 <em>hello.m</em> 源文件需要几个不同的阶段，我们可以让通过 clang 命令观察：</p>
-
-<pre><code>% clang -ccc-print-phases hello.m
-
-0: input, "hello.m", objective-c
-1: preprocessor, {0}, objective-c-cpp-output
-2: compiler, {1}, assembler
-3: assembler, {2}, object
-4: linker, {3}, image
-5: bind-arch, "x86_64", {4}, image
-</code></pre>
-
-<p>本文我们将重点关注第一阶段和第二阶段。在文章 <a href="http://objccn.io/issue-6-3/">Mach-O Executables</a> 中，Daniel 会对第三阶段和第四阶段进行阐述。</p>
-
-<h3>预处理</h3>
-
-<p>每当编源译文件的时候，编译器首先做的是一些预处理工作。比如预处理器会处理源文件中的宏定义，将代码中的宏用其对应定义的具体内容进行替换。</p>
-
-<p>例如，如果在源文件中出现下述代码：</p>
-
-<p><code>objc
-#import &lt;Foundation/Foundation.h&gt;;
-</code></p>
-
-<p>预处理器对这行代码的处理是用 Foundation.h 文件中的内容去替换这行代码，如果 Foundation.h 中也使用了类似的宏引入，则会按照同样的处理方式用各个宏对应的真正代码进行逐级替代。</p>
-
-<p>这也就是为什么人们主张头文件最好尽量少的去引入其他的类或库，因为引入的东西越多，编译器需要做的处理就越多。例如，在头文件中用：</p>
-
-<p><code>objc
-@class MyClass;
-</code></p>
-
-<p>代替：</p>
-
-<p><code>objc
-#import "MyClass.h"
-</code></p>
-
-<p>这么写是告诉编译器 MyClass 是一个类，并且在 .m 实现文件中可以通过 import <code>MyClass.h</code> 的方式来使用它。</p>
-
-<p>假设我们写了一个简单的 C 程序 <code>hello.c</code>:</p>
-
-<p>```c
-#include <stdio.h /></p>
-
-<p>int main() {
-  printf(“hello world\n”);
-  return 0;
-}
-```</p>
-
-<p>然后给上面的代码执行以下预处理命令，看看是什么效果：</p>
-
-<pre><code>clang -E hello.c | less
-</code></pre>
-
-<p>接下来看看处理后的代码，一共是 401 行。如果将如下一行代码添加到上面代码的顶部：：</p>
-
-<p><code>objc
-#import &lt;Foundation/Foundation.h&gt;
-</code></p>
-
-<p>再执行一下上面的预处理命令，处理后的文件代码行数暴增至 89,839 行。这个数字比某些操作系统的总代码行数还要多。</p>
-
-<p>幸好，目前的情况已经改善许多了：引入了<a href="http://clang.llvm.org/docs/Modules.html">模块 - modules</a>功能，这使预处理变得更加的高级。</p>
-
-<h4>自定义宏</h4>
-
-<p>我们来看看另外一种情形定义或者使用自定义宏，比如定义了如下宏：</p>
-
-<p><code>objc
-#define MY_CONSTANT 4
-</code></p>
-
-<p>那么，凡是在此行宏定义作用域内，输入了 <code>MY_CONSTANT</code>，在预处理过程中 <code>MY_CONSTANT</code> 都会被替换成 <code>4</code>。我们定义的宏也是可以携带参数的， 比如：</p>
-
-<p><code>objc
-#define MY_MACRO(x) x
-</code></p>
-
-<p>鉴于本文的内容所限，就不对强大的预处理做更多、更全面的展开讨论了。但是还是要强调一点，建议大家不要在需要预处理的代码中加入内联代码逻辑。</p>
-
-<p>例如，下面这段代码，这样用没什么问题：</p>
-
-<p>```c
-#define MAX(a,b) a &gt; b ? a : b</p>
-
-<p>int main() {
-  printf(“largest: %d\n”, MAX(10,100));
-  return 0;
-}
-```</p>
-
-<p>但是如果换成这么写：</p>
-
-<p>```c
-#define MAX(a,b) a &gt; b ? a : b</p>
-
-<p>int main() {
-  int i = 200;
-  printf(“largest: %d\n”, MAX(i++,100));
-  printf(“i: %d\n”, i);
-  return 0;
-}
-```</p>
-
-<p>用clang的max.c编译一下，结果是：</p>
-
-<pre><code>largest: 201
-i: 202
-</code></pre>
-
-<p>用 <code>clang -E max.c</code> 进行宏展开的预处理结果是如下所示：</p>
-
-<p><code>c
-int main() {
-  int i = 200;
-  printf("largest: %d\n", i++ &gt; 100 ? i++ : 100);
-  printf("i: %d\n", i);
-  return 0;
-}
-</code></p>
-
-<p>本例是典型的宏使用不当，而且通常这类问题非常隐蔽且难以 debug 。针对本例这类情况，最好使用 <code>static inline</code>:</p>
-
-<p>```c
-#include <stdio.h>
-static const int MyConstant = 200;</stdio.h></p>
-
-<p>static inline int max(int l, int r) {
-   return l &gt; r ? l : r;
-}</p>
-
-<p>int main() {
-  int i = MyConstant;
-  printf(“largest: %d\n”, max(i++,100));
-  printf(“i: %d\n”, i);
-  return 0;
-}
-```</p>
-
-<p>这样改过之后，就可以输出正常的结果 (<code>i:201</code>)。因为这里定义的代码是内联的 (inlined)，所以它的效率和宏变量差不多，但是可靠性比宏定义要好许多。再者，还可以设置断点、类型检查以及避免异常行为。</p>
-
-<p>基本上，宏的最佳使用场景是日志输出，可以使用 <code>__FILE__</code> 和 <code>__LINE__</code> 和 assert 宏。</p>
-
-<h3>词法解析标记</h3>
-
-<p>预处理完成以后，每一个 <code>.m</code> 源文件里都有一堆的声明和定义。这些代码文本都会从 string 转化成特殊的标记流。</p>
-
-<p>例如，下面是一段简单的 Objective-C hello word 程序：</p>
-
-<p><code>objc
-int main() {
-  NSLog(@"hello, %@", @"world");
-  return 0;
-}
-</code></p>
-
-<p>利用 clang 命令 <code>clang -Xclang -dump-tokens hello.m</code> 来将上面代码的标记流导出：</p>
-
-<pre><code>int 'int'        [StartOfLine]  Loc=&lt;hello.m:4:1&gt;
-identifier 'main'        [LeadingSpace] Loc=&lt;hello.m:4:5&gt;
-l_paren '('             Loc=&lt;hello.m:4:9&gt;
-r_paren ')'             Loc=&lt;hello.m:4:10&gt;
-l_brace '{'      [LeadingSpace] Loc=&lt;hello.m:4:12&gt;
-identifier 'NSLog'       [StartOfLine] [LeadingSpace]   Loc=&lt;hello.m:5:3&gt;
-l_paren '('             Loc=&lt;hello.m:5:8&gt;
-at '@'          Loc=&lt;hello.m:5:9&gt;
-string_literal '"hello, %@"'            Loc=&lt;hello.m:5:10&gt;
-comma ','               Loc=&lt;hello.m:5:21&gt;
-at '@'   [LeadingSpace] Loc=&lt;hello.m:5:23&gt;
-string_literal '"world"'                Loc=&lt;hello.m:5:24&gt;
-r_paren ')'             Loc=&lt;hello.m:5:31&gt;
-semi ';'                Loc=&lt;hello.m:5:32&gt;
-return 'return'  [StartOfLine] [LeadingSpace]   Loc=&lt;hello.m:6:3&gt;
-numeric_constant '0'     [LeadingSpace] Loc=&lt;hello.m:6:10&gt;
-semi ';'                Loc=&lt;hello.m:6:11&gt;
-r_brace '}'      [StartOfLine]  Loc=&lt;hello.m:7:1&gt;
-eof ''          Loc=&lt;hello.m:7:2&gt;
-</code></pre>
-
-<p>仔细观察可以发现，每一个标记都包含了对应的源码内容和其在源码中的位置。注意这里的位置是宏展开之前的位置，这样一来，如果编译过程中遇到什么问题，clang 能够在源码中指出出错的具体位置。</p>
-
-<h3>解析</h3>
-
-<p>接下来要说的东西比较有意思：之前生成的标记流将会被解析成一棵抽象语法树 (abstract syntax tree -- AST)。由于 Objective-C 是一门复杂的语言，因此解析的过程不简单。解析过后，源程序变成了一棵抽象语法树：一棵代表源程序的树。假设我们有一个程序 <code>hello.m</code>：</p>
-
-<p>```objc
-#import &lt;Foundation/Foundation.h&gt;</p>
-
-<p>@interface World
-- (void)hello;
-@end</p>
-
-<p>@implementation World
-- (void)hello {
-  NSLog(@”hello, world”);
-}
-@end</p>
-
-<p>int main() {
-   World* world = [World new];
-   [world hello];
-}
-```</p>
-
-<p>当我们执行 clang 命令 <code>clang -Xclang -ast-dump -fsyntax-only hello.m</code> 之后，命令行中输出的结果如下所示：：</p>
-
-<p>```objc
-@interface World- (void) hello;
-@end&gt;
-@implementation World
-- (void) hello (CompoundStmt 0x10372ded0 &lt;hello.m:8:15, line:10:1&gt;
-  (CallExpr 0x10372dea0 &lt;line:9:3, col:24&gt; ‘void’
-    (ImplicitCastExpr 0x10372de88 <col:3> 'void (*)(NSString *, ...)' <functiontopointerdecay>
-      (DeclRefExpr 0x10372ddd8 <col:3> 'void (NSString *, ...)' Function 0x1023510d0 'NSLog' 'void (NSString *, ...)'))
-    (ObjCStringLiteral 0x10372de38 &lt;col:9, col:10&gt; 'NSString *'
-      (StringLiteral 0x10372de00 <col:10> 'char [13]' lvalue "hello, world"))))</col:10></col:3></functiontopointerdecay></col:3></p>
-
-<p>@end
-int main() (CompoundStmt 0x10372e118 &lt;hello.m:13:12, line:16:1&gt;
-  (DeclStmt 0x10372e090 &lt;line:14:4, col:30&gt;
-    0x10372dfe0 “World *world =
-      (ImplicitCastExpr 0x10372e078 &lt;col:19, col:29&gt; ‘World *’ <bitcast>
-        (ObjCMessageExpr 0x10372e048 &lt;col:19, col:29&gt; 'id':'id' selector=new class='World'))")
-  (ObjCMessageExpr 0x10372e0e8 &lt;line:15:4, col:16&gt; 'void' selector=hello
-    (ImplicitCastExpr 0x10372e0d0 <col:5> 'World *' <lvaluetorvalue>
-      (DeclRefExpr 0x10372e0a8 &lt;col:5&gt; 'World *' lvalue Var 0x10372dfe0 'world' 'World *'))))
-```</lvaluetorvalue></col:5></bitcast></p>
-
-<p>在抽象语法树中的每个节点都标注了其对应源码中的位置，同样的，如果产生了什么问题，clang 可以定位到问题所在处的源码位置。</p>
-
-<h5>延伸阅读</h5>
-
-<ul>
-<li><a href="http://clang.llvm.org/docs/IntroductionToTheClangAST.html">clang AST 介绍</a></li>
-</ul>
-
-<h3>静态分析</h3>
-
-<p>一旦编译器把源码生成了抽象语法树，编译器可以对这棵树做分析处理，以找出代码中的错误，比如类型检查：即检查程序中是否有类型错误。例如：如果代码中给某个对象发送了一个消息，编译器会检查这个对象是否实现了这个消息（函数、方法）。此外，clang 对整个程序还做了其它更高级的一些分析，以确保程序没有错误。</p>
-
-<h4>类型检查</h4>
-
-<p>每当开发人员编写代码的时候，clang 都会帮忙检查错误。其中最常见的就是检查程序是否发送正确的消息给正确的对象，是否在正确的值上调用了正确的函数。如果你给一个单纯的 <code>NSObject*</code> 对象发送了一个 <code>hello</code> 消息，那么 clang 就会报错。同样，如果你创建了 <code>NSObject</code> 的一个子类 <code>Test</code>, 如下所示：</p>
-
-<p><code>objc
-@interface Test : NSObject
-@end
-</code></p>
-
-<p>然后试图给这个子类中某个属性设置一个与其自身类型不相符的对象，编译器会给出一个可能使用不正确的警告。</p>
-
-<p>一般会把类型分为两类：动态的和静态的。动态的在运行时做检查，静态的在编译时做检查。以往，编写代码时可以向任意对象发送任何消息，在运行时，才会检查对象是否能够响应这些消息。由于只是在运行时做此类检查，所以叫做动态类型。</p>
-
-<p>至于静态类型，是在编译时做检查。当在代码中使用 ARC 时，编译器在编译期间，会做许多的类型检查：因为编译器需要知道哪个对象该如何使用。例如，如果 myObject 没有 hello 方法，那么就不能写如下这行代码了：</p>
-
-<p><code>objc
-[myObject hello]
-</code></p>
-
-<h4>其他分析</h4>
-
-<p>clang 在静态分析阶段，除了类型检查外，还会做许多其它一些分析。如果你把 clang 的代码仓库 clone 到本地，然后进入目录 <code>lib/StaticAnalyzer/Checkers</code>，你会看到所有静态检查内容。比如 <code>ObjCUnusedIVarsChecker.cpp</code> 是用来检查是否有定义了，但是从未使用过的变量。而 <code>ObjCSelfInitChecker.cpp</code> 则是检查在 你的初始化方法中中调用 <code>self</code> 之前，是否已经调用 <code>[self initWith...]</code> 或 <code>[super init]</code> 了。编译器还进行了一些其它的检查，例如在 <code>lib/Sema/SemaExprObjC.cpp</code> 的 2,534 行，有这样一句：</p>
-
-<p><code>objc
-Diag(SelLoc, diag::warn_arc_perform_selector_leaks);
-</code></p>
-
-<p>这个会生成严重错误的警告 “performSelector may cause a leak because its selector is unknown” 。</p>
-
-<h2>代码生成</h2>
-
-<p>clang 完成代码的标记，解析和分析后，接着就会生成 LLVM 代码。下面继续看看<code>hello.c</code>：</p>
-
-<p>```c
-#include <stdio.h /></p>
-
-<p>int main() {
-  printf(“hello world\n”);
-  return 0;
-}
-```</p>
-
-<p>要把这段代码编译成 LLVM 字节码（绝大多数情况下是二进制码格式），我们可以执行下面的命令：</p>
-
-<pre><code>clang -O3 -emit-LLVM hello.c -c -o hello.bc
-</code></pre>
-
-<p>接着用另一个命令来查看刚刚生成的二进制文件：</p>
-
-<pre><code>llvm-dis &lt; hello.bc | less
-</code></pre>
-
-<p>输出如下：</p>
-
-<pre><code>; ModuleID = '&lt;stdin&gt;'
-target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx10.8.0"
-
-@str = private unnamed_addr constant [12 x i8] c"hello world\00"
-
-; Function Attrs: nounwind ssp uwtable
-define i32 @main() #0 {
-  %puts = tail call i32 @puts(i8* getelementptr inbounds ([12 x i8]* @str, i64 0, i64 0))
-  ret i32 0
-}
-
-; Function Attrs: nounwind
-declare i32 @puts(i8* nocapture) #1
-
-attributes #0 = { nounwind ssp uwtable }
-attributes #1 = { nounwind }
-</code></pre>
-
-<p>在上面的代码中，可以看到 <code>main</code> 函数只有两行代码：一行输出string，另一行返回 <code>0</code>。</p>
-
-<p>再换一个程序，拿 <code>five.m</code> 为例，对其做相同的编译，然后执行 <code>LLVM-dis &lt; five.bc | less</code>:</p>
-
-<p>```c
-#include <stdio.h>
-#import &lt;Foundation/Foundation.h&gt;</stdio.h></p>
-
-<p>int main() {
-  NSLog(@”%@”, [@5 description]);
-  return 0;
-}
-```</p>
-
-<p>抛开其他的不说，单看 <code>main</code> 函数：</p>
-
-<pre><code>define i32 @main() #0 {
-  %1 = load %struct._class_t** @"\01L_OBJC_CLASSLIST_REFERENCES_$_", align 8
-  %2 = load i8** @"\01L_OBJC_SELECTOR_REFERENCES_", align 8, !invariant.load !4
-  %3 = bitcast %struct._class_t* %1 to i8*
-  %4 = tail call %0* bitcast (i8* (i8*, i8*, ...)* @objc_msgSend to %0* (i8*, i8*, i32)*)(i8* %3, i8* %2, i32 5)
-  %5 = load i8** @"\01L_OBJC_SELECTOR_REFERENCES_2", align 8, !invariant.load !4
-  %6 = bitcast %0* %4 to i8*
-  %7 = tail call %1* bitcast (i8* (i8*, i8*, ...)* @objc_msgSend to %1* (i8*, i8*)*)(i8* %6, i8* %5)
-  tail call void (%1*, ...)* @NSLog(%1* bitcast (%struct.NSConstantString* @_unnamed_cfstring_ to %1*), %1* %7)
-  ret i32 0
-}
-</code></pre>
-
-<p>上面代码中最重要的是第 4 行，它创建了一个 <code>NSNumber</code> 对象。第 7 行，给这个 number 对象发送了一个  <code>description</code> 消息。第 8 行，将 <code>description</code> 消息返回的内容打印出来。</p>
-
-<h3>优化</h3>
-
-<p>要想了解 LLVM 的优化内容，以及 clang 能做哪些优化，我们先看一个略微复杂的 C 程序：这个函数主要是递归计算 <code>阶乘</code>：</p>
-
-<p>```c
-#include <stdio.h /></p>
-
-<p>int factorial(int x) {
-   if (x &gt; 1) return x * factorial(x-1);
-   else return 1;
-}</p>
-
-<p>int main() {
-  printf(“factorial 10: %d\n”, factorial(10));
-}
-```</p>
-
-<p>先看看不做优化的编译情况，执行下面命令：</p>
-
-<pre><code>clang -O0 -emit-llvm factorial.c  -c -o factorial.bc &amp;&amp; llvm-dis &lt; factorial.bc
-</code></pre>
-
-<p>重点看一下针对 <code>阶乘</code> 部分生成的代码：</p>
-
-<pre><code>define i32 @factorial(i32 %x) #0 {
-  %1 = alloca i32, align 4
-  %2 = alloca i32, align 4
-  store i32 %x, i32* %2, align 4
-  %3 = load i32* %2, align 4
-  %4 = icmp sgt i32 %3, 1
-  br i1 %4, label %5, label %11
-
-; &lt;label&gt;:5                                       ; preds = %0
-  %6 = load i32* %2, align 4
-  %7 = load i32* %2, align 4
-  %8 = sub nsw i32 %7, 1
-  %9 = call i32 @factorial(i32 %8)
-  %10 = mul nsw i32 %6, %9
-  store i32 %10, i32* %1
-  br label %12
-
-; &lt;label&gt;:11                                      ; preds = %0
-  store i32 1, i32* %1
-  br label %12
-
-; &lt;label&gt;:12                                      ; preds = %11, %5
-  %13 = load i32* %1
-  ret i32 %13
-}
-</code></pre>
-
-<p>看一下 <code>%9</code> 标注的那一行，这行代码正是递归调用阶乘函数本身，实际上这样调用是非常低效的，因为每次递归调用都要重新压栈。接下来可以看一下优化后的效果，可以通过这样的方式开启优化 -- 将 <code>-03</code> 标志传给 clang：</p>
-
-<pre><code>clang -O3 -emit-llvm factorial.c  -c -o factorial.bc &amp;&amp; llvm-dis &lt; factorial.bc
-</code></pre>
-
-<p>现在 <code>阶乘</code> 计算相关代码编译后生成的代码如下：</p>
-
-<pre><code>define i32 @factorial(i32 %x) #0 {
-  %1 = icmp sgt i32 %x, 1
-  br i1 %1, label %tailrecurse, label %tailrecurse._crit_edge
-
-tailrecurse:                                      ; preds = %tailrecurse, %0
-  %x.tr2 = phi i32 [ %2, %tailrecurse ], [ %x, %0 ]
-  %accumulator.tr1 = phi i32 [ %3, %tailrecurse ], [ 1, %0 ]
-  %2 = add nsw i32 %x.tr2, -1
-  %3 = mul nsw i32 %x.tr2, %accumulator.tr1
-  %4 = icmp sgt i32 %2, 1
-  br i1 %4, label %tailrecurse, label %tailrecurse._crit_edge
-
-tailrecurse._crit_edge:                           ; preds = %tailrecurse, %0
-  %accumulator.tr.lcssa = phi i32 [ 1, %0 ], [ %3, %tailrecurse ]
-  ret i32 %accumulator.tr.lcssa
-}
-</code></pre>
-
-<p>即便我们的函数并没有按照<a href="http://en.wikipedia.org/wiki/Tail_call">尾递归</a>的方式编写，clang 仍然能对其做优化处理，让该函数编译的结果中只包含一个循环。当然 clang 能对代码进行的优化还有很多方面。可以看以下这个比较不错的 gcc 的优化例子<a href="http://ridiculousfish.com/blog/posts/will-it-optimize.html">ridiculousfish.com</a>。</p>
-
-<p><strong>延伸阅读</strong></p>
-
-<ul>
-<li><a href="http://blog.llvm.org/search/label/optimization">LLVM blog: posts tagged 'optimization'</a></li>
-<li><a href="http://blog.llvm.org/2013/05/llvm-33-vectorization-improvements.html">LLVM blog: vectorization improvements</a></li>
-<li><a href="http://blog.llvm.org/2011/09/greedy-register-allocation-in-llvm-30.html">LLVM blog: greedy register allocation</a></li>
-<li><a href="http://polly.llvm.org/index.html">The Polly project</a></li>
-</ul>
-
-<h2>如何在实际中应用这些特性</h2>
-
-<p>刚刚我们探讨了编译的全过程，从标记到解析，从抽象语法树到分析检查，再到汇编。读者不禁要问，为什么要关注这些？</p>
-
-<h3 id="libclangclang">使用 libclan g或 clang 插件</h3>
-
-<p>之所以 clang 很酷：是因为它是一个开源的项目、并且它是一个非常好的工程：几乎可以说全身是宝。使用者可以创建自己的 clang 版本，针对自己的需求对其进行改造。比如说，可以改变 clang 生成代码的方式，增加更强的类型检查，或者按照自己的定义进行代码的检查分析等等。要想达成以上的目标，有很多种方法，其中最简单的就是使用一个名为 <a href="http://clang.llvm.org/doxygen/group__CINDEX.html">libclang</a> 的C类库。libclang 提供的 API 非常简单，可以对 C 和 clang 做桥接，并可以用它对所有的源码做分析处理。不过，根据我的经验，如果使用者的需求更高，那么 libclang 就不怎么行了。针对这种情况，推荐使用 <a href="https://github.com/macmade/ClangKit">Clangkit</a>，它是基于 clang 提供的功能，用 Objective-C 进行封装的一个库。</p>
-
-<p>最后，clang 还提供了一个直接使用 LibTooling 的 C++ 类库。这里要做的事儿比较多，而且涉及到 C++，但是它能够发挥 clang 的强大功能。用它你可以对源码做任意类型的分析，甚至重写程序。如果你想要给 clang 添加一些自定义的分析、创建自己的重构器 (refactorer)、或者需要基于现有代码做出大量修改，甚至想要基于工程生成相关图形或者文档，那么 LibTooling 是很好的选择。</p>
-
-<h3>自定义分析器</h3>
-
-<p>开发者可以按照 <a href="http://clang.LLVM.org/docs/LibASTMatchersTutorial.html">Tutorial for building tools using LibTooling</a> 中的说明去构造 LLVM ，clang 以及 clan g的附加工具。需要注意的是，编译代码是需要花费一些时间的，即时机器已经很快了，但是在编译期间，我还是可以吃顿饭的。</p>
-
-<p>接下来，进入到 LLVM 目录，然后执行命令<code>cd ~/llvm/tools/clang/tools/</code>。在这个目录中，可以创建自己独立的 clang 工具。例如，我们创建一个小工具，用来检查某个库是否正确使用。首先将 <a href="https://github.com/objcio/issue6-compiler-tool">样例工程</a> 克隆到本地，然后输入 <code>make</code>。这样就会生成一个名为 <code>example</code> 的二进制文件。</p>
-
-<p>我们的使用场景是：假如有一个 <code>Observer</code> 类, 代码如下所示：</p>
-
-<p><code>objc
-@interface Observer
-+ (instancetype)observerWithTarget:(id)target action:(SEL)selector;
-@end
-</code></p>
-
-<p>接下来，我们想要检查一下每当这个类被调用的时候，在 <code>target</code> 对象中是否都有对应的 <code>action</code> 方法存在。可以写个 C++ 函数来做这件事（注意，这是我第一次写 C++ 程序，可能不那么严谨）：</p>
-<p><code>c++
-virtual bool VisitObjCMessageExpr(ObjCMessageExpr *E) {
-  if (E-&gt;getReceiverKind() == ObjCMessageExpr::Class) {
-    QualType ReceiverType = E-&gt;getClassReceiver();
-    Selector Sel = E-&gt;getSelector();
-    string TypeName = ReceiverType.getAsString();
-    string SelName = Sel.getAsString();
-    if (TypeName == "Observer" &amp;&amp; SelName == "observerWithTarget:action:") {
-      Expr *Receiver = E-&gt;getArg(0)-&gt;IgnoreParenCasts();
-      ObjCSelectorExpr* SelExpr = cast&lt;ObjCSelectorExpr&gt;(E-&gt;getArg(1)-&gt;IgnoreParenCasts());
-      Selector Sel = SelExpr-&gt;getSelector();
-      if (const ObjCObjectPointerType *OT = Receiver-&gt;getType()-&gt;getAs&lt;ObjCObjectPointerType&gt;()) {
-        ObjCInterfaceDecl *decl = OT-&gt;getInterfaceDecl();
-        if (! decl-&gt;lookupInstanceMethod(Sel)) {
-          errs() &lt;&lt; "Warning: class " &lt;&lt; TypeName &lt;&lt; " does not implement selector " &lt;&lt; Sel.getAsString() &lt;&lt; "\n";
-          SourceLocation Loc = E-&gt;getExprLoc();
-          PresumedLoc PLoc = astContext-&gt;getSourceManager().getPresumedLoc(Loc);
-          errs() &lt;&lt; "in " &lt;&lt; PLoc.getFilename() &lt;&lt; " &lt;" &lt;&lt; PLoc.getLine() &lt;&lt; ":" &lt;&lt; PLoc.getColumn() &lt;&lt; "&gt;\n";
-        }
-      }
-    }
-  }
-  return true;
-}
-</code></p>
-
-<p>上面的这个方法首先查找消息表达式， 以 <code>Observer</code> 作为接收者， <code>observerWithTarget:action:</code> 作为 selector，然后检查 target 中是否存在相应的方法。虽然这个例子有点儿刻意，但如果你想要利用 AST 对自己的代码库做某些检查，按照上面的例子来就可以了。</p>
-
-<h3 id="clang">clang的其他特性</h3>
-
-<p>clang还有许多其他的用途。比如，可以写编译器插件（例如，类似上面的检查器例子）并且动态的加载到编译器中。虽然我没有亲自实验过，但是我觉得在 Xcode 中应该是可行的。再比如，也可以通过编写 clang 插件来自定义代码样式（具体可以参见 <a href="http://objccn.io/issue-6-1/">编译过程</a>）。</p>
-
-<p>另外，如果想对现有的代码做大规模的重构， 而 Xcode 或 AppCode 本身集成的重构工具无法达你的要求，你完全可以用 clang 自己写个重构工具。听起来有点儿可怕，读读下面的文档和教程，你会发现其实没那么难。</p>
-
-<p>最后，如果是真的有这种需求，你完全可以引导 Xcdoe 使用你自己编译的 clang 。再一次，如果你去尝试，其实这些事儿真的没想象中那么复杂，反而会发现许多个中乐趣。</p>
-
-<h5>延伸阅读</h5>
-
-<ul>
-<li><a href="https://github.com/loarabia/Clang-tutorial">Clang Tutorial</a></li>
-<li><a href="http://cocoafactory.com/blog/2012/11/23/x86-64-assembly-language-tutorial-part-1/">X86_64 Assembly Language Tutorial</a></li>
-<li><a href="http://clang-analyzer.llvm.org/xcode.html">Custom clang Build with Xcode (I)</a> 和 <a href="http://stackoverflow.com/questions/3297986/using-an-external-xcode-clang-static-analyzer-binary-with-additional-checks">(II)</a></li>
-<li><a href="http://kevinaboos.wordpress.com/2013/07/23/clang-tutorial-part-i-introduction/">Clang Tutorial (I)</a>, <a href="http://kevinaboos.wordpress.com/2013/07/23/clang-tutorial-part-ii-libtooling-example/">(II)</a> 和 <a href="http://kevinaboos.wordpress.com/2013/07/29/clang-tutorial-part-iii-plugin-example/">(III)</a></li>
-<li><a href="http://getoffmylawnentertainment.com/blog/2011/10/01/clang-plugin-development-tutorial/">Clang Plugin Tutorial</a></li>
-<li><a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html">LLVM blog: What every C programmer should know (I)</a> , <a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know_14.html">(II)</a> 和 <a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know_21.html">(III)</a></li>
-</ul>
 
 <hr />
 
