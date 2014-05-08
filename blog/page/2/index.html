@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Apr 10th, 2014 iOS Comments Xcode编译你所不知道的细节 近些日子我们被宠坏了 &#8211; 我们只需要单击 Xcode 中的一个按钮（这个按钮看起来有点像是在播放一些音乐的动作），过几秒钟之后，我们的程序就会运行起来了，直到遇到一些错误，这非常的神奇。 在本文中 &hellip;">
+	<meta name="description" content="Apr 10th, 2014 iOS Comments 提高Xcode编译器效率 编译器做些什么？ 本文主要探讨一下编译器主要做些什么，以及如何有效的利用编译器。 简单的说，编译器有两个职责：把 Objective-C 代码转化成低级代码，以及对代码做分析，确保代码中没有任何明显的错误。 现在， &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -98,6 +98,679 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-04-10T11:21:11+08:00" data-updated="true" itemprop="datePublished">Apr 10<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/04/10/ti-gao-xcodebian-yi-qi-xiao-lu/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/10/ti-gao-xcodebian-yi-qi-xiao-lu/" itemprop="url">提高Xcode编译器效率</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<h2>编译器做些什么？</h2>
+
+<p>本文主要探讨一下编译器主要做些什么，以及如何有效的利用编译器。</p>
+
+<p>简单的说，编译器有两个职责：把 Objective-C 代码转化成低级代码，以及对代码做分析，确保代码中没有任何明显的错误。</p>
+
+<p>现在，Xcode 的默认编译器是 clang。本文中我们提到的编译器都表示 clang。clang 的功能是首先对 Objective-C 代码做分析检查，然后将其转换为低级的类汇编代码：LLVM Intermediate Representation(LLVM 中间表达码)。接着 LLVM 会执行相关指令将 LLVM IR 编译成目标平台上的本地字节码，这个过程的完成方式可以是即时编译 (Just-in-time)，或在编译的时候完成。</p>
+
+<p>LLVM 指令的一个好处就是可以在支持 LLVM 的任意平台上生成和运行 LLVM 指令。例如，你写的一个 iOS app, 它可以自动的运行在两个完全不同的架构(Inter 和 ARM)上，LLVM 会根据不同的平台将 IR 码转换为对应的本地字节码。</p>
+
+<p>LLVM 的优点主要得益于它的三层式架构 &#8211; 第一层支持多种语言作为输入(例如 C, ObjectiveC, C++ 和 Haskell)，第二层是一个共享式的优化器(对 LLVM IR 做优化处理)，第三层是许多不同的目标平台(例如 Intel, ARM 和 PowerPC)。在这三层式的架构中，如果你想要添加一门语言到 LLVM 中，那么可以把重要精力集中到第一层上，如果想要增加另外一个目标平台，那么你没必要过多的考虑输入语言。在书 <em>The Architecture of Open Source Applications</em> 中 LLVM 的创建者 (Chris Lattner) 写了一章很棒的内容：关于 <a href="http://www.aosabook.org/en/llvm.html">LLVM 架构</a>。</p>
+
+<p>在编译一个源文件时，编译器的处理过程分为几个阶段。要想查看编译 <em>hello.m</em> 源文件需要几个不同的阶段，我们可以让通过 clang 命令观察：</p>
+
+<pre><code>% clang -ccc-print-phases hello.m
+
+0: input, "hello.m", objective-c
+1: preprocessor, {0}, objective-c-cpp-output
+2: compiler, {1}, assembler
+3: assembler, {2}, object
+4: linker, {3}, image
+5: bind-arch, "x86_64", {4}, image
+</code></pre>
+
+<p>本文我们将重点关注第一阶段和第二阶段。在文章 <a href="http://objccn.io/issue-6-3/">Mach-O Executables</a> 中，Daniel 会对第三阶段和第四阶段进行阐述。</p>
+
+<h3>预处理</h3>
+
+<p>每当编源译文件的时候，编译器首先做的是一些预处理工作。比如预处理器会处理源文件中的宏定义，将代码中的宏用其对应定义的具体内容进行替换。</p>
+
+<p>例如，如果在源文件中出现下述代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;Foundation/Foundation.h&gt;;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>预处理器对这行代码的处理是用 Foundation.h 文件中的内容去替换这行代码，如果 Foundation.h 中也使用了类似的宏引入，则会按照同样的处理方式用各个宏对应的真正代码进行逐级替代。</p>
+
+<p>这也就是为什么人们主张头文件最好尽量少的去引入其他的类或库，因为引入的东西越多，编译器需要做的处理就越多。例如，在头文件中用：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@class</span> <span class="nc">MyClass</span>;
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>代替：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &quot;MyClass.h&quot;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这么写是告诉编译器 MyClass 是一个类，并且在 .m 实现文件中可以通过 import <code>MyClass.h</code> 的方式来使用它。</p>
+
+<p>假设我们写了一个简单的 C 程序 <code>hello.c</code>:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;hello world</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class="line">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后给上面的代码执行以下预处理命令，看看是什么效果：</p>
+
+<pre><code>clang -E hello.c | less
+</code></pre>
+
+<p>接下来看看处理后的代码，一共是 401 行。如果将如下一行代码添加到上面代码的顶部：：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>再执行一下上面的预处理命令，处理后的文件代码行数暴增至 89,839 行。这个数字比某些操作系统的总代码行数还要多。</p>
+
+<p>幸好，目前的情况已经改善许多了：引入了<a href="http://clang.llvm.org/docs/Modules.html">模块 - modules</a>功能，这使预处理变得更加的高级。</p>
+
+<h4>自定义宏</h4>
+
+<p>我们来看看另外一种情形定义或者使用自定义宏，比如定义了如下宏：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#define MY_CONSTANT 4</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>那么，凡是在此行宏定义作用域内，输入了 <code>MY_CONSTANT</code>，在预处理过程中 <code>MY_CONSTANT</code> 都会被替换成 <code>4</code>。我们定义的宏也是可以携带参数的， 比如：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#define MY_MACRO(x) x</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>鉴于本文的内容所限，就不对强大的预处理做更多、更全面的展开讨论了。但是还是要强调一点，建议大家不要在需要预处理的代码中加入内联代码逻辑。</p>
+
+<p>例如，下面这段代码，这样用没什么问题：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="cp">#define MAX(a,b) a &gt; b ? a : b</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;largest: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">MAX</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">100</span><span class="p">));</span>
+</span><span class="line">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>但是如果换成这么写：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="cp">#define MAX(a,b) a &gt; b ? a : b</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;largest: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">MAX</span><span class="p">(</span><span class="n">i</span><span class="o">++</span><span class="p">,</span><span class="mi">100</span><span class="p">));</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;i: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span><span class="line">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>用clang的max.c编译一下，结果是：</p>
+
+<pre><code>largest: 201
+i: 202
+</code></pre>
+
+<p>用 <code>clang -E max.c</code> 进行宏展开的预处理结果是如下所示：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;largest: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="o">++</span> <span class="o">&gt;</span> <span class="mi">100</span> <span class="o">?</span> <span class="n">i</span><span class="o">++</span> <span class="o">:</span> <span class="mi">100</span><span class="p">);</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;i: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span><span class="line">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>本例是典型的宏使用不当，而且通常这类问题非常隐蔽且难以 debug 。针对本例这类情况，最好使用 <code>static inline</code>:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class="line"><span class="k">static</span> <span class="k">const</span> <span class="kt">int</span> <span class="n">MyConstant</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">int</span> <span class="nf">max</span><span class="p">(</span><span class="kt">int</span> <span class="n">l</span><span class="p">,</span> <span class="kt">int</span> <span class="n">r</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">   <span class="k">return</span> <span class="n">l</span> <span class="o">&gt;</span> <span class="n">r</span> <span class="o">?</span> <span class="n">l</span> <span class="o">:</span> <span class="n">r</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">MyConstant</span><span class="p">;</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;largest: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">max</span><span class="p">(</span><span class="n">i</span><span class="o">++</span><span class="p">,</span><span class="mi">100</span><span class="p">));</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;i: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span><span class="line">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这样改过之后，就可以输出正常的结果 (<code>i:201</code>)。因为这里定义的代码是内联的 (inlined)，所以它的效率和宏变量差不多，但是可靠性比宏定义要好许多。再者，还可以设置断点、类型检查以及避免异常行为。</p>
+
+<p>基本上，宏的最佳使用场景是日志输出，可以使用 <code>__FILE__</code> 和 <code>__LINE__</code> 和 assert 宏。</p>
+
+<h3>词法解析标记</h3>
+
+<p>预处理完成以后，每一个 <code>.m</code> 源文件里都有一堆的声明和定义。这些代码文本都会从 string 转化成特殊的标记流。</p>
+
+<p>例如，下面是一段简单的 Objective-C hello word 程序：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;hello, %@&quot;</span><span class="p">,</span> <span class="s">@&quot;world&quot;</span><span class="p">);</span>
+</span><span class="line">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>利用 clang 命令 <code>clang -Xclang -dump-tokens hello.m</code> 来将上面代码的标记流导出：</p>
+
+<pre><code>int 'int'        [StartOfLine]  Loc=&lt;hello.m:4:1&gt;
+identifier 'main'        [LeadingSpace] Loc=&lt;hello.m:4:5&gt;
+l_paren '('             Loc=&lt;hello.m:4:9&gt;
+r_paren ')'             Loc=&lt;hello.m:4:10&gt;
+l_brace '{'      [LeadingSpace] Loc=&lt;hello.m:4:12&gt;
+identifier 'NSLog'       [StartOfLine] [LeadingSpace]   Loc=&lt;hello.m:5:3&gt;
+l_paren '('             Loc=&lt;hello.m:5:8&gt;
+at '@'          Loc=&lt;hello.m:5:9&gt;
+string_literal '"hello, %@"'            Loc=&lt;hello.m:5:10&gt;
+comma ','               Loc=&lt;hello.m:5:21&gt;
+at '@'   [LeadingSpace] Loc=&lt;hello.m:5:23&gt;
+string_literal '"world"'                Loc=&lt;hello.m:5:24&gt;
+r_paren ')'             Loc=&lt;hello.m:5:31&gt;
+semi ';'                Loc=&lt;hello.m:5:32&gt;
+return 'return'  [StartOfLine] [LeadingSpace]   Loc=&lt;hello.m:6:3&gt;
+numeric_constant '0'     [LeadingSpace] Loc=&lt;hello.m:6:10&gt;
+semi ';'                Loc=&lt;hello.m:6:11&gt;
+r_brace '}'      [StartOfLine]  Loc=&lt;hello.m:7:1&gt;
+eof ''          Loc=&lt;hello.m:7:2&gt;
+</code></pre>
+
+<p>仔细观察可以发现，每一个标记都包含了对应的源码内容和其在源码中的位置。注意这里的位置是宏展开之前的位置，这样一来，如果编译过程中遇到什么问题，clang 能够在源码中指出出错的具体位置。</p>
+
+<h3>解析</h3>
+
+<p>接下来要说的东西比较有意思：之前生成的标记流将会被解析成一棵抽象语法树 (abstract syntax tree &#8211; AST)。由于 Objective-C 是一门复杂的语言，因此解析的过程不简单。解析过后，源程序变成了一棵抽象语法树：一棵代表源程序的树。假设我们有一个程序 <code>hello.m</code>：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">World</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">hello</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">World</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">hello</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;hello, world&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">   <span class="n">World</span><span class="o">*</span> <span class="n">world</span> <span class="o">=</span> <span class="p">[</span><span class="n">World</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line">   <span class="p">[</span><span class="n">world</span> <span class="n">hello</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>当我们执行 clang 命令 <code>clang -Xclang -ast-dump -fsyntax-only hello.m</code> 之后，命令行中输出的结果如下所示：：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">World</span><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">hello</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span><span class="o">&gt;</span>
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">World</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">hello</span> <span class="p">(</span><span class="n">CompoundStmt</span> <span class="mh">0x10372ded0</span> <span class="o">&lt;</span><span class="n">hello</span><span class="p">.</span><span class="nl">m:</span><span class="mi">8</span><span class="o">:</span><span class="mi">15</span><span class="p">,</span> <span class="nl">line:</span><span class="mi">10</span><span class="o">:</span><span class="mi">1</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="p">(</span><span class="n">CallExpr</span> <span class="mh">0x10372dea0</span> <span class="o">&lt;</span><span class="nl">line:</span><span class="mi">9</span><span class="o">:</span><span class="mi">3</span><span class="p">,</span> <span class="nl">col:</span><span class="mi">24</span><span class="o">&gt;</span> <span class="err">&#39;</span><span class="kt">void</span><span class="err">&#39;</span>
+</span><span class="line">    <span class="p">(</span><span class="n">ImplicitCastExpr</span> <span class="mh">0x10372de88</span> <span class="o">&lt;</span><span class="nl">col:</span><span class="mi">3</span><span class="o">&gt;</span> <span class="err">&#39;</span><span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">,</span> <span class="p">...)</span><span class="err">&#39;</span> <span class="o">&lt;</span><span class="n">FunctionToPointerDecay</span><span class="o">&gt;</span>
+</span><span class="line">      <span class="p">(</span><span class="n">DeclRefExpr</span> <span class="mh">0x10372ddd8</span> <span class="o">&lt;</span><span class="nl">col:</span><span class="mi">3</span><span class="o">&gt;</span> <span class="err">&#39;</span><span class="kt">void</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">,</span> <span class="p">...)</span><span class="err">&#39;</span> <span class="n">Function</span> <span class="mh">0x1023510d0</span> <span class="err">&#39;</span><span class="n">NSLog</span><span class="sc">&#39; &#39;</span><span class="kt">void</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">,</span> <span class="p">...)</span><span class="err">&#39;</span><span class="p">))</span>
+</span><span class="line">    <span class="p">(</span><span class="n">ObjCStringLiteral</span> <span class="mh">0x10372de38</span> <span class="o">&lt;</span><span class="nl">col:</span><span class="mi">9</span><span class="p">,</span> <span class="nl">col:</span><span class="mi">10</span><span class="o">&gt;</span> <span class="err">&#39;</span><span class="n">NSString</span> <span class="o">*</span><span class="err">&#39;</span>
+</span><span class="line">      <span class="p">(</span><span class="n">StringLiteral</span> <span class="mh">0x10372de00</span> <span class="o">&lt;</span><span class="nl">col:</span><span class="mi">10</span><span class="o">&gt;</span> <span class="err">&#39;</span><span class="kt">char</span> <span class="p">[</span><span class="mi">13</span><span class="p">]</span><span class="err">&#39;</span> <span class="n">lvalue</span> <span class="s">&quot;hello, world&quot;</span><span class="p">))))</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line"><span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">(</span><span class="n">CompoundStmt</span> <span class="mh">0x10372e118</span> <span class="o">&lt;</span><span class="n">hello</span><span class="p">.</span><span class="nl">m:</span><span class="mi">13</span><span class="o">:</span><span class="mi">12</span><span class="p">,</span> <span class="nl">line:</span><span class="mi">16</span><span class="o">:</span><span class="mi">1</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="p">(</span><span class="n">DeclStmt</span> <span class="mh">0x10372e090</span> <span class="o">&lt;</span><span class="nl">line:</span><span class="mi">14</span><span class="o">:</span><span class="mi">4</span><span class="p">,</span> <span class="nl">col:</span><span class="mi">30</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="mh">0x10372dfe0</span> <span class="s">&quot;World *world =</span>
+</span><span class="line">      <span class="p">(</span><span class="n">ImplicitCastExpr</span> <span class="mh">0x10372e078</span> <span class="o">&lt;</span><span class="nl">col:</span><span class="mi">19</span><span class="p">,</span> <span class="nl">col:</span><span class="mi">29</span><span class="o">&gt;</span> <span class="err">&#39;</span><span class="n">World</span> <span class="o">*</span><span class="err">&#39;</span> <span class="o">&lt;</span><span class="n">BitCast</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="p">(</span><span class="n">ObjCMessageExpr</span> <span class="mh">0x10372e048</span> <span class="o">&lt;</span><span class="nl">col:</span><span class="mi">19</span><span class="p">,</span> <span class="nl">col:</span><span class="mi">29</span><span class="o">&gt;</span> <span class="err">&#39;</span><span class="kt">id</span><span class="sc">&#39;:&#39;</span><span class="kt">id</span><span class="err">&#39;</span> <span class="n">selector</span><span class="o">=</span><span class="n">new</span> <span class="n">class</span><span class="o">=</span><span class="err">&#39;</span><span class="n">World</span><span class="err">&#39;</span><span class="p">))</span><span class="s">&quot;)</span>
+</span><span class="line">  <span class="p">(</span><span class="n">ObjCMessageExpr</span> <span class="mh">0x10372e0e8</span> <span class="o">&lt;</span><span class="nl">line:</span><span class="mi">15</span><span class="o">:</span><span class="mi">4</span><span class="p">,</span> <span class="nl">col:</span><span class="mi">16</span><span class="o">&gt;</span> <span class="err">&#39;</span><span class="kt">void</span><span class="err">&#39;</span> <span class="n">selector</span><span class="o">=</span><span class="n">hello</span>
+</span><span class="line">    <span class="p">(</span><span class="n">ImplicitCastExpr</span> <span class="mh">0x10372e0d0</span> <span class="o">&lt;</span><span class="nl">col:</span><span class="mi">5</span><span class="o">&gt;</span> <span class="err">&#39;</span><span class="n">World</span> <span class="o">*</span><span class="err">&#39;</span> <span class="o">&lt;</span><span class="n">LValueToRValue</span><span class="o">&gt;</span>
+</span><span class="line">      <span class="p">(</span><span class="n">DeclRefExpr</span> <span class="mh">0x10372e0a8</span> <span class="o">&lt;</span><span class="nl">col:</span><span class="mi">5</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="err">&#39;</span><span class="n">World</span> <span class="o">*</span><span class="err">&#39;</span> <span class="n">lvalue</span> <span class="n">Var</span> <span class="mh">0x10372dfe0</span> <span class="err">&#39;</span><span class="n">world</span><span class="sc">&#39; &#39;</span><span class="n">World</span> <span class="o">*</span><span class="err">&#39;</span><span class="p">))))</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在抽象语法树中的每个节点都标注了其对应源码中的位置，同样的，如果产生了什么问题，clang 可以定位到问题所在处的源码位置。</p>
+
+<h5>延伸阅读</h5>
+
+<ul>
+<li><a href="http://clang.llvm.org/docs/IntroductionToTheClangAST.html">clang AST 介绍</a></li>
+</ul>
+
+<h3>静态分析</h3>
+
+<p>一旦编译器把源码生成了抽象语法树，编译器可以对这棵树做分析处理，以找出代码中的错误，比如类型检查：即检查程序中是否有类型错误。例如：如果代码中给某个对象发送了一个消息，编译器会检查这个对象是否实现了这个消息（函数、方法）。此外，clang 对整个程序还做了其它更高级的一些分析，以确保程序没有错误。</p>
+
+<h4>类型检查</h4>
+
+<p>每当开发人员编写代码的时候，clang 都会帮忙检查错误。其中最常见的就是检查程序是否发送正确的消息给正确的对象，是否在正确的值上调用了正确的函数。如果你给一个单纯的 <code>NSObject*</code> 对象发送了一个 <code>hello</code> 消息，那么 clang 就会报错。同样，如果你创建了 <code>NSObject</code> 的一个子类 <code>Test</code>, 如下所示：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">Test</span> : <span class="nc">NSObject</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后试图给这个子类中某个属性设置一个与其自身类型不相符的对象，编译器会给出一个可能使用不正确的警告。</p>
+
+<p>一般会把类型分为两类：动态的和静态的。动态的在运行时做检查，静态的在编译时做检查。以往，编写代码时可以向任意对象发送任何消息，在运行时，才会检查对象是否能够响应这些消息。由于只是在运行时做此类检查，所以叫做动态类型。</p>
+
+<p>至于静态类型，是在编译时做检查。当在代码中使用 ARC 时，编译器在编译期间，会做许多的类型检查：因为编译器需要知道哪个对象该如何使用。例如，如果 myObject 没有 hello 方法，那么就不能写如下这行代码了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">myObject</span> <span class="n">hello</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h4>其他分析</h4>
+
+<p>clang 在静态分析阶段，除了类型检查外，还会做许多其它一些分析。如果你把 clang 的代码仓库 clone 到本地，然后进入目录 <code>lib/StaticAnalyzer/Checkers</code>，你会看到所有静态检查内容。比如 <code>ObjCUnusedIVarsChecker.cpp</code> 是用来检查是否有定义了，但是从未使用过的变量。而 <code>ObjCSelfInitChecker.cpp</code> 则是检查在 你的初始化方法中中调用 <code>self</code> 之前，是否已经调用 <code>[self initWith...]</code> 或 <code>[super init]</code> 了。编译器还进行了一些其它的检查，例如在 <code>lib/Sema/SemaExprObjC.cpp</code> 的 2,534 行，有这样一句：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">Diag</span><span class="p">(</span><span class="n">SelLoc</span><span class="p">,</span> <span class="n">diag</span><span class="o">::</span><span class="n">warn_arc_perform_selector_leaks</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这个会生成严重错误的警告 “performSelector may cause a leak because its selector is unknown” 。</p>
+
+<h2>代码生成</h2>
+
+<p>clang 完成代码的标记，解析和分析后，接着就会生成 LLVM 代码。下面继续看看<code>hello.c</code>：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;hello world</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class="line">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>要把这段代码编译成 LLVM 字节码（绝大多数情况下是二进制码格式），我们可以执行下面的命令：</p>
+
+<pre><code>clang -O3 -emit-LLVM hello.c -c -o hello.bc
+</code></pre>
+
+<p>接着用另一个命令来查看刚刚生成的二进制文件：</p>
+
+<pre><code>llvm-dis &lt; hello.bc | less
+</code></pre>
+
+<p>输出如下：</p>
+
+<pre><code>; ModuleID = '&lt;stdin&gt;'
+target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.8.0"
+
+@str = private unnamed_addr constant [12 x i8] c"hello world\00"
+
+; Function Attrs: nounwind ssp uwtable
+define i32 @main() #0 {
+  %puts = tail call i32 @puts(i8* getelementptr inbounds ([12 x i8]* @str, i64 0, i64 0))
+  ret i32 0
+}
+
+; Function Attrs: nounwind
+declare i32 @puts(i8* nocapture) #1
+
+attributes #0 = { nounwind ssp uwtable }
+attributes #1 = { nounwind }
+</code></pre>
+
+<p>在上面的代码中，可以看到 <code>main</code> 函数只有两行代码：一行输出string，另一行返回 <code>0</code>。</p>
+
+<p>再换一个程序，拿 <code>five.m</code> 为例，对其做相同的编译，然后执行 <code>LLVM-dis &lt; five.bc | less</code>:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class="line"><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">NSLog</span><span class="p">(</span><span class="err">@</span><span class="s">&quot;%@&quot;</span><span class="p">,</span> <span class="p">[</span><span class="err">@</span><span class="mi">5</span> <span class="n">description</span><span class="p">]);</span>
+</span><span class="line">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>抛开其他的不说，单看 <code>main</code> 函数：</p>
+
+<pre><code>define i32 @main() #0 {
+  %1 = load %struct._class_t** @"\01L_OBJC_CLASSLIST_REFERENCES_$_", align 8
+  %2 = load i8** @"\01L_OBJC_SELECTOR_REFERENCES_", align 8, !invariant.load !4
+  %3 = bitcast %struct._class_t* %1 to i8*
+  %4 = tail call %0* bitcast (i8* (i8*, i8*, ...)* @objc_msgSend to %0* (i8*, i8*, i32)*)(i8* %3, i8* %2, i32 5)
+  %5 = load i8** @"\01L_OBJC_SELECTOR_REFERENCES_2", align 8, !invariant.load !4
+  %6 = bitcast %0* %4 to i8*
+  %7 = tail call %1* bitcast (i8* (i8*, i8*, ...)* @objc_msgSend to %1* (i8*, i8*)*)(i8* %6, i8* %5)
+  tail call void (%1*, ...)* @NSLog(%1* bitcast (%struct.NSConstantString* @_unnamed_cfstring_ to %1*), %1* %7)
+  ret i32 0
+}
+</code></pre>
+
+<p>上面代码中最重要的是第 4 行，它创建了一个 <code>NSNumber</code> 对象。第 7 行，给这个 number 对象发送了一个  <code>description</code> 消息。第 8 行，将 <code>description</code> 消息返回的内容打印出来。</p>
+
+<h3>优化</h3>
+
+<p>要想了解 LLVM 的优化内容，以及 clang 能做哪些优化，我们先看一个略微复杂的 C 程序：这个函数主要是递归计算 <code>阶乘</code>：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">factorial</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">   <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">factorial</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</span><span class="line">   <span class="k">else</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;factorial 10: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">factorial</span><span class="p">(</span><span class="mi">10</span><span class="p">));</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>先看看不做优化的编译情况，执行下面命令：</p>
+
+<pre><code>clang -O0 -emit-llvm factorial.c  -c -o factorial.bc &amp;&amp; llvm-dis &lt; factorial.bc
+</code></pre>
+
+<p>重点看一下针对 <code>阶乘</code> 部分生成的代码：</p>
+
+<pre><code>define i32 @factorial(i32 %x) #0 {
+  %1 = alloca i32, align 4
+  %2 = alloca i32, align 4
+  store i32 %x, i32* %2, align 4
+  %3 = load i32* %2, align 4
+  %4 = icmp sgt i32 %3, 1
+  br i1 %4, label %5, label %11
+
+; &lt;label&gt;:5                                       ; preds = %0
+  %6 = load i32* %2, align 4
+  %7 = load i32* %2, align 4
+  %8 = sub nsw i32 %7, 1
+  %9 = call i32 @factorial(i32 %8)
+  %10 = mul nsw i32 %6, %9
+  store i32 %10, i32* %1
+  br label %12
+
+; &lt;label&gt;:11                                      ; preds = %0
+  store i32 1, i32* %1
+  br label %12
+
+; &lt;label&gt;:12                                      ; preds = %11, %5
+  %13 = load i32* %1
+  ret i32 %13
+}
+</code></pre>
+
+<p>看一下 <code>%9</code> 标注的那一行，这行代码正是递归调用阶乘函数本身，实际上这样调用是非常低效的，因为每次递归调用都要重新压栈。接下来可以看一下优化后的效果，可以通过这样的方式开启优化 &#8211; 将 <code>-03</code> 标志传给 clang：</p>
+
+<pre><code>clang -O3 -emit-llvm factorial.c  -c -o factorial.bc &amp;&amp; llvm-dis &lt; factorial.bc
+</code></pre>
+
+<p>现在 <code>阶乘</code> 计算相关代码编译后生成的代码如下：</p>
+
+<pre><code>define i32 @factorial(i32 %x) #0 {
+  %1 = icmp sgt i32 %x, 1
+  br i1 %1, label %tailrecurse, label %tailrecurse._crit_edge
+
+tailrecurse:                                      ; preds = %tailrecurse, %0
+  %x.tr2 = phi i32 [ %2, %tailrecurse ], [ %x, %0 ]
+  %accumulator.tr1 = phi i32 [ %3, %tailrecurse ], [ 1, %0 ]
+  %2 = add nsw i32 %x.tr2, -1
+  %3 = mul nsw i32 %x.tr2, %accumulator.tr1
+  %4 = icmp sgt i32 %2, 1
+  br i1 %4, label %tailrecurse, label %tailrecurse._crit_edge
+
+tailrecurse._crit_edge:                           ; preds = %tailrecurse, %0
+  %accumulator.tr.lcssa = phi i32 [ 1, %0 ], [ %3, %tailrecurse ]
+  ret i32 %accumulator.tr.lcssa
+}
+</code></pre>
+
+<p>即便我们的函数并没有按照<a href="http://en.wikipedia.org/wiki/Tail_call">尾递归</a>的方式编写，clang 仍然能对其做优化处理，让该函数编译的结果中只包含一个循环。当然 clang 能对代码进行的优化还有很多方面。可以看以下这个比较不错的 gcc 的优化例子<a href="http://ridiculousfish.com/blog/posts/will-it-optimize.html">ridiculousfish.com</a>。</p>
+
+<p><strong>延伸阅读</strong></p>
+
+<ul>
+<li><a href="http://blog.llvm.org/search/label/optimization">LLVM blog: posts tagged &#8216;optimization&#8217;</a></li>
+<li><a href="http://blog.llvm.org/2013/05/llvm-33-vectorization-improvements.html">LLVM blog: vectorization improvements</a></li>
+<li><a href="http://blog.llvm.org/2011/09/greedy-register-allocation-in-llvm-30.html">LLVM blog: greedy register allocation</a></li>
+<li><a href="http://polly.llvm.org/index.html">The Polly project</a></li>
+</ul>
+
+<h2>如何在实际中应用这些特性</h2>
+
+<p>刚刚我们探讨了编译的全过程，从标记到解析，从抽象语法树到分析检查，再到汇编。读者不禁要问，为什么要关注这些？</p>
+
+<h3 id="libclangclang">使用 libclan g或 clang 插件</h3>
+
+<p>之所以 clang 很酷：是因为它是一个开源的项目、并且它是一个非常好的工程：几乎可以说全身是宝。使用者可以创建自己的 clang 版本，针对自己的需求对其进行改造。比如说，可以改变 clang 生成代码的方式，增加更强的类型检查，或者按照自己的定义进行代码的检查分析等等。要想达成以上的目标，有很多种方法，其中最简单的就是使用一个名为 <a href="http://clang.llvm.org/doxygen/group__CINDEX.html">libclang</a> 的C类库。libclang 提供的 API 非常简单，可以对 C 和 clang 做桥接，并可以用它对所有的源码做分析处理。不过，根据我的经验，如果使用者的需求更高，那么 libclang 就不怎么行了。针对这种情况，推荐使用 <a href="https://github.com/macmade/ClangKit">Clangkit</a>，它是基于 clang 提供的功能，用 Objective-C 进行封装的一个库。</p>
+
+<p>最后，clang 还提供了一个直接使用 LibTooling 的 C++ 类库。这里要做的事儿比较多，而且涉及到 C++，但是它能够发挥 clang 的强大功能。用它你可以对源码做任意类型的分析，甚至重写程序。如果你想要给 clang 添加一些自定义的分析、创建自己的重构器 (refactorer)、或者需要基于现有代码做出大量修改，甚至想要基于工程生成相关图形或者文档，那么 LibTooling 是很好的选择。</p>
+
+<h3>自定义分析器</h3>
+
+<p>开发者可以按照 <a href="http://clang.LLVM.org/docs/LibASTMatchersTutorial.html">Tutorial for building tools using LibTooling</a> 中的说明去构造 LLVM ，clang 以及 clan g的附加工具。需要注意的是，编译代码是需要花费一些时间的，即时机器已经很快了，但是在编译期间，我还是可以吃顿饭的。</p>
+
+<p>接下来，进入到 LLVM 目录，然后执行命令<code>cd ~/llvm/tools/clang/tools/</code>。在这个目录中，可以创建自己独立的 clang 工具。例如，我们创建一个小工具，用来检查某个库是否正确使用。首先将 <a href="https://github.com/objcio/issue6-compiler-tool">样例工程</a> 克隆到本地，然后输入 <code>make</code>。这样就会生成一个名为 <code>example</code> 的二进制文件。</p>
+
+<p>我们的使用场景是：假如有一个 <code>Observer</code> 类, 代码如下所示：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">Observer</span>
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">observerWithTarget:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">target</span> <span class="nf">action:</span><span class="p">(</span><span class="kt">SEL</span><span class="p">)</span><span class="nv">selector</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>接下来，我们想要检查一下每当这个类被调用的时候，在 <code>target</code> 对象中是否都有对应的 <code>action</code> 方法存在。可以写个 C++ 函数来做这件事（注意，这是我第一次写 C++ 程序，可能不那么严谨）：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+</pre></td><td class="code"><pre><code class="c++"><span class="line"><span class="k">virtual</span> <span class="kt">bool</span> <span class="n">VisitObjCMessageExpr</span><span class="p">(</span><span class="n">ObjCMessageExpr</span> <span class="o">*</span><span class="n">E</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">if</span> <span class="p">(</span><span class="n">E</span><span class="o">-&gt;</span><span class="n">getReceiverKind</span><span class="p">()</span> <span class="o">==</span> <span class="n">ObjCMessageExpr</span><span class="o">::</span><span class="n">Class</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">QualType</span> <span class="n">ReceiverType</span> <span class="o">=</span> <span class="n">E</span><span class="o">-&gt;</span><span class="n">getClassReceiver</span><span class="p">();</span>
+</span><span class="line">    <span class="n">Selector</span> <span class="n">Sel</span> <span class="o">=</span> <span class="n">E</span><span class="o">-&gt;</span><span class="n">getSelector</span><span class="p">();</span>
+</span><span class="line">    <span class="n">string</span> <span class="n">TypeName</span> <span class="o">=</span> <span class="n">ReceiverType</span><span class="p">.</span><span class="n">getAsString</span><span class="p">();</span>
+</span><span class="line">    <span class="n">string</span> <span class="n">SelName</span> <span class="o">=</span> <span class="n">Sel</span><span class="p">.</span><span class="n">getAsString</span><span class="p">();</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">TypeName</span> <span class="o">==</span> <span class="s">&quot;Observer&quot;</span> <span class="o">&amp;&amp;</span> <span class="n">SelName</span> <span class="o">==</span> <span class="s">&quot;observerWithTarget:action:&quot;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">      <span class="n">Expr</span> <span class="o">*</span><span class="n">Receiver</span> <span class="o">=</span> <span class="n">E</span><span class="o">-&gt;</span><span class="n">getArg</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">IgnoreParenCasts</span><span class="p">();</span>
+</span><span class="line">      <span class="n">ObjCSelectorExpr</span><span class="o">*</span> <span class="n">SelExpr</span> <span class="o">=</span> <span class="n">cast</span><span class="o">&lt;</span><span class="n">ObjCSelectorExpr</span><span class="o">&gt;</span><span class="p">(</span><span class="n">E</span><span class="o">-&gt;</span><span class="n">getArg</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">IgnoreParenCasts</span><span class="p">());</span>
+</span><span class="line">      <span class="n">Selector</span> <span class="n">Sel</span> <span class="o">=</span> <span class="n">SelExpr</span><span class="o">-&gt;</span><span class="n">getSelector</span><span class="p">();</span>
+</span><span class="line">      <span class="k">if</span> <span class="p">(</span><span class="k">const</span> <span class="n">ObjCObjectPointerType</span> <span class="o">*</span><span class="n">OT</span> <span class="o">=</span> <span class="n">Receiver</span><span class="o">-&gt;</span><span class="n">getType</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getAs</span><span class="o">&lt;</span><span class="n">ObjCObjectPointerType</span><span class="o">&gt;</span><span class="p">())</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">ObjCInterfaceDecl</span> <span class="o">*</span><span class="n">decl</span> <span class="o">=</span> <span class="n">OT</span><span class="o">-&gt;</span><span class="n">getInterfaceDecl</span><span class="p">();</span>
+</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span> <span class="n">decl</span><span class="o">-&gt;</span><span class="n">lookupInstanceMethod</span><span class="p">(</span><span class="n">Sel</span><span class="p">))</span> <span class="p">{</span>
+</span><span class="line">          <span class="n">errs</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Warning: class &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">TypeName</span> <span class="o">&lt;&lt;</span> <span class="s">&quot; does not implement selector &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">Sel</span><span class="p">.</span><span class="n">getAsString</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span class="line">          <span class="n">SourceLocation</span> <span class="n">Loc</span> <span class="o">=</span> <span class="n">E</span><span class="o">-&gt;</span><span class="n">getExprLoc</span><span class="p">();</span>
+</span><span class="line">          <span class="n">PresumedLoc</span> <span class="n">PLoc</span> <span class="o">=</span> <span class="n">astContext</span><span class="o">-&gt;</span><span class="n">getSourceManager</span><span class="p">().</span><span class="n">getPresumedLoc</span><span class="p">(</span><span class="n">Loc</span><span class="p">);</span>
+</span><span class="line">          <span class="n">errs</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;in &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">PLoc</span><span class="p">.</span><span class="n">getFilename</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot; &lt;&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">PLoc</span><span class="p">.</span><span class="n">getLine</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;:&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">PLoc</span><span class="p">.</span><span class="n">getColumn</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;&gt;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">      <span class="p">}</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line">  <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面的这个方法首先查找消息表达式， 以 <code>Observer</code> 作为接收者， <code>observerWithTarget:action:</code> 作为 selector，然后检查 target 中是否存在相应的方法。虽然这个例子有点儿刻意，但如果你想要利用 AST 对自己的代码库做某些检查，按照上面的例子来就可以了。</p>
+
+<h3 id="clang">clang的其他特性</h3>
+
+<p>clang还有许多其他的用途。比如，可以写编译器插件（例如，类似上面的检查器例子）并且动态的加载到编译器中。虽然我没有亲自实验过，但是我觉得在 Xcode 中应该是可行的。再比如，也可以通过编写 clang 插件来自定义代码样式（具体可以参见 <a href="http://objccn.io/issue-6-1/">编译过程</a>）。</p>
+
+<p>另外，如果想对现有的代码做大规模的重构， 而 Xcode 或 AppCode 本身集成的重构工具无法达你的要求，你完全可以用 clang 自己写个重构工具。听起来有点儿可怕，读读下面的文档和教程，你会发现其实没那么难。</p>
+
+<p>最后，如果是真的有这种需求，你完全可以引导 Xcdoe 使用你自己编译的 clang 。再一次，如果你去尝试，其实这些事儿真的没想象中那么复杂，反而会发现许多个中乐趣。</p>
+
+<h5>延伸阅读</h5>
+
+<ul>
+<li><a href="https://github.com/loarabia/Clang-tutorial">Clang Tutorial</a></li>
+<li><a href="http://cocoafactory.com/blog/2012/11/23/x86-64-assembly-language-tutorial-part-1/">X86_64 Assembly Language Tutorial</a></li>
+<li><a href="http://clang-analyzer.llvm.org/xcode.html">Custom clang Build with Xcode (I)</a> 和 <a href="http://stackoverflow.com/questions/3297986/using-an-external-xcode-clang-static-analyzer-binary-with-additional-checks">(II)</a></li>
+<li><a href="http://kevinaboos.wordpress.com/2013/07/23/clang-tutorial-part-i-introduction/">Clang Tutorial (I)</a>, <a href="http://kevinaboos.wordpress.com/2013/07/23/clang-tutorial-part-ii-libtooling-example/">(II)</a> 和 <a href="http://kevinaboos.wordpress.com/2013/07/29/clang-tutorial-part-iii-plugin-example/">(III)</a></li>
+<li><a href="http://getoffmylawnentertainment.com/blog/2011/10/01/clang-plugin-development-tutorial/">Clang Plugin Tutorial</a></li>
+<li><a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html">LLVM blog: What every C programmer should know (I)</a> , <a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know_14.html">(II)</a> 和 <a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know_21.html">(III)</a></li>
+</ul>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -3724,428 +4397,6 @@ Gróa
 <p>刚开始时候，使用并发设计模式测试应用程序是具有一定的挑战性，但是一旦你理解了它们的不同，并建立最佳实践，一切都会变得简单而有趣。</p>
 
 <p>在 <a href="http://nxtbgthng.com" title="nxtbgthng">nxtbgthng</a> 项目中，我们用 <a href="https://github.com/nxtbgthng/SenTestingKitAsync" title="SenTestingKitAsync">SenTestingKitAsync</a> 框架来测试。但是像 <a href="https://github.com/allending/Kiwi" title="Kiwi">Kiwi</a> 和 <a href="https://github.com/gabriel/gh-unit/" title="GHUnit">GHUnit</a>  也都是不错的异步测试框架。建议你都可以尝试下，然后找到合适自己的测试工具并开始使用它。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-04-09T16:08:45+08:00" data-updated="true" itemprop="datePublished">Apr 9<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/" itemprop="url">线程安全</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>这篇文章将专注于实用技巧，设计模式，以及对于写出线程安全类和使用 GCD 来说所特别需要注意的一些<a href="http://zh.wikipedia.org/wiki/反面模式">反面模式</a>。</p>
-
-<h2>线程安全</h2>
-
-<h3 id="apple">Apple 的框架</h3>
-
-<p>首先让我们来看看 Apple 的框架。一般来说除非特别声明，大多数的类默认都不是线程安全的。对于其中的一些类来说，这是很合理的，但是对于另外一些来说就很有趣了。</p>
-
-<p>就算是在经验丰富的 iOS/Mac 开发者，也难免会犯从后台线程去访问 UIKit/AppKit 这种错误。比如因为图片的内容本身就是从后台的网络请求中获取的话，顺手就在后台线程中设置了 <code>image</code> 之类的属性，这样的错误其实是屡见不鲜的。Apple 的代码都经过了性能的优化，所以即使你从别的线程设置了属性的时候，也不会产生什么警告。</p>
-
-<p>在设置图片这个例子中，症结其实是你的改变通常要过一会儿才能生效。但是如果有两个线程在同时对图片进行了设定，那么很可能因为当前的图片被释放两次，而导致应用崩溃。这种行为是和时机有关系的，所以很可能在开发阶段没有崩溃，但是你的用户使用时却不断 crash。</p>
-
-<p>现在没有<strong>官方</strong>的用来寻找类似错误的工具，但我们确实有一些技巧来避免这个问题。<a href="https://gist.github.com/steipete/5664345">UIKit Main Thread Guard</a> 是一段用来监视每一次对 <code>setNeedsLayout</code> 和 <code>setNeedsDisplay</code> 的调用代码，并检查它们是否是在主线程被调用的。因为这两个方法在 UIKit 的 setter （包括 image 属性）中广泛使用，所以它可以捕获到很多线程相关的错误。虽然这个小技巧并不包含任何私有 API， 但我们还是不建议将它是用在发布产品中，不过在开发过程中使用的话还是相当赞的。</p>
-
-<p>Apple没有把 UIKit 设计为线程安全的类是有意为之的，将其打造为线程安全的话会使很多操作变慢。而事实上 UIKit 是和主线程绑定的，这一特点使得编写并发程序以及使用 UIKit 十分容易的，你唯一需要确保的就是对于 UIKit 的调用总是在主线程中来进行。</p>
-
-<h4 id="uikit">为什么 UIKit 不是线程安全的？</h4>
-
-<p>对于一个像 UIKit 这样的大型框架，确保它的线程安全将会带来巨大的工作量和成本。将 non-atomic 的属性变为 atomic 的属性只不过是需要做的变化里的微不足道的一小部分。通常来说，你需要同时改变若干个属性，才能看到它所带来的结果。为了解决这个问题，苹果可能不得不提供像 Core Data 中的 <code>performBlock:</code> 和 <code>performBlockAndWait:</code> 那样类似的方法来同步变更。另外你想想看，绝大多数对 UIKit 类的调用其实都是以<strong>配置</strong>为目的的，这使得将 UIKit 改为线程安全这件事情更显得毫无意义了。</p>
-
-<p>然而即使是那些与配置共享的内部状态之类事情无关的调用，其实也不是线程安全的。如果你做过 iOS 3.2 或之前的黑暗年代的 app 开发的话，你肯定有过一边在后台准备图像时一边使用 NSString 的 <code>drawInRect:withFont:</code> 时的随机崩溃的经历。值得庆幸的事，在 iOS 4 中 <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniOS/Articles/iPhoneOS4.html">苹果将大部分绘图的方法和诸如 <code>UIColor</code> 和 <code>UIFont</code> 这样的类改写为了后台线程可用</a>。</p>
-
-<p>但不幸的是 Apple 在线程安全方面的文档是极度匮乏的。他们推荐只访问主线程，并且甚至是绘图方法他们都没有明确地表示保证线程安全。因此在阅读文档的同时，去读读 <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniOS/Articles/iPhoneOS4.html">iOS 版本更新说明</a>会是一个很好的选择。</p>
-
-<p>对于大多数情况来说，UIKit 类确实只应该用在应用的主线程中。这对于那些继承自 UIResponder 的类以及那些操作你的应用的用户界面的类来说，不管如何都是很正确的。</p>
-
-<h4 id="deallocation">内存回收 (deallocation) 问题</h4>
-
-<p>另一个在后台使用 UIKit 对象的的危险之处在于“内存回收问题”。Apple 在技术笔记 <a href="ttp://developer.apple.com/library/ios/#technotes/tn2109/_index.html">TN2109</a> 中概述了这个问题，并提供了多种解决方案。这个问题其实是要求 UI 对象应该在主线程中被回收，因为在它们的 <code>dealloc</code> 方法被调用回收的时候，可能会去改变 view 的结构关系，而如我们所知，这种操作应该放在主线程来进行。</p>
-
-<p>因为调用者被其他线程持有是非常常见的（不管是由于 operation 还是 block 所导致的），这也是很容易犯错并且难以被修正的问题。在 <a href="https://github.com/AFNetworking/AFNetworking/issues/56">AFNetworking 中也一直长久存在这样的 bug</a>，但是由于其自身的隐蔽性而鲜为人知，也很难重现其所造成的崩溃。在异步的 block 或者操作中一致使用 <code>__weak</code>，并且不去直接访问局部变量会对避开这类问题有所帮助。</p>
-
-<h4 id="collection">Collection 类</h4>
-
-<p>Apple 有一个<a href="ttps://developer.apple.com/library/ios/#documentation/Cocoa/Conceptual/Multithreading/ThreadSafetySummary/ThreadSafetySummary.html#//apple_ref/doc/uid/10000057i-CH12-SW1">针对 iOS 和 Mac 的很好的总览性文档</a>，为大多数基本的 foundation 类列举了其线程安全特性。总的来说，比如 <code>NSArry</code> 这样不可变类是线程安全的。然而它们的可变版本，比如 <code>NSMutableArray</code> 是线程不安全的。事实上，如果是在一个队列中串行地进行访问的话，在不同线程中使用它们也是没有问题的。要记住的是即使你申明了返回类型是不可变的，方法里还是有可能返回的其实是一个可变版本的 collection 类。一个好习惯是写类似于 <code>return [array copy]</code> 这样的代码来确保返回的对象事实上是不可变对象。</p>
-
-<p>与和<a href="">Java</a>这样的语言不一样，Foundation 框架并不提供直接可用的 collection 类，这是有其道理的，因为大多数情况下，你想要的是在更高层级上的锁，以避免太多的加解锁操作。但缓存是一个值得注意的例外，iOS 4 中 Apple 添加的 <code>NSCache</code> 使用一个可变的字典来存储不可变数据，它不仅会对访问加锁，更甚至在低内存情况下会清空自己的内容。</p>
-
-<p>也就是说，在你的应用中存在可变的且线程安全的字典是可以做到的。借助于 class cluster 的方式，我们也很容易<a href="https://gist.github.com/steipete/5928916">写出这样的代码</a>。</p>
-
-<h3 id="atomicproperties">原子属性 (Atomic Properties)</h3>
-
-<p>你曾经好奇过 Apple 是怎么处理 atomic 的设置/读取属性的么？至今为止，你可能听说过自旋锁 (spinlocks)，信标 (semaphores)，锁 (locks)，@synchronized 等，Apple 用的是什么呢？因为 <a href="http://www.opensource.apple.com/source/objc4/">Objctive-C 的 runtime 是开源</a>的，所以我们可以一探究竟。</p>
-
-<p>一个非原子的 setter 看起来是这个样子的：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setUserName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userName</span> <span class="p">{</span>
-</span><span class="line">      <span class="k">if</span> <span class="p">(</span><span class="n">userName</span> <span class="o">!=</span> <span class="n">_userName</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">          <span class="p">[</span><span class="n">userName</span> <span class="n">retain</span><span class="p">];</span>
-</span><span class="line">          <span class="p">[</span><span class="n">_userName</span> <span class="n">release</span><span class="p">];</span>
-</span><span class="line">          <span class="n">_userName</span> <span class="o">=</span> <span class="n">userName</span><span class="p">;</span>
-</span><span class="line">      <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这是一个手动 retain/release 的版本，ARC 生成的代码和这个看起来也是类似的。当我们看这段代码时，显而易见要是 <code>setUserName:</code> 被并发调用的话会造成麻烦。我们可能会释放 <code>_userName</code> 两次，这回使内存错误，并且导致难以发现的 bug。</p>
-
-<p>对于任何没有手动实现的属性，编译器都会生成一个 <a href="https://github.com/opensource-apple/objc4/blob/master/runtime/Accessors.subproj/objc-accessors.mm#L127"><code>objc_setProperty_non_gc(id self, SEL _cmd, ptrdiff_t offset, id newValue, BOOL atomic, signed char shouldCopy)</code></a> 的调用。在我们的例子中，这个调用的参数是这样的：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">objc_setProperty_non_gc</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">_cmd</span><span class="p">,</span>
-</span><span class="line">  <span class="p">(</span><span class="n">ptrdiff_t</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">_userName</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">ptrdiff_t</span><span class="p">)(</span><span class="n">self</span><span class="p">),</span> <span class="n">userName</span><span class="p">,</span> <span class="n">NO</span><span class="p">,</span> <span class="n">NO</span><span class="p">);</span><span class="err">`</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>ptrdiff_t</code> 可能会吓到你，但是实际上这就是一个简单的指针算术，因为其实 Objective-C 的类仅仅只是 C 结构体而已。</p>
-
-<p><code>objc_setrProperty</code> 调用的是如下方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">static</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">reallySetProperty</span><span class="p">(</span><span class="kt">id</span> <span class="n">self</span><span class="p">,</span> <span class="kt">SEL</span> <span class="n">_cmd</span><span class="p">,</span> <span class="kt">id</span> <span class="n">newValue</span><span class="p">,</span>
-</span><span class="line">  <span class="n">ptrdiff_t</span> <span class="n">offset</span><span class="p">,</span> <span class="n">bool</span> <span class="n">atomic</span><span class="p">,</span> <span class="n">bool</span> <span class="n">copy</span><span class="p">,</span> <span class="n">bool</span> <span class="n">mutableCopy</span><span class="p">)</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="kt">id</span> <span class="n">oldValue</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">id</span> <span class="o">*</span><span class="n">slot</span> <span class="o">=</span> <span class="p">(</span><span class="kt">id</span><span class="o">*</span><span class="p">)</span> <span class="p">((</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="n">self</span> <span class="o">+</span> <span class="n">offset</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">copy</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">newValue</span> <span class="o">=</span> <span class="p">[</span><span class="n">newValue</span> <span class="nl">copyWithZone:</span><span class="nb">NULL</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">mutableCopy</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">newValue</span> <span class="o">=</span> <span class="p">[</span><span class="n">newValue</span> <span class="nl">mutableCopyWithZone:</span><span class="nb">NULL</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">slot</span> <span class="o">==</span> <span class="n">newValue</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
-</span><span class="line">        <span class="n">newValue</span> <span class="o">=</span> <span class="n">objc_retain</span><span class="p">(</span><span class="n">newValue</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">atomic</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">oldValue</span> <span class="o">=</span> <span class="o">*</span><span class="n">slot</span><span class="p">;</span>
-</span><span class="line">        <span class="o">*</span><span class="n">slot</span> <span class="o">=</span> <span class="n">newValue</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">spin_lock_t</span> <span class="o">*</span><span class="n">slotlock</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">PropertyLocks</span><span class="p">[</span><span class="n">GOODHASH</span><span class="p">(</span><span class="n">slot</span><span class="p">)];</span>
-</span><span class="line">        <span class="n">_spin_lock</span><span class="p">(</span><span class="n">slotlock</span><span class="p">);</span>
-</span><span class="line">        <span class="n">oldValue</span> <span class="o">=</span> <span class="o">*</span><span class="n">slot</span><span class="p">;</span>
-</span><span class="line">        <span class="o">*</span><span class="n">slot</span> <span class="o">=</span> <span class="n">newValue</span><span class="p">;</span>
-</span><span class="line">        <span class="n">_spin_unlock</span><span class="p">(</span><span class="n">slotlock</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">objc_release</span><span class="p">(</span><span class="n">oldValue</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>除开方法名字很有趣以外，其实方法实际做的事情非常直接，它使用了在 <code>PropertyLocks</code> 中的 128 个自旋锁中的 1 个来给操作上锁。这是一种务实和快速的方式，最糟糕的情况下，如果遇到了哈希碰撞，那么 setter 需要等待另一个和它无关的 setter 完成之后再进行工作。</p>
-
-<p>虽然这些方法没有定义在任何公开的头文件中，但我们还是可用手动调用他们。我不是说这是一个好的做法，但是知道这个还是蛮有趣的，而且如果你想要同时实现原子属性<strong>和</strong>自定义的 setter 的话，这个技巧就非常有用了。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// 手动声明运行时的方法</span>
-</span><span class="line"><span class="k">extern</span> <span class="kt">void</span> <span class="nf">objc_setProperty</span><span class="p">(</span><span class="kt">id</span> <span class="n">self</span><span class="p">,</span> <span class="kt">SEL</span> <span class="n">_cmd</span><span class="p">,</span> <span class="n">ptrdiff_t</span> <span class="n">offset</span><span class="p">,</span>
-</span><span class="line">  <span class="kt">id</span> <span class="n">newValue</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="n">atomic</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="n">shouldCopy</span><span class="p">);</span>
-</span><span class="line"><span class="k">extern</span> <span class="kt">id</span> <span class="nf">objc_getProperty</span><span class="p">(</span><span class="kt">id</span> <span class="n">self</span><span class="p">,</span> <span class="kt">SEL</span> <span class="n">_cmd</span><span class="p">,</span> <span class="n">ptrdiff_t</span> <span class="n">offset</span><span class="p">,</span>
-</span><span class="line">  <span class="kt">BOOL</span> <span class="n">atomic</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line"><span class="cp">#define PSTAtomicRetainedSet(dest, src) objc_setProperty(self, _cmd, </span>
-</span><span class="line">  <span class="p">(</span><span class="n">ptrdiff_t</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">dest</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">ptrdiff_t</span><span class="p">)(</span><span class="n">self</span><span class="p">),</span> <span class="n">src</span><span class="p">,</span> <span class="n">YES</span><span class="p">,</span> <span class="n">NO</span><span class="p">)</span>
-</span><span class="line"><span class="cp">#define PSTAtomicAutoreleasedGet(src) objc_getProperty(self, _cmd, </span>
-</span><span class="line">  <span class="p">(</span><span class="n">ptrdiff_t</span><span class="p">)(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">src</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">ptrdiff_t</span><span class="p">)(</span><span class="n">self</span><span class="p">),</span> <span class="n">YES</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><a href="https://gist.github.com/steipete/5928690">参考这个 gist</a> 来获取包含处理结构体的完整的代码，但是我们其实并不推荐使用它。</p>
-
-<h4 id="synchronized">为何不用 @synchronized ？</h4>
-
-<p>你也许会想问为什么苹果不用 <code>@synchronized(self)</code> 这样一个已经存在的运行时特性来锁定属？？你可以看看<a href="https://github.com/opensource-apple/objc4/blob/master/runtime/objc-sync.mm#L291">这里的源码</a>，就会发现其实发生了很多的事情。Apple 使用了<a href="http://googlemac.blogspot.co.at/2006/10/synchronized-swimming.html">最多三个加/解锁序列</a>，还有一部分原因是他们也添加了<a href="https://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/Multithreading/ThreadSafety/ThreadSafety.html#//apple_ref/doc/uid/10000057i-CH8-SW3">异常开解(exception unwinding)</a>机制。相比于更快的自旋锁方式，这种实现要慢得多。由于设置某个属性一般来说会相当快，因此自旋锁更适合用来完成这项工作。<code>@synchonized(self)</code> 更适合使用在你
-需要确保在发生错误时代码不会死锁，而是抛出异常的时候。</p>
-
-<h3>你自己的类</h3>
-
-<p>单独使用原子属性并不会是你的类变成线程安全。它不能保护你应用的逻辑，只能保护你免于在 setter 中遭遇到<a href="http://objccn.io/issue-3-1">竞态条件</a>的困扰。看看下面的代码片段：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">contents</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">CFAttributedStringRef</span> <span class="n">stringRef</span> <span class="o">=</span> <span class="n">CFAttributedStringCreate</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span>
-</span><span class="line">      <span class="p">(</span><span class="n">__bridge</span> <span class="n">CFStringRef</span><span class="p">)</span><span class="n">self</span><span class="p">.</span><span class="n">contents</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class="line">    <span class="c1">// 渲染字符串</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我之前在 <a href="http://pspdfkit.com">PSPDFKit</a> 中就犯了这个错误。时不时地应用就会因为 <code>contents</code> 属性在通过检查之后却又被设成了 nil 而导致 EXC<em>BAD</em>ACCESS 崩溃。捕获这个变量就可以简单修复这个问题；</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">contents</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">contents</span><span class="p">;</span>
-</span><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">contents</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">CFAttributedStringRef</span> <span class="n">stringRef</span> <span class="o">=</span> <span class="n">CFAttributedStringCreate</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span>
-</span><span class="line">      <span class="p">(</span><span class="n">__bridge</span> <span class="n">CFStringRef</span><span class="p">)</span><span class="n">contents</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class="line">    <span class="c1">// 渲染字符串</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>在这里这样就能解决问题，但是大多数情况下不会这么简单。想象一下我们还有一个 <code>textColor</code> 的属性，我们在一个线程中将两个属性都做了改变。我们的渲染线程有可能使用了新的内容，但是依旧保持了旧的颜色，于是我们得到了一组奇怪的组合。这其实也是为什么 Core Data 要将 model 对象都绑定在一个线程或者队列中的原因。</p>
-
-<p>对于这个问题，其实没有万用解法。使用 <a href="http://www.cocoawithlove.com/2008/04/value-of-immutable-values.html">不可变模型</a>是一个可能的方案，但是它也有自己的问题。另一种途径是限制对存在在主线程或者某个特定队列中的既存对象的改变，而是先进行一次拷贝之后再在工作线程中使用。对于这个问题的更多对应方法，我推荐阅读 Jonathan Sterling 的关于 <a href="http://www.jonmsterling.com/posts/2012-12-27-a-pattern-for-immutability.html">Objective-C 中轻量化不可变对象</a>的文章。</p>
-
-<p>一个简单的解决办法是使用 <code>@synchronize</code>。其他的方式都非常非常可能使你误入歧途，已经有太多聪明人在这种尝试上一次又一次地以失败告终。</p>
-
-<h4>可行的线程安全设计</h4>
-
-<p>在尝试写一些线程安全的东西之前，应该先想清楚是不是真的需要。确保你要做的事情不会是过早优化。如果要写的东西是一个类似配置类 (configuration class) 的话，去考虑线程安全这种事情就毫无意义了。更正确的做法是扔一个断言上去，以保证它被正确地使用：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">void</span> <span class="nf">PSPDFAssertIfNotMainThread</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">NSAssert</span><span class="p">(</span><span class="n">NSThread</span><span class="p">.</span><span class="n">isMainThread</span><span class="p">,</span>
-</span><span class="line">      <span class="s">@&quot;Error: Method needs to be called on the main thread. %@&quot;</span><span class="p">,</span>
-</span><span class="line">      <span class="p">[</span><span class="n">NSThread</span> <span class="n">callStackSymbols</span><span class="p">]);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>对于那些肯定应该线程安全的代码（一个好例子是负责缓存的类）来说，一个不错的设计是使用并发的 <code>dispatch_queue</code> 作为读/写锁，并且确保只锁着那些真的需要被锁住的部分，以此来最大化性能。一旦你使用多个队列来给不同的部分上锁的话，整件事情很快就会变得难以控制了。</p>
-
-<p>于是你也可以重新组织你的代码，这样某些特定的锁就不再需要了。看看下面这段实现了一种多委托的代码（其实在大多数情况下，用 NSNotifications 会更好，但是其实也还是有<a href="https://code.google.com/r/riky-adsfasfasf/source/browse/Utilities/GCDMulticastDelegate.h">多委托的实用例子</a>）的</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// 头文件</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">NSMutableSet</span> <span class="o">*</span><span class="n">delegates</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">// init方法中</span>
-</span><span class="line"><span class="n">_delegateQueue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="s">&quot;com.PSPDFKit.cacheDelegateQueue&quot;</span><span class="p">,</span>
-</span><span class="line">  <span class="n">DISPATCH_QUEUE_CONCURRENT</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addDelegate:</span><span class="p">(</span><span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PSPDFCacheDelegate</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;)</span><span class="nv">delegate</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">dispatch_barrier_async</span><span class="p">(</span><span class="n">_delegateQueue</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">delegates</span> <span class="nl">addObject:</span><span class="n">delegate</span><span class="p">];</span>
-</span><span class="line">    <span class="p">});</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">removeAllDelegates</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">dispatch_barrier_async</span><span class="p">(</span><span class="n">_delegateQueue</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">delegates</span> <span class="n">removeAllObjects</span><span class="p">];</span>
-</span><span class="line">    <span class="p">});</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">callDelegateForX</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">dispatch_sync</span><span class="p">(</span><span class="n">_delegateQueue</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">delegates</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PSPDFCacheDelegate</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">delegate</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">            <span class="c1">// 调用delegate</span>
-</span><span class="line">        <span class="p">}];</span>
-</span><span class="line">    <span class="p">});</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>除非 <code>addDelegate:</code> 或者 <code>removeDelegate:</code> 每秒要被调用上千次，否则我们可以使用一个相对简洁的实现方式：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// 头文件</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">atomic</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span> <span class="n">NSSet</span> <span class="o">*</span><span class="n">delegates</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addDelegate:</span><span class="p">(</span><span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PSPDFCacheDelegate</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;)</span><span class="nv">delegate</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">@synchronized</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">delegates</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">delegates</span> <span class="nl">setByAddingObject:</span><span class="n">delegate</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">removeAllDelegates</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">delegates</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">callDelegateForX</span> <span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">delegates</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">PSPDFCacheDelegate</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">delegate</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="c1">// 调用delegate</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>当然啦，这个例子有点过于人为编造，其实我们很容易可以把变化限制在主线程中来避免问题。但是对于很多数据结构来说，可以在进行变更操作的方法中创建不可变的拷贝，这样 app 的整体逻辑就不需要处理很多锁的情况。请注意我们还是需要给 <code>addDelegate:</code> 加上锁，否则在其他线程进行异步调用的时候可能遭遇委托对象丢失的问题。</p>
-
-<h2 id="gcd">GCD 的陷阱</h2>
-
-<p>对于大多数上锁的需求来说，GCD 就足够好了。它简单迅速，并且基于 block 的 API 使得粗心大意造成非平衡锁操作的概率下降了不少。然后，GCD 中还是有不少陷阱，我们在这里探索一下其中的一些。</p>
-
-<h3 id="gcd">将 GCD 当作递归锁使用</h3>
-
-<p>GCD 是一个对共享资源的访问进行串行化的队列。这个特性可以被当作锁来使用，但实际上它和 <code>@synchronized</code> 有很大区别。 GCD队列并非是<a href="http://zh.wikipedia.org/w/index.php?title=可重入&amp;variant=zh-cn">可重入</a>的，因为这将破坏队列的特性。很多有试图使用 <code>dispatch_get_current_queue()</code> 来绕开这个限制，但是这是一个<a href="https://gist.github.com/steipete/3713233">糟糕的做法</a>，Apple 在 iOS6 中将这个方法标记为废弃，自然也是有自己的理由。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// This is a bad idea.</span>
-</span><span class="line"><span class="kr">inline</span> <span class="kt">void</span> <span class="nf">pst_dispatch_sync_reentrant</span><span class="p">(</span><span class="n">dispatch_queue_t</span> <span class="n">queue</span><span class="p">,</span>
-</span><span class="line">  <span class="n">dispatch_block_t</span> <span class="n">block</span><span class="p">)</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">dispatch_get_current_queue</span><span class="p">()</span> <span class="o">==</span> <span class="n">queue</span> <span class="o">?</span> <span class="n">block</span><span class="p">()</span>
-</span><span class="line">                                          <span class="o">:</span> <span class="n">dispatch_sync</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">block</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>对当前的队列进行测试也许在简单情况下可以行得通，但是一旦你的代码变得复杂一些，并且你可能有多个队列在同时被锁住的情况下，这种方法很快就悲剧了。一旦这种情况发生，几乎可以肯定的是你会遇到<a href="http://objccn.io/issue-2-1/#dead_locks">死锁</a>。当然，你可以使用 <code>dispatch_get_specific()</code>，这将截断整个队列结构，从而对某个特定的队列进行测试。要这么做的话，你还得为了在队列中附加标志队列的元数据，而去写自定义的队列构造函数。嘛，最好别这么做。其实在实用中，使用 <code>NSRecursiveLock</code> 会是一个更好的选择。</p>
-
-<h3 id="dispatch_async">用 dispatch_async 修复时序问题</h3>
-
-<p>在使用 UIKit 的时候遇到了一些时序上的麻烦？很多时候，这样进行“修正”看来非常完美：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">    <span class="c1">// Some UIKit call that had timing issues but works fine </span>
-</span><span class="line">    <span class="c1">// in the next runloop.</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">updatePopoverSize</span><span class="p">];</span>
-</span><span class="line"><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>千万别这么做！相信我，这种做法将会在之后你的 app 规模大一些的时候让你找不着北。这种代码非常难以调试，并且你很快就会陷入用更多的 dispatch 来修复所谓的莫名其妙的&#8221;时序问题&#8221;。审视你的代码，并且找到合适的地方来进行调用（比如在 viewWillAppear 里调用，而不是 viewDidLoad 之类的）才是解决这个问题的正确做法。我在自己的代码中也还留有一些这样的 hack，但是我为它们基本都做了正确的文档工作，并且对应的 issue 也被一一记录过。</p>
-
-<p>记住这不是真正的 GCD 特性，而只是一个在 GCD 下很容易实现的常见反面模式。事实上你可以使用 <code>performSelector:afterDelay:</code> 方法来实现同样的操作，其中 delay 是在对应时间后的 runloop。</p>
-
-<h3 id="dispatch_syncdispatch_async">在性能关键的代码中混用 dispatch<em>sync 和 dispatch</em>async</h3>
-
-<p>这个问题我花了好久来研究。在 <a href="http://pspdfkit.com">PSPDFKit</a> 中有一个使用了 LRU（最久未使用）算法列表的缓存类来记录对图片的访问。当你在页面中滚动时，这个方法将被调用<strong>非常多次</strong>。最初的实现使用了 <code>dispatch_sync</code> 来进行实际有效的访问，使用 <code>dispatch_async</code> 来更新 LRU 列表的位置。这导致了帧数远低于原来的 60 帧的目标。</p>
-
-<p>当你的 app 中的其他运行的代码阻挡了 GCD 线程的时候，dispatch manager 需要花时间去寻找能够执行 dispatch_async 代码的线程，这有时候会花费一点时间。在找到合适的执行线程之前，你的同步调用就会被 block 住了。其实在这个例子中，异步情况的执行顺序并不是很重要，但没有能将这件事情告诉 GCD 的好办法。读/写锁这里并不能起到什么作用，因为在异步操作中基本上一定会需要进行顺序写入，而在此过程中读操作将被阻塞住。如果误用了 <code>dispatch_async</code> 代价将会是非常惨重的。在将它用作锁的时候，一定要非常小心。</p>
-
-<h3 id="dispatch_async">使用 dispatch_async 来派发内存敏感的操作</h3>
-
-<p>我们已经谈论了很多关于 NSOperations 的话题了，一般情况下，使用这个更高层级的 API 会是一个好主意。当你要处理一段内存敏感的操作的代码块时，这个优势尤为突出、</p>
-
-<p>在 PSPDFKit 的老版本中，我用了 GCD 队列来将已缓存的 JPG 图片写到磁盘中。当 retina 的 iPad 问世之后，这个操作出现了问题。ß因为分辨率翻倍了，相比渲染这张图片，将它编码花费的时间要长得多。所以，操作堆积在了队列中，当系统繁忙时，甚至有可能因为内存耗尽而崩溃。</p>
-
-<p>我们没有办法追踪有多少个操作在队列中等待运行（除非你手动添加了追踪这个的代码），我们也没有现成的方法来在接收到低内存通告的时候来取消操作、这时候，切换到 NSOperations 可以使代码变得容易调试得多，并且允许我们在不添加手动管理的代码的情况下，做到对操作的追踪和取消。</p>
-
-<p>当然也有一些不好的地方，比如你不能在你的 <code>NSOperationQueue</code> 中设置目标队列（就像 <code>DISPATCH_QUEUE_PRIORITY_BACKGROUND</code> 之于 缓速 I/O 那样）。但这只是为了可调试性的一点小代价，而事实上这也帮助你避免遇到<a href="http://objccn.io/issue-2-1/#priority_inversion">优先级反转</a>的问题。我甚至不推荐直接使用已经包装好的 <code>NSBlockOperation</code> 的 API，而是建议使用一个 NSOperation 的真正的子类，包括实现其 description。诚然，这样做工作量会大一些，但是能输出所有运行中/准备运行的操作是及其有用的。</p>
 
 <hr />
 <p class="post-footer">
