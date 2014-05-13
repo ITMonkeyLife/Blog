@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-05-13T16:30:29+08:00</updated>
+  <updated>2014-05-13T16:37:32+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,496 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[CollectionView布局动画]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/"/>
+    <updated>2014-05-13T16:33:11+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua</id>
+    <content type="html"><![CDATA[<p><code>UICollectionView</code> 和相关类的设置非常灵活和强大。但是灵活性一旦增强，某种程度上也增加了其复杂性： <code>UICollectionView</code> 比老式的 <code>UITableView</code> 更有深度，适用性也更强。</p>
+
+<p>Collection View 深入太多了，事实上，<a href="http://oleb.net">Ole Begeman</a> 和 <a href="https://twitter.com/ashfurrow">Ash Furrow</a> 之前曾在 objc.io 上发表过 <a href="http://objccn.io/issue-3-3/">自定义 Collection View 布局</a> 和 <a href="http://objccn.io/issue-5-2/">UICollectionView + UIKit 力学</a>，但是我依然有一些他们没有提及的内容可以写。在这篇文章中，我假设你已经非常熟悉 <code>UICollectionView</code> 的基本布局，并且至少阅读了苹果精彩的<a href="https://developer.apple.com/library/ios/documentation/WindowsViews/Conceptual/CollectionViewPGforIOS/Introduction/Introduction.html#//apple_ref/doc/uid/TP40012334">编程指南</a>以及 Ole 之前的<a href="http://objccn.io/issue-3-3/">文章</a>。</p>
+
+<p>本文的第一部分将集中讨论并举例说明如何用不同的类和方法来共同帮助实现一些常见的 <code>UICollectionView</code> 动画。在第二部分，我们将看一下带有 collection views 的 view controller 转场动画以及在 <code>useLayoutToLayoutNavigationTransitions</code> 可用时使用其进行转场，如果不可用时，我们会实现一个自定义转场动画。</p>
+
+<p>你可以在 GitHub 中找到本文提到的两个示例工程:</p>
+
+<ul>
+<li><a href="https://github.com/objcio/issue-12-CollectionViewAnimations">布局动画</a></li>
+<li><a href="https://github.com/objcio/issue-12-CustomCollectionViewTransition">自定义 collection view 转场动画</a></li>
+</ul>
+
+<h2 id="collectionview">Collection View 布局动画</h2>
+
+<p>标准 <code>UICollectionViewFlowLayout</code> 除了动画是非常容易自定义的，苹果选择了一种安全的途径去实现一个简单的淡入淡出动画作为所有布局的默认动画。如果你想实现自定义动画，最好的办法是子类化 <code>UICollectionViewFlowLayout</code> 并且在适当的地方实现你的动画。让我们通过一些例子来了解 <code>UICollectionViewFlowLayout</code> 子类中的一些方法如何协助完成自定义动画。</p>
+
+<h3>插入删除元素</h3>
+
+<p>一般来说，我们对布局属性从初始状态到结束状态进行线性插值来计算 collection view 的动画参数。然而，新插入或者删除的元素并没有最初或最终状态来进行插值。要计算这样的 cells 的动画，collection view 将通过  <code>initialLayoutAttributesForAppearingItemAtIndexPath:</code> 以及 <code>finalLayoutAttributesForAppearingItemAtIndexPath:</code> 方法来询问其布局对象，以获取最初的和最后的属性。苹果默认的实现中，对于特定的某个 indexPath，返回的是它的通常的位置，但 <code>alpha</code> 值为 0.0，这就产生了一个淡入或淡出动画。如果你想要更漂亮的效果，比如你的新的 cells 从屏幕底部发射并且旋转飞到对应位置，你可以如下实现这样的布局子类：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span><span class="o">*</span><span class="p">)</span><span class="nf">initialLayoutAttributesForAppearingItemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">itemIndexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">attr</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">layoutAttributesForItemAtIndexPath:</span><span class="n">itemIndexPath</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">attr</span><span class="p">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">CGAffineTransformRotate</span><span class="p">(</span><span class="n">CGAffineTransformMakeScale</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="n">M_PI</span><span class="p">);</span>
+</span><span class="line">    <span class="n">attr</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">CGRectGetMidX</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">),</span> <span class="n">CGRectGetMaxY</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">));</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">attr</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>结果如下：</p>
+
+<p><img src="http://img.objccn.io/issue-12/2014-05-01-collectionview-animations-1-insertion.gif" alt="Insertion and Deletion" /></p>
+
+<p>对应的 <code>finalLayoutAttributesForAppearingItemAtIndexPath:</code> 方法中，除了设定了不同的 transform 以外，其他都很相似。</p>
+
+<h3>响应设备旋转</h3>
+
+<p>设备方向变化通常会导致 collection view 的 bounds 变化。如果通过 <code>shouldInvalidateLayoutForBoundsChange:</code> 判定为布局需要被无效化并重新计算的时候，布局对象会被询问以提供新的布局。<code>UICollectionViewFlowLayout</code> 的默认实现正确地处理了这个情况，但是如果你子类化 <code>UICollectionViewLayout</code> 的话，你需要在边界变化时返回 <code>YES</code>：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">shouldInvalidateLayoutForBoundsChange:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">newBounds</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">CGRect</span> <span class="n">oldBounds</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">;</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">CGSizeEqualToSize</span><span class="p">(</span><span class="n">oldBounds</span><span class="p">.</span><span class="n">size</span><span class="p">,</span> <span class="n">newBounds</span><span class="p">.</span><span class="n">size</span><span class="p">))</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在 bounds 变化的动画中，collection view 表现得像当前显示的元素被移除然后又在新的 bounds 中被被重新插入，这会对每个 IndexPath 产生一系列的 <code>finalLayoutAttributesForAppearingItemAtIndexPath:</code> 和 <code>initialLayoutAttributesForAppearingItemAtIndexPath:</code> 的调用。</p>
+
+<p>如果你在插入和删除的时候加入了非常炫的动画，现在你应该看看为何苹果明智的使用简单的淡入淡出动画作为默认效果：</p>
+
+<p><img src="http://img.objccn.io/issue-12/2014-05-01-collectionview-animations-2-wrong-rotation.gif" alt="设备旋转的错误反应" /></p>
+
+<p>啊哦&#8230;</p>
+
+<p>为了防止这种不想要的动画，初始化位置 -&gt; 删除动画 -&gt; 插入动画 -&gt; 最终位置的顺序必须完全匹配 collection view 的每一项，以便最终呈现出一个平滑动画。换句话说，<code>finalLayoutAttributesForAppearingItemAtIndexPath:</code> 以及 <code>initialLayoutAttributesForAppearingItemAtIndexPath:</code> 应该针对元素到底是真的在显示或者消失，还是 collection view 正在经历的边界改变动画的不同情况，做出不同反应，并返回不同的布局属性。</p>
+
+<p>幸运的是，collection view 会告知布局对象哪一种动画将被执行。它分别通过调用 <code>prepareForAnimatedBoundsChange:</code> 和 <code>prepareForCollectionViewUpdates:</code> 来对应 bounds 变化以及元素更新。出于本实例的说明目的，我们可以使用 <code>prepareForCollectionViewUpdates:</code> 来跟踪更新对象：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">prepareForCollectionViewUpdates:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">updateItems</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">prepareForCollectionViewUpdates:</span><span class="n">updateItems</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSMutableArray</span> <span class="o">*</span><span class="n">indexPaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableArray</span> <span class="n">array</span><span class="p">];</span>
+</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">UICollectionViewUpdateItem</span> <span class="o">*</span><span class="n">updateItem</span> <span class="k">in</span> <span class="n">updateItems</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">switch</span> <span class="p">(</span><span class="n">updateItem</span><span class="p">.</span><span class="n">updateAction</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">            <span class="k">case</span> <span class="nl">UICollectionUpdateActionInsert:</span>
+</span><span class="line">                <span class="p">[</span><span class="n">indexPaths</span> <span class="nl">addObject:</span><span class="n">updateItem</span><span class="p">.</span><span class="n">indexPathAfterUpdate</span><span class="p">];</span>
+</span><span class="line">                <span class="k">break</span><span class="p">;</span>
+</span><span class="line">            <span class="k">case</span> <span class="nl">UICollectionUpdateActionDelete:</span>
+</span><span class="line">                <span class="p">[</span><span class="n">indexPaths</span> <span class="nl">addObject:</span><span class="n">updateItem</span><span class="p">.</span><span class="n">indexPathBeforeUpdate</span><span class="p">];</span>
+</span><span class="line">                <span class="k">break</span><span class="p">;</span>
+</span><span class="line">            <span class="k">case</span> <span class="nl">UICollectionUpdateActionMove:</span>
+</span><span class="line">                <span class="p">[</span><span class="n">indexPaths</span> <span class="nl">addObject:</span><span class="n">updateItem</span><span class="p">.</span><span class="n">indexPathBeforeUpdate</span><span class="p">];</span>
+</span><span class="line">                <span class="p">[</span><span class="n">indexPaths</span> <span class="nl">addObject:</span><span class="n">updateItem</span><span class="p">.</span><span class="n">indexPathAfterUpdate</span><span class="p">];</span>
+</span><span class="line">                <span class="k">break</span><span class="p">;</span>
+</span><span class="line">            <span class="k">default</span><span class="o">:</span>
+</span><span class="line">                <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;unhandled case: %@&quot;</span><span class="p">,</span> <span class="n">updateItem</span><span class="p">);</span>
+</span><span class="line">                <span class="k">break</span><span class="p">;</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">indexPathsToAnimate</span> <span class="o">=</span> <span class="n">indexPaths</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>以及修改我们元素的插入动画，让元素只在其正在被插入 collection view 时进行发射：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span><span class="o">*</span><span class="p">)</span><span class="nf">initialLayoutAttributesForAppearingItemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">itemIndexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">attr</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">layoutAttributesForItemAtIndexPath:</span><span class="n">itemIndexPath</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">_indexPathsToAnimate</span> <span class="nl">containsObject:</span><span class="n">itemIndexPath</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">attr</span><span class="p">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">CGAffineTransformRotate</span><span class="p">(</span><span class="n">CGAffineTransformMakeScale</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="n">M_PI</span><span class="p">);</span>
+</span><span class="line">        <span class="n">attr</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">CGRectGetMidX</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">),</span> <span class="n">CGRectGetMaxY</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">));</span>
+</span><span class="line">        <span class="p">[</span><span class="n">_indexPathsToAnimate</span> <span class="nl">removeObject:</span><span class="n">itemIndexPath</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">attr</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>如果这个元素没有正在被插入，那么将通过 <code>layoutAttributesForItemAtIndexPath</code> 来返回一个普通的属性，以此取消特殊的外观动画。结合 <code>finalLayoutAttributesForAppearingItemAtIndexPath:</code> 中相应的逻辑，最终将会使元素能够在 bounds 变化时，从初始位置到最终位置以很流畅的动画形式实现，从而建立一个简单但很酷的动画效果：</p>
+
+<p><img src="http://img.objccn.io/issue-12/2014-05-01-collectionview-animations-3-correct-rotation.gif" alt="Wrong reaction to device rotation" /></p>
+
+<h3>交互式布局动画</h3>
+
+<p>Collection views 让用户通过手势实现与布局交互这件事变得很容易。如苹果<a href="https://developer.apple.com/library/ios/documentation/WindowsViews/Conceptual/CollectionViewPGforIOS/IncorporatingGestureSupport/IncorporatingGestureSupport.html#//apple_ref/doc/uid/TP40012334-CH4-SW1">建议</a>的那样，为 collection view 布局添加交互的途径一般会遵循以下步骤：</p>
+
+<ol>
+<li>创建手势识别  </li>
+<li>将手势识别添加给 collection view  </li>
+<li>通过手势来驱动布局动画</li>
+</ol>
+
+<p>让我们来看看我们如何可以建立一些用户可缩放捏合的元素，以及一旦用户释放他们的捏合手势元素返回到原始大小。</p>
+
+<p>我们的处理方式可能会是这样：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">handlePinch:</span><span class="p">(</span><span class="n">UIPinchGestureRecognizer</span> <span class="o">*</span><span class="p">)</span><span class="nv">sender</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">sender</span> <span class="n">numberOfTouches</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class="line">        <span class="k">return</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">sender</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateBegan</span> <span class="o">||</span>
+</span><span class="line">        <span class="n">sender</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateChanged</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="c1">// 获取捏合的点</span>
+</span><span class="line">        <span class="n">CGPoint</span> <span class="n">p1</span> <span class="o">=</span> <span class="p">[</span><span class="n">sender</span> <span class="nl">locationOfTouch:</span><span class="mi">0</span> <span class="nl">inView:</span><span class="p">[</span><span class="n">self</span> <span class="n">collectionView</span><span class="p">]];</span>
+</span><span class="line">        <span class="n">CGPoint</span> <span class="n">p2</span> <span class="o">=</span> <span class="p">[</span><span class="n">sender</span> <span class="nl">locationOfTouch:</span><span class="mi">1</span> <span class="nl">inView:</span><span class="p">[</span><span class="n">self</span> <span class="n">collectionView</span><span class="p">]];</span>
+</span><span class="line">
+</span><span class="line">        <span class="c1">// 计算扩展距离</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">xd</span> <span class="o">=</span> <span class="n">p1</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">p2</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">yd</span> <span class="o">=</span> <span class="n">p1</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">p2</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">xd</span><span class="o">*</span><span class="n">xd</span> <span class="o">+</span> <span class="n">yd</span><span class="o">*</span><span class="n">yd</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">        <span class="c1">// 更新自定义布局参数以及无效化</span>
+</span><span class="line">        <span class="n">FJAnimatedFlowLayout</span><span class="o">*</span> <span class="n">layout</span> <span class="o">=</span> <span class="p">(</span><span class="n">FJAnimatedFlowLayout</span><span class="o">*</span><span class="p">)[[</span><span class="n">self</span> <span class="n">collectionView</span><span class="p">]</span> <span class="n">collectionViewLayout</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">NSIndexPath</span> <span class="o">*</span><span class="n">pinchedItem</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span> <span class="nl">indexPathForItemAtPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">p1</span><span class="p">.</span><span class="n">x</span><span class="o">+</span><span class="n">p2</span><span class="p">.</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">p1</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">p2</span><span class="p">.</span><span class="n">y</span><span class="p">))];</span>
+</span><span class="line">        <span class="p">[</span><span class="n">layout</span> <span class="nl">resizeItemAtIndexPath:</span><span class="n">pinchedItem</span> <span class="nl">withPinchDistance:</span><span class="n">distance</span><span class="p">];</span>
+</span><span class="line">        <span class="p">[</span><span class="n">layout</span> <span class="n">invalidateLayout</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">sender</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateCancelled</span> <span class="o">||</span>
+</span><span class="line">             <span class="n">sender</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateEnded</span><span class="p">){</span>
+</span><span class="line">        <span class="n">FJAnimatedFlowLayout</span><span class="o">*</span> <span class="n">layout</span> <span class="o">=</span> <span class="p">(</span><span class="n">FJAnimatedFlowLayout</span><span class="o">*</span><span class="p">)[[</span><span class="n">self</span> <span class="n">collectionView</span><span class="p">]</span> <span class="n">collectionViewLayout</span><span class="p">];</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span>
+</span><span class="line">         <span class="nl">performBatchUpdates:</span><span class="o">^</span><span class="p">{</span>
+</span><span class="line">            <span class="p">[</span><span class="n">layout</span> <span class="n">resetPinchedItem</span><span class="p">];</span>
+</span><span class="line">         <span class="p">}</span>
+</span><span class="line">         <span class="nl">completion:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这个捏合操作需要计算捏合距离并找出被捏合的元素，并且在用户捏合的时候通知布局以实现自身更新。当捏合手势结束的时候，布局会做一个批量更新动画返回原始尺寸。</p>
+
+<p>另一方面，我们的布局始终在跟踪捏合的元素以及期望尺寸，并在需要的时候提供正确的属性：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForElementsInRect:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">rect</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nl">layoutAttributesForElementsInRect:</span><span class="n">rect</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">_pinchedItem</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">attr</span> <span class="o">=</span> <span class="p">[[</span><span class="n">attrs</span> <span class="nl">filteredArrayUsingPredicate:</span><span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithFormat:</span><span class="s">@&quot;indexPath == %@&quot;</span><span class="p">,</span> <span class="n">_pinchedItem</span><span class="p">]]</span> <span class="n">firstObject</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">attr</span><span class="p">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">_pinchedItemSize</span><span class="p">;</span>
+</span><span class="line">        <span class="n">attr</span><span class="p">.</span><span class="n">zIndex</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">attrs</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>小结</h3>
+
+<p>我们通过一些例子来说明了如何在 collection view 布局中创建自定义动画。虽然 <code>UICollectionViewFlowLayout</code> 并不直接允许定制动画，但是苹果工程师提供了清晰的架构让你可以子类化并实现各种自定义行为。从本质来说，在你的 <code>UICollectionViewLayout</code> 子类中正确地响应以下信号，并对那些要求返回 <code>UICollectionViewLayoutAttributes</code> 的方法返回合适的属性，那么实现自定义布局和动画的唯一约束就是你的想象力：</p>
+
+<ul>
+<li><code>prepareLayout</code></li>
+<li><code>prepareForCollectionViewUpdates:</code></li>
+<li><code>finalizeCollectionViewUpdates</code></li>
+<li><code>prepareForAnimatedBoundsChange:</code></li>
+<li><code>finalizeAnimatedBoundsChange</code></li>
+<li><code>shouldInvalidateLayoutForBoundsChange:</code></li>
+</ul>
+
+<p>更引人入胜的动画可以结合像在 objc.io <a href="http://objccn.io/issue-5-2/">话题 #5</a> 中 UIKit 力学这样的技术来实现。</p>
+
+<h2 id="collectionviewsviewcontroller">带有 Collection views 的 View controller 转场</h2>
+
+<p>就如 <a href="https://twitter.com/chriseidhof">Chris</a> 之前在 objc.io 的<a href="http://objccn.io/issue-5-3/">文章</a>中所说的那样，iOS 7 中的一个重大更新是自定义 view controller 转场动画。与自定义转场动画相呼应，苹果也在 <code>UICollectionViewController</code> 添加了 <code>useLayoutToLayoutNavigationTransitions</code> 标记来在可复用的单个 collection view 间启用导航转场。苹果自己的照片和日历应用就是这类转场动画的非常好的代表作。</p>
+
+<h3 id="uicollectionviewcontroller">UICollectionViewController 实例之间的转场动画</h3>
+
+<p>让我们来看看我们如何能够利用上一节相同的示例项目达到类似的效果：</p>
+
+<p><img src="http://img.objccn.io/issue-12/2014-05-01-collectionview-animations-4-layout2layout.gif" alt="Layout to Layout Navigation Transitions" /></p>
+
+<p>为了使布局到布局的转场动画工作，navigation controller 的 root view controller 必须是一个 <code>useLayoutToLayoutNavigationTransitions</code> 设置为 <code>NO</code> 的 collection view controller。当另一个 <code>useLayoutToLayoutNavigationTransitions</code> 设置为 <code>YES</code> 的 <code>UICollectionViewController</code> 实例被 push 到根视图控制器之上时，navigation controller 会用布局转场动画来代替标准的 push 转场动画。这里要注意一个重要的细节，根视图控制器的 collection view 实例被回收用于在导航栈上 push 进来的 collection 控制器中，如果你试图在 <code>viewDidLoad</code> 之类的方法中中设置 collection view 属性， 它们将不会有任何反应，你也不会收到任何警告。</p>
+
+<p>这个行为可能最常见的陷阱是期望回收的 collection view 根据顶层的 collection 视图控制器来更新数据源和委托。它当然不会这样：根 collection 视图控制器会保持数据源和委托，除非我们做点什么。</p>
+
+<p>解决此问题的方法是实现 navigation controller 的委托方法，并根据导航堆栈顶部的当前视图控制器的需要正确设置 collection view 的数据源和委托。在我们简单的例子中，这可以通过以下方式实现：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">navigationController:</span><span class="p">(</span><span class="n">UINavigationController</span> <span class="o">*</span><span class="p">)</span><span class="nv">navigationController</span> <span class="nf">didShowViewController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">viewController</span> <span class="nf">animated:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">animated</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">viewController</span> <span class="nl">isKindOfClass:</span><span class="p">[</span><span class="n">FJDetailViewController</span> <span class="n">class</span><span class="p">]])</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">FJDetailViewController</span> <span class="o">*</span><span class="n">dvc</span> <span class="o">=</span> <span class="p">(</span><span class="n">FJDetailViewController</span><span class="o">*</span><span class="p">)</span><span class="n">viewController</span><span class="p">;</span>
+</span><span class="line">        <span class="n">dvc</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">dataSource</span> <span class="o">=</span> <span class="n">dvc</span><span class="p">;</span>
+</span><span class="line">        <span class="n">dvc</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">delegate</span> <span class="o">=</span> <span class="n">dvc</span><span class="p">;</span>
+</span><span class="line">        <span class="p">[</span><span class="n">dvc</span><span class="p">.</span><span class="n">collectionView</span> <span class="nl">scrollToItemAtIndexPath:</span><span class="p">[</span><span class="n">NSIndexPath</span> <span class="nl">indexPathForItem:</span><span class="n">_selectedItem</span> <span class="nl">inSection:</span><span class="mi">0</span><span class="p">]</span> <span class="nl">atScrollPosition:</span><span class="n">UICollectionViewScrollPositionCenteredVertically</span> <span class="nl">animated:</span><span class="n">NO</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">viewController</span> <span class="o">==</span> <span class="n">self</span><span class="p">){</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">dataSource</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">delegate</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>objc</p>
+
+<p>当详细页面的 collection view 被推入导航栈时，我们重新设置 collection view 的数据源到详细视图控制器，确保只有被选择的 cell 颜色显示在详细页面的 collection view 中。如果我们不打算这样做，布局依然可以正确过渡，但是collection 将显示所有的 cells。在实际应用中，detail 的数据源通常负责在转场动画过程中显示更详细的数据。</p>
+
+<h3 id="collectionview">用于常规转换的 Collection View 布局动画</h3>
+
+<p>使用了 <code>useLayoutToLayoutNavigationTransitions</code> 的布局和布局间导航转换是很有用的，但却局限于仅在 两个 view controller 都是 <code>UICollectionViewController</code> 的实例，并且转场的必须发生在顶级 collection views 之间。为了达到在任意视图控制器的任意 collection view 之间都能实现相似的过渡，我们需要自定义一个 view collection 的转场动画。</p>
+
+<p><img src="http://img.objccn.io/issue-12/2014-05-01-collectionview-animations-5-custom-transitions.gif" alt="Custom Collection View Transition" /></p>
+
+<p>针对此类自定义过渡的动画控制器，需要遵循以下步骤进行设计：</p>
+
+<ol>
+<li>对初始的 collection view 中的所有可见元素制作截图  </li>
+<li>将截图添加到转场上下文的 container view 中  </li>
+<li>运用目标 collection view 的布局计算最终位置  </li>
+<li>制作动画使快照到正确的位置  </li>
+<li>当目标 collection view 可见时删除截图</li>
+</ol>
+
+<p>一个这样的动画设计有两重缺陷：它只能对初始的 collection view 的可见元素制作动画，因为<a href="https://developer.apple.com/library/ios/documentation/uikit/reference/uiview_class/UIView/UIView.html#//apple_ref/doc/uid/TP40006816-CH3-SW198">快照 APIs </a> 只能工作于屏幕上可见的 view，另外，依赖于可见的元素数量，可能会有很多的 views 需要进行正确的跟踪并为其制作动画。但另一方面，这种设计又具有一个明显的优势，那就是它可以为所有类型的 <code>UICollectionViewLayout</code> 组合所使用。这样一个系统的实现就留给读者们去进行练习吧。</p>
+
+<p>在附带的演示项目中我们用另一种途径进行了实现，它依赖于一些 <code>UICollectionViewFlowLayout</code> 的巧合。</p>
+
+<p>基本的想法是，因为源 collection view 和目标 collection view 都拥有有效的 flow layouts，因此源 layout 的布局属性正好可以用作目标 collection view 的布局中的初始布局属性，以此驱动转场动画。一旦正确建立，就算对于那些一开始在屏幕上不可见的元素，collection view 的机制都将为我们追踪它们并进行动画。下面是我们的动画控制器中的 <code>animateTransition:</code> 的核心代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGRect</span> <span class="n">initialRect</span> <span class="o">=</span> <span class="p">[</span><span class="n">inView</span><span class="p">.</span><span class="n">window</span> <span class="nl">convertRect:</span><span class="n">_fromCollectionView</span><span class="p">.</span><span class="n">frame</span> <span class="nl">fromView:</span><span class="n">_fromCollectionView</span><span class="p">.</span><span class="n">superview</span><span class="p">];</span>
+</span><span class="line"><span class="n">CGRect</span> <span class="n">finalRect</span>   <span class="o">=</span> <span class="p">[</span><span class="n">transitionContext</span> <span class="nl">finalFrameForViewController:</span><span class="n">toVC</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">UICollectionViewFlowLayout</span> <span class="o">*</span><span class="n">toLayout</span> <span class="o">=</span> <span class="p">(</span><span class="n">UICollectionViewFlowLayout</span><span class="o">*</span><span class="p">)</span> <span class="n">_toCollectionView</span><span class="p">.</span><span class="n">collectionViewLayout</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">UICollectionViewFlowLayout</span> <span class="o">*</span><span class="n">currentLayout</span> <span class="o">=</span> <span class="p">(</span><span class="n">UICollectionViewFlowLayout</span><span class="o">*</span><span class="p">)</span> <span class="n">_fromCollectionView</span><span class="p">.</span><span class="n">collectionViewLayout</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">//制作原来布局的拷贝</span>
+</span><span class="line"><span class="n">UICollectionViewFlowLayout</span> <span class="o">*</span><span class="n">currentLayoutCopy</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UICollectionViewFlowLayout</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">currentLayoutCopy</span><span class="p">.</span><span class="n">itemSize</span> <span class="o">=</span> <span class="n">currentLayout</span><span class="p">.</span><span class="n">itemSize</span><span class="p">;</span>
+</span><span class="line"><span class="n">currentLayoutCopy</span><span class="p">.</span><span class="n">sectionInset</span> <span class="o">=</span> <span class="n">currentLayout</span><span class="p">.</span><span class="n">sectionInset</span><span class="p">;</span>
+</span><span class="line"><span class="n">currentLayoutCopy</span><span class="p">.</span><span class="n">minimumLineSpacing</span> <span class="o">=</span> <span class="n">currentLayout</span><span class="p">.</span><span class="n">minimumLineSpacing</span><span class="p">;</span>
+</span><span class="line"><span class="n">currentLayoutCopy</span><span class="p">.</span><span class="n">minimumInteritemSpacing</span> <span class="o">=</span> <span class="n">currentLayout</span><span class="p">.</span><span class="n">minimumInteritemSpacing</span><span class="p">;</span>
+</span><span class="line"><span class="n">currentLayoutCopy</span><span class="p">.</span><span class="n">scrollDirection</span> <span class="o">=</span> <span class="n">currentLayout</span><span class="p">.</span><span class="n">scrollDirection</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">//将拷贝赋值给源 collection view</span>
+</span><span class="line"><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">fromCollectionView</span> <span class="nl">setCollectionViewLayout:</span><span class="n">currentLayoutCopy</span> <span class="nl">animated:</span><span class="n">NO</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">UIEdgeInsets</span> <span class="n">contentInset</span> <span class="o">=</span> <span class="n">_toCollectionView</span><span class="p">.</span><span class="n">contentInset</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">CGFloat</span> <span class="n">oldBottomInset</span> <span class="o">=</span> <span class="n">contentInset</span><span class="p">.</span><span class="n">bottom</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">//强制在目标 collection view 中设定一个很大的 bottom inset</span>
+</span><span class="line"><span class="n">contentInset</span><span class="p">.</span><span class="n">bottom</span> <span class="o">=</span> <span class="n">CGRectGetHeight</span><span class="p">(</span><span class="n">finalRect</span><span class="p">)</span><span class="o">-</span><span class="p">(</span><span class="n">toLayout</span><span class="p">.</span><span class="n">itemSize</span><span class="p">.</span><span class="n">height</span><span class="o">+</span><span class="n">toLayout</span><span class="p">.</span><span class="n">sectionInset</span><span class="p">.</span><span class="n">bottom</span><span class="o">+</span><span class="n">toLayout</span><span class="p">.</span><span class="n">sectionInset</span><span class="p">.</span><span class="n">top</span><span class="p">);</span>
+</span><span class="line"><span class="n">self</span><span class="p">.</span><span class="n">toCollectionView</span><span class="p">.</span><span class="n">contentInset</span> <span class="o">=</span> <span class="n">contentInset</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">//将源布局设置给目标 collection view</span>
+</span><span class="line"><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">toCollectionView</span> <span class="nl">setCollectionViewLayout:</span><span class="n">currentLayout</span> <span class="nl">animated:</span><span class="n">NO</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">toView</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">initialRect</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="p">[</span><span class="n">inView</span> <span class="nl">insertSubview:</span><span class="n">toView</span> <span class="nl">aboveSubview:</span><span class="n">fromView</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="p">[</span><span class="n">UIView</span>
+</span><span class="line"> <span class="nl">animateWithDuration:</span><span class="p">[</span><span class="n">self</span> <span class="nl">transitionDuration:</span><span class="n">transitionContext</span><span class="p">]</span>
+</span><span class="line"> <span class="nl">delay:</span><span class="mi">0</span>
+</span><span class="line"> <span class="nl">options:</span><span class="n">UIViewAnimationOptionBeginFromCurrentState</span>
+</span><span class="line"> <span class="nl">animations:</span><span class="o">^</span><span class="p">{</span>
+</span><span class="line">   <span class="c1">//使用最终 frame 制作动画</span>
+</span><span class="line">     <span class="n">toView</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">finalRect</span><span class="p">;</span>
+</span><span class="line">     <span class="c1">//在 performUpdates 中设定最终的布局</span>
+</span><span class="line">     <span class="p">[</span><span class="n">_toCollectionView</span>
+</span><span class="line">      <span class="nl">performBatchUpdates:</span><span class="o">^</span><span class="p">{</span>
+</span><span class="line">          <span class="p">[</span><span class="n">_toCollectionView</span> <span class="nl">setCollectionViewLayout:</span><span class="n">toLayout</span> <span class="nl">animated:</span><span class="n">NO</span><span class="p">];</span>
+</span><span class="line">      <span class="p">}</span>
+</span><span class="line">      <span class="nl">completion:</span><span class="o">^</span><span class="p">(</span><span class="kt">BOOL</span> <span class="n">finished</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">          <span class="n">_toCollectionView</span><span class="p">.</span><span class="n">contentInset</span> <span class="o">=</span> <span class="n">UIEdgeInsetsMake</span><span class="p">(</span><span class="n">contentInset</span><span class="p">.</span><span class="n">top</span><span class="p">,</span>
+</span><span class="line">                                                            <span class="n">contentInset</span><span class="p">.</span><span class="n">left</span><span class="p">,</span>
+</span><span class="line">                                                            <span class="n">oldBottomInset</span><span class="p">,</span>
+</span><span class="line">                                                            <span class="n">contentInset</span><span class="p">.</span><span class="n">right</span><span class="p">);</span>
+</span><span class="line">      <span class="p">}];</span>
+</span><span class="line">
+</span><span class="line"> <span class="p">}</span> <span class="nl">completion:</span><span class="o">^</span><span class="p">(</span><span class="kt">BOOL</span> <span class="n">finished</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">     <span class="p">[</span><span class="n">transitionContext</span> <span class="nl">completeTransition:</span><span class="n">YES</span><span class="p">];</span>
+</span><span class="line"> <span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>首先，动画控制器确保目标 collection view 以与原来的 collection view 完全相同的框架和布局作为开始。接着，它将源 collection view 的布局设定给目标 collection view，以确保其不会失效。与此同时，该布局已经复制到另一个新的布局对象中，而这个布局对象则是为防止在导航回原始视图控制器时出现奇怪的布局 bug。我们还会强制在目标 collection view 的底部设定一个很大的 content inset，来确保布局在动画的初始位置时保持在一行上。观察日志的话，你会发现由于元素的尺寸加上 inset 的尺寸会比 collection view 的非滚动维度要大，因此 collection view 会在控制台警告。在这样的情况下，collection view 的行为是没有定义的，我们也只是使用这样一个不稳定的状态来作为我们转换动画的初始状态。最后，复杂的动画 block 将展现它的魅力，首先将目标 collection view 的框架设定到最终位置，然后在 <code>performBatchUpdates:completion:</code> 的 update block 中执行一个无动画的布局来改变至最终布局，紧随其后便是在 completion block 中将 content insets 重置为原始值。</p>
+
+<h3>小结</h3>
+
+<p>我们讨论了两种可以在 collection view 之间实现布局转场的途径。一种使用了内置的 <code>useLayoutToLayoutNavigationTransitions</code>，看起来令人印象深刻并且极其容易实现，缺点就是可以使用的范围较为局限。由于 <code>useLayoutToLayoutNavigationTransitions</code> 在一些案例中不能使用，想驱动自定义的过渡动画的话，就需要一个自定义的 animator。这篇文章中，我们看到了如何实现这样一个 animator，然而，由于你的应用程序大概肯定会需要在两个和本例完全不同的 view 结构中实现完全不同的动画，所以正如此例中做的那样，不要吝于尝试不同的方法来探究其是否能够工作。</p>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[自定义ViewController动画]]></title>
@@ -7009,777 +7499,6 @@ scroll view 的 content size 并不会改变其 bounds 的任何东西，所以�
 <hr />
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[iOS之玩转字符串]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/"/>
-    <updated>2014-04-09T16:40:06+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan</id>
-    <content type="html"><![CDATA[<p>在每个应用里我们都大量使用字符串。下面我们将快速看看一些常见的操作字符串的方法，过一遍常见操作的最佳实践。</p>
-
-<h2>字符串的比较、搜索和排序</h2>
-
-<p>排序和比较字符串比第一眼看上去要复杂得多。不只是因为字符串可以包含<strong>代理对（surrogate pairs ）</strong>(详见 <a href="http://objccn.io/issue-9-1/#peculiar-unicode-features">Ole 写的这篇关于 Unicode 的文章</a>) ，而且比较还与字符串的本地化相关。在某些极端情况下相当棘手。</p>
-
-<p>苹果文档中 <em>String Programming Guide</em> 里有一节叫做 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/Strings/Articles/stringsClusters.html"><strong>“字符与字形集群（Characters and Grapheme Clusters）”</strong></a>，里面提到一些陷阱。例如对于排序来说，一些欧洲语言将序列“ch”当作单个字母。在一些语言里，“ä”被认为等同于 ‘a’ ，而在其它语言里它却被排在 ‘z’ 后面。</p>
-
-<p>而 <code>NSString</code> 有一些方法来帮助我们处理这种复杂性。首先看下面的方法：</p>
-
-<pre><code>- (NSComparisonResult)compare:(NSString *)aString options:(NSStringCompareOptions)mask range:(NSRange)range locale:(id)locale
-</code></pre>
-
-<p>它带给我们充分的灵活性。另外，还有很多<strong>便捷函数（convenience functions）</strong>都使用了这个方法。</p>
-
-<p>与比较有关的可用参数如下：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSCaseInsensitiveSearch</span>
-</span><span class="line"><span class="n">NSLiteralSearch</span>
-</span><span class="line"><span class="n">NSNumericSearch</span>
-</span><span class="line"><span class="n">NSDiacriticInsensitiveSearch</span>
-</span><span class="line"><span class="n">NSWidthInsensitiveSearch</span>
-</span><span class="line"><span class="n">NSForcedOrderingSearch</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>它们都可以用逻辑“或”运算符组合在一起。</p>
-
-<p><code>NSCaseInsensitiveSearch</code>：“A”等同于“a”，然而在某些地方还有更复杂的情况。例如，在德国，“ß” 和 “SS”是等价的。</p>
-
-<p><code>NSLiteralSearch</code>：Unicode 的点对点比较。它只在所有字符都用相同的方式组成的情况下才会返回相等（即 <code>NSOrderedSame</code>）。LATIN CAPITAL LETTER A 加上 COMBINING RING ABOVE 并不等同于 LATIN CAPITAL LETTER A WITH RING ABOVE.</p>
-
-<blockquote>
-  <p><span class="secondary radius label">编者注</span> 这里要解释一下，首先，每一个Unicode都是有官方名字的！LATIN CAPITAL LETTER A是一个大写“A”，COMBINING RING ABOVE是一个  ̊，LATIN CAPITAL LETTER A WITH RING ABOVE，这是Å。前两者的组合不等同于后者。</p>
-</blockquote>
-
-<p><code>NSNumericSearch</code>：它对字符串里的数字排序，所以 “Section 9” &lt; “Section 20” &lt; “Section 100.”</p>
-
-<p><code>NSDiacriticInsensitiveSearch</code>：“A” 等同于 “Å” 等同于 “Ä.”</p>
-
-<p><code>NSWidthInsensitiveSearch</code>：一些东亚文字（平假名和片假名）有全宽与半宽两种形式。</p>
-
-<p>很值得一提的是<code>-localizedStandardCompare:</code>，它排序的方式和 Finder 一样。它对应的选项是 <code>NSCaseInsensitiveSearch</code>、<code>NSNumericSearch</code>、<code>NSWidthInsensitiveSearch</code> 以及 <code>NSForcedOrderingSearch</code>。如果我们要在 UI 上显示一个文件列表，用它就最合适不过了。</p>
-
-<p>大小写不敏感的比较和音调符号不敏感的比较都是相对复杂和昂贵的操作。如果我们需要比较很多次字符串那这就会成为一个性能上的瓶颈（例如对一个大的数据集进行排序），一个常见的解决方法是同时存储原始字符串和折叠字符串。例如，我们的 <code>Contact</code> 类有一个正常的 <code>name</code> 属性，在内部它还有一个 <code>foldedName</code> 属性，它将自动在 name 变化时更新。那么我们就可以使用 <code>NSLiteralSearch</code> 来比较 name 的折叠版本。 <code>NSString</code> 有一个方法来创建折叠版本：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringByFoldingWithOptions:</span><span class="p">(</span><span class="n">NSStringCompareOptions</span><span class="p">)</span><span class="nv">options</span> <span class="nf">locale:</span><span class="p">(</span><span class="n">NSLocale</span> <span class="o">*</span><span class="p">)</span><span class="nv">locale</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>搜索</h3>
-
-<p>要在一个字符串中搜索子字符串，最灵活性的方法是:</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSRange</span><span class="p">)</span><span class="nf">rangeOfString:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">aString</span> <span class="nf">options:</span><span class="p">(</span><span class="n">NSStringCompareOptions</span><span class="p">)</span><span class="nv">mask</span> <span class="nf">range:</span><span class="p">(</span><span class="n">NSRange</span><span class="p">)</span><span class="nv">searchRange</span> <span class="nf">locale:</span><span class="p">(</span><span class="n">NSLocale</span> <span class="o">*</span><span class="p">)</span><span class="nv">locale</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>同时，还有一些便捷方法，它们在最终都会调用上面这个方法，我们可以传入上面列出的参数，以及以下这些额外的参数：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSBackwardsSearch</span>
-</span><span class="line"><span class="n">NSAnchoredSearch</span>
-</span><span class="line"><span class="n">NSRegularExpressionSearch</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>NSBackwardsSearch</code>：在字符串的末尾开始反向搜索。</p>
-
-<p><code>NSAnchoredSearch</code>：只考虑搜索的起始点（单独使用）或终止点（当与 <code>NSBackwardsSearch</code> 结合使用时）。这个方法可以用来检查前缀或者后缀，以及<strong>大小写不敏感（case-insensitive）</strong>或者<strong>音调不敏感（diacritic-insensitive）</strong>的比较。</p>
-
-<p><code>NSRegularExpressionSearch</code>：使用正则表达式搜索，要了解更多与使用正则表达式有关的信息，请关注 Chris 写的字符串解析这篇文章。</p>
-
-<p>另外，还有一个方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSRange</span><span class="p">)</span><span class="nf">rangeOfCharacterFromSet:</span><span class="p">(</span><span class="n">NSCharacterSet</span> <span class="o">*</span><span class="p">)</span><span class="nv">aSet</span> <span class="nf">options:</span><span class="p">(</span><span class="n">NSStringCompareOptions</span><span class="p">)</span><span class="nv">mask</span> <span class="nf">range:</span><span class="p">(</span><span class="n">NSRange</span><span class="p">)</span><span class="nv">aRange</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>与前面搜索字符串不同的是，它只搜索给定字符集的第一个字符。即使只搜索一个字符，但如果由于此字符是<strong>由元字符组成的序列（composed character sequence）</strong>，所以返回范围的长度也可能大于1。</p>
-
-<h2>大写与小写</h2>
-
-<p>一定不要使用 <code>NSString</code> 的 <code>-uppercaseString</code> 或者 <code>-lowercaseString</code> 的方法来处理 UI 显示的字符串，而应该使用 <code>-uppercaseStringWithLocale</code> 来代替， 比如：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="s">@&quot;Tómas&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">cell</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="nl">uppercaseStringWithLocale:</span><span class="p">[</span><span class="n">NSLocale</span> <span class="n">currentLocale</span><span class="p">]];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h2>格式化字符串</h2>
-
-<p>同 C 语言中的 <code>sprintf</code> 函数（ANSI C89 中的一个函数）类似，Objective C 中的 <code>NSString</code> 类也有如下的 3 个方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="nf">initWithFormat:</span>
-</span><span class="line"><span class="k">-</span><span class="nf">initWithFormat:arguments:</span>
-</span><span class="line"><span class="k">+</span><span class="nf">stringWithFormat:</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>需要注意这些格式化方法都是<em>非本地化</em>的。所以这些方法得到的字符串是不能直接拿来显示在用户界面上的。如果需要本地化，那我们需要使用下面这些方法:</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="nf">initWithFormat:locale:</span>
-</span><span class="line"><span class="k">-</span><span class="nf">initWithFormat:locale:arguments:</span>
-</span><span class="line"><span class="k">+</span><span class="nf">localizedStringWithFormat:</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Florian 有一篇关于<a href="http://objccn.io/issue-9-3/#localized-format-strings">字符串的本地化</a>的文章更详细地讨论了这个问题。</p>
-
-<p><a href="https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man3/printf.3.html">printf(3)</a> 的 man 页面有关于它如何格式化字符串的全部细节。除了以 <code>%</code> 字符开始的所谓<strong>格式转换符（conversion specification）</strong>，格式化字符串会被逐字复制：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">double</span> <span class="n">a</span> <span class="o">=</span> <span class="mf">25812.8074434</span><span class="p">;</span>
-</span><span class="line"><span class="kt">float</span> <span class="n">b</span> <span class="o">=</span> <span class="mf">376.730313461</span><span class="p">;</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;%g :: %g&quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">];</span>
-</span><span class="line"><span class="c1">// &quot;25812.8 :: 376.73&quot;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我们格式化了两个浮点数。注意单精度浮点数 <code>float</code> 和双精度浮点数 <code>double</code> 共同了一个格式转换符。</p>
-
-<h3>对象</h3>
-
-<p>除了来自 <code>printf(3)</code> 的转换规范，我们还可以使用 <code>%@</code> 来输出一个对象。在<a href="#object-description">对象描述</a>那一节中有述，如果对象响应 <code>-descriptionWithLocale:</code> 方法，则调用它，否则调用 <code>-description</code>。<code>%@</code> 被结果替换。</p>
-
-<h3>整数</h3>
-
-<p>使用整形数字时，有些需要注意的细节。首先，有符号数（<code>d</code> 和 <code>i</code>）和无符号数（<code>o</code>、<code>u</code>、<code>x</code>和<code>X</code>）的格式转换符是不一样的，需要使用者根据具体情况来选择。</p>
-
-<p>如果我们使用 printf 支持的类型列表之外的类型，就必须要做类型转换。<code>NSUInteger</code> 正是这样一个例子，它在 64 位和 32 位平台上是不一样的。下面的例子可以同时工作在 32 位和 64 位平台上：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">uint64_t</span> <span class="n">p</span> <span class="o">=</span> <span class="mi">2305843009213693951</span><span class="p">;</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;The ninth Mersenne prime is %llu&quot;</span><span class="p">,</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">long</span><span class="p">)</span> <span class="n">p</span><span class="p">];</span>
-</span><span class="line"><span class="c1">// &quot;The ninth Mersenne prime is 2305843009213693951&quot;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<table>  
-  <thead>
-  <tr><th style="text-align: left">Modifier          </th><th style="text-align: left">d, i           </th><th style="text-align: left">o, u, x, X</th></tr>
-  </thead>
-  <tbody>
-  <tr><td>hh                </td><td>signed char    </td><td>unsigned char</td></tr>
-  <tr><td>h                 </td><td>short          </td><td>unsigned short</td></tr>
-  <tr><td>(none)            </td><td>int            </td><td>unsigned int</td></tr>
-  <tr><td>l (ell)           </td><td>long           </td><td>unsigned long</td></tr>
-  <tr><td>ll (ell ell)      </td><td>long long      </td><td>unsigned long long</td></tr>
-  <tr><td>j                 </td><td>intmax_t       </td><td>uintmax_t</td></tr>
-  <tr><td>t                 </td><td>ptrdiff_t      </td><td /></tr>
-  <tr><td>z                 </td><td>               </td><td>size_t</td></tr>
-  </tbody>
-</table>
-
-<p>适用于整数的转换规则有：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">int</span> <span class="n">m</span> <span class="o">=</span> <span class="o">-</span><span class="mi">150004021</span><span class="p">;</span>
-</span><span class="line"><span class="n">uint</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">150004021</span><span class="n">U</span><span class="p">;</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;d:%d i:%i o:%o u:%u x:%x X:%X&quot;</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">];</span>
-</span><span class="line"><span class="c1">// &quot;d:-150004021 i:-150004021 o:1074160465 u:150004021 x:8f0e135 X:8F0E135&quot;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>%d</code> 和 <code>%i</code> 具有一样的功能，它们都打印出有符号十进制数。<code>%o</code> 就较为晦涩了：它使用<a href="https://en.wikipedia.org/wiki/Octal">八进制</a>表示。<code>%u</code> 输出无符号十进制数——它是我们常用的。最后 <code>%x</code> 和 <code>%X</code> 使用十六进制表示——后者使用大写字母。</p>
-
-<p>对于 <code>x%</code> 和 <code>X%</code>，我们可以在 <code>0x</code> 前面添加 <code>#</code> 前缀，增加可读性。</p>
-
-<p>我们可以传入特定参数，来设置最小字段宽度和最小数字位数（默认两者都是 0），以及左/右对齐。请查看 man 页面获取详细信息。下面是一些例子：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">int</span> <span class="n">m</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;&#39;%4d&#39; &#39;%-4d&#39; &#39;%+4d&#39; &#39;%4.3d&#39; &#39;%04d&#39;&quot;</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">];</span>
-</span><span class="line"><span class="c1">// &quot;[  42] [42  ] [ +42] [ 042] [0042]&quot;</span>
-</span><span class="line"><span class="n">m</span> <span class="o">=</span> <span class="o">-</span><span class="mi">42</span><span class="p">;</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;&#39;%4d&#39; &#39;%-4d&#39; &#39;%+4d&#39; &#39;%4.3d&#39; &#39;%04d&#39;&quot;</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">];</span>
-</span><span class="line"><span class="c1">// &quot;[ -42] [-42 ] [ -42] [-042] [-042]&quot;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>%p</code> 可用于打印出指针——它和 <code>%#x</code> 相似但可同时在 32 位和 64 位平台上正常工作。</p>
-
-<h3>浮点数</h3>
-
-<p>浮点数的格式转符有8个：<code>eEfFgGaA</code>。但除了 <code>%f</code> 和 <code>%g</code> 外我们很少使用其它的。对于指数部分，小写的版本使用小写 <code>e</code>，大写的版本就使用大写 <code>E</code>。</p>
-
-<p>通常 <code>%g</code> 是浮点数的全能转换符 ，它与 <code>%f</code> 的不同在下面的例子里显示得很清楚：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">double</span> <span class="n">v</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">12345</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mf">0.12</span><span class="p">,</span> <span class="mf">0.12345678901234</span><span class="p">,</span> <span class="mf">0.0000012345678901234</span><span class="p">};</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;%g %g %g %g %g&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">4</span><span class="p">]];</span>
-</span><span class="line"><span class="c1">// &quot;12345 12 0.12 0.123457 1.23457e-06&quot;</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;%f %f %f %f %f&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">4</span><span class="p">]];</span>
-</span><span class="line"><span class="c1">// &quot;12345.000000 12.000000 0.120000 0.123457 0.000001&quot;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>和整数一样，我们依然可以指定最小字段宽度和最小数字数。</p>
-
-<h3>指定位置</h3>
-
-<p>格式化字符串允许使用参数来改变顺序：</p>
-
-<p>[NSString stringWithFormat:@&#8221;%2$@ %1$@&#8221;, @&#8221;1st&#8221;, @&#8221;2nd&#8221;];</p>
-
-<p>// &#8220;2nd 1st&#8221;</p>
-
-<p>我们只需将从 1 开始的参数与一个 <code>$</code> 接在 <code>%</code> 后面。这种写法在进行本地化的时候极其常见，因为在不同语言中，各个参数所处的顺序位置可能不尽相同。</p>
-
-<h3 id="nslog">NSLog()</h3>
-
-<p><code>NSLog()</code> 函数与 <code>+stringWithFormat:</code> 的工作方式一样。我们可以调用：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">int</span> <span class="n">magic</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
-</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;The answer is %d&quot;</span><span class="p">,</span> <span class="n">magic</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>下面的代码可以用同样的方式构造字符串：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">int</span> <span class="n">magic</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;The answer is %d&quot;</span><span class="p">,</span> <span class="n">magic</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>显然 <code>NSLog()</code> 会输出字符串，并且它会加上时间戳、进程名、进程 ID 以及线程 ID 作为前缀。</p>
-
-<h3>实现能接受格式化字符串的方法</h3>
-
-<p>有时在我们自己的类中提供一个能接受格式化字符串的方法会很方便使用。假设我们要实现的是一个 To Do 类的应用，它包含一个  <code>Item</code> 类。我们想要提供：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">itemWithTitleFormat:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">format</span><span class="p">,</span> <span class="p">...</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>如此我们就可以使用：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">Item</span> <span class="o">*</span><span class="n">item</span> <span class="o">=</span> <span class="p">[</span><span class="n">Item</span> <span class="nl">itemWithFormat:</span><span class="s">@&quot;Need to buy %@ for %@&quot;</span><span class="p">,</span> <span class="n">food</span><span class="p">,</span> <span class="n">pet</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这种类型的方法接受可变数量的参数，所以被称为可变参数方法。我们必须使用一个定义在 <code>stdarg.h</code> 里的宏来使用可变参数。上面方法的实现代码可能会像下面这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">itemWithTitleFormat:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">format</span><span class="p">,</span> <span class="p">...;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">va_list</span> <span class="n">ap</span><span class="p">;</span>
-</span><span class="line">    <span class="n">va_start</span><span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="n">format</span><span class="p">);</span>
-</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">title</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSString</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithFormat:</span><span class="n">format</span> <span class="nl">locale:</span><span class="p">[</span><span class="n">NSLocale</span> <span class="n">currentLocale</span><span class="p">]</span> <span class="nl">arguments:</span><span class="n">ap</span><span class="p">];</span>
-</span><span class="line">    <span class="n">va_end</span><span class="p">(</span><span class="n">ap</span><span class="p">);</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span> <span class="nl">itemWithTitle:</span><span class="n">title</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>进一步，我们要添加 <code>NS_FORMAT_FUNCTION</code> 到方法的定义里（即头文件中），如下所示：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">itemWithTitleFormat:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">format</span><span class="p">,</span> <span class="p">...</span> <span class="n">NS_FORMAT_FUNCTION</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>NS_FORMAT_FUNCTION</code> 展开为一个方法 <code>__attribute__</code>，它会告诉编译器在索引 <strong>1</strong> 处的参数是一个格式化字符串，而实际参数从索引 <strong>2</strong> 开始。这将允许编译器检查格式化字符串而且会像 <code>NSLog()</code> 和 <code>-[NSString stringWithFormat:]</code> 一样输出警告信息。</p>
-
-<h2>字符与字符串组件</h2>
-
-<p>如有一个字符串 “bird” ，找出组成它的独立字母是很简单的。第二个字母是“i”（Unicode: LATIN SMALL LETTER I）。而对于像<a href="https://en.wikipedia.org/wiki/Åse">Åse</a>这样的字符串就没那么简单了。看起来像三个字母的组合可有多种方式，例如：</p>
-
-<pre><code>A    LATIN CAPITAL LETTER A
- ̊    COMBINING RING ABOVE
-s    LATIN SMALL LETTER S
-e    LATIN SMALL LETTER E
-</code></pre>
-
-<p>或者</p>
-
-<pre><code>Å    LATIN CAPITAL LETTER A WITH RING ABOVE
-s    LATIN SMALL LETTER S
-e    LATIN SMALL LETTER E
-</code></pre>
-
-<p>从 <a href="http://objccn.io/issue-9-1/#peculiar-unicode-features">Ole 写的这篇关于 Unicode 的文章</a> 里可以读到更多关于<strong>联合标记（combining marks）</strong>的信息，其他语言文字有更多复杂的<strong>代理对（complicated surrogate pairs）</strong>。</p>
-
-<p>如果我们要在字符层面处理一个字符串，那我们就要小心翼翼。苹果的文档中 String Programming Guide 里有一节叫做 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/Strings/Articles/stringsClusters.html">“Characters and Grapheme Clusters”</a>，里面有更多关于这一点的细节。</p>
-
-<p><code>NSString</code> 有两个方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="nf">rangeOfComposedCharacterSequencesForRange:</span>
-</span><span class="line"><span class="k">-</span><span class="nf">rangeOfComposedCharacterSequenceAtIndex:</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>上面这两个方法在有的时候很有帮助，例如，拆分一个字符串时保证我们不会把所谓的<strong>代理对（surrogate pairs）</strong>拆散。</p>
-
-<p>如果我们要针对字符串中的字符做文章， NSString 提供了下面这个方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="nf">enumerateSubstringsInRange:options:usingBlock:</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>options 这里传入 <code>NSStringEnumerationByComposedCharacterSequences</code> 这个参数，就可以扫描所有的字符。例如，用下面的方法，我们可将字符串 “International Business Machines” 变成 “IBM”：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">initials</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSMutableString</span> <span class="o">*</span><span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableString</span> <span class="n">string</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">enumerateSubstringsInRange:</span><span class="n">NSMakeRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">length</span><span class="p">)</span> <span class="nl">options:</span><span class="n">NSStringEnumerationByWords</span> <span class="o">|</span> <span class="n">NSStringEnumerationLocalized</span> <span class="nl">usingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">word</span><span class="p">,</span> <span class="n">NSRange</span> <span class="n">wordRange</span><span class="p">,</span> <span class="n">NSRange</span> <span class="n">enclosingWordRange</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">__block</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">firstLetter</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line">          <span class="p">[</span><span class="n">self</span> <span class="nl">enumerateSubstringsInRange:</span><span class="n">NSMakeRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">word</span><span class="p">.</span><span class="n">length</span><span class="p">)</span> <span class="nl">options:</span><span class="n">NSStringEnumerationByComposedCharacterSequences</span> <span class="nl">usingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">letter</span><span class="p">,</span> <span class="n">NSRange</span> <span class="n">letterRange</span><span class="p">,</span> <span class="n">NSRange</span> <span class="n">enclosingLetterRange</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop2</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">              <span class="n">firstLetter</span> <span class="o">=</span> <span class="n">letter</span><span class="p">;</span>
-</span><span class="line">              <span class="o">*</span><span class="n">stop2</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">          <span class="p">}];</span>
-</span><span class="line">          <span class="k">if</span> <span class="p">(</span><span class="n">firstLetter</span> <span class="o">!=</span> <span class="nb">nil</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">              <span class="p">[</span><span class="n">result</span> <span class="nl">appendString:</span><span class="n">firstLetter</span><span class="p">];</span>
-</span><span class="line">        <span class="p">};</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>如文档所示，词和句的分界可能基于地区的变化而变化。因此有 <code>NSStringEnumerationLocalized</code> 这个选项。</p>
-
-<h2>多行文字字面量</h2>
-
-<p>编译器的确有一个隐蔽的特性：把空格分隔开的字符串衔接到一起。这是什么意思呢？这段代码：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">limerick</span> <span class="o">=</span> <span class="s">@&quot;A lively young damsel named Menzies</span><span class="se">\n</span><span class="s">&quot;</span>
-</span><span class="line"><span class="s">@&quot;Inquired: «Do you know what this thenzies?»</span><span class="se">\n</span><span class="s">&quot;</span>
-</span><span class="line"><span class="s">@&quot;Her aunt, with a gasp,</span><span class="se">\n</span><span class="s">&quot;</span>
-</span><span class="line"><span class="s">@&quot;Replied: &quot;</span><span class="n">It</span><span class="err">&#39;</span><span class="n">s</span> <span class="n">a</span> <span class="n">wasp</span><span class="p">,</span><span class="err">\</span><span class="n">n</span><span class="s">&quot;</span>
-</span><span class="line"><span class="s">@&quot;And you&#39;re holding the end where the stenzies.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>与下面这段代码是完全等价的：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">limerick</span> <span class="o">=</span> <span class="s">@&quot;A lively young damsel named Menzies</span><span class="se">\n</span><span class="s">Inquired: «Do you know what this thenzies?»</span><span class="se">\n</span><span class="s">Her aunt, with a gasp,</span><span class="se">\n</span><span class="s">Replied: &quot;</span><span class="n">It</span><span class="err">&#39;</span><span class="n">s</span> <span class="n">a</span> <span class="n">wasp</span><span class="p">,</span><span class="err">\</span><span class="n">nAnd</span> <span class="n">you</span><span class="err">&#39;</span><span class="n">re</span> <span class="n">holding</span> <span class="n">the</span> <span class="n">end</span> <span class="n">where</span> <span class="n">the</span> <span class="n">stenzies</span><span class="p">.</span><span class="err">\</span><span class="n">n</span><span class="s">&quot;;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>前者看起来更舒服，但是有一点要注意：千万不要在任意一行末尾加入逗号或者分号。</p>
-
-<p>你也可以这样做：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSString</span> <span class="o">*</span> <span class="n">string</span> <span class="o">=</span> <span class="s">@&quot;The man &quot;</span> <span class="s">@&quot;who knows everything &quot;</span> <span class="s">@&quot;learns nothing&quot;</span> <span class="s">@&quot;.&quot;</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>编译器只是为我们提供了一个便捷的方式，将多个字符串在编译期组合在了一起。</p>
-
-<h2>可变字符串</h2>
-
-<p>可变字符串有两个常见的使用场景：（1）拼接字符串（2）替换子字符串</p>
-
-<h3>拼接字符串</h3>
-
-<p>可变字符串可以很轻易地把多个字符串按照你的需要组合起来。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">magicToken</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSMutableString</span> <span class="o">*</span><span class="n">string</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableString</span> <span class="n">string</span><span class="p">];</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">usePrefix</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">string</span> <span class="nl">appendString:</span><span class="s">@&quot;&amp;gt;&amp;gt;&amp;gt;&quot;</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="p">[</span><span class="n">string</span> <span class="nl">appendFormat:</span><span class="s">@&quot;%d--%d&quot;</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">foo</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bar</span><span class="p">];</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">useSuffix</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">string</span> <span class="nl">appendString:</span><span class="s">@&quot;&amp;gt;&amp;gt;&amp;gt;&quot;</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">string</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这里要注意的是，虽然原本返回值应该是一个 <code>NSString</code> 类型的对象，我们在这里只是简单地返回一个 <code>NSMutableString</code> 类型的对象。</p>
-
-<h3>替换子字符串</h3>
-
-<p>除了追加组合之外，<code>NSMutableString</code> 还提供了以下4个方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="nf">deleteCharactersInRange:</span>
-</span><span class="line"><span class="k">-</span><span class="nf">insertString:atIndex:</span>
-</span><span class="line"><span class="k">-</span><span class="nf">replaceCharactersInRange:withString:</span>
-</span><span class="line"><span class="k">-</span><span class="nf">replaceOccurrencesOfString:withString:options:range:</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>NSString</code> 也有类似的方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="nf">stringByReplacingOccurrencesOfString:withString:</span>
-</span><span class="line"><span class="k">-</span><span class="nf">stringByReplacingOccurrencesOfString:withString:options:range:</span>
-</span><span class="line"><span class="k">-</span><span class="nf">stringByReplacingCharactersInRange:withString:</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>但是 <code>NSMutableString</code> 的那些方法不会创建新的字符串，而仅仅改变当前字符串。这样会让代码更容易阅读，有时也会提升一些性能。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSMutableString</span> <span class="o">*</span><span class="n">string</span><span class="p">;</span> <span class="c1">// 假设我们已经有了一个名为 string 的字符串</span>
-</span><span class="line"><span class="c1">// 现在要去掉它的一个前缀，做法如下:</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">prefix</span> <span class="o">=</span> <span class="s">@&quot;WeDon’tWantThisPrefix&quot;</span>
-</span><span class="line"><span class="n">NSRange</span> <span class="n">r</span> <span class="o">=</span> <span class="p">[</span><span class="n">string</span> <span class="nl">rangeOfString:</span><span class="n">prefix</span> <span class="nl">options:</span><span class="n">NSAnchoredSearch</span> <span class="nl">range:</span><span class="n">NSMakeRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">string</span><span class="p">.</span><span class="n">length</span><span class="p">)</span> <span class="nl">locale:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">location</span> <span class="o">!=</span> <span class="n">NSNotFound</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">string</span> <span class="nl">deleteCharactersInRange:</span><span class="n">r</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h2>连接组件</h2>
-
-<p>一个看似微不足道但很常见的情况是字符串连接。比如现在有这样几个字符串：</p>
-
-<pre><code>Hildr
-Heidrun
-Gerd
-Guðrún
-Freya
-Nanna
-Siv
-Skaði
-Gróa
-</code></pre>
-
-<p>我们想用它们来创建下面这样的一个字符串：</p>
-
-<pre><code>Hildr, Heidrun, Gerd, Guðrún, Freya, Nanna, Siv, Skaði, Gróa
-</code></pre>
-
-<p>那么就可以这样做：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSArray</span> <span class="o">*</span><span class="n">names</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span><span class="s">&quot;Hildr&quot;</span><span class="p">,</span> <span class="s">@&quot;Heidrun&quot;</span><span class="p">,</span> <span class="s">@&quot;Gerd&quot;</span><span class="p">,</span> <span class="s">@&quot;Guðrún&quot;</span><span class="p">,</span> <span class="s">@&quot;Freya&quot;</span><span class="p">,</span> <span class="s">@&quot;Nanna&quot;</span><span class="p">,</span> <span class="s">@&quot;Siv&quot;</span><span class="p">,</span> <span class="s">@&quot;Skaði&quot;</span><span class="p">,</span> <span class="s">@&quot;Gróa&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">names</span> <span class="nl">componentsJoinedByString:</span><span class="s">@&quot;, &quot;</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>如果我们将其显示给用户，我们就要使用本地化表达，确保将最后一部分替换相应语言的 “, and” ：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">NSArray</span> <span class="nl">(ObjcIO_GroupedComponents)</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">groupedComponentsWithLocale:</span><span class="p">(</span><span class="n">NSLocale</span> <span class="o">*</span><span class="p">)</span><span class="nv">locale</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">count</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="s">@&quot;&quot;</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">count</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">self</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">count</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">NSString</span> <span class="o">*</span><span class="n">joiner</span> <span class="o">=</span> <span class="n">NSLocalizedString</span><span class="p">(</span><span class="s">@&quot;joiner.2components&quot;</span><span class="p">,</span> <span class="s">@&quot;&quot;</span><span class="p">);</span>
-</span><span class="line">        <span class="k">return</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;%@%@%@&quot;</span><span class="p">,</span> <span class="n">self</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">joiner</span><span class="p">,</span> <span class="n">self</span><span class="p">[</span><span class="mi">1</span><span class="p">]];</span>
-</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">NSString</span> <span class="o">*</span><span class="n">joiner</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;%@ &quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">locale</span> <span class="nl">objectForKey:</span><span class="n">NSLocaleGroupingSeparator</span><span class="p">]];</span>
-</span><span class="line">        <span class="n">NSArray</span> <span class="o">*</span><span class="n">first</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">subarrayWithRange:</span><span class="n">NSMakeRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)];</span>
-</span><span class="line">        <span class="n">NSMutableString</span> <span class="o">*</span><span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableString</span> <span class="nl">stringWithString:</span><span class="p">[</span><span class="n">first</span> <span class="nl">componentsJoinedByString:</span><span class="n">joiner</span><span class="p">]];</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">NSString</span> <span class="o">*</span><span class="n">lastJoiner</span> <span class="o">=</span> <span class="n">NSLocalizedString</span><span class="p">(</span><span class="s">@&quot;joiner.3components&quot;</span><span class="p">,</span> <span class="s">@&quot;&quot;</span><span class="p">);</span>
-</span><span class="line">        <span class="p">[</span><span class="n">result</span> <span class="nl">appendString:</span><span class="n">lastJoiner</span><span class="p">];</span>
-</span><span class="line">        <span class="p">[</span><span class="n">result</span> <span class="nl">appendString:</span><span class="n">self</span><span class="p">.</span><span class="n">lastObject</span><span class="p">];</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>那么在本地化的时候，如果是英语，应该是：</p>
-
-<pre><code>"joiner.2components" = " and ";
-"joiner.3components" = ", and ";
-</code></pre>
-
-<p>如果是德语，则应该是：</p>
-
-<pre><code>"joiner.2components" = " und ";
-"joiner.3components" = " und ";
-</code></pre>
-
-<p>结合组件的逆过程可以用 <code>-componentsSeparatedByString:</code>，这个方法会将字符串变成一个数组。例如，将 “12|5|3” 变成 “12”、“5” 和 “3”。</p>
-
-<p><a name="object-description"> </a>  </p>
-
-<h2>对象描述</h2>
-
-<p>在许多面向对象编程语言里，对象有一个叫做 <code>toString()</code> 或类似的方法。在 Objective C 里，这个方法是：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">description</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>以及它的兄弟方法:</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">debugDescription</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>当自定义模型对象时，覆写 <code>-description</code> 方法是一个好习惯，在 UI 上显示该对象时调用的就是该方法的返回值。假定我们有一个 <code>Contact</code> 类，下面是它的 <code>-description</code> 方法的实现：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">description</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我们可以像下面代码这样格式化字符串：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">label</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="n">NSLocalizedString</span><span class="p">(</span><span class="s">@&quot;%@ has been added to the group “%@”.&quot;</span><span class="p">,</span> <span class="s">@&quot;&quot;</span><span class="p">),</span> <span class="n">contact</span><span class="p">,</span> <span class="n">group</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>因为该字符串是用来做 UI 显示的，我们可能需要做本地化，那么我们就需要覆写下面这个方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">descriptionWithLocale:</span><span class="p">(</span><span class="n">NSLocale</span> <span class="o">*</span><span class="p">)</span><span class="nv">locale</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>格式转换符 <code>%@</code> 会首先调用 <code>-descriptionWithLocale</code>，如果没有返回值，再调用 <code>-description</code>。</p>
-
-<p>在调试时，打印一个对象，我们用 <code>po</code> 这个命令（它是 print object 的缩写）：</p>
-
-<pre><code>(lldb) po contact
-</code></pre>
-
-<p>它会调用对象的 <code>debugDescription</code> 方法。默认情况下 <code>debugDescription</code> 是直接调用 <code>description</code>。如果你希望输出不同的信息，那么就分别覆写两个方法。大多数情况下，尤其是对于非数据模型的对象，你只需要覆写 <code>-description</code> 就能满足需求了。</p>
-
-<p>实际上对象的标准格式化输出是这样的：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">description</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;&amp;lt;%@: %p&amp;gt;&quot;</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">class</span><span class="p">,</span> <span class="n">self</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>NSObject</code> 这个类内部就是这么实现的。当你覆写该方法时，也可以像这样写。假定我们有一个 <code>DetailViewController</code>，在它的UI上要显示一个 <code>contact</code>，我们可能会这样覆写该方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">description</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;&amp;lt;%@: %p&amp;gt; contact = %@&quot;</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">class</span><span class="p">,</span> <span class="n">self</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">contact</span><span class="p">.</span><span class="n">debugDescription</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3 id="nsmanagedobject"><code>NSManagedObject</code> 子类的描述</h3>
-
-<p>我们将特别注意向 <code>NSManagedObject</code> 的子类添加 <code>-description</code>/<code>-debugDescription</code> 的情况。由于 Core Data 的<strong>惰性加载机制（faulting mechanism）</strong>允许未加载数据的对象存在，所以当我们调用 <code>-debugDescription</code> 时我们并不希望改变应用程序的状态，因此需要检查 <code>isFault</code> 这个属性。例如，我们可如下这样实现它：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">debugDescription</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSMutableString</span> <span class="o">*</span><span class="n">description</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;&amp;lt;%@: %p&amp;gt;&quot;</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">class</span><span class="p">,</span> <span class="n">self</span><span class="p">];</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span> <span class="n">self</span><span class="p">.</span><span class="n">isFault</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">description</span> <span class="nl">appendFormat:</span><span class="s">@&quot; %@ </span><span class="se">\&quot;</span><span class="s">%@</span><span class="se">\&quot;</span><span class="s"> %gL&quot;</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">name</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">metricVolume</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">description</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>再次，因为它们是模型对象，重载 <code>-description</code> 简单地返回描述实例的属性名就可以了。</p>
-
-<h3>文件路径</h3>
-
-<p>简单来说就是我们不应该使用 <code>NSString</code> 来描述文件路径。对于 OS X 10.7 和 iOS 5，<code>NSURL</code> 更便于使用，而且更有效率，它还能缓存文件系统的属性。</p>
-
-<p>再者，<code>NSURL</code> 有八个方法来访问被称为 <em>resource values</em> 的东西。这些方法提供了一个稳定的接口，使我们可以用来获取和设置文件与目录的各种属性，例如本地化文件名（<code>NSURLLocalizedNameKey</code>）、文件大小（<code>NSURLFileSizeKey</code>），以及创建日期（<code>NSURLCreationDateKey</code>），等等。</p>
-
-<p>尤其是在遍历目录内容时，使用 
-<code>-[NSFileManager enumeratorAtURL:includingPropertiesForKeys:options:errorHandler:]</code>，并传入一个<strong>关键词（keys）</strong>列表，然后用 <code>-getResourceValue:forKey:error:</code> 检索它们，能带来显著的性能提升。
-
-<p>下面是一个简短的例子展示了如何将它们组合在一起：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line"><span class="n">NSFileManager</span> <span class="o">*</span><span class="n">fm</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSFileManager</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSURL</span> <span class="o">*</span><span class="n">documents</span> <span class="o">=</span> <span class="p">[</span><span class="n">fm</span> <span class="nl">URLForDirectory:</span><span class="n">NSDocumentationDirectory</span> <span class="nl">inDomain:</span><span class="n">NSUserDomainMask</span> <span class="nl">appropriateForURL:</span><span class="nb">nil</span> <span class="nl">create:</span><span class="n">NO</span> <span class="nl">error:</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">error</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSArray</span> <span class="o">*</span><span class="n">properties</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span><span class="n">NSURLLocalizedNameKey</span><span class="p">,</span> <span class="n">NSURLCreationDateKey</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSDirectoryEnumerator</span> <span class="o">*</span><span class="n">dirEnumerator</span> <span class="o">=</span> <span class="p">[</span><span class="n">fm</span> <span class="nl">enumeratorAtURL:</span><span class="n">documents</span>
-</span><span class="line">                                <span class="nl">includingPropertiesForKeys:</span><span class="n">properties</span>
-</span><span class="line">                                                   <span class="nl">options:</span><span class="mi">0</span>
-</span><span class="line">                                              <span class="nl">errorHandler:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line"><span class="k">for</span> <span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="n">fileURL</span> <span class="k">in</span> <span class="n">dirEnumerator</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line">    <span class="n">NSDate</span> <span class="o">*</span><span class="n">creationDate</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">fileURL</span> <span class="nl">getResourceValue:</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">name</span> <span class="nl">forKey:</span><span class="n">NSURLLocalizedNameKey</span> <span class="nl">error:</span><span class="nb">NULL</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span>
-</span><span class="line">        <span class="p">[</span><span class="n">fileURL</span> <span class="nl">getResourceValue:</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">creationDate</span> <span class="nl">forKey:</span><span class="n">NSURLCreationDateKey</span> <span class="nl">error:</span><span class="nb">NULL</span><span class="p">])</span>
-</span><span class="line">    <span class="p">{</span>
-</span><span class="line">        <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;&#39;%@&#39; was created at %@&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">creationDate</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我们把属性的键传给 <code>-enumeratorAtURL:...</code> 方法中，在遍历目录内容时，这个方法能确保用非常高效的方式获取它们。在循环中，调用 <code>-getResourceValue:...</code> 能简单地从 <code>NSURL</code> 得到已缓存的值，而不用去访问文件系统。</p>
-
-<h2 id="unixapi">传递路径到 UNIX API</h2>
-
-<p>因为 Unicode 非常复杂，同一个字母有多种表示方式，所以我们在传递路径给 UNIX API 时需要非常小心。在这些情况里，一定不能使用 <code>UTF8String</code>，正确的做法是使用 <code>-fileSystemRepresentation</code> 这个方法，如下：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSURL</span> <span class="o">*</span><span class="n">documentURL</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSFileManager</span> <span class="n">defaultManager</span><span class="p">]</span> <span class="nl">URLForDirectory:</span><span class="n">NSDocumentDirectory</span> <span class="nl">inDomain:</span><span class="n">NSUserDomainMask</span> <span class="nl">appropriateForURL:</span><span class="nb">nil</span> <span class="nl">create:</span><span class="n">NO</span> <span class="nl">error:</span><span class="nb">NULL</span><span class="p">];</span>
-</span><span class="line"><span class="n">documentURL</span> <span class="o">=</span> <span class="p">[</span><span class="n">documentURL</span> <span class="nl">URLByAppendingPathComponent:</span><span class="n">name</span><span class="p">];</span>
-</span><span class="line"><span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">documentURL</span><span class="p">.</span><span class="n">fileSystemRepresentation</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>与 <code>NSURL</code> 类似，同样的情况也发生在 <code>NSString</code> 上。如果我们不这么做，在打开一个文件名或路径名包含合成字符的文件时我们将看到随机错误。在 OS X 上，当用户的短名刚好包含合成字符时就会显得特别糟糕，比如 <code>tómas</code>。</p>
-
-<p>有时我们可能需要路径是一个不可变的常量，即 <code>char const *</code>，一个常见的例子就是 UNIX 的 <code>open()</code> 和 <code>close()</code> 指令。但这种需求也可能发生在使用 GCD / libdispatch 的 I/O API 上。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">dispatch_io_t</span>
-</span><span class="line"><span class="nf">dispatch_io_create_with_path</span><span class="p">(</span><span class="n">dispatch_io_type_t</span> <span class="n">type</span><span class="p">,</span>
-</span><span class="line">    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">path</span><span class="p">,</span> <span class="kt">int</span> <span class="n">oflag</span><span class="p">,</span> <span class="n">mode_t</span> <span class="n">mode</span><span class="p">,</span>
-</span><span class="line">    <span class="n">dispatch_queue_t</span> <span class="n">queue</span><span class="p">,</span>
-</span><span class="line">    <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="n">cleanup_handler</span><span class="p">)(</span><span class="kt">int</span> <span class="n">error</span><span class="p">));</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>如果我们要使用 <code>NSString</code> 来做这件事，那我们要保证像下面这样做：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">path</span> <span class="o">=</span> <span class="p">...</span> <span class="c1">// 假设这个字符串已经存在</span>
-</span><span class="line"><span class="n">io</span> <span class="o">=</span> <span class="n">dispatch_io_create_with_path</span><span class="p">(</span><span class="n">DISPATCH_IO_STREAM</span><span class="p">,</span>
-</span><span class="line">    <span class="n">path</span><span class="p">.</span><span class="n">fileSystemRepresentation</span><span class="p">,</span>
-</span><span class="line">    <span class="n">O_RDONLY</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">queue</span><span class="p">,</span> <span class="n">cleanupHandler</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>-fileSystemRepresentation</code> 所做的是它首先将这个字符串转换成文件系统的<a href="http://objccn.io/issue-9-1/#normalization-forms">规范形式</a>然后用 UTF-8 编码。</p>
-
-<hr /><p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</p>
 ]]></content>
   </entry>
   
