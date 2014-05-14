@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-05-13T16:37:32+08:00</updated>
+  <updated>2014-05-14T11:59:51+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,395 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[View-Layer协作]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/14/view-layerxie-zuo/"/>
+    <updated>2014-05-14T11:30:43+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/14/view-layerxie-zuo</id>
+    <content type="html"><![CDATA[<p>在 iOS 中，所有的 view 都是由一个底层的 layer 来驱动的。view 和它的 layer 之间有着紧密的联系，view 其实直接从 layer 对象中获取了绝大多数它所需要的数据。在 iOS 中也有一些单独的 layer，比如 <code>AVCaptureVideoPreviewLayer</code> 和 <code>CAShapeLayer</code>，它们不需要附加到 view 上就可以在屏幕上显示内容。两种情况下其实都是 layer 在起决定作用。当然了，附加到 view 上的 layer 和单独的 layer 在行为上还是稍有不同的。</p>
+
+<p>基本上你改变一个单独的 layer 的任何属性的时候，都会触发一个从旧的值过渡到新值的简单动画（这就是所谓的可动画 <code>animatable</code>）。然而，如果你改变的是 view 中 layer 的同一个属性，它只会从这一帧直接跳变到下一帧。尽管两种情况中都有 layer，但是当 layer 附加在 view 上时，它的默认的隐式动画的 layer 行为就不起作用了。</p>
+
+<blockquote>
+  <p>animatable；几乎所有的层的属性都是隐性可动画的。你可以在文档中看到它们的简介是以 'animatable' 结尾的。这不仅包括了比如位置，尺寸，颜色或者透明度这样的绝大多数的数值属性，甚至也囊括了像 isHidden 和 doubleSided 这样的布尔值。 像 paths 这样的属性也是 animatable 的，但是它不支持隐式动画。</p>
+</blockquote>
+
+<p>在 Core Animation 编程指南的 “How to Animate Layer-Backed Views” 中，对<em>为什么</em>会这样做出了一个解释：</p>
+
+<blockquote>
+  <p>UIView 默认情况下禁止了 layer 动画，但是在 animation block 中又重新启用了它们</p>
+</blockquote>
+
+<p>这正是我们所看到的行为；当一个属性在动画 block 之外被改变时，没有动画，但是当属性在动画 block 内被改变时，就带上了动画。对于这是<em>如何</em>发生的这一问题的答案十分简单和优雅，它优美地阐明和揭示了 view 和 layer 之间是如何协同工作和被精心设计的。</p>
+
+<p>无论何时一个可动画的 layer 属性改变时，layer 都会寻找并运行合适的 'action' 来实行这个改变。在 Core Animation 的专业术语中就把这样的动画统称为动作 (action，或者 <code>CAAction</code>)。</p>
+
+<blockquote>
+  <p>CAAction：技术上来说，这是一个接口，并可以用来做各种事情。但是实际中，某种程度上你可以只把它理解为用来处理动画。</p>
+</blockquote>
+
+<p>layer 将像文档中所写的的那样去寻找动作，整个过程分为五个步骤。第一步中的在 view 和 layer 中交互的部分是最有意思的：</p>
+
+<p>layer 通过向它的 delegate 发送 <code>actionForLayer:forKey:</code> 消息来询问提供一个对应属性变化的 action。delegate 可以通过返回以下三者之一来进行响应：</p>
+
+<ol>
+<li>它可以返回一个动作对象，这种情况下 layer 将使用这个动作。  </li>
+<li>它可以返回一个 <code>nil</code>， 这样 layer 就会到其他地方继续寻找。  </li>
+<li>它可以返回一个 <code>NSNull</code> 对象，告诉 layer 这里不需要执行一个动作，搜索也会就此停止。</li>
+</ol>
+
+<p>而让这一切变得有趣的是，当 layer 在背后支持一个 view 的时候，view 就是它的 delegate；</p>
+
+<blockquote>
+  <p>在 iOS 中，如果 layer 与一个 UIView 对象关联时，这个属性<code>必须</code>被设置为持有这个 layer 的那个 view。</p>
+</blockquote>
+
+<p>理解这些之后，前一分钟解释起来还复杂无比的现象瞬间就易如反掌了：属性改变时 layer 会向 view 请求一个动作，而一般情况下 view 将返回一个 <code>NSNull</code>，只有当属性改变发生在动画 block 中时，view 才会返回实际的动作。哈，但是请别轻信我的这些话，你可以非常容易地验证到底是不是这样。只要对一个一般来说可以动画的 layer 属性向 view 询问动作就可以了，比如对于 'position'：</p>
+
+<p>```objc
+NSLog(@”outside animation block: %@”,
+      [myView actionForLayer:myView.layer forKey:@”position”]);</p>
+
+<p>[UIView animateWithDuration:0.3 animations:^{
+    NSLog(@”inside animation block: %@”,
+          [myView actionForLayer:myView.layer forKey:@”position”]);
+}];
+```</p>
+
+<p>运行上面的代码，可以看到在 block 外 view 返回的是 NSNull 对象，而在 block 中时返回的是一个 CABasicAnimation。很优雅，对吧？值得注意的是打印出的 NSNull 是带着一对尖括号的 ("<code>&lt;null&gt;</code>")，这和其他对象一样，而打印 nil 的时候我们得到的是普通括号(<code>(null)</code>)： </p>
+
+<pre><code>outside animation block: &lt;null&gt;
+inside animation block: &lt;CABasicAnimation: 0x8c2ff10&gt;
+</code></pre>
+
+<p>对于 view 中的 layer 来说，对动作的搜索只会到第一步为止（至少我没有见过 view 返回一个 <code>nil</code> 然后导致继续搜索动作的情况）。对于单独的 layer 来说，剩余的四个步骤可以在 <a href="https://developer.apple.com/library/mac/documentation/graphicsimaging/reference/CALayer_class/Introduction/Introduction.html#//apple_ref/occ/instm/CALayer/actionForKey:">CALayer 的 <code>actionForKey:</code> 文档</a>中找到。</p>
+
+<h1 id="uikit">从 UIKit 中学习</h1>
+
+<p>我很确定我们都会同意 UIView 动画是一组非常优秀的 API，它简洁明确。实际上，它使用了 Core Animation 来执行动画，这给了我们一个绝佳的机会来深入研究 UIKit 是如何使用 Core Animation 的。在这里甚至还有很多非常棒的实践和技巧可以让我们借鉴。:)</p>
+
+<p>当属性在动画 block 中改变时，view 将向 layer 返回一个基本的动画，然后动画通过通常的 <code>addAnimation:forKey:</code> 方法被添加到 layer 中，就像显式地添加动画那样。再一次，别直接信我，让我们实践检验一下。</p>
+
+<p>归功于 UIView 的 <code>+layerClass</code> 类方法，view 和 layer 之间的交互很容易被观测到。通过这个方法我们可以在为 view 创建 layer 时为其指定要使用的类。通过子类一个 UIView，以及用这个方法返回一个自定义的 layer 类，我们就可以重写 layer 子类中的 <code>addAnimation:forKey:</code> 并输出一些东西来验证它是否确实被调用。唯一要记住的是我们需要调用 super 方法，不然的话我们就把要观测的行为完全改变了：</p>
+
+<p>```objc
+@interface DRInspectionLayer : CALayer
+@end</p>
+
+<p>@implementation DRInspectionLayer
+- (void)addAnimation:(CAAnimation *)anim forKey:(NSString *)key
+{
+    NSLog(@”adding animation: %@”, [anim debugDescription]);
+    [super addAnimation:anim forKey:key];
+}
+@end</p>
+
+<p>@interface DRInspectionView : UIView
+@end</p>
+
+<p>@implementation DRInspectionView
++ (Class)layerClass
+{
+    return [DRInspectionLayer class];
+}
+@end
+```</p>
+
+<p>通过输出动画的 debug 信息，我们不仅可以验证它确实如预期一样被调用了，还可以看到动画是如何组织构建的：</p>
+
+<pre><code>&lt;CABasicAnimation:0x8c73680; 
+    delegate = &lt;UIViewAnimationState: 0x8e91fa0&gt;;
+    fillMode = both; 
+    timingFunction = easeInEaseOut; 
+    duration = 0.3; 
+    fromValue = NSPoint: {5, 5}; 
+    keyPath = position
+&gt;
+</code></pre>
+
+<p>当动画刚被添加到 layer 时，属性的新值还没有被改变。在构建动画时，只有 <code>fromValue</code> (也就是当前值) 被显式地指定了。<a href="https://developer.apple.com/library/ios/documentation/GraphicsImaging/Reference/CABasicAnimation_class/Introduction/Introduction.html">CABasicAnimation 的文档</a>向我们简单介绍了这么做对于动画的插值来说的的行为应该是：</p>
+
+<blockquote>
+  <p>只有 <code>fromValue</code> 不是 <code>nil</code> 时，在 <code>fromValue</code> 和属性当前显示层的值之间进行插值。</p>
+</blockquote>
+
+<p>这也是我在处理显式动画时选择的做法，将一个属性改变为新的值，然后将动画对象添加到 layer 上：</p>
+
+<p>```objc
+CABasicAnimation *fadeIn = [CABasicAnimation animationWithKeyPath:@”opacity”];
+fadeIn.duration  = 0.75;
+fadeIn.fromValue = @0;</p>
+
+<p>myLayer.opacity = 1.0; // 更改 model 的值 …
+// … 然后添加动画对象
+[myLayer addAnimation:fadeIn forKey:@”fade in slowly”];
+```</p>
+
+<p>这很简洁，你也不需要在动画被移除的时候做什么额外操作。如果动画是在一段延迟后才开始的话，你可以使用 backward 填充模式 (或者 'both' 填充模式)，就像 UIKit 所创建的动画那样。</p>
+
+<p>可能你看见上面输出中的动画的 delegate 了，想知道这个类是用来做什么的吗？我们可以来看看 <a href="https://github.com/rpetrich/iphoneheaders/blob/master/UIKit/UIViewAnimationState.h">dump 出来的头文件</a>，它主要用来维护动画的一些状态 (持续时间，延时，重复次数等等)。它还负责对一个栈做 push 和 pop，这是为了在多个动画 block 嵌套时能够获取正确的动画状态。这些都是些实现细节，除非你想要写一套自己的基于 block 的动画 API，否则可能你不会用到它们 (实际上这是一个很有趣的点子)。</p>
+
+<p>然后真正<em>有意思</em>的是这个 delegate 实现了 <code>animationDidStart:</code> 和 <code>animationDidStop:finished:</code>，并将信息传给了它自己的 delegate。</p>
+
+<blockquote>
+  <p><span class="secondary radius label">编者注</span> 这里不太容易理解，加以说明：从上面的头文件中可以看出，作为 CAAnimation 的 delegate 的私有类 <code>UIViewAnimationState</code> 中还有一个 <code>_delegate</code> 成员，并且 <code>animationDidStart:</code> 和 <code>animationDidStop:finished:</code> 也是典型的 delegate 的实现方法。</p>
+</blockquote>
+
+<p>通过打印这个 delegate 的 delegate，我们可以发现它也是一个私有类：UIViewAnimationBlockDelegate。同样进行 <a href="https://github.com/EthanArbuckle/IOS-7-Headers/blob/master/Frameworks/UIKit.framework/UIViewAnimationBlockDelegate.h">class dump 得到它的头文件</a>，这是一个很小的类，只负责一件事情：响应动画的 delegate 回调并且执行相应的 block。如果我们使用自己的 Core Animation 代码，并且选择 block 而不是 delegate 做回调的话，添加这个是很容易的：</p>
+
+<p>```
+@interface DRAnimationBlockDelegate : NSObject</p>
+
+<p>@property (copy) void(^start)(void);
+@property (copy) void(^stop)(BOOL);</p>
+
+<p>+(instancetype)animationDelegateWithBeginning:(void(^)(void))beginning
+                                   completion:(void(^)(BOOL finished))completion;</p>
+
+<p>@end</p>
+
+<p>@implementation DRAnimationBlockDelegate</p>
+
+<ul>
+  <li>
+    <p>(instancetype)animationDelegateWithBeginning:(void (^)(void))beginning
+                                  completion:(void (^)(BOOL))completion
+{
+  DRAnimationBlockDelegate *result = [DRAnimationBlockDelegate new];
+  result.start = beginning;
+  result.stop  = completion;
+  return result;
+}</p>
+  </li>
+  <li>
+    <p>(void)animationDidStart:(CAAnimation *)anim
+{
+  if (self.start) {
+      self.start();
+  }
+  self.start = nil;
+}</p>
+  </li>
+  <li>
+    <p>(void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag
+{
+  if (self.stop) {
+      self.stop(flag);
+  }
+  self.stop = nil;
+}</p>
+  </li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>虽然是我个人的喜好，但是我觉得像这样的基于 block 的回调风格可能会比实现一个 delegate 回调更适合你的代码：</p>
+
+<p><code>objc
+fadeIn.delegate = [DRAnimationBlockDelegate animationDelegateWithBeginning:^{
+    NSLog(@"beginning to fade in");
+} completion:^(BOOL finished) {
+    NSLog(@"did fade %@", finished ? @"to the end" : @"but was cancelled");
+}];
+</code></p>
+
+<h1 id="blockapis">自定义基于 block 的动画 APIs</h1>
+
+<p>一旦你知道了 <code>actionForKey:</code> 的机理之后，UIView 就远没有它一开始看起来那么神秘了。实际上我们完全可以按照我们的需求量身定制地写出一套自己的基于 block 的动画 APIs。我所设计的动画将通过在 block 中用一个很激进的时间曲线来做动画，以吸引用户对该 view 的注意，之后做一个缓慢的动画回到原始状态。你可以把它看作一种类似 pop (请不要和 Facebook 最新的 Pop 框架弄混了)的行为。与一般使用 <code>UIViewAnimationOptionAutoreverse</code> 的动画 block 不同，因为动画设计和概念上的需要，我自己实现了将 model 值改变回原始值的过程。自定义的动画 API 的使用方法就像这样：</p>
+
+<pre><code>[UIView DR_popAnimationWithDuration:0.7
+                             animations:^{
+                                 myView.transform = CGAffineTransformMakeRotation(M_PI_2);
+                                }];
+</code></pre>
+
+<p>当我们完成后，效果是这个样子的 (对四个不同的 view 为位置，尺寸，颜色和旋转进行动画)：</p>
+
+<p><img alt="The custom block animation API, used to animate the position, size, color, and rotation of four different views" src="http://img.objccn.io/issue-12/2014-05-01-view-layer-synergy-custom-block-animations.gif" width="238" /></p>
+
+<p>要开始实现它，我们首先要做的是当一个 layer 属性变化时获取 delegate 的回调。因为我们无法事先预测 layer 要改变什么，所以我选择在一个 UIView 的 category 中 swizzle <code>actionForLayer:forKey:</code> 方法：</p>
+
+<p>```objc
+@implementation UIView (DR_CustomBlockAnimations)</p>
+
+<ul>
+  <li>
+    <p>(void)load
+{      <br />
+  SEL originalSelector = @selector(actionForLayer:forKey:);
+  SEL extendedSelector = @selector(DR_actionForLayer:forKey:);</p>
+
+    <p>Method originalMethod = class_getInstanceMethod(self, originalSelector);
+  Method extendedMethod = class_getInstanceMethod(self, extendedSelector);</p>
+
+    <p>NSAssert(originalMethod, @”original method should exist”);
+  NSAssert(extendedMethod, @”exchanged method should exist”);</p>
+
+    <p>if(class_addMethod(self, originalSelector, method_getImplementation(extendedMethod), method_getTypeEncoding(extendedMethod))) {
+      class_replaceMethod(self, extendedSelector, method_getImplementation(originalMethod), method_getTypeEncoding(originalMethod));
+  } else {
+      method_exchangeImplementations(originalMethod, extendedMethod);
+  }
+}
+```</p>
+  </li>
+</ul>
+
+<p>为了保证我们不破坏其他依赖于 <code>actionForLayer:forKey:</code> 回调的代码，我们使用一个静态变量来判断现在是不是处于我们自己定义的上下文中。对于这个例子来说一个简单的 <code>BOOL</code> 其实就够了，但是如果我们之后要写更多内容的话，上下文的话就要灵活得多了：</p>
+
+<pre><code>static void *DR_currentAnimationContext = NULL;
+static void *DR_popAnimationContext     = &amp;DR_popAnimationContext;
+
+- (id&lt;CAAction&gt;)DR_actionForLayer:(CALayer *)layer forKey:(NSString *)event
+{
+    if (DR_currentAnimationContext == DR_popAnimationContext) {
+        // 这里写我们自定义的代码...
+    }
+
+    // 调用原始方法
+    return [self DR_actionForLayer:layer forKey:event]; // 没错，你没看错。因为它们已经被交换了
+}
+</code></pre>
+
+<p>在我们的实现中，我们要确保在执行动画 block 之前设置动画的上下文，并且在执行后恢复上下文：</p>
+
+<p><code>objc
+ + (void)DR_popAnimationWithDuration:(NSTimeInterval)duration
+                          animations:(void (^)(void))animations
+ {
+     DR_currentAnimationContext = DR_popAnimationContext;
+     // 执行动画 (它将触发交换后的 delegate 方法)
+     animations();
+     /* 一会儿再添加 */
+     DR_currentAnimationContext = NULL;
+ }
+</code></p>
+
+<p>如果我们想要做的不过是添加一个从旧的值向新的值过度的动画的话，我们可以直接在 delegate 的回调中来做。然而因为我们想要更精确地控制动画，我们需要用一个帧动画来实现。帧动画需要所有的值都是已知的，而对我们的情况来说，新的值还没有被设定，因此我们也就无从知晓。</p>
+
+<p>有意思的是，iOS 添加的一个基于 block 的动画 API 也遇到了同样的问题。使用和上面一样的观察手段，我们就能知道它是如何绕开这个麻烦的。对于每个关键帧，在属性变化时，view 返回 <code>nil</code>，但是却存储下需要的状态。这样就能在所有关键帧 block 执行后创建一个 <code>CAKeyframeAnimationz</code> 对象。</p>
+
+<p>受到这种方法的启发，我们可以创建一个小的类来存储我们创建动画时所需要的信息：什么 layer 被更改了，什么 key path 的值被改变了，以及原来的值是什么：</p>
+
+<p>```objc
+ @interface DRSavedPopAnimationState : NSObject</p>
+
+<p>@property (strong) CALayer  *layer;
+ @property (copy)   NSString *keyPath;
+ @property (strong) id        oldValue;</p>
+
+<ul>
+  <li>(instancetype)savedStateWithLayer:(CALayer *)layer
+                          keyPath:(NSString *)keyPath;</li>
+</ul>
+
+<p>@end</p>
+
+<p>@implementation DRSavedPopAnimationState</p>
+
+<ul>
+  <li>(instancetype)savedStateWithLayer:(CALayer *)layer
+                          keyPath:(NSString *)keyPath
+ {
+  DRSavedPopAnimationState *savedState = [DRSavedPopAnimationState new];
+  savedState.layer    = layer;
+  savedState.keyPath  = keyPath;
+  savedState.oldValue = [layer valueForKeyPath:keyPath];
+  return savedState;
+ }</li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>接下来，在我们的交换后的 delegate 回调中，我们简单地将被变更的属性的状态存入一个静态可变数组中：</p>
+
+<pre><code> if (DR_currentAnimationContext == DR_popAnimationContext) {
+       [[UIView DR_savedPopAnimationStates] addObject:[DRSavedPopAnimationState savedStateWithLayer:layer
+                                                                                 keyPath:event]];
+
+       // 没有隐式的动画 (稍后添加)
+       return (id&lt;CAAction&gt;)[NSNull null];
+   }
+</code></pre>
+
+<p>在动画 block 执行完毕后，所有的属性都被变更了，它们的状态也被保存了。现在，创建关键帧动画：</p>
+
+<p>```objc
+ + (void)DR_popAnimationWithDuration:(NSTimeInterval)duration
+                          animations:(void (^)(void))animations
+ {
+     DR_currentAnimationContext = DR_popAnimationContext;</p>
+
+<pre><code> // 执行动画 (它将触发交换后的 delegate 方法)
+ animations();
+
+ [[self DR_savedPopAnimationStates] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+     DRSavedPopAnimationState *savedState   = (DRSavedPopAnimationState *)obj;
+     CALayer *layer    = savedState.layer;
+     NSString *keyPath = savedState.keyPath;
+     id oldValue       = savedState.oldValue;
+     id newValue       = [layer valueForKeyPath:keyPath];
+
+     CAKeyframeAnimation *anim = [CAKeyframeAnimation animationWithKeyPath:keyPath];
+
+     CGFloat easing = 0.2;
+     CAMediaTimingFunction *easeIn  = [CAMediaTimingFunction functionWithControlPoints:1.0 :0.0 :(1.0-easing) :1.0];
+     CAMediaTimingFunction *easeOut = [CAMediaTimingFunction functionWithControlPoints:easing :0.0 :0.0 :1.0];
+
+     anim.duration = duration;
+     anim.keyTimes = @[@0, @(0.35), @1];
+     anim.values = @[oldValue, newValue, oldValue];
+     anim.timingFunctions = @[easeIn, easeOut];
+
+     // 不带动画地返回原来的值
+     [CATransaction begin];
+     [CATransaction setDisableActions:YES];
+     [layer setValue:oldValue forKeyPath:keyPath];
+     [CATransaction commit];
+
+     // 添加 "pop" 动画
+     [layer addAnimation:anim forKey:keyPath];
+
+ }];
+
+ // 扫除工作 (移除所有存储的状态)
+ [[self DR_savedPopAnimationStates] removeAllObjects];
+
+ DR_currentAnimationContext = nil;  } ```
+</code></pre>
+
+<p>注意老的 model 值被射到了 layer 上，所以在当动画结束和移除后，model 的值和 presentation 的值是相符合的。</p>
+
+<p>创建像这样的你自己的 API 不会对没种情况都很适合，但是如果你需要在你的应用中的很多地方都做同样的动画的话，这可以帮助你写出整洁的代码，并减少重复。就算你之后从来不会使用这种方法，实际做一遍也能帮助你搞懂 UIView block 动画的 APIs，特别是你已经在 Core Animation 的舒适区的时候，这非常有助于你的提高。</p>
+
+<h1>其他的动画灵感</h1>
+
+<p>UIImageView 动画是一个完全不同的更高层次的动画 API 的实现方式，我会把它留给你来探索。表面上，它只不过是重新组装了一个传统的动画 API。你所要做的事情就是指定一个图片数组和一段时间，然后告诉 image view 开始动画。在抽象背后，其实是一个添加在 image view 的 layer 上的 contents 属性的离散的关键帧动画：</p>
+
+<pre><code>&lt;CAKeyframeAnimation:0x8e5b020; 
+    removedOnCompletion = 0; 
+    delegate = &lt;_UIImageViewExtendedStorage: 0x8e49230&gt;; 
+    duration = 2.5; 
+    repeatCount = 2.14748e+09; 
+    calculationMode = discrete; 
+    values = (
+        "&lt;CGImage 0x8d6ce80&gt;",
+        "&lt;CGImage 0x8d6d2d0&gt;",
+        "&lt;CGImage 0x8d5cd30&gt;"
+    ); 
+    keyPath = contents
+&gt;
+</code></pre>
+
+<p>动画 APIs 可以以很多不同形式出现，而对于你自己写的动画 API 来说，也是这样的。</p>
+
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[CollectionView布局动画]]></title>
@@ -1305,226 +1694,6 @@ google_ad_height = 280;
 <h3>这些如何映射到<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">UIView</code></h3>
 <p>关于<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>getter方法，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">center</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">UIView</code>并没有做什么工作；它只是简单的各自调用它底层的CALayer的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>方法。</p>
 <p>注意<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">center</code>到<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>的映射 &mdash; 改变底层<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">layer</code>的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>会使<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">center</code>不能正确的对应到层的&rdquo;中心&rdquo;或者层的边界矩形的&rdquo;中点&rdquo;。</p>
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[CocoaPods安装和使用教程]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/"/>
-    <updated>2014-05-08T00:10:43+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng</id>
-    <content type="html"><![CDATA[<h2>目录</h2>
-
-<ul>
-<li><a href="#cocoapods">CocoaPods是什么？</a></li>
-<li><a href="#install">如何下载和安装CocoaPods？</a></li>
-<li><a href="#usage">如何使用CocoaPods？</a>
-
-    <ul>
-        <li><a href="#usage1">场景1：利用CocoaPods，在项目中导入AFNetworking类库</a></li>
-        <li><a href="#usage2">场景2：如何正确编译运行一个包含CocoPods类库的项目</a></li>
-    </ul>
-</li>
-</ul>
-
-<h2 id="cocoapods">CocoaPods是什么？</h2>
-
-<p>当你开发iOS应用时，会经常使用到很多第三方开源类库，比如JSONKit，AFNetWorking等等。可能某个类库又用到其他类库，所以要使用它，必须得另外下载其他类库，而其他类库又用到其他类库，“子子孙孙无穷尽也”，这也许是比较特殊的情况。总之小编的意思就是，手动一个个去下载所需类库十分麻烦。另外一种常见情况是，你项目中用到的类库有更新，你必须得重新下载新版本，重新加入到项目中，十分麻烦。如果能有什么工具能解决这些恼人的问题，那将“善莫大焉”。所以，你需要 CocoaPods。</p>
-
-<p>CocoaPods应该是iOS最常用最有名的类库管理工具了，上述两个烦人的问题，通过cocoaPods，只需要一行命令就可以完全解决，当然前提是你必须正确设置它。重要的是，绝大部分有名的开源类库，都支持CocoaPods。所以，作为iOS程序员的我们，掌握CocoaPods的使用是必不可少的基本技能了。</p>
-
-<h2 id="install">如何下载和安装CocoaPods？</h2>
-
-<p>在安装CocoaPods之前，首先要在本地安装好Ruby环境。至于如何在Mac中安装好Ruby环境，请google一下，本文不再涉及。</p>
-
-<p>假如你在本地已经安装好Ruby环境，那么下载和安装CocoaPods将十分简单，只需要一行命令。在Terminator（也就是终端）中输入以下命令（注意，本文所有命令都是在终端中输入并运行的。什么，你不知道什么是终端？那请小编吃饭，小编告诉你）：</p>
-
-<pre><code>sudo gem install cocoapods
-</code></pre>
-
-<p>但是，且慢。如果你在天朝，在终端中敲入这个命令之后，会发现半天没有任何反应。原因无他，因为那堵墙阻挡了cocoapods.org。（你会问，我靠，这都要墙！是的，小编也纳闷。）</p>
-
-<p>但是，是的，又但是（不过是个可喜的“但是”）。我们可以用淘宝的Ruby镜像来访问cocoapods。按照下面的顺序在终端中敲入依次敲入命令：</p>
-
-<pre><code>$ gem sources --remove https://rubygems.org/
-//等有反应之后再敲入以下命令
-$ gem sources -a http://ruby.taobao.org/
-</code></pre>
-
-<p>为了验证你的Ruby镜像是并且仅是taobao，可以用以下命令查看：</p>
-
-<pre><code>$ gem sources -l
-</code></pre>
-
-<p>只有在终端中出现下面文字才表明你上面的命令是成功的：</p>
-
-<pre><code>*** CURRENT SOURCES ***
-
-http://ruby.taobao.org/
-</code></pre>
-
-<p>上面所有的命令完成之时，在小编的终端上是这个的样子：</p>
-
-<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_1.png" alt="Figure 1" /></p>
-
-<p>这时候，你再次在终端中运行：</p>
-
-<pre><code>$ sudo gem install cocoapods
-</code></pre>
-
-<p>等上十几秒钟，CocoaPods就可以在你本地下载并且安装好了，不再需要其他设置。</p>
-
-<p>敲入以上命令时，小编终端上是这个样子的（由于太长，仅截取前面一部分）：</p>
-
-<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_11.png" alt="Figure 2" /></p>
-
-<p>看到这里，你心里会不会说，我靠！太爽了，这么容易就可以下载并且安装好了！是的，小编也是这么想的。CocoPods就是这么简单，使用也十分简单。继续往下看吧。</p>
-
-<h2 id="usage">如何使用CocoaPods？</h2>
-
-<p>好了，安装好CocoPods之后，接下来就是使用它。所幸，使用CocoPods和安装它一样简单，也是通过一两行命令就可以搞定。</p>
-
-<p>小编在这里用两种使用场景来具体说明如何使用CocoaPods。</p>
-
-<h3 id="usage1">场景1：利用CocoaPods，在项目中导入AFNetworking类库</h3>
-
-<p>AFNetworking类库在GitHub地址是：<a href="https://github.com/AFNetworking/AFNetworking">https://github.com/AFNetworking/AFNetworking</a></p>
-
-<p>为了确定AFNetworking是否支持CocoaPods，可以用CocoaPods的搜索功能验证一下。在终端中输入：</p>
-
-<pre><code>$ pod search AFNetworking
-</code></pre>
-
-<p>过几秒钟之后，你会在终端中看到关于AFNetworking类库的一些信息。比如：</p>
-
-<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_12.png" alt="Figure 3" /></p>
-
-<p>这说明，AFNetworking是支持CocoaPods，所以我们可以利用CocoaPods将AFNetworking导入你的项目中。</p>
-
-<p>首先，我们需要在我们的项目中加入CocoaPods的支持。你可以跟随小编的步骤，先利用Xcode创建一个名字CocoaPodsDemo的项目，用于以下的教程。创建好之后，在继续下一步之前，小编先截图，看看项目没有支持CocoaPods时的项目Xcode目录结构：</p>
-
-<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_13.png" alt="Figure 4" /></p>
-
-<p>上图等一下要跟项目支持CocoaPods之后的项目Xcode目录结构做对比。</p>
-
-<p>你看到这里也许会问，CocoaPods为什么能下载AFNetworking呢，而不是下载其他类库呢？这个问题的答案是，有个文件来控制CocoaPods该下载什么。这个文件就叫做“Podfile”（注意，一定得是这个文件名，而且没有后缀）。你创建一个Podfile文件，然后在里面添加你需要下载的类库，也就是告诉CocoaPods，“某某和某某和某某某，快到碗里来！”。每个项目只需要一个Podfile文件。</p>
-
-<p>好吧，废话少说，我们先创建这个神奇的PodFile。在终端中进入（cd命令）你项目所在目录，然后在当前目录下，利用vim创建Podfile，运行：</p>
-
-<pre><code>$ vim Podfile
-</code></pre>
-
-<p>然后在Podfile文件中输入以下文字：</p>
-
-<pre><code>platform :ios, '7.0'
-pod "AFNetworking", "~&gt; 2.0"
-</code></pre>
-
-<p>注意，这段文字不是小编凭空生成的，可以在AFNetworking的github页面找到。这两句文字的意思是，当前AFNetworking支持的iOS最高版本是iOS 7.0, 要下载的AFNetworking版本是2.0。</p>
-
-<p>然后保存退出。vim环境下，保存退出命令是：</p>
-
-<pre><code>:wq
-</code></pre>
-
-<p>这时候，你会发现你的项目目录中，出现一个名字为Podfile的文件，而且文件内容就是你刚刚输入的内容。注意，Podfile文件应该和你的工程文件.xcodeproj在同一个目录下。</p>
-
-<p>这时候，你就可以利用CocoPods下载AFNetworking类库了。还是在终端中的当前项目目录下，运行以下命令：</p>
-
-<pre><code>$ pod install 
-</code></pre>
-
-<p>因为是在你的项目中导入AFNetworking，这就是为什么这个命令需要你进入你的项目所在目录中运行。</p>
-
-<p>运行上述命令之后，小编的终端出现以下信息：</p>
-
-<pre><code>EricmatoMacBook-Pro:CocoaPodsDemo ericwang$ pod install
-Analyzing dependencies
-Downloading dependencies
-Installing AFNetworking (2.0.2)
-Generating Pods project
-Integrating client project
-
-[!] From now on use `CocoaPodsDemo.xcworkspace`.
-</code></pre>
-
-<p>注意最后一句话，意思是：以后打开项目就用 CocoaPodsDemo.xcworkspace 打开，而不是之前的.xcodeproj文件。</p>
-
-<p>你也许会郁闷，为什么会出现.xcodeproj文件呢。这正是你刚刚运行<code>$ pod install</code>命令产生的新文件。除了这个文件，你会发现还多了另外一个文件“Podfile.lock”和一个文件夹“Pods”。
-点击 CocoaPodsDemo.xcworkspace 打开之后工程之后，项目Xcode目录结构如下图：</p>
-
-<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_14.png" alt="Figure 5" /></p>
-
-<p>你会惊喜地发现，AFNetwoking已经成功导入项目了（红框部分）！</p>
-
-<p>现在，你就可以开始使用AFNetworking.h啦。可以稍微测试一下，在你的项目任意代码文件中输入：</p>
-
-<pre><code>#import &lt;AFNetworking.h&gt;
-或者
-#import "AFNetworking.h"
-</code></pre>
-
-<p>然后编译，看看是否出错。如果你严格按照小编上述的步骤来，是不可能出错的啦。</p>
-
-<p>至此，CocoPods的第一个应用场景讲述完毕。别看小编写了这么多，其实过程是十分简单的。总结一下就是：</p>
-
-<ol>
-<li>先在项目中创建Podfile，Podfile的内容是你想导入的类库。一般类库的原作者会告诉你导入该类库应该如何写Podfile；</li>
-<li>运行命令：<code>`$ pod install</code>.</li>
-</ol>
-
-<p>下面，小编继续讲述第二种使用场景。</p>
-
-<h3 id="usage2">场景2：如何正确编译运行一个包含CocoPods类库的项目</h3>
-
-<p>你也许曾经遇到过（特别是新手iOS开发者）这种情况，好不容易在GitHub上找到一份代码符合自己想需求，兴冲冲下载下来，一编译，傻眼了，发现有各种各样错误。一看，原来是缺失了各种其他第三方类库。这时候莫慌，你再仔细一看，会发现你下载的代码包含了Podfile。没错，这意味着你可以用CocoaPods很方便下载所需要的类库。</p>
-
-<p>下面，小编以代码 <a href="https://github.com/UrbanApps/UAAppReviewManager">UAAppReviewManager</a> 为例来说明如何正确编译运行一个包含CocoPods类库的项目。</p>
-
-<p>UAAppReviewManager是一个能够让你方便地将提醒用户评分的功能加入你的应用中。当你去UAAppReviewManager的GitHub地址下载这份代码之后，打开Example工程（UAAppReviewManagerExample），编译，你会发现Xcode报告一大堆错误，基本都是说你编译的这份代码找不到某某头文件，这就意味着你要成功编译UAAppReviewManager的Example代码，必须先导入一些第三方类库。同时你会发现在UAAppReviewManagerExample文件夹下面有三个跟CocosPods相关的文件（文件夹）：Podfile，Podfile.lock和Pods，如下图：</p>
-
-<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_15.png" alt="Figure 6" /></p>
-
-<p>用</p>
-
-<p>这时候，打开终端，进入UAAppReviewManagerExample所在的目录，也就是和Podfile在同一目录下，和场景1一样，输入以下命令（由于已经有Podfile，所以不需要再创建Podfile）：</p>
-
-<pre><code>$ pod update
-</code></pre>
-
-<p>过几秒（也许需要十几秒，取决于你的网络状况）之后，终端出现：</p>
-
-<pre><code>Analyzing dependencies
-Fetching podspec for `UAAppReviewManager` from `../`
-Downloading dependencies
-Installing UAAppReviewManager (0.1.6)
-Generating Pods project
-Integrating client project
-
-[!] From now on use `UAAppReviewManagerExample.xcworkspace`.
-</code></pre>
-
-<p>这时候，再回到UAAppReviewManagerExample文件夹看一看，会看到多了一个文件UAAppReviewManagerExample.xcworkspace：</p>
-
-<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_16.png" alt="Figure 7" /></p>
-
-<p>根据终端的信息提示，你以后就需用新产生的UAAppReviewManagerExample.xcworkspace来运行这个Example代码了。</p>
-
-<p>打开UAAppReviewManagerExample.xcworkspace，编译运行，成功！如下图：</p>
-
-<p><img src="http://code4app.com/photo/5273c20b6803fac658000000_17.png" alt="Figure 8" /></p>
-
-<p>注意，这里有个小问题，如果刚刚你不是输入<code>$ pod update</code>，而是输入<code>$ pod install</code>，会发现类库导入不成功，并且终端出现下面提示：</p>
-
-<pre><code>[!] Required version (UAAppReviewManager (from `../`)) not found for `UAAppReviewManager`.
-Available versions: 0.1.6
-</code></pre>
-
-<p>这里的意思大概是Podfile文件过期，类库有升级，但是Podfile没有更改。<code>$ pod install</code>只会按照Podfile的要求来请求类库，如果类库版本号有变化，那么将获取失败。但是 <code>$ pod update</code>会更新所有的类库，获取最新版本的类库。而且你会发现，如果用了 <code>$ pod update</code>，再用 <code>$ pod install</code> 就成功了。</p>
-
-<p>那你也许会问，什么时候用 <code>$ pod install</code>，什么时候用 <code>$ pod update</code> 呢，我又不知道类库有没有新版本。好吧，那你每次直接用 <code>$ pod update</code> 算了。或者先用 <code>$ pod install</code>，如果不行，再用 <code>$ pod update</code>。</p>
 <hr />
 
 ]]></content>
