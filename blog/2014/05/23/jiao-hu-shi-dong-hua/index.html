@@ -118,10 +118,13 @@
 
 <p>Core Animation 是通过分离 layer 的模型属性和你在屏幕上看到的界面 (显示层) 的方式来设计的，这就导致我们很难去创建一个可以在任何时候能交互的动画，因为在动画时，模型和界面已经不能匹配了。这时，我们不得不通过手动的方式来同步这两个的状态，来达到改变动画的效果：</p>
 
-<pre><code>view.layer.center = view.layer.presentationLayer.center;
-[view.layer removeAnimationForKey:@"animation"];
-// 添加新动画
-</code></pre>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">presentationLayer</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
+</span><span class="line"><span class="p">[</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">removeAnimationForKey:</span><span class="s">@&quot;animation&quot;</span><span class="p">];</span>
+</span><span class="line"><span class="c1">// 添加新动画</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <h3 id="vs">直接控制 vs 间接控制</h3>
 
@@ -135,7 +138,9 @@
 
 <p>只有通过<em>间接</em>操作动画才能达到上面的效果，比如通过模拟力在界面上的表现。新的动画需要用 layer 的当前<em>速度矢量</em>作为参数传入来达到流畅的效果。</p>
 
-<p>看一下 UIView 中关于弹簧动画的 API (<code>animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:</code>)，你会注意到速率是个 <code>CGFloat</code>。所以当我们给一个移动 view 的动画在其运动的方向上加一个初始的速率时，你没法告知动画这个 view 现在的运动状态，比如我们不知道要添加的动画的方向是不是和原来的 view 的速度方向垂直。为了使其成为可能，这个速度需要用向量来表示。</p>
+<p>看一下 UIView 中关于弹簧动画的 API (<pre><code>
+	animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:
+</code>)，你会注意到速率是个 <code>CGFloat</code>。所以当我们给一个移动 view 的动画在其运动的方向上加一个初始的速率时，你没法告知动画这个 view 现在的运动状态，比如我们不知道要添加的动画的方向是不是和原来的 view 的速度方向垂直。为了使其成为可能，这个速度需要用向量来表示。
 
 <h2>解决方案</h2>
 
@@ -650,9 +655,9 @@
 
 <p>非常感谢 <a href="https://twitter.com/lorenb">Loren Brichter</a> 给这篇文章提出的一些意见。</p>
 
-<hr />
-<p class="post-footer">
+<hr /><p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</pre></p>
 </div>
 
 </article>
