@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-05-18T10:58:26+08:00</updated>
+  <updated>2014-05-23T10:20:28+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,569 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[交互式动画]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/"/>
+    <updated>2014-05-23T10:11:17+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua</id>
+    <content type="html"><![CDATA[<p>在2007年，乔布斯在第一次介绍 iPhone 的时候，iPhone 的触摸屏交互简直就像是一种魔法。最好的例子就是在他<a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">第一次滑动 TableView 的展示上</a>。你可以感受到当时观众的反应是多么惊讶，但是对于现在的我们来说早已习以为常。在展示的后面一部分，他特别指出当他给别人看了这个滑动例子，别人说的一句话: <a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">“当这个界面滑动的时候我就已经被征服了”</a>.</p>
+
+<p>是什么样的滑动能让人有‘哇哦’的效果呢？</p>
+
+<p>滑动是最完美地展示了通过触摸屏直接操作的例子。滚动视图遵从于你的手指，当你的手指离开屏幕的时，视图会自然地继续滑动直到该停止的时候停止。它用自然的方式减速，甚至在快到界限的时候也能表现出细腻的弹力效果。滑动在任何时候都保持相应，并且看上去非常真实。</p>
+
+<h2>动画的状态</h2>
+
+<p>在 iOS 中的大部分动画仍然没有按照最初 iPhone 指定的滑动标准实现。这里有很多动画一旦它们运行就不能交互（比如说解锁动画，主界面中打开文件夹和关闭文件夹的动画，和导航栏切换的动画，还有很多）。</p>
+
+<p>然而现在有一些应用给我一种始终在控制动画的体验，我们可以直接操作那些我在用的动画。当我们将这些应用和其他的应用相比较之后，我们就能感觉到明显的区别。这些应用中最优秀的有最初的 Twitter iPad app， 和现在的 Facebook Paper。但目前，使用直接操作为主并且可以中断动画的应用仍然很少。这就给我们做出更好的应用提供了机会，让我们的应用有更不同的，更高质量的体验。</p>
+
+<h2>真实交互式动画的挑战</h2>
+
+<p>当我们用 UIView 或者 CAAnimation 来实现交互式动画时会有两个大问题: 这些动画会将你在屏幕上的内容和 layer 上的实际的特定属性分离开来，并且他们直接操作这些特定属性。</p>
+
+<h3 id="modelpresentation">模型 (Model) 和显示 (Presentation) 的分离</h3>
+
+<p>Core Animation 是通过分离 layer 的模型属性和你在屏幕上看到的界面 (显示层) 的方式来设计的，这就导致我们很难去创建一个可以在任何时候能交互的动画，因为在动画时，模型和界面已经不能匹配了。这时，我们不得不通过手动的方式来同步这两个的状态，来达到改变动画的效果：</p>
+
+<pre><code>view.layer.center = view.layer.presentationLayer.center;
+[view.layer removeAnimationForKey:@"animation"];
+// 添加新动画
+</code></pre>
+
+<h3 id="vs">直接控制 vs 间接控制</h3>
+
+<p><code>CAAnimation</code> 动画的更大的问题是它们是直接在 layer 上对属性进行操作的。这意味着什么呢？比如我们想指定一个 layer 从坐标为 (100, 100) 的位置运动到 (300, 300) 的位置，但是在它运动到中间的时候，我们想它停下来并且让它回到它原来的位置，事情就变得非常复杂了。如果你只是简单地删除当前的动画然后再添加一个新的，那么这个 layer 的速率就会不连续。</p>
+
+<p><img src="http://img.objccn.io/issue-12/abrupt.png" width="600" /></p>
+
+<p>然而，我们想要的是一个漂亮的，流畅地减速和加速的动画。</p>
+
+<p><img src="http://img.objccn.io/issue-12/smooth.png" width="600" /></p>
+
+<p>只有通过<em>间接</em>操作动画才能达到上面的效果，比如通过模拟力在界面上的表现。新的动画需要用 layer 的当前<em>速度矢量</em>作为参数传入来达到流畅的效果。</p>
+
+<p>看一下 UIView 中关于弹簧动画的 API (<code>animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:</code>)，你会注意到速率是个 <code>CGFloat</code>。所以当我们给一个移动 view 的动画在其运动的方向上加一个初始的速率时，你没法告知动画这个 view 现在的运动状态，比如我们不知道要添加的动画的方向是不是和原来的 view 的速度方向垂直。为了使其成为可能，这个速度需要用向量来表示。</p>
+
+<h2>解决方案</h2>
+
+<p>让我们看一下我们怎样来正确实现一个可交互并且可以中断的动画。我们来做一个类似于控制中心板的东西来实现这个效果：</p>
+
+<p><video controls="1" style="display:block;max-width:100%;height:auto;border:0;"> <br />
+  <source src="http://www.objc.io/images/issue-12/interactive-animation.mov" />
+</video></p>
+
+<p>这个控制板有两个状态：打开和关闭。你可以通过点击来切换这两个状态，或者通过上下拖动来调调整它向上或向下。我要将这个控制面板的所有状态都做到可以交互，甚至是在动画的过程中也可以，这是一个很大的挑战。比如，当你在这个控制板还没有切换到打开状态的动画过程中，你点击了它，那么它应该从现在这个点的位置马上回到关闭状态的位置。在现在很多的应用中，大部分都是用默认的动画 API，你必须要等一个动画结束之后你才能做自己想做的事情。或者，如果你不等待的话，就会看到一个不连续的速度曲线。我们要解决这个问题。</p>
+
+<h3 id="uikit">UIKit 力学</h3>
+
+<p>随着 iOS7 的发布，苹果向我们展示了一个叫 UIKit 力学的动画框架 (可以参见 WWDC 2013 sessions <a href="https://developer.apple.com/videos/wwdc/2013/index.php?id=206">206</a> 和 <a href="https://developer.apple.com/videos/wwdc/2013/index.php?id=221">221</a>)。UIKit 力学是一个基于模拟物理引擎的框架，只要你添加指定的行为到动画对象上来实现 <a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIDynamicItem_Protocol/Reference/Reference.html">UIDynamicItem</a> 协议就能实现很多动画。这个框架非常强大，并且它能够在多个物体间启用像是附着和碰撞这样的复杂行为。请看一下 <a href="https://developer.apple.com/library/ios/samplecode/DynamicsCatalog/Introduction/Intro.html">UIKit Dynamics Catalog</a>，确认一下什么是可用的。</p>
+
+<p>因为 UIKit 力学中的的动画是被间接驱动的，就像我在上面提到的，这使我们实现真实的交互式动画成为可能，它能在任何时候被中断并且拥有连续的加速度。同时，UIKit 力学在物理层的抽象上能完全胜任我们一般情况下在用户界面中的所需要的所有动画。其实在大部分情况下，我们只会用到其中的一小部分功能。</p>
+
+<h4>定义行为</h4>
+
+<p>为了实现我们的控制板的行为，我们将使用 UIkit 力学中的两个不同行为：<a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIAttachmentBehavior_Class/Reference/Reference.html">UIAttachmentBehavior</a> 和 <a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIDynamicItemBehavior_Class/Reference/Reference.html">UIDynamicItemBehavior</a>。附着行为用来扮演弹簧的角色，它将界面向目标点拉动。另一方面，我们用动态 item behvaior 定义了比如摩擦系数这样的界面的内置属性。</p>
+
+<p>我创建了一个我们自己的行为子类，以将这两个行为封装到我们的控制板上:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">PaneBehavior</span> : <span class="nc">UIDynamicBehavior</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">)</span> <span class="n">CGPoint</span> <span class="n">targetPoint</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">)</span> <span class="n">CGPoint</span> <span class="n">velocity</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithItem:</span><span class="p">(</span><span class="kt">id</span> <span class="o">&lt;</span><span class="n">UIDynamicItem</span><span class="o">&gt;</span><span class="p">)</span><span class="nv">item</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们通过一个 dynamic item 来初始化这个行为，然后就可以设置它的目标点和我们想要的任何速度。在内部，我们创建了附着行为和 dynamic item 行为，并且将这些行为添加到我们自定义的行为中:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setup</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">attachmentBehavior</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAttachmentBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItem:</span><span class="n">self</span><span class="p">.</span><span class="n">item</span> <span class="nl">attachedToAnchor:</span><span class="n">CGPointZero</span><span class="p">];</span>
+</span><span class="line">    <span class="n">attachmentBehavior</span><span class="p">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="mf">3.5</span><span class="p">;</span>
+</span><span class="line">    <span class="n">attachmentBehavior</span><span class="p">.</span><span class="n">damping</span> <span class="o">=</span> <span class="mf">.4</span><span class="p">;</span>
+</span><span class="line">    <span class="n">attachmentBehavior</span><span class="p">.</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">addChildBehavior:</span><span class="n">attachmentBehavior</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">attachmentBehavior</span> <span class="o">=</span> <span class="n">attachmentBehavior</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">UIDynamicItemBehavior</span> <span class="o">*</span><span class="n">itemBehavior</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIDynamicItemBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItems:</span><span class="err">@</span><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">item</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">itemBehavior</span><span class="p">.</span><span class="n">density</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span><span class="line">    <span class="n">itemBehavior</span><span class="p">.</span><span class="n">resistance</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">addChildBehavior:</span><span class="n">itemBehavior</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">itemBehavior</span> <span class="o">=</span> <span class="n">itemBehavior</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>为了用 <code>targetPoint</code> 和 <code>velocity</code> 属性来影响 item 的 behavior，我们需要重写它们的 setter 方法，并且分别修改在附着行为和 item behaviors 中的对应的属性。我们对目标点的 setter 方法来说，这个改动很简单：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setTargetPoint:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">targetPoint</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">_targetPoint</span> <span class="o">=</span> <span class="n">targetPoint</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">attachmentBehavior</span><span class="p">.</span><span class="n">anchorPoint</span> <span class="o">=</span> <span class="n">targetPoint</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>对于 <code>velocity</code> 属性，我们需要多做一些工作，因为 dynamic item behavior 只允许相对地改变速度。这就意味如果我们要将 <code>velocity</code> 设置为绝对值，首先我们就需要得到当前的速度，然后再加上速度差才能得到我们的目标速度。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">velocity</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">_velocity</span> <span class="o">=</span> <span class="n">velocity</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">currentVelocity</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">itemBehavior</span> <span class="nl">linearVelocityForItem:</span><span class="n">self</span><span class="p">.</span><span class="n">item</span><span class="p">];</span>
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">velocityDelta</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">velocity</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">currentVelocity</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">velocity</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">currentVelocity</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">itemBehavior</span> <span class="nl">addLinearVelocity:</span><span class="n">velocityDelta</span> <span class="nl">forItem:</span><span class="n">self</span><span class="p">.</span><span class="n">item</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3 id="behavior">将Behavior投入使用</h3>
+
+<p>我们的控制板有三个不同状态：在开始或结束位置的静止状态，正在被用户拖动的状态，以及在没有用户控制时运动到结束位置的动画状态。</p>
+
+<p>为了将从直接操作状态 (用户拖动这个滑动板) 过渡到动画状态这个过程做的流畅，我们还有很多其他的事要做。当用户停止拖动控制板时，它会发送一个消息到它的 delegate。根据这个方法，我们可以知道这个板应该朝哪个方向运动，然后在我们自定义的 <code>PaneBehavior</code> 上设置结束点，以及初始速度 (这非常重要)，并将行为添加到动画器中去，以此确保从拖动操作到动画状态这个过程能够非常流畅。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">draggableView:</span><span class="p">(</span><span class="n">DraggableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span> <span class="nf">draggingEndedWithVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">velocity</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">PaneState</span> <span class="n">targetState</span> <span class="o">=</span> <span class="n">velocity</span><span class="p">.</span><span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">PaneStateClosed</span> <span class="o">:</span> <span class="n">PaneStateOpen</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">animatePaneToState:</span><span class="n">targetState</span> <span class="nl">initialVelocity:</span><span class="n">velocity</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animatePaneToState:</span><span class="p">(</span><span class="n">PaneState</span><span class="p">)</span><span class="nv">targetState</span> <span class="nf">initialVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">velocity</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">self</span><span class="p">.</span><span class="n">paneBehavior</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">PaneBehavior</span> <span class="o">*</span><span class="n">behavior</span> <span class="o">=</span> <span class="p">[[</span><span class="n">PaneBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItem:</span><span class="n">self</span><span class="p">.</span><span class="n">pane</span><span class="p">];</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">paneBehavior</span> <span class="o">=</span> <span class="n">behavior</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">paneBehavior</span><span class="p">.</span><span class="n">targetPoint</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">targetPointForState:</span><span class="n">targetState</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">CGPointEqualToPoint</span><span class="p">(</span><span class="n">velocity</span><span class="p">,</span> <span class="n">CGPointZero</span><span class="p">))</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">paneBehavior</span><span class="p">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="n">velocity</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">animator</span> <span class="nl">addBehavior:</span><span class="n">self</span><span class="p">.</span><span class="n">paneBehavior</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">paneState</span> <span class="o">=</span> <span class="n">targetState</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>一旦用户用他的手指再次触动控制板时，我必须要将所有的 dynamic behavior 从 animator 删除，这样才不会影响控制板对拖动手势的响应：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">draggableViewBeganDragging:</span><span class="p">(</span><span class="n">DraggableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">animator</span> <span class="n">removeAllBehaviors</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们不仅仅允许控制板可以被拖动，还要允许它可以被点击，让它可以从一个位置跳转到另一个位置以达到开关的效果。一旦点击事件发生，我们就会立即调整这个滑动板的目标位置。因为我们不能直接控制动画，但是通过弹力和摩擦力，我们的动画可以非常流畅地执行这个动作：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">didTap:</span><span class="p">(</span><span class="n">UITapGestureRecognizer</span> <span class="o">*</span><span class="p">)</span><span class="nv">tapRecognizer</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">PaneState</span> <span class="n">targetState</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">paneState</span> <span class="o">==</span> <span class="n">PaneStateOpen</span> <span class="o">?</span> <span class="n">PaneStateClosed</span> <span class="o">:</span> <span class="n">PaneStateOpen</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">animatePaneToState:</span><span class="n">targetState</span> <span class="nl">initialVelocity:</span><span class="n">CGPointZero</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这样就实现了我们的大部分功能了。你可以在 <a href="https://github.com/objcio/issue-12-interactive-animations-uidynamics">GitHub</a> 上查看完整的例子。</p>
+
+<p>重申一点：UIKit 力学可以通过在界面上模拟力来间接地驱动动画（我们的例子中，使用的是弹力和摩擦力）。这间接地使我们在任何时候都能以连续的速度曲线来与界面进行交互。</p>
+
+<p>现在我们已经通过 UIKit 力学实现了整个交互，让我们回顾一下这个场景。这个例子的动画中我们只用了 UIKit 力学中一小部分功能，并且它的实现方式也非常简单。对于我们来说这是一个去理解它其中的过程的很好的例子，但是如果我们使用的环境中没有 UIKit  力学 (比如说在 Mac 上)，或者你的使用场景中不能很好的适用 UIKit 力学呢。</p>
+
+<h2>自己操作动画</h2>
+
+<p>至于在你的应用中大部分时间会用的动画，比如简单的弹力动画，我们控制它真的不难。我们可以做一个练习，来看看如何抛弃 UIKit 力学这个巨大的黑盒子，看要如何“手动”来实现一个简单的交互。想法非常简单：我们只要每秒修改这个 view 的 frame 60 次。每一帧我们都基于当前速度和作用在 view 上的力来调整 view 的 frame 就可以了。</p>
+
+<h3>物理原理</h3>
+
+<p>首先让我们看一下我们需要知道的基础物理知识，这样我们才能实现出刚才使用 UIKit 力学实现的那种弹簧动画效果。为了简化问题，虽然引入第二个维度也是很直接的，但我们在这里只关注一维的情况 (在我们的例子中就是这样的情况)。</p>
+
+<p>我们的目标是依据控制面板当前的位置和上一次动画后到现在为止经过的时间，来计算它的新位置。我们可以把它表示成这样：</p>
+
+<pre><code>y = y0 + Δy
+</code></pre>
+
+<p>位置的偏移量可以通过速度和时间的函数来表达：</p>
+
+<pre><code>Δy = v ⋅ Δt
+</code></pre>
+
+<p>这个速度可以通过前一次的速度加上速度偏移量算出来，这个速度偏移量是由力在 view 上的作用引起的。</p>
+
+<pre><code>v = v0 + Δv
+</code></pre>
+
+<p>速度的变化可以通过作用在这个 view 上的冲量计算出来：</p>
+
+<pre><code>Δv = (F ⋅ Δt) / m
+</code></pre>
+
+<p>现在，让我们看一下作用在这个界面上的力。为了得到弹簧效果，我们必须要将摩擦力和弹力结合起来：</p>
+
+<pre><code>F = F_spring + F_friction
+</code></pre>
+
+<p>弹力的计算方法我们可以从任何一本教科书中得到 (编者注：简单的胡克定律)：</p>
+
+<pre><code>F_spring = k ⋅ x
+</code></pre>
+
+<p><code>k</code> 是弹簧的劲度系数，<code>x</code> 是 view 到目标结束位置的距离 (也就是弹簧的长度)。因此，我们可以把它写成这样：</p>
+
+<pre><code>F_spring = k ⋅ abs(y_target - y0)
+</code></pre>
+
+<p>摩擦力和 view 的速度成正比：</p>
+
+<pre><code>F_friction = μ ⋅ v
+</code></pre>
+
+<p><code>μ</code> 是一个简单的摩擦系数。你可以通过别的方式来计算摩擦力，但是这个方法能很好地做出我们想要的动画效果。</p>
+
+<p>将上面的表达式放在一起，我们就可以算出作用在界面上的力：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">F</span> <span class="o">=</span> <span class="n">k</span> <span class="err">⋅</span> <span class="n">abs</span><span class="p">(</span><span class="n">y_target</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">+</span> <span class="err">μ</span> <span class="err">⋅</span> <span class="n">v</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>为了实现起来更简单点些，我们将 view 的质量设为 1，这样我们就能计算在位置上的变化：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="err">Δ</span><span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">v0</span> <span class="o">+</span> <span class="p">(</span><span class="n">k</span> <span class="err">⋅</span> <span class="n">abs</span><span class="p">(</span><span class="n">y_target</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">+</span> <span class="err">μ</span> <span class="err">⋅</span> <span class="n">v</span><span class="p">)</span> <span class="err">⋅</span> <span class="err">Δ</span><span class="n">t</span><span class="p">)</span> <span class="err">⋅</span> <span class="err">Δ</span><span class="n">t</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>实现动画</h3>
+
+<p>为了实现这个动画，我们首先需要创建我们自己的 <code>Animator</code> 类，它将扮演驱动动画的角色。这个类使用了 <code>CADisplayLink</code>，<code>CADisplayLink</code> 是专门用来将绘图与屏幕刷新频率相同步的定时器。换句话说，如果你的动画是流畅的，这个定时器就会每秒调用你的方法60次。接下来，我们需要实现 <code>Animation</code> 协议来和我们的 <code>Animator</code> 一起工作。这个协议只有一个方法，<code>animationTick:finished:</code>。屏幕每次被刷新时都会调用这个方法，并且在方法中会得到两个参数：第一个参数是前一个 frame 的持续时间，第二个参数是一个指向 <code>BOOL</code> 的指针。当我们设置这个指针的值为 <code>YES</code> 时，我们就可以与 <code>Animator</code> 取得通讯并汇报动画完成；</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">Animation</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">animationTick:</span><span class="p">(</span><span class="n">CFTimeInterval</span><span class="p">)</span><span class="n">dt</span> <span class="nl">finished:</span><span class="p">(</span><span class="kt">BOOL</span> <span class="o">*</span><span class="p">)</span><span class="n">finished</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们会在下面实现这个方法。首先，根据时间间隔我们来计算由弹力和摩擦力的合力。然后根据这个力来更新速度，并调整 view 的中心位置。最后，当这个速度降低并且 view 到达结束位置时，我们就停止这个动画：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animationTick:</span><span class="p">(</span><span class="n">CFTimeInterval</span><span class="p">)</span><span class="nv">dt</span> <span class="nf">finished:</span><span class="p">(</span><span class="kt">BOOL</span> <span class="o">*</span><span class="p">)</span><span class="nv">finished</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">static</span> <span class="k">const</span> <span class="kt">float</span> <span class="n">frictionConstant</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+</span><span class="line">    <span class="k">static</span> <span class="k">const</span> <span class="kt">float</span> <span class="n">springConstant</span> <span class="o">=</span> <span class="mi">300</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">time</span> <span class="o">=</span> <span class="p">(</span><span class="n">CGFloat</span><span class="p">)</span> <span class="n">dt</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">//摩擦力 = 速度 * 摩擦系数</span>
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">frictionForce</span> <span class="o">=</span> <span class="n">CGPointMultiply</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">velocity</span><span class="p">,</span> <span class="n">frictionConstant</span><span class="p">);</span>
+</span><span class="line">    <span class="c1">//弹力 = (目标位置 - 当前位置) * 弹簧劲度系数</span>
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">springForce</span> <span class="o">=</span> <span class="n">CGPointMultiply</span><span class="p">(</span><span class="n">CGPointSubtract</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">targetPoint</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">center</span><span class="p">),</span> <span class="n">springConstant</span><span class="p">);</span>
+</span><span class="line">    <span class="c1">//力 = 弹力 - 摩擦力</span>
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">force</span> <span class="o">=</span> <span class="n">CGPointSubtract</span><span class="p">(</span><span class="n">springForce</span><span class="p">,</span> <span class="n">frictionForce</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">//速度 = 当前速度 + 力 * 时间 / 质量</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="n">CGPointAdd</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">velocity</span><span class="p">,</span> <span class="n">CGPointMultiply</span><span class="p">(</span><span class="n">force</span><span class="p">,</span> <span class="n">time</span><span class="p">));</span>
+</span><span class="line">    <span class="c1">//位置 = 当前位置 + 速度 * 时间</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">CGPointAdd</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">center</span><span class="p">,</span> <span class="n">CGPointMultiply</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">velocity</span><span class="p">,</span> <span class="n">time</span><span class="p">));</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">speed</span> <span class="o">=</span> <span class="n">CGPointLength</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">velocity</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">distanceToGoal</span> <span class="o">=</span> <span class="n">CGPointLength</span><span class="p">(</span><span class="n">CGPointSubtract</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">targetPoint</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">center</span><span class="p">));</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">speed</span> <span class="o">&lt;</span> <span class="mf">0.05</span> <span class="o">&amp;&amp;</span> <span class="n">distanceToGoal</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">targetPoint</span><span class="p">;</span>
+</span><span class="line">        <span class="o">*</span><span class="n">finished</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这就是这个方法里的全部内容。我们把这个方法封装到一个 <code>SpringAnimation</code> 对象中。除了这个方法之外，这个对象中还有一个初始化方法，它指定了 view 中心的目标位置 (在我们的例子中，就是打开状态时界面的中心位置，或者关闭状态时界面的中心位置) 和初始的速度。</p>
+
+<h3 id="view">将动画添加到 view 上</h3>
+
+<p>我们的 view 类刚好和使用 UIDynamic 的例子一样：它有一个拖动手势，并且根据拖动手势来更新中心位置。它也有两个同样的 delegate 方法，这两个方法会实现动画的初始化。首先，一旦用户开始拖动控制板时，我们就取消所有动画：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">draggableViewBeganDragging:</span><span class="p">(</span><span class="n">DraggableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">cancelSpringAnimation</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>一旦停止拖动，我们就根据从拖动手势中得到的最后一个速率值来开始我们的动画。我们根据拖动状态 <code>paneState</code> 计算出动画的结束位置：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">draggableView:</span><span class="p">(</span><span class="n">DraggableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span> <span class="nf">draggingEndedWithVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">velocity</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">PaneState</span> <span class="n">targetState</span> <span class="o">=</span> <span class="n">velocity</span><span class="p">.</span><span class="n">y</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">=</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">PaneStateClosed</span> <span class="o">:</span> <span class="n">PaneStateOpen</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">paneState</span> <span class="o">=</span> <span class="n">targetState</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">startAnimatingView:</span><span class="n">view</span> <span class="nl">initialVelocity:</span><span class="n">velocity</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">startAnimatingView:</span><span class="p">(</span><span class="n">DraggableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span> <span class="nf">initialVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">velocity</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">cancelSpringAnimation</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">springAnimation</span> <span class="o">=</span> <span class="p">[</span><span class="n">UINTSpringAnimation</span> <span class="nl">animationWithView:</span><span class="n">view</span> <span class="nl">target:</span><span class="n">self</span><span class="p">.</span><span class="n">targetPoint</span> <span class="nl">velocity:</span><span class="n">velocity</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">view</span><span class="p">.</span><span class="n">animator</span> <span class="nl">addAnimation:</span><span class="n">self</span><span class="p">.</span><span class="n">springAnimation</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>剩下来要做的就是添加点击动画了，这很简单。一旦我们触发这个状态，就开始动画。如果这里正在进行弹簧动画，我们就用当时的速度作为开始。如果这个弹簧动画是 nil，那么这个开始速度就是 CGPointZero。想要知道为什么依然可以进行动画，可以看看 <code>animationTick:finished:</code> 里的代码。当这个起始速度为 0 的时候，弹力就会使速度缓慢地增长，直到面板到达目标位置：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">didTap:</span><span class="p">(</span><span class="n">UITapGestureRecognizer</span> <span class="o">*</span><span class="p">)</span><span class="nv">tapRecognizer</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">PaneState</span> <span class="n">targetState</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">paneState</span> <span class="o">==</span> <span class="n">PaneStateOpen</span> <span class="o">?</span> <span class="n">PaneStateClosed</span> <span class="o">:</span> <span class="n">PaneStateOpen</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">paneState</span> <span class="o">=</span> <span class="n">targetState</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">startAnimatingView:</span><span class="n">self</span><span class="p">.</span><span class="n">pane</span> <span class="nl">initialVelocity:</span><span class="n">self</span><span class="p">.</span><span class="n">springAnimation</span><span class="p">.</span><span class="n">velocity</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>动画驱动</h3>
+
+<p>最后，我们需要一个 <code>Animator</code>，也就是动画的驱动者。Animator 封装了 display link。因为每个 display link 都链接一个指定的 <code>UIScreen</code>，所以我们根据这个指定的 UIScreen 来初始化我们的 animator。我们初始化一个 display link，并且将它加入到 run loop 中。因为现在还没有动画，所以我们是从暂停状态开始的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithScreen:</span><span class="p">(</span><span class="n">UIScreen</span> <span class="o">*</span><span class="p">)</span><span class="nv">screen</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">displayLink</span> <span class="o">=</span> <span class="p">[</span><span class="n">screen</span> <span class="nl">displayLinkWithTarget:</span><span class="n">self</span> <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">animationTick:</span><span class="p">)];</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">displayLink</span><span class="p">.</span><span class="n">paused</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">displayLink</span> <span class="nl">addToRunLoop:</span><span class="p">[</span><span class="n">NSRunLoop</span> <span class="n">mainRunLoop</span><span class="p">]</span> <span class="nl">forMode:</span><span class="n">NSRunLoopCommonModes</span><span class="p">];</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">animations</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableSet</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>一旦我们添加了这个动画，我们要确保这个 display link 不再是停止状态：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addAnimation:</span><span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">Animation</span><span class="o">&gt;</span><span class="p">)</span><span class="nv">animation</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">animations</span> <span class="nl">addObject:</span><span class="n">animation</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">animations</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">displayLink</span><span class="p">.</span><span class="n">paused</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们设置这个 display link 来调用 <code>animationTick:</code> 方法，在每个 Tick 中，我们都遍历它的动画数组，并且给这些动画数组中的每个动画发送一个消息。如果这个动画数组中已经没有动画了，我们就暂停这个 display link。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"> <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">animationTick:</span><span class="p">(</span><span class="n">CADisplayLink</span> <span class="o">*</span><span class="p">)</span><span class="n">displayLink</span>
+</span><span class="line"> <span class="p">{</span>
+</span><span class="line">     <span class="n">CFTimeInterval</span> <span class="n">dt</span> <span class="o">=</span> <span class="n">displayLink</span><span class="p">.</span><span class="n">duration</span><span class="p">;</span>
+</span><span class="line">     <span class="k">for</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">Animation</span><span class="o">&gt;</span> <span class="n">a</span> <span class="k">in</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">animations</span> <span class="n">copy</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">         <span class="kt">BOOL</span> <span class="n">finished</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">         <span class="p">[</span><span class="n">a</span> <span class="nl">animationTick:</span><span class="n">dt</span> <span class="nl">finished:</span><span class="o">&amp;</span><span class="n">finished</span><span class="p">];</span>
+</span><span class="line">         <span class="k">if</span> <span class="p">(</span><span class="n">finished</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">             <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">animations</span> <span class="nl">removeObject:</span><span class="n">a</span><span class="p">];</span>
+</span><span class="line">         <span class="p">}</span>
+</span><span class="line">     <span class="p">}</span>
+</span><span class="line">     <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">animations</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">         <span class="n">self</span><span class="p">.</span><span class="n">displayLink</span><span class="p">.</span><span class="n">paused</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">     <span class="p">}</span>
+</span><span class="line"> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>完整的项目在 <a href="https://github.com/objcio/issue-12-interactive-animations">GitHub</a> 上。</p>
+
+<h3>权衡</h3>
+
+<p>我们必须记住，通过 display link 来驱动动画 (就像我们刚才演示的例子，或者我们使用UIkit力学来做的例子，又或者是使用 Facebook 的 Pop 框架) 是有代价需要进行权衡的。就像 <a href="https://twitter.com/andy_matuschak/status/464790108072206337">Andy Matuschar 指出的</a>那样，UIView 和 CAAnimation 动画比其他任务更少受系统的影响，因为比起你的应用来说，渲染处于更高的优先级。</p>
+
+<h2 id="mac">回到 Mac</h2>
+
+<p>现在 Mac 中还没有 UIKit 力学。如果你想在 Mac 中创建一个真实的交互式动画，你必须自己去实现这些动画。我们已经向你展示了如何在 iOS 中实现这些动画，所以在 OS X 中实现相似的功能也是非常简单的。你可以查看在 GitHub 中的<a href="https://github.com/objcio/issue-12-interactive-animations-osx">完整项目</a>，如果你想要应用到 OS X 中，这里还有一些地方需要修改：</p>
+
+<ul>
+<li>第一个要修改的就是 <code>Animator</code>。在Mac中没有 <code>CADisplayLink</code>，但是取而代之的有 <code>CVDisplayLink</code>，它是以 C 语言为基础的 API。创建它需要做更多的工作，但也是很直接。</li>
+<li>iOS 中的弹簧动画是基于调整 view 的中心位置来实现的。而 OS X 中的 <code>NSView</code> 类没有 center 这个属性，所以我们用为 frame 中的 origin 做动画来代替。</li>
+<li>在 Mac 中是没有手势识别，所以我要在我们自定义的 view 子类中实现 <code>mouseDown:</code>，<code>mouseUp:</code> 和 <code>mouseDragged:</code> 方法。</li>
+</ul>
+
+<p>上面就是我们需要在 Mac 中使用我们的动画效果在代码所需要做的修改。对于像这样的简单 view，它能很好的胜任。但对于更复杂的动画，你可能就不会想通过为 frame 做动画来实现了，我们可以用 <code>transform</code> 来代替，浏览 Jonathan Willing 写的关于 <a href="http://jwilling.com/osx-animations">OS X 动画</a>的博客，你会获益良多。</p>
+
+<h3 id="facebookpop">Facebook 的 POP 框架</h3>
+
+<p>上个星期围绕着 Facebook 的 <a href="https://github.com/facebook/pop">POP 框架</a>的讨论络绎不绝。POP 框架是 Paper 应用背后支持的动画引擎。它的操作非常像我们上面讲的驱动动画的例子，但是它以非常灵活的方式巧妙地封装到了一个程序包中。</p>
+
+<p>让我们动手用 POP 来驱动我们的动画吧。因为我们自己的类中已经封装了弹簧动画，这些改变就非常简单了。我们所要做的就是初始化一个 POP 动画来代替我们刚才自己做的动画，并将下面这段代码加入到 view
+ 中：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animatePaneWithInitialVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">initialVelocity</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">pane</span> <span class="n">pop_removeAllAnimations</span><span class="p">];</span>
+</span><span class="line">    <span class="n">POPSpringAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">POPSpringAnimation</span> <span class="nl">animationWithPropertyNamed:</span><span class="n">kPOPViewCenter</span><span class="p">];</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">initialVelocity</span><span class="p">];</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">self</span><span class="p">.</span><span class="n">targetPoint</span><span class="p">];</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">springSpeed</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">springBounciness</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">pane</span> <span class="nl">pop_addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;animation&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">animation</span> <span class="o">=</span> <span class="n">animation</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>你可以在 <a href="https://github.com/objcio/issue-12-interactive-animations-pop">GitHub</a> 中找到使用 POP 框架的完整例子。</p>
+
+<p>让其工作非常简单，并且通过它我们可以实现很多更复杂的动画。但是它真正强大的地方在于它能够实现真正的可交互和可中断的动画，就像我们上面提到的那样，因为它直接支持以速度作为输入参数。如果你打算从一开始到被中断这过程中的任何时候都能交互，像 POP 这样的框架就能帮你实现这些动画，并且它能始终保证动画一直很平滑。</p>
+
+<p>如果你不满足于用 <code>POPSpringAnimation</code> 和 <code>POPDecayAnimation</code> 的开箱即用的处理方式的话，POP 还提供了 <code>POPCustomAnimation</code> 类，它基本上是一个 display link 的方便的转换，来在动画的每一个 tick 的回调 block 中驱动你自己的动画。</p>
+
+<h2>展望未来</h2>
+
+<p>随着 iOS7 中从对拟物化的视觉效果的远离，以及对 UI 行为的关注，真实的交互式动画通向未来的大道变得越来越明显。它们也是将初代 iPhone 中滑动行为的魔力延续到交互的各个方面的一条康庄大道。为了让这些魔力成为现实，我们就不能在开发过程中才想到这些动画，而是应该在设计时就要考虑这些交互，这一点非常重要。</p>
+
+<p>非常感谢 <a href="https://twitter.com/lorenb">Loren Brichter</a> 给这篇文章提出的一些意见。</p>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[iOS动画解释]]></title>
@@ -7242,258 +7805,6 @@ tailrecurse._crit_edge:                           ; preds = %tailrecurse, %0
 <li><a href="http://getoffmylawnentertainment.com/blog/2011/10/01/clang-plugin-development-tutorial/">Clang Plugin Tutorial</a></li>
 <li><a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html">LLVM blog: What every C programmer should know (I)</a> , <a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know_14.html">(II)</a> 和 <a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know_21.html">(III)</a></li>
 </ul>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Xcode编译你所不知道的细节]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/"/>
-    <updated>2014-04-10T11:09:26+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie</id>
-    <content type="html"><![CDATA[<p>近些日子我们被宠坏了 &#8211; 我们只需要单击 Xcode 中的一个按钮（这个按钮看起来有点像是在播放一些音乐的动作），过几秒钟之后，我们的程序就会运行起来了，直到遇到一些错误，这非常的神奇。</p>
-
-<p>在本文中，我们将从更高级别的角度来解读 Build 过程，并探索一下在 Xcode 界面中暴露出的 project setting 信息与 Build 过程有什么关系。为了更加深入的探索 Build 过程中，每一步实际执行的工作，我都会在本文中引入一些别的文章。</p>
-
-<h2 id="build">解密 Build 日志</h2>
-
-<p>为了了解 Xcode build 过程的内部工作原理，我们首先把突破口瞄准完整的 log 文件上。打开 Log Navigator ，从列表中选择一个 Build ，Xcode 会将 log 文件很完美的展现出来。</p>
-
-<p><img src="http://img.objccn.io/issue-6/build-log.png" alt="Xcode build log navigator" /></p>
-
-<p>默认情况下，上面的 Xcode 界面中隐藏了大量的信息，我们通过选择任务，然后点击右边的展开按钮，就能看到每个任务的详细信息。另外一种可选的方案就是选中列表中的一个或者多个任务，然后选择组合键 Cmd-C，这将会把所有的纯文本信息拷贝至粘贴板。最后，我们还可以选择 Editor 菜单中的 &#8220;Copy transcript for shown results&#8221;，以此将所有的 log 信息拷贝到粘贴板中。</p>
-
-<p>本文给出的示例中，log 信息将近有 10,000 行（其实大多数的 log 信息是编译 OpenSSL 时生成的，并不是我们自己所写的代码生成的）。下面我们就开始吧！</p>
-
-<p>注意观察输出的 log 信息，首先会发现 log 信息被分为不同的几大块，它们与我们工程中的targets相互对应着：</p>
-
-<pre><code>Build target Pods-SSZipArchive
-...
-Build target Makefile-openssl
-...
-Build target Pods-AFNetworking
-...
-Build target crypto
-...
-Build target Pods
-...
-Build target ssl
-...
-Build target objcio
-</code></pre>
-
-<p>本文涉及到的工程有几个依赖项：其中 AFNetworking 和 SSZipArchive 包含在 Pods 中，而 OpenSSL 则以子工程的形式包含在工程中。</p>
-
-<p>针对工程中的每个 target，Xcode 都会执行一系列的操作，将相关的源码，根据所选定的平台，转换为机器可读的二进制文件。下面我们详细的了解一下第一个 target：SSZipArchive。</p>
-
-<p>在针对这个 target 输出的 log 信息中，我们可以看到每个任务被执行的详细情况。例如第一个任务是处理一个预编译头文件（为了增强 log 信息的可读性，我省略了许多细节）：</p>
-<pre><code>(1) ProcessPCH /.../Pods-SSZipArchive-prefix.pch.pch Pods-SSZipArchive-prefix.pch normal armv7 objective-c com.apple.compilers.llvm.clang.1_0.compiler
-(2) cd /.../Dev/objcio/Pods
-	setenv LANG en_US.US-ASCII
-	setenv PATH "..."
-(3) /.../Xcode.app/.../clang 
-(4) -x objective-c-header 
-(5) -arch armv7 
-... configuration and warning flags ...
-(6) -DDEBUG=1 -DCOCOAPODS=1 
-... include paths and more ...
-(7) -c 
-(8) /.../Pods-SSZipArchive-prefix.pch 
-(9) -o /.../Pods-SSZipArchive-prefix.pch.pch
-</code></pre>
-
-<p>在 build 处理过程中，每个任务都会出现类似上面的这些 log 信息，我们就通过上面的 log 信息进一步了解详情。</p>
-
-<ol>
-<li>类似上面的每个 log 信息块都会利用一行 log 信息来描述相关的任务作为起点。  </li>
-<li>接着输出带缩进的3行 log 信息，列出了该任务执行的语句。此处，工作目录发生了改变，并对PANG和PATH环境变量进行设置。  </li>
-<li>这里是发生奇迹的地方。为了处理一个<code>.pch</code>文件，调用了 clang，并附带了许多可选项。下面跟着输出的 log 信息显示了显示了完整的调用过程，以及所有的参数。我们看看其中的几个参数&#8230;  </li>
-<li><code>-x</code> 标示符用来指定所使用的语言，此处是 <code>objective-c-header</code>。  </li>
-<li>目标架构指定为 <code>armv7</code>。  </li>
-<li>暗示 <code>#defines</code> 的内容已经被添加了。  </li>
-<li><code>-c</code> 标示符用来告诉 clang 具体该如何做。<code>-c</code> 表示：运行预处理器、词法分析器、类型检查、LLVM 的生成和优化，以及 target 指定汇编代码的生成阶段，最后，运行汇编器以产出一个<code>.o</code>的目标文件。  </li>
-<li>输入文件。  </li>
-<li>输出文件。</li>
-</ol>
-
-<p>虽然有大量的 log 信息，不过我不会对每个任务做详细的介绍。我们的重点是让你全面的了解在整个 build 过程中，哪些工具会被调用，以及背后会使用到了哪些参数。</p>
-
-<p>针对这个 target ，虽然只有一个 <code>.pch</code> 文件，但实际上这里对 <code>objective-c-header</code> 文件的处理有两个任务。通过观察具体输出的 log 信息，我们可以知道详情：</p>
-
-<pre><code>ProcessPCH /.../Pods-SSZipArchive-prefix.pch.pch Pods-SSZipArchive-prefix.pch normal armv7 objective-c ...
-ProcessPCH /.../Pods-SSZipArchive-prefix.pch.pch Pods-SSZipArchive-prefix.pch normal armv7s objective-c ...
-</code></pre>
-
-<p>从上面的 log 信息中，可以明显的看出 target 针对两种架构做了 build &#8211; armv7 和 armv7s &#8211; 因此 clang 对文件做了两次处理，每次针对一种架构。</p>
-
-<p>在处理预编译头文件之后，可以看到针对 SSZipArchive target 有另外的几个任务类型。</p>
-
-<pre><code>CompileC ...
-Libtool ...
-CreateUniversalBinary ...
-</code></pre>
-
-<p>顾名思义：<code>CompileC</code> 用来编译 <code>.m</code> 和 <code>.c</code> 文件，<code>Libtool</code> 用来从目标文件中构建 library，而 <code>CreateUniversalBinary</code> 则将上一阶段产生的两个 <code>.a</code> 文件（每个文件对应一种架构）合并为一个通用的二进制文件，这样就能同时在 armv7 和 armv7s 上面运行。</p>
-
-<p>接着，在工程中其它一些依赖项也会发生于此类似的步骤。AFNetworking 被编译之后，会与 SSZipArchive 进行链接，以当做 pod library。OpenSSL 编译之后，会接着处理 crypto 和 ssl target。</p>
-
-<p>当所有的依赖项都 build 完成之后，就轮到我们程序的 target 了。Build 该 target 时，输出的 log 信息会包含一些非常有价值，并且之前没有出现过的内容：</p>
-
-<pre><code>PhaseScriptExecution ...
-DataModelVersionCompile ...
-Ld ...
-GenerateDSYMFile ...
-CopyStringsFile ...
-CpResource ...
-CopyPNGFile ...
-CompileAssetCatalog ...
-ProcessInfoPlistFile ...
-ProcessProductPackaging /.../some-hash.mobileprovision ...
-ProcessProductPackaging objcio/objcio.entitlements ...
-CodeSign ...
-</code></pre>
-
-<p>在上面的任务列表中，根据名称不能区分的唯一任务可能就是 <code>Ld</code>，<code>Ld</code> 是一个 linker 工具的名称，与 <code>libtool</code> 非常相似。实际上，<code>libtool</code>也是简单的调用 <code>ld</code> 和 <code>lipo</code>。&#8217;ld&#8217;被用来构建可执行文件，而<code>libtool</code>则用来构建 library 文件。阅读<a href="http://www.objccn.io/issue-6-3">Daniel</a> 和 <a href="http://www.objccn.io/issue-6-2">Chris</a>两篇文章，可以了解到更多关于编译和链接的工作原理。</p>
-
-<p>上面每一个步骤，实际上都会调用相关的命令行工具来做实际的工作，这跟之前我们看到的的 <code>ProcessPCH</code> 类似。至此，我将不会继续介绍这些 log 信息了，我将带领大家从另外一个不同的角度来继续探索这些任务：Xcode 是如何知道哪些任务需要被执行？</p>
-
-<h2 id="build">Build过程的控制</h2>
-
-<p>当你选择 Xcode 5 中的一个工程时，会在 project editor 顶部显示出 6 个 tabs：General, Capabilities, Info, Build Settings, Build Phases 以及 Build Rules。</p>
-
-<p><img src="http://img.objccn.io/issue-6/project-editor-tabs.png" alt="Xcode project editor tabs" /></p>
-
-<p>对于我们理解 build 过程来说，其中最后 3 项与 build 过程紧密相连。</p>
-
-<h3 id="buildphases">Build Phases</h3>
-
-<p>Build Phases 代表着将代码转变为可执行文件的最高级别规则。里面描述了 build 过程中必须执行的不同类型规则。</p>
-
-<p><img src="http://img.objccn.io/issue-6/build-phases.png" alt="Xcode build phases" /></p>
-
-<p>首先是 target 依赖项的构建。这里会告诉 build 系统，build 当前的 target 之前，必须先对这里的依赖性进行 build。实际上这并不属于真正的 build phase，在这里，Xcode 只不过将其与 build phase 显示到一块罢了。</p>
-
-<p>接着在 build phase中是一个 CocoaPods 相关的脚本 <em>script execution</em> &#8211; 更多 CocoaPods 相关信息和 它的 build 过程可以查看<a href="http://www.objc.io/issue-6-4">Michele的文章</a> &#8211; 接着在 <code>Compile Sources</code> section 中规定了所有必须参与编译的文件。需要留意的是，这里并没有指明这些文件是<em>如何</em>被编译处理的。关于处理这些文件的更多内容，我们将在研究 build rules 和 build settings 时学习到。此处列出的所有文件将根据相关的 rules 和 settings 被处理。</p>
-
-<p>当编译结束之后，接下来就是将编译所生成的目标文件链接到一块。注意观察，Xcode 中的 build phase 之后是：&#8221;Link Binary with Libraries.&#8221; 这里面列出了所有的静态库和动态库，这些库会参与上面编译阶段生成的目标文件进行链接。静态库和动态库的处理过程有非常大的区别，相关内容请参考 Daniel的文章 <a href="http://www.objccn.io/issue-6-3">Mach-O 可执行文件</a>。</p>
-
-<p>当链接完成之后，build phase 中最后需要处理的就是将静态资源（例如图片和字体）拷贝到 app bundle 中。需要注意的是，如果图片资源是PNG格式，那么不仅仅对其进行拷贝，还会做一些优化（如果 build settings 中的 PNG 优化是打开的话）。</p>
-
-<p>虽然静态资源的拷贝是 build phase 中的最后一步，但 build 还没有完成。例如，还没有进行 code signing （这并不是 build phase 考虑的范畴），code signing 属于 build 步骤中的最后一步 &#8220;Packaging&#8221;。</p>
-
-<h3 id="buildphases">定制Build Phases</h3>
-
-<p>至此，如果不考虑默认设置的话，你已经可以完全掌握了上面介绍的 build phases。例如，你可以在 build phases 中添加运行自定义脚本，就像<a href="http://www.objccn.io/issue-6-4/">CocoaPods</a>使用的一样，来做额外的工作。当然也可以添加一些资源的拷贝任务，当你需要将某些确定的资源拷贝到指定的 target 目录中，这非常有用。</p>
-
-<p>另外定制 build phases 有一个非常好用的功能：添加带有水印（包括版本号和 commit hash）的 app icon &#8211; 只需要在 build phase 中添加一个 &#8220;Run Script&#8221;，并用下面的命令来获取版本号和 commit hash：</p>
-
-<pre><code>version=`/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "${INFOPLIST_FILE}"`
-commit=`git rev-parse --short HEAD`
-</code></pre>
-
-<p>然后使用 ImageMagick 来修改 app icon。这里有一个<a href="https://github.com/krzysztofzablocki/IconOverlaying">完整的示例</a>，可以参考。</p>
-
-<p>如果你希望自己或者别人编写的代码看起来比较简洁点，可以添加一个 &#8220;Run Script&#8221;：如果一个源文件超过指定行数，就发出警告。如下代码所示，设置的行数为 200。</p>
-
-<pre><code>find "${SRCROOT}" \( -name "*.h" -or -name "*.m" \) -print0 | xargs -0 wc -l | awk '$1 &gt; 200 &amp;&amp; $2 != "total" { print $2 ":1: warning: file more than 200 lines" }'
-</code></pre>
-
-<h3 id="buildrules">Build Rules</h3>
-
-<p>Build rules 指定了不同的文件类型该如何编译。一般来说，开发者并不需要修改这里面的内容。如果你需要对特定类型的文件添加处理方法，那么可以在此处添加一条新的规则。</p>
-
-<p>一条 build rule 指定了其应用于哪种类型文件，该类型文件是如何被处理的，以及输出的内容该如何处置。比方说，我们创建了一条预处理规则，该规则将 Objective-C 的实现文件当做输入，解析文件中的注释内容，最后再输出一个 <code>.m</code> 文件，文件中包含了生成的代码。由于我们不能将 <code>.m</code> 文件既当做输入又当做输出，所以我使用了 <code>.mal</code> 后缀，定制的 build rule 如下所示：</p>
-
-<p><img src="http://img.objccn.io/issue-6/custom-build-rule.png" alt="Custom build rule" /></p>
-
-<p>上面的规则应用于所有后缀为 <code>*.mal</code> 的文件，这些文件会被自定义的脚本处理（调用我们的预处理器，并附带上输入和输出参数）。最后，该规则告诉 build system 在哪里可以找到此规则的输出文件。</p>
-
-<p>在脚本中，我使用了少量的变量来指定正确的路径和文件名。在苹果的 <a href="https://developer.apple.com/library/mac/documentation/DeveloperTools/Reference/XcodeBuildSettingRef/1-Build_Setting_Reference/build_setting_ref.html#//apple_ref/doc/uid/TP40003931-CH3-SW105">Build Setting Reference</a> 文档中可以找到所有可用的变量。build 过程中，要想观察所有已存在的环境变量，你可以在 build phase 中添加一个 &#8220;Run Script&#8221;，并勾选上 &#8220;Show environment variables in build log&#8221;。</p>
-
-<h3 id="buildsettings">Build Settings</h3>
-
-<p>至此，我们已经了解到在 build phases 中是如何定义 build 处理的过程，以及 build rules 是如何指定哪些文件类型在编译阶段需要被预处理。在 build settings 中，我们可以配置每个任务（之前在 build log 输出中看到的任务）的详细内容。</p>
-
-<p>你会发现 build 过程的每一个阶段，都有许多选项：从编译、链接一直到 code signing 和 packaging。注意，settings 是如何被分割为不同的部分 &#8211; 其实这大部分会与 build phases 有关联，有时候也会指定编译的文件类型。</p>
-
-<p>这些选项基本都有很好的文档介绍，你可以在右边面板中的 quick help inspector 或者 <a href="https://developer.apple.com/library/mac/documentation/DeveloperTools/Reference/XcodeBuildSettingRef/1-Build_Setting_Reference/build_setting_ref.html#//apple_ref/doc/uid/TP40003931-CH3-SW105">Build Setting Reference</a> 中查看到。</p>
-
-<h2>工程文件</h2>
-
-<p>上面我们介绍的所有内容都被保存在工程文件（<code>.pbxproj</code>）中，除了其它一些工程相关信息（例如 file groups），我们很少会深入该文件内部，除非在代码 merge 时发生冲突，或许会进去看看。</p>
-
-<p>建议你用文本编辑器打开一个工程文件，从头到尾看一遍里面的内容。它的可读性非常高，里面的许多内容一看就知道什么意思了，不会存在太大的问题。通过阅读并完全理解工程文件，这对于合并工程文件的冲突非常有帮助。</p>
-
-<p>首先，我们来看看文件中叫做 <code>rootObject</code> 的条目。在我的工程中，如下所示：</p>
-
-<pre><code>rootObject = 1793817C17A9421F0078255E /* Project object */;
-</code></pre>
-
-<p>根据这个 ID（<code>1793817C17A9421F0078255E</code>），我们可以找到 main 工程的定义：</p>
-
-<pre><code>/* Begin PBXProject section */
-    1793817C17A9421F0078255E /* Project object */ = {
-        isa = PBXProject;
-...
-</code></pre>
-
-<p>在这部分中有一些 keys，顺从这些 key，我们可以了解到更多关于这个工程文件的组成。例如，<code>mainGroup</code> 指向了 root file group。如果你按照这个思路，你可以快速了解到在 <code>.pbxproj</code> 文件中工程的结构。下面我要来介绍一些与 build 过程相关的内容。其中 <code>target</code> key 指向了 build target 的定义：</p>
-
-<pre><code>targets = (
-    1793818317A9421F0078255E /* objcio */,
-    170E83CE17ABF256006E716E /* objcio Tests */,
-);
-</code></pre>
-
-<p>根据第一个内容，我们找到一个 target 的定义：</p>
-
-<pre><code>1793818317A9421F0078255E /* objcio */ = {
-    isa = PBXNativeTarget;
-    buildConfigurationList = 179381B617A9421F0078255E /* Build configuration list for PBXNativeTarget "objcio" */;
-    buildPhases = (
-        F3EB8576A1C24900A8F9CBB6 /* Check Pods Manifest.lock */,
-        1793818017A9421F0078255E /* Sources */,
-        1793818117A9421F0078255E /* Frameworks */,
-        1793818217A9421F0078255E /* Resources */,
-        FF25BB7F4B7D4F87AC7A4265 /* Copy Pods Resources */,
-    );
-    buildRules = (
-    );
-    dependencies = (
-        1769BED917CA8239008B6F5D /* PBXTargetDependency */,
-        1769BED717CA8236008B6F5D /* PBXTargetDependency */,
-    );
-    name = objcio;
-    productName = objcio;
-    productReference = 1793818417A9421F0078255E /* objcio.app */;
-    productType = "com.apple.product-type.application";
-};
-</code></pre>
-
-<p>其中 <code>buildConfigurationList</code> 指向了可用的配置项，一般是 <code>Debug</code> 和 <code>Release</code>。根据 debug 对应的 id，我们可以找到 build setting tab 中所有选项存储的位置：</p>
-
-<pre><code>179381B717A9421F0078255E /* Debug */ = {
-    isa = XCBuildConfiguration;
-    baseConfigurationReference = 05D234D6F5E146E9937E8997 /* Pods.xcconfig */;
-    buildSettings = {
-        ALWAYS_SEARCH_USER_PATHS = YES;
-        ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-        CODE_SIGN_ENTITLEMENTS = objcio/objcio.entitlements;
-...
-</code></pre>
-
-<p><code>buildPhases</code> 属性则简单的列出了在 Xcode 中定义的所有 build phases。这非常容易识别出来（Xcode 中的参数使用了它们原本真正的名字，并以 C 风格进行注释）。<code>buildRules</code> 属性是空的：因为在该工程中，我没有自定义 build rules。<code>dependencies</code> 列出了在 Xcode build phase tab 中列出的 target 依赖项。</p>
-
-<p>没那么吓人，不是吗？工程中剩下的内容就留给你去当做练习来了解吧。只需要顺着对象的 ID 走，即可，一旦你找到了敲门，理解了Xcode中工程设置的不同 section ，那么对于 merge 工程文件的冲突时，将变得非常简单。甚至可以在 GitHub 中就能阅读工程文件，而不用将工程文件 clone 到本地，并用 Xcode 打开。</p>
-
-<h2>小结</h2>
-
-<p>当今的软件是都用其它复杂的一些软件和资源开发出来的，例如 library 和 build 工具等。反过来，这些工具是构建于底层架构的，这犹如剥洋葱一样，一层包着一层。虽然这样一层一层的，给人感觉太复杂，但是你完全可以去深入了解它们，这非常有助于你对软件的深入理解，实际上当你了解之后，这并没有想象中的那么神奇，只不过它是一层一层堆砌起来的，每一层都是基于下一层构建起来的。</p>
-
-<p>本文所探索 build system 的内部机制犹如剥掉洋葱的一层。其实当我们点击 Xcode 中的运行按钮时，我们并没必要理解这个动作涉及到的所有内容。我们只是深入理解某一层，然后找到一个有组织的、并且可控的调用其它工具的顺序，如果我们愿意的话，可以做进一步的探索。我建议你阅读本期中的其它文章，以进一步了解这个洋葱的下一层内容！</p>
 
 <hr />
 <p class="post-footer">
