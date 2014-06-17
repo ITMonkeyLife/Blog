@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="May 8th, 2014 iOS Comments 理解Frame在布局的作用 Frame是布局的核心。每个开发者都使用frame定位和改变UIView和CALayer的大小。在本文中我将把焦点集中在CALayer上，因为它是UIView的底层实现，view.frame简单的返回了view. &hellip;">
+	<meta name="description" content="May 13th, 2014 iOS Comments 自定义ViewController动画 在话题 #5 中，Chris Eidhof 向我们介绍了 iOS7 引入的新特性自定义 View Controller 转场. 他给出了一个 结论： 我们在本文只探讨了在 navigation &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -98,6 +98,1254 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-05-13T15:45:26+08:00" data-updated="true" itemprop="datePublished">May 13<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/" itemprop="url">自定义ViewController动画</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>在<a href="http://objccn.io/issue-5/">话题 #5</a> 中，<a href="http://twitter.com/chriseidhof">Chris Eidhof</a> 向我们介绍了 iOS7 引入的新特性自定义 <a href="http://objccn.io/issue-5-3">View Controller 转场</a>. 他给出了一个 <a href="http://objccn.io/issue-5-3/#conclusion">结论</a>：</p>
+
+<blockquote>
+  <p>我们在本文只探讨了在 navigation controller 中的两个 view controller 之间的转场动画，但是这些做法在 tab bar controller 或者<strong>任何你自己定义的 view controller 容器</strong>中<strong>也是通用的</strong>… </p>
+</blockquote>
+
+<p>尽管从技术角度来讲，使用 iOS 7 的 API，你可以对自定义容器中的 view controllers 做自定义转场，但是这不是能直接使用的，实现这种效果非常不容易。</p>
+
+<p>请注意我正在讨论的自定义视图控制器容器 (custom container view controllers) 都是 <code>UIViewController</code> 的直接子类，而不是 <code>UITabBarController</code> 或者 <code>UINavigationController</code> 的子类。</p>
+
+<p>对于你自定义的继承于 <code>UIViewController</code> 的容器子类，并没有现成可用的 API 允许一个任意的<em>动画控制器 (animation controller)</em> 将一个子视图控制器自动转场到另外一个，不管是可交互式的转场还是不可交互式的转场。 我甚至都觉着苹果根本就不想支持这种方式。苹果支持下面的这几种转场方式:</p>
+
+<ul>
+<li>Navigation controller 推入和推出页面</li>
+<li>Tab bar controller 选择的改变</li>
+<li>Modal 页面的展示和消失</li>
+</ul>
+
+<p>在本文中，我将向你展示如何自定义视图控制器容器，并且使其支持第三方的动画控制器。</p>
+
+<p>如果你需要复习一下 iOS 5 引入的视图控制器容器，请阅读<a href="http://objccn.io/issue-1/">话题＃1</a> 中 <a href="https://twitter.com/rickigregersen">Ricky Gregersen</a> 写的文章 “<a href="http://objccn.io/issue-1-4/">View Controller 容器</a>”。</p>
+
+<h2>预热准备</h2>
+
+<p>看到这里，你可能对上文我们说到的一些问题犯嘀咕，让我来告诉你答案吧:</p>
+
+<p><em>为什么我们不直接继承 <code>UINavigationController</code> 或 <code>UITabBarController</code>，并且使用它们提供的功能的？</em></p>
+
+<p>有些时候这是你不想要的。可能你想要一个非常特殊的外观或者行为，和这些类能够提供给你的差别非常大，因此你必须使用一些黑客式的手段去达到你想要的结果，同时还要担心系统框架的版本更新后这些黑客式的手段是否还仍然有效。或者，你就是想完全控制你的视图控制器容器，避免不得不支持一些特定的功能。</p>
+
+<p><em>好吧, 那么为什么不使用  <pre><code>transitionFromViewController:toViewController:duration:options:animations:completion:</code></pre> 去实现呢？</em></p>
+
+<p>这又是一个好问题，你可能想用这种方式去实现，但是或许你对代码的整洁性比较在意，想把这种转场相关的代码封装在内部。那么为什么不使用一个既存的、被良好验证的设计模式呢？这种设计模式可以非常方便的支持第三方的转场动画。</p>
+
+<h2 id="api">介绍相关的API</h2>
+
+<p>在我们开始写代码之前，让我们先花一分钟的时间来简单看一下我们需要的组件吧。</p>
+
+<p>iOS 7 自定义视图控制器转场的 API 基本上都是以协议的方式提供的，这也使其可以非常灵活的使用，因为你可以很简单地将它们插入到你的类中。最主要的五个组件如下:</p>
+
+<ol>
+<li><strong>动画控制器 (Animation Controllers)</strong> 遵从 <code>UIViewControllerAnimatedTransitioning</code> 协议，并且负责实际执行动画。  </li>
+<li><strong>交互控制器 (Interaction Controllers)</strong> 通过遵从 <code>UIViewControllerInteractiveTransitioning</code> 协议来控制可交互式的转场。  </li>
+<li><strong>转场代理 (Transitioning Delegates)</strong> 根据不同的转场类型方便的提供需要的动画控制器和交互控制器。  </li>
+<li><strong>转场上下文 (Transitioning Contexts)</strong> 定义了转场时需要的元数据，比如在转场过程中所参与的视图控制器和视图的相关属性。 转场上下文对象遵从 <code>UIViewControllerContextTransitioning</code> 协议，<em>并且这是由系统负责生成和提供的</em>。2.  </li>
+<li><strong>转场协调器(Transition Coordinators)</strong> 可以在运行转场动画时，并行的运行其他动画。 转场协调器遵从 <code>UIViewControllerTransitionCoordinator</code> 协议。</li>
+</ol>
+
+<p>正如你从其他的阅读材料中得知的那样，转场有不可交互式和可交互式两种方式。在本文中，我们将集中精力于不可交互的转场。这种转场是最简单的转场，也是我们学习的一个好的开始。这意味着我们需要处理上面提到的<em>动画控制器 (animation controllers)</em>，<em>转场代理 (transitioning delegates)</em> 和<em>转场上下文 (transitioning contexts)</em>。</p>
+
+<p>闲话少说，让我们开始动手吧…</p>
+
+<h2>示例工程</h2>
+
+<p>通过三个阶段，我们将要实现一个简单自定义的视图控制器容器，它可以对子视图控制器提供自定义的转场动画的支持。</p>
+
+<p>你可以在<a href="https://github.com/objcio/issue-12-custom-container-transitions">这里</a>找到这三个阶段的 Xcode 工程的源代码。</p>
+
+<h3 id="1">阶段 1: 基础</h3>
+
+<p>我们应用中的核心类是 <code>ContainerViewController</code>，它持有一个<code>UIViewController</code>实例的数组，每个实例是一个普通的 <code>ChildViewController</code>。容器视图控制器设置了一个带有可点击图标，并代表每个子视图控制器的私有的子视图：</p>
+
+<p><img src="http://img.objccn.io/issue-12/2014-05-01-custom-container-view-controller-transitions-stage-1.gif" alt="Stage 1: no animation" /></p>
+
+<p>我们通过点击图标在不同的子视图控制器之间切换。在这一阶段，子视图控制器之间切换时是没有转场动画的。</p>
+
+<p>你可以在这里查看<a href="https://github.com/objcio/issue-12-custom-container-transitions/tree/stage-1">阶段－1</a>的源代码。</p>
+
+<h3 id="2">阶段 2: 转场动画</h3>
+
+<p>当我们添加转场动画时，我们想要使用一个遵从 <code>UIViewControllerAnimatedTransitioning</code> 协议的<em>动画控制器(animation controllers)</em>。这个协议声明了 3 个方法，前面的 2 个方法是必须实现的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSTimeInterval</span><span class="p">)</span><span class="nf">transitionDuration:</span><span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">UIViewControllerContextTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nv">transitionContext</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animateTransition:</span><span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">UIViewControllerContextTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nv">transitionContext</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animationEnded:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">transitionCompleted</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>通过这些方法，我们可以获得我们所需的所有东西。当我们的视图控制器容器准备执行动画时，我们可以从动画控制器中获取动画的持续时间，并让其去执行真正的动画。当动画执行完毕后，如果动画控制器实现了可选的 <code>animationEnded:</code> 方法，我们可以调用动画控制器中的 <code>animationEnded:</code> 方法。</p>
+
+<p>但是，首先我们必须把一件事情搞清楚。正如你在上面的方法签名中看到的那样，上面两个必须实现的方法需要一个<em>转场上下文</em>参数，这是一个遵从 <code>UIViewControllerContextTransitioning</code> 协议的对象。通常情况下，当我们使用系统内建的类时，系统框架为我们创建了<em>转场上下文</em>对象，并把它传递给动画控制器。但是在我们这种情况下，我们需要自定义转场动画，所以我们需要承担系统框架的责任，<em>自己</em>去创建这个<em>转场上下文</em>对象。</p>
+
+<p>这就是大量使用协议的方便之处。我们可以不用必须复写一个私有类，而复写私有类这种方法是明显不可行的。我们可以定义自己的类，并使其遵从文档中相应的协议就可以了。</p>
+
+<p>尽管在 <code>UIViewControllerContextTransitioning</code> 协议中声明了<a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIViewControllerContextTransitioning_protocol/Reference/Reference.html">很多方法</a>，而且它们都是必须要实现 (required) 的，但是我们现在可以暂时忽略它们中的一些方法，因为我们现在仅仅支持不可交互式的转场。</p>
+
+<p>同 UIKit 类似，我们定义了一个私有类 <code>NSObject &lt;UIViewControllerContextTransitioning&gt;</code>。在我们的特定例子中，这个私有类是 <code>PrivateTransitionContext</code>，它的初始化方法如下实现：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithFromViewController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">fromViewController</span> <span class="nf">toViewController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">toViewController</span> <span class="nf">goingRight:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">goingRight</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">NSAssert</span> <span class="p">([</span><span class="n">fromViewController</span> <span class="n">isViewLoaded</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="n">fromViewController</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">superview</span><span class="p">,</span> <span class="s">@&quot;The fromViewController view must reside in the container view upon initializing the transition context.&quot;</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="p">((</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">]))</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">presentationStyle</span> <span class="o">=</span> <span class="n">UIModalPresentationCustom</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">containerView</span> <span class="o">=</span> <span class="n">fromViewController</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">superview</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">viewControllers</span> <span class="o">=</span> <span class="err">@</span><span class="p">{</span>
+</span><span class="line">            <span class="nl">UITransitionContextFromViewControllerKey:</span><span class="n">fromViewController</span><span class="p">,</span>
+</span><span class="line">            <span class="nl">UITransitionContextToViewControllerKey:</span><span class="n">toViewController</span><span class="p">,</span>
+</span><span class="line">        <span class="p">};</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">travelDistance</span> <span class="o">=</span> <span class="p">(</span><span class="n">goingRight</span> <span class="o">?</span> <span class="o">-</span><span class="n">self</span><span class="p">.</span><span class="n">containerView</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">:</span> <span class="n">self</span><span class="p">.</span><span class="n">containerView</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">);</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">disappearingFromRect</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">appearingToRect</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">containerView</span><span class="p">.</span><span class="n">bounds</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">disappearingToRect</span> <span class="o">=</span> <span class="n">CGRectOffset</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">containerView</span><span class="p">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">travelDistance</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">appearingFromRect</span> <span class="o">=</span> <span class="n">CGRectOffset</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">containerView</span><span class="p">.</span><span class="n">bounds</span><span class="p">,</span> <span class="o">-</span><span class="n">travelDistance</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们把视图的出现和消失时的状态记录了下来，比如初始状态和最终状态的 frame。</p>
+
+<p>请注意一点，我们的初始化方法需要我们提供我们是在向右切换还是向左切换。在我们的 <code>ContainerViewController</code> 中，按钮是一个接一个水平排列的，转场上下文通过设置每个的 frame 来记录它们之间的位置关系。动画控制器或者说 <em>animator</em>，在生成动画时可以使用这些 frame。</p>
+
+<p>我们也可以通过另外的方式去获取这些信息，但是那样的话，就会使 animator 和 <code>ContainerViewController</code> 及其视图控制器耦合在一起了，这是不好的，我们并不想这样。animator 应该只关心它自己以及传递给它的上下文，因为这样，在理想情况下，animator 可以在不同的上下文中得到复用。</p>
+
+<p>在下一步实现我们自己的动画控制器时，我们应该时刻记住这一点，现在让我们来实现转场上下文吧。</p>
+
+<p>你可能记得我们在 <a href="http://objccn.io/issue-5/">issue #5</a> 中的<a href="http://objccn.io/issue-5-3/">View Controller 转场</a>已经做过相同的事情了，为什么我们不使用它呢？事实上，由于使用了非常灵活的协议，我们可以直接把那个工程中的动画控制器，也就是 <code>Animator</code> 类直接拿过来使用，不需要任何修改。</p>
+
+<p>使用 <code>Animator</code> 类的实例来做转场动画的核心代码如下所示：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">fromViewController</span> <span class="nl">willMoveToParentViewController:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">self</span> <span class="nl">addChildViewController:</span><span class="n">toViewController</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">Animator</span> <span class="o">*</span><span class="n">animator</span> <span class="o">=</span> <span class="p">[[</span><span class="n">Animator</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">NSUInteger</span> <span class="n">fromIndex</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">viewControllers</span> <span class="nl">indexOfObject:</span><span class="n">fromViewController</span><span class="p">];</span>
+</span><span class="line"><span class="n">NSUInteger</span> <span class="n">toIndex</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">viewControllers</span> <span class="nl">indexOfObject:</span><span class="n">toViewController</span><span class="p">];</span>
+</span><span class="line"><span class="n">PrivateTransitionContext</span> <span class="o">*</span><span class="n">transitionContext</span> <span class="o">=</span> <span class="p">[[</span><span class="n">PrivateTransitionContext</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithFromViewController:</span><span class="n">fromViewController</span> <span class="nl">toViewController:</span><span class="n">toViewController</span> <span class="nl">goingRight:</span><span class="n">toIndex</span> <span class="o">&gt;</span> <span class="n">fromIndex</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">transitionContext</span><span class="p">.</span><span class="n">animated</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="n">transitionContext</span><span class="p">.</span><span class="n">interactive</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line"><span class="n">transitionContext</span><span class="p">.</span><span class="n">completionBlock</span> <span class="o">=</span> <span class="o">^</span><span class="p">(</span><span class="kt">BOOL</span> <span class="n">didComplete</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">fromViewController</span><span class="p">.</span><span class="n">view</span> <span class="n">removeFromSuperview</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">fromViewController</span> <span class="n">removeFromParentViewController</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">toViewController</span> <span class="nl">didMoveToParentViewController:</span><span class="n">self</span><span class="p">];</span>
+</span><span class="line"><span class="p">};</span>
+</span><span class="line">
+</span><span class="line"><span class="p">[</span><span class="n">animator</span> <span class="nl">animateTransition:</span><span class="n">transitionContext</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这其中的大部分是在对视图控制器容器的操作，计算出我们是在向左切换还是向右切换。做动画的部分基本上只有 3 行代码：1) 创建 animator，2) 创建转场上下文，和 3) 触发动画执行。</p>
+
+<p>有了上面的代码，转场效果看起来如下图所示:</p>
+
+<p><img src="http://img.objccn.io/issue-12/2014-05-01-custom-container-view-controller-transitions-stage-2.gif" alt="Stage 2: third-party animation" /></p>
+
+<p>非常酷，我们甚至没有写一行动画相关的代码。</p>
+
+<p>你可以在 <a href="https://github.com/objcio/issue-12-custom-container-transitions/tree/stage-2">阶段-2</a> 标签下看到这部分代码的变化。在<a href="https://github.com/objcio/issue-12-custom-container-transitions/compare/stage-1...stage-2">与 阶段－1 的对比</a>这里你可以看到 阶段-2 和 阶段-1 相对比的完整的代码改变。</p>
+
+<h3 id="3">阶段 3: 封装</h3>
+
+<p>我想我们最后要做的一件事情是封装 <code>ContainerViewController</code> ，使其能够：</p>
+
+<ol>
+<li>提供默认的转场动画。  </li>
+<li>提供替换默认动画控制器的代理。</li>
+</ol>
+
+<p>这意味着我们需要把对 <code>Animator</code> 类的依赖移除，同时需要创建一个代理协议。</p>
+
+<p>我们如下定义这个协议:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">ContainerViewControllerDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line"><span class="k">@optional</span>
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">containerViewController:</span><span class="p">(</span><span class="n">ContainerViewController</span> <span class="o">*</span><span class="p">)</span><span class="n">containerViewController</span> <span class="nl">didSelectViewController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="n">viewController</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span> <span class="o">&lt;</span><span class="n">UIViewControllerAnimatedTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nf">containerViewController:</span><span class="p">(</span><span class="n">ContainerViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">containerViewController</span> <span class="nf">animationControllerForTransitionFromViewController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">fromViewController</span> <span class="nf">toViewController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">toViewController</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><code>containerViewController:didSelectViewController:</code> 方法使 <code>ContainerViewController</code> 可以很更容易的集成于功能齐全的应用中。 </p>
+
+<p><code>containerViewController:animationControllerForTransitionFromViewController:toViewController:</code> 方法挺有趣的，当然，你可以把它和下面的 UIKit 中的视图控制器容器的代理协议做对比：</p>
+
+<ul>
+<li><code>tabBarController:animationControllerForTransitionFromViewController:toViewController:</code> (<code>UITabBarControllerDelegate</code>)</li>
+<li><code>navigationController:animationControllerForOperation:fromViewController:toViewController:</code> (<code>UINavigationControllerDelegate</code>)</li>
+</ul>
+
+<p>所有的这些方法都返回一个 <code>id&lt;UIViewControllerAnimatedTransitioning&gt;</code> 对象。</p>
+
+<p>与之前一直使用一个 <code>Animator</code> 对象不同, 我们现在可以从我们的代理那里获取一个动画控制器：</p>
+
+<pre><code>id&lt;UIViewControllerAnimatedTransitioning&gt;animator = nil;
+if ([self.delegate respondsToSelector:@selector (containerViewController:animationControllerForTransitionFromViewController:toViewController:)]) {
+    animator = [self.delegate containerViewController:self animationControllerForTransitionFromViewController:fromViewController toViewController:toViewController];
+}
+animator = (animator ?: [[PrivateAnimatedTransition alloc] init]);
+</code></pre>
+
+<p>如果我们有代理并且它返回了一个 animator，那么我们就使用这个 animator。否则，我们使用内部私有类 <code>PrivateAnimatedTransition</code> 创建一个默认的 animator。接下来我们将实现 <code>PrivateAnimatedTransition</code> 类。</p>
+
+<p>尽管默认的动画和 <code>Animator</code> 有一些不同，但是代码看起来惊人的相似。下面是完整的代码实现:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">PrivateAnimatedTransition</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="n">CGFloat</span> <span class="k">const</span> <span class="n">kChildViewPadding</span> <span class="o">=</span> <span class="mi">16</span><span class="p">;</span>
+</span><span class="line"><span class="k">static</span> <span class="n">CGFloat</span> <span class="k">const</span> <span class="n">kDamping</span> <span class="o">=</span> <span class="mf">0.75f</span><span class="p">;</span>
+</span><span class="line"><span class="k">static</span> <span class="n">CGFloat</span> <span class="k">const</span> <span class="n">kInitialSpringVelocity</span> <span class="o">=</span> <span class="mf">0.5f</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSTimeInterval</span><span class="p">)</span><span class="nf">transitionDuration:</span><span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">UIViewControllerContextTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nv">transitionContext</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animateTransition:</span><span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">UIViewControllerContextTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nv">transitionContext</span> <span class="p">{</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">UIViewController</span><span class="o">*</span> <span class="n">toViewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">transitionContext</span> <span class="nl">viewControllerForKey:</span><span class="n">UITransitionContextToViewControllerKey</span><span class="p">];</span>
+</span><span class="line">    <span class="n">UIViewController</span><span class="o">*</span> <span class="n">fromViewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">transitionContext</span> <span class="nl">viewControllerForKey:</span><span class="n">UITransitionContextFromViewControllerKey</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// When sliding the views horizontally, in and out, figure out whether we are going left or right.</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">goingRight</span> <span class="o">=</span> <span class="p">([</span><span class="n">transitionContext</span> <span class="nl">initialFrameForViewController:</span><span class="n">toViewController</span><span class="p">].</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">&gt;</span> <span class="p">[</span><span class="n">transitionContext</span> <span class="nl">finalFrameForViewController:</span><span class="n">toViewController</span><span class="p">].</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">travelDistance</span> <span class="o">=</span> <span class="p">[</span><span class="n">transitionContext</span> <span class="n">containerView</span><span class="p">].</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">+</span> <span class="n">kChildViewPadding</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGAffineTransform</span> <span class="n">travel</span> <span class="o">=</span> <span class="n">CGAffineTransformMakeTranslation</span> <span class="p">(</span><span class="n">goingRight</span> <span class="o">?</span> <span class="n">travelDistance</span> <span class="o">:</span> <span class="o">-</span><span class="n">travelDistance</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[[</span><span class="n">transitionContext</span> <span class="n">containerView</span><span class="p">]</span> <span class="nl">addSubview:</span><span class="n">toViewController</span><span class="p">.</span><span class="n">view</span><span class="p">];</span>
+</span><span class="line">    <span class="n">toViewController</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">    <span class="n">toViewController</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">CGAffineTransformInvert</span> <span class="p">(</span><span class="n">travel</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">UIView</span> <span class="nl">animateWithDuration:</span><span class="p">[</span><span class="n">self</span> <span class="nl">transitionDuration:</span><span class="n">transitionContext</span><span class="p">]</span> <span class="nl">delay:</span><span class="mi">0</span> <span class="nl">usingSpringWithDamping:</span><span class="n">kDamping</span> <span class="nl">initialSpringVelocity:</span><span class="n">kInitialSpringVelocity</span> <span class="nl">options:</span><span class="mh">0x00</span> <span class="nl">animations:</span><span class="o">^</span><span class="p">{</span>
+</span><span class="line">        <span class="n">fromViewController</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">travel</span><span class="p">;</span>
+</span><span class="line">        <span class="n">fromViewController</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">        <span class="n">toViewController</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">CGAffineTransformIdentity</span><span class="p">;</span>
+</span><span class="line">        <span class="n">toViewController</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span> <span class="nl">completion:</span><span class="o">^</span><span class="p">(</span><span class="kt">BOOL</span> <span class="n">finished</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">fromViewController</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">CGAffineTransformIdentity</span><span class="p">;</span>
+</span><span class="line">        <span class="p">[</span><span class="n">transitionContext</span> <span class="nl">completeTransition:</span><span class="o">!</span><span class="p">[</span><span class="n">transitionContext</span> <span class="n">transitionWasCancelled</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>p</p>
+
+<p>需要注意的一点是，上面的代码没有通过设置视图的 frame 来反应它们之间的位置关系，但是代码仍然可以正常工作，只不过转场总是在同一个方向上。因此，这个类也可以被其他的代码库使用。</p>
+
+<p>转场动画现在看起来如下所示:</p>
+
+<p><img src="http://img.objccn.io/issue-12/2014-05-01-custom-container-view-controller-transitions-stage-3.gif" alt="Stage 3: third-party animation" /></p>
+
+<p>在 <a href="https://github.com/objcio/issue-12-custom-container-transitions/tree/stage-3">阶段-3</a> 的代码中，app delegate 中设置代理的部分被<a href="https://github.com/objcio/issue-12-custom-container-transitions/blob/stage-3/Container%20Transitions/AppDelegate.m#L41">注释掉了</a>，这样就可以看到默认的动画效果了。你可以将其设置回再使用 <code>Animator</code> 类。你可能想查看<a href="https://github.com/objcio/issue-12-custom-container-transitions/compare/stage-2...stage-3">同 阶段－2 相比所有的修改</a>。</p>
+
+<p>我们现在有一个自包含的提供了默认转场动画的 <code>ContainerViewController</code> 类，这个默认的转场动画可以被开发者自己定义的iOS 7 自定义动画控制器 (<code>UIViewControllerAnimatedTransitioning</code>) 的对象代替，甚至都可以不用关心我们的源代码就可以方便的替换。</p>
+
+<h2>结论</h2>
+
+<p>在本文中我们通过使用 iOS 7 提供的自定义视图控制器转场的新特性，使我们自定义的视图控制器容器成为了 UIKit 的一等公民。</p>
+
+<p>这意味着你可以把自定义的非交互式的转场动画应用到自定义的视图控制器容器中。你可以看到我们把 7 个话题之前使用的转场类直接拿过来使用，而且没有做任何修改。</p>
+
+<blockquote>
+  <p><span class="secondary radius label">译者注</span> 即 <a href="http://objccn.io/issue-5/">issue #5</a> 中的 <a href="http://objccn.io/issue-5-3/">View Controller 转场</a>中的 <code>Animator</code> 类。</p>
+</blockquote>
+
+<p>如果你想让自己的容器视图控制器作为一个类库或者框架，或者仅仅想使你的代码得到更好的复用，这将是非常完美的。</p>
+
+<p>我们现在仅仅支持非交互式的转场，下一步就是对交互式的转场也提供支持。</p>
+
+<p>我把它留给你当作一个练习。这有一些复杂，因为我们基本上是要模仿系统的行为，而这真的全是猜测性的工作。</p>
+
+<h2>扩展资料</h2>
+
+<ul>
+<li>2014 年的 iOS 7 Tech Talks 视频: <a href="https://developer.apple.com/tech-talks/videos/index.php?id=3#3">“Architecting Modern Apps, Part 1”</a> (07:23-31:27)</li>
+<li>全部代码都放在 <a href="https://github.com/objcio/issue-12-custom-container-transitions">GitHub</a></li>
+</ul>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-05-11T00:08:11+08:00" data-updated="true" itemprop="datePublished">May 11<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/" itemprop="url">Layer中动画概述</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>默认情况下，<code>CALayer</code> 及其子类的绝大部分标准属性都可以执行动画，无论是添加一个 <code>CAAnimation</code> 到 Layer（显式动画），亦或是为属性指定一个动作然后修改它（隐式动画）。</p>
+
+<p>但有时候我们希望能同时为好几个属性添加动画，使它们看起来像是一个动画一样；或者，我们需要执行的动画不能通过使用标准 Layer 属性动画来实现。</p>
+
+<p>在本文中，我们将讨论如何子类化 <code>CALayer</code> 并添加我们自己的属性，以便比较容易地创建那些如果以其他方式实现起来会很麻烦的动画效果。</p>
+
+<p>一般说来，我们希望添加到 <code>CALayer</code> 的子类上的可动画属性有三种类型：</p>
+
+<ul>
+<li>能间接动画 Layer （或其子类）的一个或多个标准属性的属性。</li>
+<li>能触发 Layer 背后的图像（即 <code>contents</code> 属性）重绘的属性。</li>
+<li>不涉及 Layer 重绘或对任何已有属性执行动画的属性。</li>
+</ul>
+
+<h2>间接属性动画</h2>
+
+<p>能间接修改其它标准 Layer 属性的自定义属性是这些选项中最简单的。它们仅仅只是自定义 setter 方法。然后将它们的输入转换为适用于创建动画的一个或多个不同的值。</p>
+
+<p>如果被我们设置的属性已经预设好标准动画，那我们完全不需要编写任何实际的动画代码，因为我们修改这些属性后，它们就会继承任何被配置在当前 <code>CATransaction</code> 上的动画设置，并且自动执行动画。</p>
+
+<p>换句话说，即使 <code>CALayer</code> 不知道如何对我们自定义的属性进行动画，它依然能对因自定义属性被改变而引起的其它可见副作用进行动画，而这恰好就是我们所需要的。</p>
+
+<p>为了演示这种方法，让我们来创建一个简单的模拟时钟，之后我们可以使用被声明为 <code>NSDate</code> 类型 <code>time</code> 属性来设置它的时间。我会将从创建一个静态的时钟面盘开始。这个时钟包含三个 <code>CAShapeLayer</code> 实例 —— 一个用于时钟面盘的圆形 Layer 和两个用于时针和分针的长方形 Sublayer。</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span>: <span class="nc">CAShapeLayer</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">NSDate</span> <span class="o">*</span><span class="n">time</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// 私有属性</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">CAShapeLayer</span> <span class="o">*</span><span class="n">hourHand</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">CAShapeLayer</span> <span class="o">*</span><span class="n">minuteHand</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ClockFace</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">((</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">]))</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithOvalInRect:</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">].</span><span class="n">CGPath</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">whiteColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">strokeColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">lineWidth</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAShapeLayer</span> <span class="n">layer</span><span class="p">];</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">70</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">70</span><span class="p">)].</span><span class="n">CGPath</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAShapeLayer</span> <span class="n">layer</span><span class="p">];</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">90</span><span class="p">)].</span><span class="n">CGPath</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>同时我们要设置一个包含 <code>UIDatePicker</code> 的基本的 View Controller，这样我们就能测试我们的 Layer （日期选择器在 Storyboard 里设置）了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ViewController</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="kt">IBOutlet</span> <span class="n">UIDatePicker</span> <span class="o">*</span><span class="n">datePicker</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">ClockFace</span> <span class="o">*</span><span class="n">clockFace</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">viewDidLoad</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 添加时钟面板 Layer</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span> <span class="o">=</span> <span class="p">[[</span><span class="n">ClockFace</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">150</span><span class="p">);</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 设置默认时间</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">.</span><span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDate</span> <span class="n">date</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">setTime</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">datePicker</span><span class="p">.</span><span class="n">date</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>现在我们只需要实现 <code>time</code> 属性的 setter 方法。这个方法使用 <code>NSCalendar</code> 将时间变为小时和分钟，之后我们将它们转换为角坐标。然后我们就可以使用这些角度去生成两个 <code>CGAffineTransform</code> 以旋转时针和分针。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setTime:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">time</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSCalendar</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithCalendarIdentifier:</span><span class="n">NSGregorianCalendar</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSDateComponents</span> <span class="o">*</span><span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">components:</span><span class="n">NSHourCalendarUnit</span> <span class="o">|</span> <span class="n">NSMinuteCalendarUnit</span> <span class="nl">fromDate:</span><span class="n">time</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">affineTransform</span> <span class="o">=</span> <span class="n">CGAffineTransformMakeRotation</span><span class="p">(</span><span class="n">components</span><span class="p">.</span><span class="n">hour</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span><span class="p">);</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">affineTransform</span> <span class="o">=</span> <span class="n">CGAffineTransformMakeRotation</span><span class="p">(</span><span class="n">components</span><span class="p">.</span><span class="n">minute</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>结果看起来像这样：</p>
+
+<p><img src="http://img.objccn.io/issue-12/clock.gif" width="320px" /></p>
+
+<p>你可以 <a href="https://github.com/objcio/issue-12-custom-layer-property-animations">从 GitHub 上</a> 下载这个项目看看。</p>
+
+<p>如你所见，我们实在没有做什么太费脑筋的事情；我们并没有创建一个新的可动画属性，而只是在单个方法里设置了几个标准可动画 Layer 属性而已。然而，如果我们想创建的动画并不能映射到任何已有的 Layer 属性上时，该怎么办呢？</p>
+
+<h2 id="layer">动画 Layer 内容</h2>
+
+<p>假设不使用几个分离的 Layer 来实现我们的时钟面板，那我们可以改用 Core Graphics 来绘制时钟。（这通常会降低性能，但我们可以假想我们所要实现的效果需要许多复杂的绘图操作，而它们很难用常规的 Layer 属性和 transform 来复制。）我们要怎么做呢？</p>
+
+<p>与 <code>NSManagedObject</code> 很类似， <code>CALayer</code> 具有为任何被声明的属性生成 dynamic 的 setter 和 getter 的能力。在我们当前的实现中，我们让编译器去 synthesize 了 <code>time</code> 属性的 ivar 和 getter 方法，而我们自己实现了 setter 方法。但让我们来改变一下：丢弃我们的 setter 并将属性标记为 <code>@dynamic</code> 。同时我们也丢弃分离的时针和分针 Layer ，因为我们将自己去绘制它们。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ClockFace</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@dynamic</span> <span class="n">time</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">((</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">]))</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在我们开始之前，需要先做一个小调整：因为不幸的是，<code>CALayer</code> 不知道如何对 <code>NSDate</code> 属性进行插值（interpolate）（例如，虽然它可以处理数字类型和其它例如 <code>CGColor</code> 和 <code>CGAffineTransform</code> 这样的类型，但它不能自动生成不同的 <code>NSDate</code> 实例之间的中间值）。我们可以保留我们的自定义 setter 方法并用它设置另一个等价于 <code>NSTimeInterval</code> 的动态属性（这是一个数字值，可以被插值），但为了保持例子的简单性，我们会用一个浮点值替换 <code>NSDate</code> 属性来表征时钟的小时。我们还更新了用户界面，现在使用一个简单的 <code>UITextField</code> 来设置浮点值，而不再使用日期选择器：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ViewController</span> <span class="p">()</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">UITextFieldDelegate</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="kt">IBOutlet</span> <span class="n">UITextField</span> <span class="o">*</span><span class="n">textField</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">ClockFace</span> <span class="o">*</span><span class="n">clockFace</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">viewDidLoad</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 添加时钟面板 Layer</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span> <span class="o">=</span> <span class="p">[[</span><span class="n">ClockFace</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">150</span><span class="p">);</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">textFieldShouldReturn:</span><span class="p">(</span><span class="n">UITextField</span> <span class="o">*</span><span class="p">)</span><span class="nv">textField</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">textField</span> <span class="n">resignFirstResponder</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">textFieldDidEndEditing:</span><span class="p">(</span><span class="n">UITextField</span> <span class="o">*</span><span class="p">)</span><span class="nv">textField</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">.</span><span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span class="n">textField</span><span class="p">.</span><span class="n">text</span> <span class="n">floatValue</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>现在，既然我们已经移除了自定义的 setter 方法，那我们要如何才能知晓 <code>time</code> 属性的改变呢？我们需要一个无论何时 <code>time</code> 属性改变时都能自动通知 <code>CALayer</code> 的方式，这样它才好重绘它的内容。我们通过覆写 <code>+needsDisplayForKey:</code> 方法即可做到这一点，如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">needsDisplayForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="s">@&quot;time&quot;</span> <span class="nl">isEqualToString:</span><span class="n">key</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">super</span> <span class="nl">needsDisplayForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这就告诉了 Layer ，无论何时 <code>time</code> 属性被修改，它都需要调用 <code>-display</code> 方法。现在我们就覆写 <code>-display</code> 方法，添加一个 <code>NSLog</code> 语句打印出 <code>time</code> 的值：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">display</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;time: %f&quot;</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">time</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>如果我们设置 <code>time</code> 属性为 1.5 ，我们就会看到 <code>-display</code> 被调用，打印出新值：</p>
+
+<pre><code>2014-04-28 22:37:04.253 ClockFace[49145:60b] time: 1.500000
+</code></pre>
+
+<p>但这还不是我们真正想要的；我们希望 <code>time</code> 属性能在旧值和新值之间在几帧之内做一个平滑的过渡动画。为了实现这一点，我们需要为 <code>time</code> 属性指定一个动画（或“动作（action）”），而通过覆写 <code>-actionForKey:</code> 方法就能做到：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">CAAction</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;)</span><span class="nf">actionForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">key</span> <span class="nl">isEqualToString:</span><span class="s">@&quot;time&quot;</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">timingFunction</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">time</span><span class="p">);</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">animation</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">super</span> <span class="nl">actionForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>现在，如果我们再次设置 <code>time</code> 属性，我们就会看到 <code>-display</code> 被多次调用。调用的次数大约为每秒 60 次，至于动画的长度，默认为 0.25 秒，大约是 15 帧：</p>
+
+<pre><code>2014-04-28 22:37:04.253 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.255 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.351 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.370 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.388 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.407 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.425 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.443 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.461 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.479 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.497 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.515 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.755 ClockFace[49145:60b] time: 1.500000
+</code></pre>
+
+<p>由于某些原因，当我们在每个中间点打印 <code>time</code> 值时，我们一直看到的是最终值。为何不能得到插值呢？因为我们查看的是错误的 <code>time</code> 属性。</p>
+
+<p>当你设置某个 <code>CALayer</code> 的某个属性，你实际设置的是 <em>model</em> Layer 的值 —— 这里的 <em>model</em> Layer 表示正在进行的动画结束时， Layer 所达到的最终状态。如果你取 <em>model</em> Layer 的值，它就总是给你它被设置到的最终值。</p>
+
+<p>但连接到 <em>model</em> Layer 的是所谓的 <em>presentation</em> Layer ——它是 <em>model</em> Layer 的一个拷贝，但它的值所表示的是 <em>当前的</em>，中间动画状态。如果我们修改 <code>-display</code> 方法去打印 Layer 的 <code>presentationLayer</code> 的 <code>time</code> 属性，那我们就会看到我们所期望的插值。（同时我们也使用 <code>presentationLayer</code> 的 <code>time</code> 属性来获取动画的开始值，替代 <code>self.time</code> ）：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">CAAction</span><span class="o">&gt;</span><span class="p">)</span><span class="nf">actionForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">key</span> <span class="nl">isEqualToString:</span><span class="s">@&quot;time&quot;</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">timingFunction</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="p">([[</span><span class="n">self</span> <span class="n">presentationLayer</span><span class="p">]</span> <span class="n">time</span><span class="p">]);</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">animation</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">super</span> <span class="nl">actionForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">display</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;time: %f&quot;</span><span class="p">,</span> <span class="p">[[</span><span class="n">self</span> <span class="n">presentationLayer</span><span class="p">]</span> <span class="n">time</span><span class="p">]);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>下面是打印出的值：</p>
+
+<pre><code>2014-04-28 22:43:31.200 ClockFace[49176:60b] time: 0.000000
+2014-04-28 22:43:31.203 ClockFace[49176:60b] time: 0.002894
+2014-04-28 22:43:31.263 ClockFace[49176:60b] time: 0.363371
+2014-04-28 22:43:31.300 ClockFace[49176:60b] time: 0.586421
+2014-04-28 22:43:31.318 ClockFace[49176:60b] time: 0.695179
+2014-04-28 22:43:31.336 ClockFace[49176:60b] time: 0.803713
+2014-04-28 22:43:31.354 ClockFace[49176:60b] time: 0.912598
+2014-04-28 22:43:31.372 ClockFace[49176:60b] time: 1.021573
+2014-04-28 22:43:31.391 ClockFace[49176:60b] time: 1.134173
+2014-04-28 22:43:31.409 ClockFace[49176:60b] time: 1.242892
+2014-04-28 22:43:31.427 ClockFace[49176:60b] time: 1.352016
+2014-04-28 22:43:31.446 ClockFace[49176:60b] time: 1.460729
+2014-04-28 22:43:31.464 ClockFace[49176:60b] time: 1.500000
+2014-04-28 22:43:31.636 ClockFace[49176:60b] time: 1.500000
+</code></pre>
+
+<p>所以现在我们所要做就是画出时钟。我们将使用普通的 Core Graphics 函数以绘制到一个 Graphics Context 上来做到这一点，然后将产生出图像设置为我们 Layer 的 <code>contents</code>。下面是更新后的 <code>-display</code> 方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">display</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">// 获取时间插值</span>
+</span><span class="line">    <span class="kt">float</span> <span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presentationLayer</span> <span class="n">time</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 创建绘制上下文</span>
+</span><span class="line">    <span class="n">UIGraphicsBeginImageContextWithOptions</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">,</span> <span class="n">NO</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextRef</span> <span class="n">ctx</span> <span class="o">=</span> <span class="n">UIGraphicsGetCurrentContext</span><span class="p">();</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 绘制时钟面板</span>
+</span><span class="line">    <span class="n">CGContextSetLineWidth</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextStrokeEllipseInRect</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">CGRectInset</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">));</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 绘制时针</span>
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">angle</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">center</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextSetLineWidth</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextMoveToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="mi">80</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="mi">80</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextStrokePath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 绘制分针</span>
+</span><span class="line">    <span class="n">angle</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span> <span class="o">-</span> <span class="n">floor</span><span class="p">(</span><span class="n">time</span><span class="p">))</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGContextSetLineWidth</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextMoveToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="mi">90</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="mi">90</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextStrokePath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">//set backing image 设置 contents </span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">contents</span> <span class="o">=</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">UIGraphicsGetImageFromCurrentImageContext</span><span class="p">().</span><span class="n">CGImage</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIGraphicsEndImageContext</span><span class="p">();</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>结果看起来如下：</p>
+
+<p><img src="http://img.objccn.io/issue-12/clock2.gif" width="320px" /></p>
+
+<p>如你所见，不同于第一个时钟动画，随着时针的变化，分针实际上对每一个小时都会转上满满一圈（就像一个真正的时钟那样），而不仅仅只是通过最短的路径移动到它的最终位置；因为我们正在动画的是 <code>time</code> 值本身而不仅仅是时针或分针的位置，所以上下文信息被保留了。</p>
+
+<p>通过这样的方式绘制一个时钟并不是很理想，因为 Core Graphics 函数没有硬件加速，可能会引起动画帧数的下降。另一种能每秒重绘 <code>contents</code> 图像 60 次的方式是用一个数组存储一些预先绘制好的图像，然后基于合适的插值简单的选择对应的图像即可。实现代码大概如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">const</span> <span class="n">NSInteger</span> <span class="n">hoursOnAClockFace</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">display</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">// 获取时间插值 </span>
+</span><span class="line">    <span class="kt">float</span> <span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presentationLayer</span> <span class="n">time</span><span class="p">]</span> <span class="o">/</span> <span class="n">hoursOnAClockFace</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 从之前定义好的图像数组里获取图像帧</span>
+</span><span class="line">    <span class="n">NSInteger</span> <span class="n">numberOfFrames</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">frames</span> <span class="n">count</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSInteger</span> <span class="n">index</span> <span class="o">=</span> <span class="n">round</span><span class="p">(</span><span class="n">time</span> <span class="o">*</span> <span class="n">numberOfFrames</span><span class="p">)</span> <span class="o">%</span> <span class="n">numberOfFrames</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIImage</span> <span class="o">*</span><span class="n">frame</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">frames</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">contents</span> <span class="o">=</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">frame</span><span class="p">.</span><span class="n">CGImage</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>通过避免在每一帧里都用昂贵的软件绘制，我们能改善动画的性能，但代价是我们需要在内存里存储所有预先绘制的动画帧图像，对于一个复杂的动画来说，这可能造成惊人的内存浪费。</p>
+
+<p>但这提出了一个有趣的可能性。如果我们完全不在 <code>-display</code> 里更新 <code>contents</code> 图像会发生什么？我们做一些其它的事情怎样？</p>
+
+<h2>非可视属性的动画</h2>
+
+<p>在 <code>-display</code> 里更新其它 Layer 属性就是不必要的，因为我们可以很简单地直接对任何这样的属性做动画，如同我们在第一个时钟面板例子里所做的那样。但如果我们设置一些其它的东西，比如某些完全和 Layer 不相关的东西，会怎样呢？</p>
+
+<p>下面的代码使用一个 <code>CALayer</code> 结合 <code>AVAudioPlayer</code> 来创建一个可动画的音量控制器。通过把音量绑定到 dynamic 的 Layer 属性上，我们可以使用 Core Animation 的属性插值来平滑的在两个不同的音量之间渐变，以同样的方式我们可以动画 Layer 上的任何自定义属性：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+<span class="line-number">59</span>
+<span class="line-number">60</span>
+<span class="line-number">61</span>
+<span class="line-number">62</span>
+<span class="line-number">63</span>
+<span class="line-number">64</span>
+<span class="line-number">65</span>
+<span class="line-number">66</span>
+<span class="line-number">67</span>
+<span class="line-number">68</span>
+<span class="line-number">69</span>
+<span class="line-number">70</span>
+<span class="line-number">71</span>
+<span class="line-number">72</span>
+<span class="line-number">73</span>
+<span class="line-number">74</span>
+<span class="line-number">75</span>
+<span class="line-number">76</span>
+<span class="line-number">77</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">AudioLayer</span> : <span class="nc">CALayer</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithAudioFileURL:</span><span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">URL</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">assign</span><span class="p">)</span> <span class="kt">float</span> <span class="n">volume</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">play</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">stop</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isPlaying</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">AudioLayer</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">AVAudioPlayer</span> <span class="o">*</span><span class="n">player</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">AudioLayer</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@dynamic</span> <span class="n">volume</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithAudioFileURL:</span><span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">URL</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">((</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">init</span><span class="p">]))</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">volume</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">player</span> <span class="o">=</span> <span class="p">[[</span><span class="n">AVAudioPlayer</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithContentsOfURL:</span><span class="n">URL</span> <span class="nl">error:</span><span class="nb">NULL</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">play</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">player</span> <span class="n">play</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">stop</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">player</span> <span class="n">stop</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isPlaying</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">player</span><span class="p">.</span><span class="n">playing</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">needsDisplayForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="s">@&quot;volume&quot;</span> <span class="nl">isEqualToString:</span><span class="n">key</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">super</span> <span class="nl">needsDisplayForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">CAAction</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;)</span><span class="nf">actionForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">key</span> <span class="nl">isEqualToString:</span><span class="s">@&quot;volume&quot;</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">timingFunction</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="p">([[</span><span class="n">self</span> <span class="n">presentationLayer</span><span class="p">]</span> <span class="n">volume</span><span class="p">]);</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">animation</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">super</span> <span class="nl">actionForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">display</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">// 设置音量值为合适的音量插值</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">player</span><span class="p">.</span><span class="n">volume</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presentationLayer</span> <span class="n">volume</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们可以通过使用一个简单的有着播放、停止、音量增大以及音量减小按钮的 View Controller 来做测试：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ViewController</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">AudioLayer</span> <span class="o">*</span><span class="n">audioLayer</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">viewDidLoad</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSURL</span> <span class="o">*</span><span class="n">musicURL</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">fileURLWithPath:</span><span class="p">[[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="nl">pathForResource:</span><span class="s">@&quot;music&quot;</span> <span class="nl">ofType:</span><span class="s">@&quot;caf&quot;</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span> <span class="o">=</span> <span class="p">[[</span><span class="n">AudioLayer</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithAudioFileURL:</span><span class="n">musicURL</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">playPauseMusic:</span><span class="p">(</span><span class="n">UIButton</span> <span class="o">*</span><span class="p">)</span><span class="nv">sender</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span> <span class="n">isPlaying</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span> <span class="n">stop</span><span class="p">];</span>
+</span><span class="line">        <span class="p">[</span><span class="n">sender</span> <span class="nl">setTitle:</span><span class="s">@&quot;Play Music&quot;</span> <span class="nl">forState:</span><span class="n">UIControlStateNormal</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">else</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span> <span class="n">play</span><span class="p">];</span>
+</span><span class="line">        <span class="p">[</span><span class="n">sender</span> <span class="nl">setTitle:</span><span class="s">@&quot;Pause Music&quot;</span> <span class="nl">forState:</span><span class="n">UIControlStateNormal</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">fadeIn</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span><span class="p">.</span><span class="n">volume</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">fadeOut</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span><span class="p">.</span><span class="n">volume</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>注意：尽管我们的 Layer 没有可见的外观，但它依然需要被添加到屏幕上的视图层级里，以便动画能正常工作。</p>
+
+<h2>结论</h2>
+
+<p><code>CALayer</code> 的 dynamic 属性提供了一中简单的机制来实现任何形式的动画 —— 不仅仅只是内建的那些。而通过覆写 <code>-display</code>  方法，我们可以使用这些属性去控制任何我们想控制的东西，甚至是音量值这样的东西。</p>
+
+<p>通过使用这些属性，我们不仅仅避免了重复造轮子，同时还确保了我们的自定义动画能与标准动画的时机和控制函数协同工作，以此就能非常容易地与其它动画属性同步。</p>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -2970,583 +4218,6 @@ close connection
 <h2>结论</h2>
 
 <p>本文提供了一些真实的测试，使你在使用基础集合类的时候做出有根据的选择。除了上面讨论的类，还有一些不常用但确实有用的类，尤其是 <code>NSCountedSet</code>，<a href="http://nshipster.com/cfbag/"><code>CFBag</code></a>，<a href="https://developer.apple.com/library/mac/documentation/corefoundation/Reference/CFTreeRef/Reference/reference.html"><code>CFTree</code></a>，<a href="https://developer.apple.com/library/mac/documentation/corefoundation/Reference/CFBitVectorRef/Reference/reference.html"><code>CFBitVector</code></a>和<a href="https://developer.apple.com/library/mac/documentation/corefoundation/Reference/CFBinaryHeapRef/Reference/reference.html"><code>CFBinaryHeap</code></a>。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-04-15T08:45:11+08:00" data-updated="true" itemprop="datePublished">Apr 15<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/shi-ge/'>诗歌</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/04/15/wo-bu-hui-xie-shi/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/15/wo-bu-hui-xie-shi/" itemprop="url">我不会写诗</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>
-好想在此写诗一回，<br />
-但我始终不敢下笔，<br />
-或许是诗不若景美，<br />
-或许是诗不及影魅，<br />
-抑或是我的诗，<br />
-比此刻风景甚悲，<br />
-忘记了天空的深邃，<br />
-忘记了风的轻微，<br />
-愿一只纸鸳的甜蜜，<br />
-放飞漫天的心醉。<br />
-好想在此放声歌唱，<br />
-歌唱那满地的青黄，<br />
-那白衣的姑娘，<br />
-那微微的碎影，<br />
-折射出太阳的方向，<br />
-也许那甜蜜的不是淡淡阳光，<br />
-而是那挂着笑容的脸庞，<br />
-和那美好的希望。</p>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-04-14T13:56:37+08:00" data-updated="true" itemprop="datePublished">Apr 14<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/android/'>Android</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/04/14/ioskai-fa-zhe-de-an-zhuo-chu-bu-kui-tan/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/14/ioskai-fa-zhe-de-an-zhuo-chu-bu-kui-tan/" itemprop="url">iOS开发者的安卓初步窥探</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>随着移动软件工业的发展，一个移动产品只局限于 iOS 系统变得越来越不切实际。 Android 目前占有近 80% 的智能手机份额[^1]，它能给一个产品带来的潜在用户量实在不能再被忽略了。</p>
-
-<p>在本文中，我会在 iOS 的开发范围内介绍 Android 开发的核心内容。 Android 和 iOS 处理类似的问题集，但在大部分问题上，它们都有不同的解决方式。通过本文，我会使用一个配套项目（在 <a href="https://github.com/objcio/issue-11-android-101">GitHub</a> 上）来说明如何在两个平台上开发以完成相同的任务。</p>
-
-<p>除了 iOS 开发的相关知识，我假设你在 Java 上也有一定经验，能够安装和使用<a href="http://developer.android.com/tools/index.html">ADT（Android Development Tools）</a>。此外，如果你最近才开始 Android 开发，读一遍 Google 编写的关于<a href="http://developer.android.com/training/basics/firstapp/index.html">创建你的第一个应用</a>的教程会很有帮助。</p>
-
-<h3 id="ui">UI设计概要</h3>
-
-<p>本文不会深入到介绍 iOS 和 Android 在用户体验和设计模式上的不同。然而，了解一些当今 Android 上使用的关键 UI 范式，比如 Action Bar、Overflow Menu、Back Button、Share Action 等，还是会很有好处的。如果你正在认真考虑 Android 开发，我推荐你从 Google Play Store 买个 <a href="https://play.google.com/store/devices/details?id=nexus_5_white_16gb">Nexus 5</a>，将它作为你的主要设备，用满一周，强迫自己最大程度的去体验这个操作系统。一个开发者若不清楚要为之开发的操作系的关键使用模式，就那是对产品的不负责任。</p>
-
-<h2>语言应用结构</h2>
-
-<h3 id="java">Java</h3>
-
-<p>Objective-C 和 Java 之间有很多不同，虽然若能将 Objective-C 的方式带入 Java 可能会很有诱惑力，但这样做很可能导致代码库与驱动它的主要框架产生冲突。总之，有一些需要提防地陷阱：</p>
-
-<ul>
-<li>类前缀就留在 Objective-C 里不要带过来了。Java 有实在的命名空间和包管理，所以不再需要类前缀。</li>
-<li>实例变量的前缀是 <code>m</code>，不是 <code>_</code>。尽可能多的在代码里使用JavaDoc来写方法和类描述，它能让你和其他人更舒服些。</li>
-<li>Null 检查！Objective-C能妥善处理向nil发送消息，但Java不行。</li>
-<li>向属性说再见。如果你想要 setter 和 getter，你只能实际地创建一个 getVariableName()方法，并显式的调用它。使用 <code>this.object</code> <strong>不会</strong>调用你自定义地getter，你必须使用 <code>this.getObjct</code>。</li>
-<li>同样的，给方法名加上 <code>get</code> 和 <code>set</code> 前缀来更好的识别 getter 和 setter 。Java 方法通常写为动作和查询，例如 <code>getCell()</code>，而不是 <code>cellForRowAtIndexPath:</code>。</li>
-</ul>
-
-<h3>项目结构</h3>
-
-<p>Android 应用主要分为两个部分，第一部分是 Java 源代码。源代码通过 Java 包的方式进行组织，所以可按照你的喜好来决定。然而一个常见的实践是为 Activity、Fragment、View、Adapter 和 Data（模型和管理器）使用顶层的类别（top-level categories）。</p>
-
-<p>第二个主要部分是 <code>res</code> 文件夹，也就是资源文件夹。<code>res</code> 文件夹包含有图像、 XML 布局文件，以及 XML 值文件，它们构成了大部分非代码资源。在 iOS 上，图像可有 <code>@2x</code> 版本，但在 Android 上有好几种不同的屏幕密度文件夹要考虑[^2]。Android 使用文件夹来组织文件、字符串以及其他与屏幕密度相关的值。<code>res</code> 文件夹还包含有 XML 布局文件，就像 <code>xib</code> 文件一样。最后，还有其他 XML 文件存储了字符串、整数和样式资源。</p>
-
-<p>最后一个与项目结构相关的是 <code>AndroidManifest.xml</code> 文件。这个文件等同于 iOS 上的 <code>Project-Info.plist</code> 文件，它存储着 Activity 信息、应用名字，并设置应用能处理的 Intent [^3]（系统级事件）。关于 Intent 的更多信息，继续阅读本文，或者阅读 <a href="http://objccn.io/issue-11-2">Intents</a> 这篇文章。</p>
-
-<h2 id="activity">Activity</h2>
-
-<p>Activity 是 Android 应用的基本显示单元，就像 <code>UIViewController</code> 是iOS的基本显示组件一样。作为 <code>UINavigationController</code> 的替代，Android 由系统来维护一个 Activity 栈。当应用完成加载，系统将应用的主 Activity（main activity）压到栈上。注意你也可以加载其他应用的 Activity 并将它们放在栈里。默认，Android 上的返回（back）按钮将从系统的 Activity 栈中弹出 Activity，所以当用户不停地按下返回时，他可以见到多个曾经加载过的应用。</p>
-
-<p>通过使用包含有额外的数据 Intent，Activity 同样可以初始化其他 Activity 。通过 Intent 启动 Activity 类似于通过自定义的 <code>init</code> 方法创建一个 <code>UIViewController</code>。因为最常见的加载新 Activity 的方法是创建一个有数据的 Intent，在 Android 上暴露自定义初始化方法的一个非常棒的方式是创建一个静态 Intent getter 方法。Activity 同样能在完成时返回结果（再见，modal 代理），当其完成时在 Intent 上放置额外数据即可。</p>
-
-<p>Android 和 iOS 的一大差别是任何 Activity 都可以作为你应用的入口，只要它们在 <code>AndroidManifest</code>文件里正确注册即可。在 AndroidManifest.xml 文件中，为一个 Activity 设置一个 <code>media intent</code> 的 Intent 过滤器的话，就能让系统知道这个 Activity 可以作为包含有媒体数据的 Intent 的入口。一个不错的例子是相片编辑  Activity ，它打开一个相片，修改它，并在 Activity 完成时返回修改后的图片。</p>
-
-<p>作为一个旁注，如果你想在 Activity 和 Fragment 之间发送模型对象的话，它们必须实现 <code>Parcelable</code> 接口。实现 <code>Parcelable</code> 接口很类似于 iOS 上实现 <code>&lt;NSCopying&gt;</code> 协议。同样值得一提的是，<code>Parcelable</code> 对象可以存储在 activity 或者 fragment 的 savedInstanceState 里，这是为了能更容易地在它们被销毁后恢复它们的状态。</p>
-
-<p>接下来就看看一个 Activity 启动另一个 Activity，同时能在第二个 Activity 完成时做出响应。</p>
-
-<h3 id="activity">加载另一个Activity并得到结果</h3>
-
-<pre><code>// request code 是为返回 activities 所设置的特定值
-private static final int REQUEST_CODE_NEXT_ACTIVITY = 1234;
-
-protected void startNextActivity() {
-    // Intents 需要一个 context, 所以将当前的 activity 作为 context 给入
-    Intent nextActivityIntent = new Intent(this, NextActivity.class);
-       startActivityForResult(nextActivityResult, REQUEST_CODE_NEXT_ACTIVITY);
-}
-
-@Override
-protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-    case REQUEST_CODE_NEXT_ACTIVITY:
-        if (resultCode == RESULT_OK) {
-            // 这表示我们的 activity 成功返回了。现在显示一段提示文字
-            // 这里在屏幕上创建了一个简单的 pop-up 消息框
-                Toast.makeText(this, "Result OK!", Toast.LENGTH_SHORT).show();
-            }
-            return;
-        }    
-        super.onActivityResult(requestCode, resultCode, data);
-}
-</code></pre>
-
-<h3 id="activityfinish">在 Activity finish() 上返回结果</h3>
-
-<pre><code>public static final String activityResultString = "activityResultString";
-
-/*
- * 结束时调用, 在 intent 上设置 object ID 并调用成功结束
- * @param returnObject 是要处理的对象
- */
-private void onActivityResult(Object returnObject) {
-        Intent data = new Intent();
-        if (returnObject != null) {
-            data.putExtra(activityResultString, returnObject.uniqueId);
-        }
-
-        setResult(RESULT_OK, data);
-        finish();        
-}
-</code></pre>
-
-<h2 id="fragments">Fragments</h2>
-
-<p><a href="http://developer.android.com/guide/components/fragments.html">Fragment</a> 的概念是 Android 独有的，它最近才随着 Android 3.0 的问世而出现。Fragment 是一种迷你控制器，能够被实例化来填充 Activity。它们可以存储状态信息，还有可能包含视图逻辑，但区别 Activity 和 Fragment 的最大不同在于。同一时间里屏幕上可能有多个 Fragment。同时注意 Fragment 自身没有上下文，它们严重依赖 Activity 来将它们和应用的状态联系起来。</p>
-
-<p>平板是使用 Fragment 的绝好场景：你可以在左边放一个列表 Fragment，右边放一个详细信息 Fragment。[^4]Fragment 能让你将 UI 和控制器逻辑分割到更小、可重用的层面上。但要当心，Fragment 的生命周期有不少细微差别，我们会在后面详细谈到。</p>
-
-<p><img src="http://img.objccn.io/issue-11/multipane_view_tablet.png" alt="一个含有两个 fragment 的多面板 activity" /></p>
-
-<p>Fragment 是实现 App 的新方式，就像在 iOS 上 <code>UICollectionView</code> 是可取代 <code>UITableView</code> 的构造列表数据的新方式。[^5] 虽然在一开始避开 Fragment 而使用 Activity 会比较容易，但你之后可能会为之后悔。然而，我们也要抗拒那种想完全放弃 Activity，转而只在单个 Activity 上使用 Fragment 的冲动，因为如果那么做了，那么当你想获得 Intent 的好处且想在同一个 Activity 上使用多个 Fragment 时，你将陷入困境。</p>
-
-<p>现在来看一个例子，<code>UITableViewController</code> 和 <code>ListFragment</code> 是如何分别显示一个地铁行程预测时刻表，数据由 <a href="http://www.mbta.com/rider_tools/developers/default.asp?id=21898">MBTA</a> 所提供。</p>
-
-<h3 id="tableviewcontroller">Table View Controller 实现</h3>
-
-<p>&nbsp;</p>
-
-<p><img alt="TripDetailsTableViewController" src="http://img.objccn.io/issue-11/IMG_0095.png" width="50%" /></p>
-
-<p>&nbsp;</p>
-
-<pre><code>@interface MBTASubwayTripTableTableViewController ()
-
-@property (assign, nonatomic) MBTATrip *trip;
-
-@end
-
-@implementation MBTASubwayTripTableTableViewController
-
-- (instancetype)initWithTrip:(MBTATrip *)trip
-{
-    self = [super initWithStyle:UITableViewStylePlain];
-    if (self) {
-        _trip = trip;
-        [self setTitle:trip.destination];
-    }
-    return self;
-}
-
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-
-    [self.tableView registerClass:[MBTAPredictionCell class] forCellReuseIdentifier:[MBTAPredictionCell reuseId]];
-    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass([MBTATripHeaderView class]) bundle:nil] forHeaderFooterViewReuseIdentifier:[MBTATripHeaderView reuseId]];
-}
-
-#pragma mark - UITableViewDataSource
-
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-{
-    return 1;
-}
-
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-{
-    return [self.trip.predictions count];
-}
-
-#pragma mark - UITableViewDelegate
-
-- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
-{
-    return [MBTATripHeaderView heightWithTrip:self.trip];
-}
-
-- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
-{
-    MBTATripHeaderView *headerView = [self.tableView dequeueReusableHeaderFooterViewWithIdentifier:[MBTATripHeaderView reuseId]];
-    [headerView setFromTrip:self.trip];
-    return headerView;
-}
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:[MBTAPredictionCell reuseId] forIndexPath:indexPath];
-
-    MBTAPrediction *prediction = [self.trip.predictions objectAtIndex:indexPath.row];
-    [(MBTAPredictionCell *)cell setFromPrediction:prediction];
-
-    return cell;
-}
-
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    return NO;
-}
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
-}
-
-@end
-</code></pre>
-
-<h3 id="listfragment">List Fragment 实现</h3>
-
-<p>&nbsp;</p>
-
-<p><img alt="TripDetailFragment" src="http://img.objccn.io/issue-11/Screenshot_2014-03-25-11-42-16.png" width="50%" /></p>
-
-<p>&nbsp;</p>
-
-<pre><code>public class TripDetailFragment extends ListFragment {
-
-    /**
-     * Trip Detail Fragment的配置标识.
-     */
-    public static final class TripDetailFragmentState {
-        public static final String KEY_FRAGMENT_TRIP_DETAIL = "KEY_FRAGMENT_TRIP_DETAIL";
-    }
-
-    protected Trip mTrip;
-
-    /**
-     * 根据提供的参数使用这个工厂方法来创建 fragment 的新的实例
-     *
-     * @param trip trip的详细信息
-     * @return fragment TripDetailFragment 的新实例.
-     */
-    public static TripDetailFragment newInstance(Trip trip) {
-        TripDetailFragment fragment = new TripDetailFragment();
-        Bundle args = new Bundle();
-        args.putParcelable(TripDetailFragmentState.KEY_FRAGMENT_TRIP_DETAIL, trip);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    public TripDetailFragment() { }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        Prediction[] predictions= mTrip.predictions.toArray(new Prediction[mTrip.predictions.size()]);
-        PredictionArrayAdapter predictionArrayAdapter = new PredictionArrayAdapter(getActivity(), predictions);
-        setListAdapter(predictionArrayAdapter);
-        return super.onCreateView(inflater,container, savedInstanceState);
-    }
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        TripDetailsView headerView = new TripDetailsView(getActivity());
-        headerView.updateFromTripObject(mTrip);
-        getListView().addHeaderView(headerView);
-    }
-}
-</code></pre>
-
-<p>下一节，我们将研究一些 Android 独有的组件。</p>
-
-<h2 id="android">通用Android组件</h2>
-
-<h3>列表视图与适配器</h3>
-
-<p><code>ListView</code> 是 Android 上 <code>UITableView</code> 的近似物，也是最常使用的一种组件。就像 <code>UITableView</code> 有一个助手 View Controller <code>UITableViewController</code> 那样，<code>ListView</code> 也有一个助手 Activity 叫做 <code>ListActivity</code>，它还有一个助手 Fragment 叫做 <code>ListFragment</code>。同<code>UITableViewController</code>类似，这些助手为你处理布局（类似 xib）并提供管理适配器（下面将讨论）能够使用的简便方法。上面的例子使用一个 <code>ListFragment</code> 来显示来自一个 <code>Prediction</code> 模型对象列表的数据，类比一下，其实就相当于 UITableView 的 datasource 提供了一个 <code>Prediction</code> 模型对象数组，并用它来填充 <code>ListView</code>。</p>
-
-<p>说到 datasource，在 Android 上，我们没有用于 <code>ListView</code> 的 datasource 和 delegate。作为代替，我们有适配器 (adapters)。适配器有多种形式，但它们的主要目标类似于将 datasource 和 delegate 合二为一。适配器拿到数据并通过实例化视图适配它去填充 <code>ListView</code>，这样 <code>ListView</code> 就会显示出来了。让我们来看看上面使用的数组适配器：</p>
-
-<pre><code>public class PredictionArrayAdapter extends ArrayAdapter&lt;Prediction&gt; {
-
-    int LAYOUT_RESOURCE_ID = R.layout.view_three_item_list_view;
-
-    public PredictionArrayAdapter(Context context) {
-        super(context, R.layout.view_three_item_list_view);
-    }
-
-    public PredictionArrayAdapter(Context context, Prediction[] objects) {
-        super(context, R.layout.view_three_item_list_view, objects);
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent)
-    {
-        Prediction prediction = this.getItem(position);
-        View inflatedView = convertView;
-        if(convertView==null)
-        {
-            LayoutInflater inflater = (LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            inflatedView = inflater.inflate(LAYOUT_RESOURCE_ID, parent, false);
-        }
-
-        TextView stopNameTextView = (TextView)inflatedView.findViewById(R.id.view_three_item_list_view_left_text_view);
-        TextView middleTextView = (TextView)inflatedView.findViewById(R.id.view_three_item_list_view_middle_text_view);
-        TextView stopSecondsTextView = (TextView)inflatedView.findViewById(R.id.view_three_item_list_view_right_text_view);
-
-        stopNameTextView.setText(prediction.stopName);
-        middleTextView.setText("");
-        stopSecondsTextView.setText(prediction.stopSeconds.toString());
-
-        return inflatedView;
-    }
-}
-</code></pre>
-
-<p>你会注意到此适配器有一个叫做 <code>getView</code> 的重要方法，它非常类似于 <code>cellForRowAtIndexPath:</code> 。另一个易被发现的相似点是一个重用视图的模式，类似于 iOS 6。视图重用同在 iOS 上的情况一样重要，因为它能非常显著地提高性能！这个适配器有点儿简单，因为它使用了内建的父类 <code>ArrayAdapter&lt;T&gt;</code> ，用于数组数据，但它依然说明了如何用一个数据集来填充一个 <code>ListView</code>。</p>
-
-<h3 id="asynctasks">AsyncTasks</h3>
-
-<p>作为 iOS 上 GCD（Grand Central Dispatch）的替代，Android 上可以使用 <code>AsyncTasks</code>。<code>AsyncTasks</code> 是一个以更加友好的方式处理异步的工具。<code>AsyncTasks</code>有点超出本文的范围，但我强烈建议你阅读相关<a href="http://developer.android.com/reference/android/os/AsyncTask.html">文档</a>。</p>
-
-<h2 id="activity">Activity 生命周期</h2>
-
-<p>从 iOS 开发转过来时候，我们需要注意的首要事情之一是安卓的生命周期。让我们从查看 <a href="http://developer.android.com/training/basics/activity-lifecycle/index.html">Activity 生命周期文档</a> 开始：</p>
-
-<p><img src="http://img.objccn.io/issue-11/Android-Activity-Lifecycle.png" alt="安卓 Activity 生命周期" /></p>
-
-<p>从本质上看来，Activity 生命周期近似于 UIViewController 生命周期。主要的不同是 Android 系统在销毁 Activity 上比较无情，因此保证数据和 Activity 的状态的保存是非常重要的，因此只有这样它们才能在 <code>onCreate()</code> 中从被保存的状态里恢复。做到这个的最好方式是使用绑定数据（bundled data）并从 savedInstanceState 和/或 Intents 中恢复。例如，下面是来自我们示例项目中 <code>TripListActivity</code> 的部分代码，它能跟踪当前显示的地铁线路：</p>
-
-<pre><code>public static Intent getTripListActivityIntent(Context context, TripList.LineType lineType) {
-    Intent intent = new Intent(context, TripListActivity.class);
-    intent.putExtra(TripListActivityState.KEY_ACTIVITY_TRIP_LIST_LINE_TYPE, lineType.getLineName());
-    return intent;
-}
-
-public static final class TripListActivityState {
-    public static final String KEY_ACTIVITY_TRIP_LIST_LINE_TYPE = "KEY_ACTIVITY_TRIP_LIST_LINE_TYPE";
-}
-
-TripList.LineType mLineType;    
-
-@Override
-protected void onCreate(Bundle savedInstanceState) {
-   super.onCreate(savedInstanceState);
-   mLineType = TripList.LineType.getLineType(getIntent().getStringExtra(TripListActivityState.KEY_ACTIVITY_TRIP_LIST_LINE_TYPE));
-}    
-</code></pre>
-
-<p>注意旋转：在旋转时，生命周期会被<strong>完全</strong>重设。就是说，在旋转发生时，你的 Activity 将被摧毁并重建。如果数据被正确保存在 savedInstanceState 里，而且 Activity 能在重新创建后正确恢复的话，那么旋转看起来就会无缝平滑。许多应用开发者开发的应用因为  Activity 没有正确处理状态的改变，导致在旋转时出现稳定性问题。小心！不要通过锁定屏幕旋转来避免这种问题，这样做只会掩盖生命周期 bug，它们依然会在 Activity 被系统摧毁的时候冒出来。</p>
-
-<h2 id="fragment">Fragment 生命周期</h2>
-
-<p><a href="http://developer.android.com/training/basics/fragments/index.html">Fragment 生命周期</a>相似于 Activity 生命周期，但有些附加的东西：</p>
-
-<p><img src="http://img.objccn.io/issue-11/fragment_lifecycle.png" alt="Android Fragment 生命周期" /></p>
-
-<p>能让开发者措手不及的问题之一是 Fragment 和 Activity 之间的通信问题。注意 <code>onAttach()</code> <strong>先于</strong> <code>onActivityCreated()</code> 调用。这就意味着 Activity 不能保证在 Fragment 被创建前存在。<code>onActivityCreated()</code> 方法应该在有必要的时候用于将 interface（delegate）设置到父亲 Activity 上。</p>
-
-<p>Fragment 同样被操作系统积极地创建和销毁，为了保存它们的状态，需要同 Activity 一样多的劳动量。下面是来自示例项目的一个例子，此处的旅程列表 Fragment 一直追踪<code>TripList</code>数据，以及地铁线路类型：</p>
-
-<pre><code>/**
- * Trip List Fragment 的配置标识.
- */
-public static final class TripListFragmentState {
-    public static final String KEY_FRAGMENT_TRIP_LIST_LINE_TYPE = "KEY_FRAGMENT_TRIP_LIST_LINE_TYPE";
-    public static final String KEY_FRAGMENT_TRIP_LIST_DATA = "KEY_FRAGMENT_TRIP_LIST_DATA";
-}
-
-/**
- * Use this factory method to create a new instance of
- * this fragment using the provided parameters.
- *
- * @param lineType the subway line to show trips for.
- * @return A new instance of fragment TripListFragment.
- */
-public static TripListFragment newInstance(TripList.LineType lineType) {
-    TripListFragment fragment = new TripListFragment();
-    Bundle args = new Bundle();
-    args.putString(TripListFragmentState.KEY_FRAGMENT_TRIP_LIST_LINE_TYPE, lineType.getLineName());
-    fragment.setArguments(args);
-    return fragment;
-}
-
-protected TripList mTripList;
-protected void setTripList(TripList tripList) {
-    Bundle arguments = this.getArguments();
-    arguments.putParcelable(TripListFragmentState.KEY_FRAGMENT_TRIP_LIST_DATA, tripList);
-    mTripList = tripList;
-    if (mTripArrayAdapter != null) {
-        mTripArrayAdapter.clear();
-        mTripArrayAdapter.addAll(mTripList.trips);
-    }
-}
-
-@Override
-public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    if (getArguments() != null) {
-        mLineType = TripList.LineType.getLineType(getArguments().getString(TripListFragmentState.KEY_FRAGMENT_TRIP_LIST_LINE_TYPE));
-        mTripList = getArguments().getParcelable(TripListFragmentState.KEY_FRAGMENT_TRIP_LIST_DATA);
-    }
-}    
-</code></pre>
-
-<p>注意到 Fragment 总是用 <code>onCreate</code> 里的绑定参数（bundled arguments）来恢复它的状态，用于 <code>TripList</code> 模型对象的自定义的 setter 会将对象添加到绑定参数中去。这就保证了如果 Fragment 在例如设备被旋转时被销毁并重建的话，Fragment 总是有最新的数据并从中恢复。</p>
-
-<h2>布局</h2>
-
-<p>类似于 Android 开发的其他部分，Android 对比 iOS，在指定布局这里同样有优点和缺点。<a href="http://developer.android.com/guide/topics/ui/declaring-layout.html">布局</a>被存储为人类可读的 XML 文件，放在 <code>res/layouts</code> 文件夹中。</p>
-
-<h3>地铁列表视图布局</h3>
-
-<p><img alt="Subway ListView" src="http://img.objccn.io/issue-11/Screenshot_2014-03-24-13-12-00.png" width="50%" /></p>
-
-<pre><code>&lt;RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.example.androidforios.app.activities.MainActivity$PlaceholderFragment"&gt;
-
-    &lt;ListView
-        android:id="@+id/fragment_subway_list_listview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingBottom="@dimen/Button.Default.Height"/&gt;
-
-    &lt;Button
-        android:id="@+id/fragment_subway_list_Button"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/Button.Default.Height"
-        android:minHeight="@dimen/Button.Default.Height"
-        android:background="@drawable/button_red_selector"
-        android:text="@string/hello_world"
-        android:textColor="@color/Button.Text"
-        android:layout_alignParentBottom="true"
-        android:gravity="center"/&gt;
-
-&lt;/RelativeLayout&gt;
-</code></pre>
-
-<p>下面是 iOS 上在 Interface Builder 中用<code>UITableView</code>和一个通过 Auto Layout 钉在底部的 <code>UIButton</code> 实现的同一个视图：</p>
-
-<p><img alt="iOS Subway Lines UIViewController" src="http://img.objccn.io/issue-11/iOS_Screen1.png" width="50%" /></p>
-
-<p><img src="http://img.objccn.io/issue-11/iOSConstraints.png" alt="Interface Builder 约束" /></p>
-
-<p>你会注意到 Android 布局文件更易<strong>阅读</strong>和理解。Android 中的布局视图有许多不同的部分，但这里我们只会覆盖到少数几个重要的部分。</p>
-
-<p>你需要处理的主要结构就是 <a href="http://developer.android.com/reference/android/view/ViewGroup.html">ViewGroup</a> 的子类，比如 <a href="http://developer.android.com/reference/android/widget/RelativeLayout.html">RelativeLayout</a>、<a href="http://developer.android.com/reference/android/widget/LinearLayout.html">LinearLayout</a>，以及 <a href="http://developer.android.com/reference/android/widget/FrameLayout.html">FrameLayout</a>，这些就是最常见的。这些 ViewGroup 包含其他视图并暴露属性来在屏幕上安排它们。</p>
-
-<p>一个不错的例子是使用上面提到的 <code>RelativeLayout</code>，一个相对布局允许我们在布局中使用 <code>android:layout_alignParentBottom="true"</code> 这样的语句来将按钮钉在底部。</p>
-
-<p>最后，要将布局连接到 Fragment 或 Activity，只需要简单地在 <code>onCreateView</code> 上使用布局的资源 ID 即可：</p>
-
-<pre><code>@Override
-public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_subway_listview, container, false);
-}
-</code></pre>
-
-<h3>布局小贴士</h3>
-
-<ul>
-<li>总是去处理 dp（密度无关的像素）的情况，而不是直接使用像素。</li>
-<li>不要在可视化编辑器里去调整的部件 - 通常来说可视化编辑器会在部件之间加间隔，而不是像你所期望的那样去调整高宽。最佳选择应该是直接在 XML 文件中进行编辑。</li>
-<li>如果你曾看到 <code>fill_parent</code> 值用于布局的高或宽，这个值在好几年前的 API 8 中就被废弃并被 <code>match_parent</code> 取代了。</li>
-</ul>
-
-<p>查看看这篇<a href="http://objccn.io/issue-11-3">响应式 Android 应用</a>的文章能得到更多布局小贴士。</p>
-
-<h2>数据</h2>
-
-<p>Android 上可用的<a href="http://developer.android.com/guide/topics/data/data-storage.html">数据存储选项</a>同样类似于 iOS 上可用的：</p>
-
-<ul>
-<li><a href="http://developer.android.com/guide/topics/data/data-storage.html#pref">Shared Preferences</a> &lt;-&gt; NSUserDefaults</li>
-<li>内存对象</li>
-<li>通过<a href="http://developer.android.com/guide/topics/data/data-storage.html#filesInternal">内部</a>或<a href="http://developer.android.com/guide/topics/data/data-storage.html#filesExternal">外部</a>文件存储将数据保存到文件结构或是从文件结构获取数据 &lt;-&gt; 保存数据到 documents 目录</li>
-<li><a href="http://developer.android.com/guide/topics/data/data-storage.html#db">SQLite</a> &lt;-&gt; Core Data</li>
-</ul>
-
-<p>主要的不同是缺少 Core Data，作为替代，Android 提供了直接访问 SQLite 数据库的方式，并返回一个<a href="http://developer.android.com/reference/android/database/Cursor.html">游标 (cursor)</a> 对象作为结果。请看这篇<a href="htttp://objccn.io/issue-11-5">在 Android 上使用 SQLite </a>的文章获取更多此问题的细节。</p>
-
-<h2 id="android">Android 家庭作业</h2>
-
-<p>我们目前为止讨论的只是一些皮毛而已。要真正从一些 Android 特有的事物里获取好处，我建议关注以下这些特性：</p>
-
-<ul>
-<li><a href="http://developer.android.com/guide/topics/ui/actionbar.html">Action Bar, Overflow Menu, 和 Menu Button</a></li>
-<li><a href="https://developer.android.com/training/sharing/index.html">跨应用数据分享</a> </li>
-<li><a href="http://developer.android.com/guide/components/intents-common.html">响应常见的 OS 操作</a></li>
-<li>从 Java 的特性获取好处：泛型、虚方法、虚类，等等。</li>
-<li><a href="http://developer.android.com/tools/support-library/index.html">Google 兼容库</a></li>
-<li>Android 模拟器：安装 <a href="http://software.intel.com/en-us/android/articles/intel-hardware-accelerated-execution-manager">x86 HAXM 插件</a>让模拟器像黄油般顺滑。</li>
-</ul>
-
-<h2>最后的话</h2>
-
-<p>本文中我们讨论的大部分都实现在 MBTA 地铁交通<a href="https://github.com/objcio/issue-11-android-101">示例项目</a>中，并放在了Github上。创建这个项目的目的是在两个平台上展示应用的结构、绑定数据、构建 UI 等相似内容的方式。</p>
-
-<p>虽然在 Android 上一些纯粹的<strong>实现</strong>细节非常不同，但将从 iOS 学来的问题解决技能和模式用于实践依然非常容易。也许懂得一些 Android 的工作方式可能可以让你准备好面对下一版的 iOS，谁又知道会怎样呢？</p>
-
-<p>[^1]: <a href="http://www.prnewswire.com/news-releases/strategy-analytics-android-captures-79-percent-share-of-global-smartphone-shipments-in-2013-242563381.html"> 消息来源</a></p>
-
-<p>[^2]: <a href="http://developer.android.com/guide/practices/screens_support.html"> 在此</a>查看Google的文档支持多种屏幕尺寸。</p>
-
-<p>[^3]: <a href="http://developer.android.com/reference/android/content/Intent.html">Intent 文档</a></p>
-
-<p>[^4]: <a href="http://developer.android.com/design/patterns/multi-pane-layouts.html"> 查看Google的文档获得更多多窗格平板视图</a>的信息。</p>
-
-<p>[^5]: <a href="http://nshipster.com/uicollectionview/"> 感谢，NSHipster</a></p>
 
 <hr />
 <p class="post-footer">
