@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Jun 17th, 2014 iOS Comments MVVM介绍 有时我感觉就像我不知道在做什么。虽然我知道自己的设计模式——就像任何好的编程人员那样 —— 但我太接近我在做的产品以至于不能客观地衡量我的架构决策的有效性。当队伍中来了另外一位开发者时，我意识到我们陷入困境了。 从没听过 &hellip;">
+	<meta name="description" content="Jun 18th, 2014 iOS Comments OC的子类 这篇文章跟我以往的文章有点不一样。它主要是一些思想与模式的汇集，而不是一篇指南。下面我所写的模式几乎全都来之不易，都是我犯了错之后才学到的。我并不认为自己是子类方面的权威，但我确实想把我学到的一些东西分享出来。 &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -98,6 +98,228 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-06-18T09:23:01+08:00" data-updated="true" itemprop="datePublished">Jun 18<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/06/18/ocde-zi-lei/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/06/18/ocde-zi-lei/" itemprop="url">OC的子类</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>这篇文章跟我以往的文章有点不一样。它主要是一些思想与模式的汇集，而不是一篇指南。下面我所写的模式几乎全都来之不易，都是我犯了错之后才学到的。我并不认为自己是子类方面的权威，但我确实想把我学到的一些东西分享出来。别把本文当做权威指南，它只是一些例子的汇集。</p>
+
+<p>在被问到 OOP（面向对象编程）的时候，Alan Kay（OOP 的发明人）写到：它跟类无关，但跟消息有关。<a href="http://c2.com/cgi/wiki?AlanKayOnMessaging">^1</a>然而，很多人的关注点仍然还在类层次上。在本文中，我们会看几个我们可能会把注意力放在创建复杂的类结构上的例子，并给出更有用的替代方案。根据经验，这样会让代码更简单，更易维护。关于这个话题，在 <a href="http://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882">Clean Code</a>（中文版：<a href="http://www.amazon.cn/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E9%A9%AC%E4%B8%81/dp/B0031M9GHC/ref=pd_bxgy_b_img_y">代码整洁之道</a>）和 <a href="http://www.amazon.com/Code-Complete-Practical-Handbook-Construction/dp/0735619670">Code Complete</a>（中文版：<a href="http://www.amazon.cn/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8-%E5%8F%B2%E8%92%82%E5%A4%AB%E2%80%A2%E8%BF%88%E5%85%8B%E5%BA%B7%E5%A5%88%E5%B0%94/dp/B0061XKRXA/ref=pd_bxgy_b_img_z">代码大全</a>）中已经有大量讨论。推荐你阅读这两本书。</p>
+
+<h2>何时用子类</h2>
+
+<p>首先，我们讨论几种使用子类比较合适的场景。如果你要写一个自定义布局的 <code>UITableViewCell</code> ，那就创建一个子类。这同样适用于几乎每个视图。一旦你开始布局，把这块代码放入子类就更合理一些，不光代码得到了更好的封装，你也能得到一个可在工程之间重用的组件。</p>
+
+<p>假设你的代码是针对多平台多版本的，并且你需要针对每个平台每个版本写一些代码。这时候更合理的做法可能是创建一个 <code>OBJDevice</code> 类，让一些子类如 <code>OBJIPhoneDevice</code> 和 <code>OBJIPadDevice</code> ，甚至更深层的子类如 <code>OBJIPhone5Device</code> 来继承，并让这些子类重写特定的方法。例如，你的 OBJDevice 类可能包含了函数 <code>applyRoundedCornersToView:withRadius</code> ，它有一个默认的实现，但是也能被特定的子类重写。</p>
+
+<p>另一个子类化可能很有用的场景是模型对象（model object）。绝大多数情况下，我的模型对象继承自一个实现了 <code>isEqual:</code> 、 <code>hash</code> 、 <code>copyWithZone:</code> 和 <code>description</code> 等方法的类。这些方法只被实现一次，并且迭代循环遍历所有属性，所以极不容易出错。（如果你也想找一个这样的基类，可以考虑使用 <a href="https://github.com/mantle/mantle">Mantle</a> ，它就是这么做的，并且做得更多。）</p>
+
+<h2>何时不使用子类</h2>
+
+<p>在以往工作过的很多工程中，我见到过很多继承层次很深的子类。当我也这么干的时候，总会感到内疚。除非继承的层次非常浅，否则你会很快发现它的局限性。<a href="http://c2.com/cgi/wiki?LimitsOfHierarchies">^2</a></p>
+
+<p>幸运的是，如果你发现自己正在使用深层次的继承，还有很多替代方案可选。在下面的章节中，我们会逐个进行更详细地描述。如果你的子类只是使用相同的接口，协议会是个非常好的替代方案。如果你知道某个对象需要大量的修改，你可能会使用代理来动态改变和配置它。当你想给已有对象增加一些简单功能时，类别可能是个选择。当你有一堆重写了相同方法的子类时，你可以使用配置对象（configuration object）来代替。最后，当你想重用某些功能时，组合多个对象而不是扩展它们可能会更好。</p>
+
+<h2>替代方案</h2>
+
+<h3 id="protocols">替代方案：协议（Protocols）</h3>
+
+<p>很多时候，使用子类的原因是你想保证某个对象可以响应某些消息。假设在 app 里你有一个播放器对象，它可以播放视频。现在你想添加对 YouTube 的支持，使用相同的接口，但是具体实现不同。你可以使像这样用子类来实现：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">@class Player : NSObject
+</span><span class="line">
+</span><span class="line">- (void)play;
+</span><span class="line">- (void)pause;
+</span><span class="line">
+</span><span class="line">@end
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">@class YouTubePlayer : Player
+</span><span class="line">
+</span><span class="line">@end</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>事实上可能这两个类并没有太多共用的代码，它们只不过具有相同的接口。如果这样的话，使用协议可能会是更好的方案。可以这样用协议来写你的代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">VideoPlayer</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">play</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">pause</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@class</span> <span class="nc">Player</span> <span class="o">:</span> <span class="n">NSObject</span> <span class="o">&lt;</span><span class="n">VideoPlayer</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@class</span> <span class="nc">YouTubePlayer</span> <span class="o">:</span> <span class="n">NSObject</span> <span class="o">&lt;</span><span class="n">VideoPlayer</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这样，<code>YouTubePlayer</code> 类就不必知道 <code>Player</code> 类的内部实现了。</p>
+
+<h3 id="delegation">替代方案：代理（Delegation）</h3>
+
+<p>再一次假设你有一个像上面例子中的 <code>Player</code> 类。现在，你想在开始播放的时候在某个地方执行一个自定义的函数。这么做相对容易一些：创建一个自定义的子类，重写 <code>play</code> 方法，调用 <code>[super play ]</code>，然后开始做你自定义的工作。这么做是一种方法。另外一种方法是，改动你的 <code>Player</code> 对象，然后给它设置一个代理。如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@class</span> <span class="nc">Player</span>;
+</span><span class="line">
+</span><span class="line"><span class="k">@protocol</span> <span class="nc">PlayerDelegate</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">playerDidStartPlaying:</span><span class="p">(</span><span class="n">Player</span> <span class="o">*</span><span class="p">)</span><span class="nv">player</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@class</span> <span class="nc">Player</span> <span class="o">:</span> <span class="n">NSObject</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span><span class="n">weak</span><span class="p">)</span> <span class="kt">id</span><span class="o">&lt;</span><span class="n">PlayerDelegate</span><span class="o">&gt;</span> <span class="n">delegate</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">play</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">pause</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>现在，在播放器的 <code>play</code> 方法里，就可以给代理发送 <code>playerDidStartPlaying:</code> 消息了。这个 <code>Player</code> 类的任何使用者都可以仅仅实现这个代理协议，而不用继承该该类， <code>Player</code> 类也能够保持通用性。这是个强大有效的技术，苹果在自己的框架里大量地使用它。你想想像 <code>UITextField</code> 这样的类，还有 <code>NSLayoutManager</code>。有时候你还会想把几个不同的方法打包分组到几个单独的协议里，比如 <code>UITableView</code> —— 它不仅有一个代理（delegate），还有一个数据源（dataSource）。</p>
+
+<h3 id="categories">替代方案：类别（Categories）</h3>
+
+<p>有时候，你可能会想给一个对象增加一点点额外的功能。比如你想给 <code>NSArray</code> 增加一个方法 <code>arrayByRemovingFirstObject</code>。不用子类，你可以把这个函数放到一个类别里。像这样：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">NSArray</span> <span class="nl">(OBJExtras)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">obj_arrayByRemovingFirstObject</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在用类别扩展一个不是你自己的类的时候，在方法前添加前缀是个比较好的习惯做法。如果不这么做，有可能别人也用类别对此类添加了相同名字的函数。那时候程序的行为可能跟你想要的并不一样，未预期的事情可能会发生。</p>
+
+<p>使用类别还有另外一个风险，那就是，到最后你可能会使用一大堆的类别，连你自己都会失去对代码全局的认识。假如那样的话，创建自定义的类可能更简单一些。</p>
+
+<h3 id="configurationobjects">替代方案：配置对象（Configuration Objects）</h3>
+
+<p>在我经常会犯的错误中（现在很快就能发现了），其中有一条是：使用一个含有几个抽象方法的类并让很多子类来重写某个方法。例如，在一个幻灯片应用里，你有一个主题类 <code>Theme</code> ，它有几个属性，比如 <code>backgroundColor</code> 和 <code>font</code> ，还有一些在一张幻灯片上如何布局的逻辑函数。</p>
+
+<p>然后，对每种主题，你都创建一个 <code>Theme</code> 的子类，重写某个函数（例如 <code>setup</code> ）并配置其属性。直接使用父类对此做不了什么事。在这种情况下，你可以使用配置对象来让代码更简单些。你可以把共有的逻辑（比如幻灯片布局）放在 <code>Theme</code> 类中，把属性的配置放到较简单的对象中，这些对象中只含有这些属性。</p>
+
+<p>例如，类 <code>ThemeConfiguration</code> 具有 <code>backgroundColor</code> 和 <code>font</code> 属性，而类 <code>Theme</code> 在其初始化函数中获取一个配置类 <code>ThemeConfiguration</code> 的值。</p>
+
+<h3>替代方案：组合</h3>
+
+<p>组合是代替子类化的最强大有效的方案。如果你想重用已有代码而不想共享同样的接口，组合就是你的首选武器。例如，假设你要设计一个缓存类：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">OBJCache</span> : <span class="nc">NSObject</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">cacheValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span> <span class="nf">forKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">removeCachedValueForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>简单点的做法是直接继承 <code>NSDictionary</code>，通过调用字典的函数来实现上面的两个方法。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">OBJCache</span> : <span class="nc">NSDictionary</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>但是这么做有几个弊端。它本来是应该被详细实现的，但只是通过字典来实现。现在，在任何需要一个 <code>NSDictionary</code> 参数的时候，你可以直接提供一个 <code>OBJCache</code> 值。但如果你想把它转为其它完全不同的东西（例如你自己的库），你就可能需要重构很多代码了。</p>
+
+<p>更好的方式是，将这个字典存在一个私有属性（或者实例变量）中，对外仅仅暴露这两个 <code>cache</code> 方法。现在，当你有了更深入想法的时候，你可以在灵活地修改其实现，而该类的使用者们不用进行重构。</p>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -2971,524 +3193,6 @@ static void *DR_popAnimationContext     = &amp;DR_popAnimationContext;
 </code></pre>
 
 <p>动画 APIs 可以以很多不同形式出现，而对于你自己写的动画 API 来说，也是这样的。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-05-13T16:33:11+08:00" data-updated="true" itemprop="datePublished">May 13<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/" itemprop="url">CollectionView布局动画</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p><code>UICollectionView</code> 和相关类的设置非常灵活和强大。但是灵活性一旦增强，某种程度上也增加了其复杂性： <code>UICollectionView</code> 比老式的 <code>UITableView</code> 更有深度，适用性也更强。</p>
-
-<p>Collection View 深入太多了，事实上，<a href="http://oleb.net">Ole Begeman</a> 和 <a href="https://twitter.com/ashfurrow">Ash Furrow</a> 之前曾在 objc.io 上发表过 <a href="http://objccn.io/issue-3-3/">自定义 Collection View 布局</a> 和 <a href="http://objccn.io/issue-5-2/">UICollectionView + UIKit 力学</a>，但是我依然有一些他们没有提及的内容可以写。在这篇文章中，我假设你已经非常熟悉 <code>UICollectionView</code> 的基本布局，并且至少阅读了苹果精彩的<a href="https://developer.apple.com/library/ios/documentation/WindowsViews/Conceptual/CollectionViewPGforIOS/Introduction/Introduction.html#//apple_ref/doc/uid/TP40012334">编程指南</a>以及 Ole 之前的<a href="http://objccn.io/issue-3-3/">文章</a>。</p>
-
-<p>本文的第一部分将集中讨论并举例说明如何用不同的类和方法来共同帮助实现一些常见的 <code>UICollectionView</code> 动画。在第二部分，我们将看一下带有 collection views 的 view controller 转场动画以及在 <code>useLayoutToLayoutNavigationTransitions</code> 可用时使用其进行转场，如果不可用时，我们会实现一个自定义转场动画。</p>
-
-<p>你可以在 GitHub 中找到本文提到的两个示例工程:</p>
-
-<ul>
-<li><a href="https://github.com/objcio/issue-12-CollectionViewAnimations">布局动画</a></li>
-<li><a href="https://github.com/objcio/issue-12-CustomCollectionViewTransition">自定义 collection view 转场动画</a></li>
-</ul>
-
-<h2 id="collectionview">Collection View 布局动画</h2>
-
-<p>标准 <code>UICollectionViewFlowLayout</code> 除了动画是非常容易自定义的，苹果选择了一种安全的途径去实现一个简单的淡入淡出动画作为所有布局的默认动画。如果你想实现自定义动画，最好的办法是子类化 <code>UICollectionViewFlowLayout</code> 并且在适当的地方实现你的动画。让我们通过一些例子来了解 <code>UICollectionViewFlowLayout</code> 子类中的一些方法如何协助完成自定义动画。</p>
-
-<h3>插入删除元素</h3>
-
-<p>一般来说，我们对布局属性从初始状态到结束状态进行线性插值来计算 collection view 的动画参数。然而，新插入或者删除的元素并没有最初或最终状态来进行插值。要计算这样的 cells 的动画，collection view 将通过  <code>initialLayoutAttributesForAppearingItemAtIndexPath:</code> 以及 <code>finalLayoutAttributesForAppearingItemAtIndexPath:</code> 方法来询问其布局对象，以获取最初的和最后的属性。苹果默认的实现中，对于特定的某个 indexPath，返回的是它的通常的位置，但 <code>alpha</code> 值为 0.0，这就产生了一个淡入或淡出动画。如果你想要更漂亮的效果，比如你的新的 cells 从屏幕底部发射并且旋转飞到对应位置，你可以如下实现这样的布局子类：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span><span class="o">*</span><span class="p">)</span><span class="nf">initialLayoutAttributesForAppearingItemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">itemIndexPath</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">attr</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">layoutAttributesForItemAtIndexPath:</span><span class="n">itemIndexPath</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">attr</span><span class="p">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">CGAffineTransformRotate</span><span class="p">(</span><span class="n">CGAffineTransformMakeScale</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="n">M_PI</span><span class="p">);</span>
-</span><span class="line">    <span class="n">attr</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">CGRectGetMidX</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">),</span> <span class="n">CGRectGetMaxY</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">));</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">return</span> <span class="n">attr</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>结果如下：</p>
-
-<p><img src="http://img.objccn.io/issue-12/2014-05-01-collectionview-animations-1-insertion.gif" alt="Insertion and Deletion" /></p>
-
-<p>对应的 <code>finalLayoutAttributesForAppearingItemAtIndexPath:</code> 方法中，除了设定了不同的 transform 以外，其他都很相似。</p>
-
-<h3>响应设备旋转</h3>
-
-<p>设备方向变化通常会导致 collection view 的 bounds 变化。如果通过 <code>shouldInvalidateLayoutForBoundsChange:</code> 判定为布局需要被无效化并重新计算的时候，布局对象会被询问以提供新的布局。<code>UICollectionViewFlowLayout</code> 的默认实现正确地处理了这个情况，但是如果你子类化 <code>UICollectionViewLayout</code> 的话，你需要在边界变化时返回 <code>YES</code>：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">shouldInvalidateLayoutForBoundsChange:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">newBounds</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">CGRect</span> <span class="n">oldBounds</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">;</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">CGSizeEqualToSize</span><span class="p">(</span><span class="n">oldBounds</span><span class="p">.</span><span class="n">size</span><span class="p">,</span> <span class="n">newBounds</span><span class="p">.</span><span class="n">size</span><span class="p">))</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">NO</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>在 bounds 变化的动画中，collection view 表现得像当前显示的元素被移除然后又在新的 bounds 中被被重新插入，这会对每个 IndexPath 产生一系列的 <code>finalLayoutAttributesForAppearingItemAtIndexPath:</code> 和 <code>initialLayoutAttributesForAppearingItemAtIndexPath:</code> 的调用。</p>
-
-<p>如果你在插入和删除的时候加入了非常炫的动画，现在你应该看看为何苹果明智的使用简单的淡入淡出动画作为默认效果：</p>
-
-<p><img src="http://img.objccn.io/issue-12/2014-05-01-collectionview-animations-2-wrong-rotation.gif" alt="设备旋转的错误反应" /></p>
-
-<p>啊哦&#8230;</p>
-
-<p>为了防止这种不想要的动画，初始化位置 -&gt; 删除动画 -&gt; 插入动画 -&gt; 最终位置的顺序必须完全匹配 collection view 的每一项，以便最终呈现出一个平滑动画。换句话说，<code>finalLayoutAttributesForAppearingItemAtIndexPath:</code> 以及 <code>initialLayoutAttributesForAppearingItemAtIndexPath:</code> 应该针对元素到底是真的在显示或者消失，还是 collection view 正在经历的边界改变动画的不同情况，做出不同反应，并返回不同的布局属性。</p>
-
-<p>幸运的是，collection view 会告知布局对象哪一种动画将被执行。它分别通过调用 <code>prepareForAnimatedBoundsChange:</code> 和 <code>prepareForCollectionViewUpdates:</code> 来对应 bounds 变化以及元素更新。出于本实例的说明目的，我们可以使用 <code>prepareForCollectionViewUpdates:</code> 来跟踪更新对象：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">prepareForCollectionViewUpdates:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">updateItems</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">prepareForCollectionViewUpdates:</span><span class="n">updateItems</span><span class="p">];</span>
-</span><span class="line">    <span class="n">NSMutableArray</span> <span class="o">*</span><span class="n">indexPaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableArray</span> <span class="n">array</span><span class="p">];</span>
-</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">UICollectionViewUpdateItem</span> <span class="o">*</span><span class="n">updateItem</span> <span class="k">in</span> <span class="n">updateItems</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">switch</span> <span class="p">(</span><span class="n">updateItem</span><span class="p">.</span><span class="n">updateAction</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">            <span class="k">case</span> <span class="nl">UICollectionUpdateActionInsert:</span>
-</span><span class="line">                <span class="p">[</span><span class="n">indexPaths</span> <span class="nl">addObject:</span><span class="n">updateItem</span><span class="p">.</span><span class="n">indexPathAfterUpdate</span><span class="p">];</span>
-</span><span class="line">                <span class="k">break</span><span class="p">;</span>
-</span><span class="line">            <span class="k">case</span> <span class="nl">UICollectionUpdateActionDelete:</span>
-</span><span class="line">                <span class="p">[</span><span class="n">indexPaths</span> <span class="nl">addObject:</span><span class="n">updateItem</span><span class="p">.</span><span class="n">indexPathBeforeUpdate</span><span class="p">];</span>
-</span><span class="line">                <span class="k">break</span><span class="p">;</span>
-</span><span class="line">            <span class="k">case</span> <span class="nl">UICollectionUpdateActionMove:</span>
-</span><span class="line">                <span class="p">[</span><span class="n">indexPaths</span> <span class="nl">addObject:</span><span class="n">updateItem</span><span class="p">.</span><span class="n">indexPathBeforeUpdate</span><span class="p">];</span>
-</span><span class="line">                <span class="p">[</span><span class="n">indexPaths</span> <span class="nl">addObject:</span><span class="n">updateItem</span><span class="p">.</span><span class="n">indexPathAfterUpdate</span><span class="p">];</span>
-</span><span class="line">                <span class="k">break</span><span class="p">;</span>
-</span><span class="line">            <span class="k">default</span><span class="o">:</span>
-</span><span class="line">                <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;unhandled case: %@&quot;</span><span class="p">,</span> <span class="n">updateItem</span><span class="p">);</span>
-</span><span class="line">                <span class="k">break</span><span class="p">;</span>
-</span><span class="line">        <span class="p">}</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">indexPathsToAnimate</span> <span class="o">=</span> <span class="n">indexPaths</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>以及修改我们元素的插入动画，让元素只在其正在被插入 collection view 时进行发射：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span><span class="o">*</span><span class="p">)</span><span class="nf">initialLayoutAttributesForAppearingItemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">itemIndexPath</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">attr</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">layoutAttributesForItemAtIndexPath:</span><span class="n">itemIndexPath</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">_indexPathsToAnimate</span> <span class="nl">containsObject:</span><span class="n">itemIndexPath</span><span class="p">])</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">attr</span><span class="p">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">CGAffineTransformRotate</span><span class="p">(</span><span class="n">CGAffineTransformMakeScale</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span> <span class="n">M_PI</span><span class="p">);</span>
-</span><span class="line">        <span class="n">attr</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">CGRectGetMidX</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">),</span> <span class="n">CGRectGetMaxY</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">));</span>
-</span><span class="line">        <span class="p">[</span><span class="n">_indexPathsToAnimate</span> <span class="nl">removeObject:</span><span class="n">itemIndexPath</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">return</span> <span class="n">attr</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>如果这个元素没有正在被插入，那么将通过 <code>layoutAttributesForItemAtIndexPath</code> 来返回一个普通的属性，以此取消特殊的外观动画。结合 <code>finalLayoutAttributesForAppearingItemAtIndexPath:</code> 中相应的逻辑，最终将会使元素能够在 bounds 变化时，从初始位置到最终位置以很流畅的动画形式实现，从而建立一个简单但很酷的动画效果：</p>
-
-<p><img src="http://img.objccn.io/issue-12/2014-05-01-collectionview-animations-3-correct-rotation.gif" alt="Wrong reaction to device rotation" /></p>
-
-<h3>交互式布局动画</h3>
-
-<p>Collection views 让用户通过手势实现与布局交互这件事变得很容易。如苹果<a href="https://developer.apple.com/library/ios/documentation/WindowsViews/Conceptual/CollectionViewPGforIOS/IncorporatingGestureSupport/IncorporatingGestureSupport.html#//apple_ref/doc/uid/TP40012334-CH4-SW1">建议</a>的那样，为 collection view 布局添加交互的途径一般会遵循以下步骤：</p>
-
-<ol>
-<li>创建手势识别  </li>
-<li>将手势识别添加给 collection view  </li>
-<li>通过手势来驱动布局动画</li>
-</ol>
-
-<p>让我们来看看我们如何可以建立一些用户可缩放捏合的元素，以及一旦用户释放他们的捏合手势元素返回到原始大小。</p>
-
-<p>我们的处理方式可能会是这样：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">handlePinch:</span><span class="p">(</span><span class="n">UIPinchGestureRecognizer</span> <span class="o">*</span><span class="p">)</span><span class="nv">sender</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">sender</span> <span class="n">numberOfTouches</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">)</span>
-</span><span class="line">        <span class="k">return</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">sender</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateBegan</span> <span class="o">||</span>
-</span><span class="line">        <span class="n">sender</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateChanged</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="c1">// 获取捏合的点</span>
-</span><span class="line">        <span class="n">CGPoint</span> <span class="n">p1</span> <span class="o">=</span> <span class="p">[</span><span class="n">sender</span> <span class="nl">locationOfTouch:</span><span class="mi">0</span> <span class="nl">inView:</span><span class="p">[</span><span class="n">self</span> <span class="n">collectionView</span><span class="p">]];</span>
-</span><span class="line">        <span class="n">CGPoint</span> <span class="n">p2</span> <span class="o">=</span> <span class="p">[</span><span class="n">sender</span> <span class="nl">locationOfTouch:</span><span class="mi">1</span> <span class="nl">inView:</span><span class="p">[</span><span class="n">self</span> <span class="n">collectionView</span><span class="p">]];</span>
-</span><span class="line">
-</span><span class="line">        <span class="c1">// 计算扩展距离</span>
-</span><span class="line">        <span class="n">CGFloat</span> <span class="n">xd</span> <span class="o">=</span> <span class="n">p1</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">p2</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
-</span><span class="line">        <span class="n">CGFloat</span> <span class="n">yd</span> <span class="o">=</span> <span class="n">p1</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">p2</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
-</span><span class="line">        <span class="n">CGFloat</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">xd</span><span class="o">*</span><span class="n">xd</span> <span class="o">+</span> <span class="n">yd</span><span class="o">*</span><span class="n">yd</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">        <span class="c1">// 更新自定义布局参数以及无效化</span>
-</span><span class="line">        <span class="n">FJAnimatedFlowLayout</span><span class="o">*</span> <span class="n">layout</span> <span class="o">=</span> <span class="p">(</span><span class="n">FJAnimatedFlowLayout</span><span class="o">*</span><span class="p">)[[</span><span class="n">self</span> <span class="n">collectionView</span><span class="p">]</span> <span class="n">collectionViewLayout</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">NSIndexPath</span> <span class="o">*</span><span class="n">pinchedItem</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span> <span class="nl">indexPathForItemAtPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">p1</span><span class="p">.</span><span class="n">x</span><span class="o">+</span><span class="n">p2</span><span class="p">.</span><span class="n">x</span><span class="p">),</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">p1</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">p2</span><span class="p">.</span><span class="n">y</span><span class="p">))];</span>
-</span><span class="line">        <span class="p">[</span><span class="n">layout</span> <span class="nl">resizeItemAtIndexPath:</span><span class="n">pinchedItem</span> <span class="nl">withPinchDistance:</span><span class="n">distance</span><span class="p">];</span>
-</span><span class="line">        <span class="p">[</span><span class="n">layout</span> <span class="n">invalidateLayout</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">sender</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateCancelled</span> <span class="o">||</span>
-</span><span class="line">             <span class="n">sender</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateEnded</span><span class="p">){</span>
-</span><span class="line">        <span class="n">FJAnimatedFlowLayout</span><span class="o">*</span> <span class="n">layout</span> <span class="o">=</span> <span class="p">(</span><span class="n">FJAnimatedFlowLayout</span><span class="o">*</span><span class="p">)[[</span><span class="n">self</span> <span class="n">collectionView</span><span class="p">]</span> <span class="n">collectionViewLayout</span><span class="p">];</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span>
-</span><span class="line">         <span class="nl">performBatchUpdates:</span><span class="o">^</span><span class="p">{</span>
-</span><span class="line">            <span class="p">[</span><span class="n">layout</span> <span class="n">resetPinchedItem</span><span class="p">];</span>
-</span><span class="line">         <span class="p">}</span>
-</span><span class="line">         <span class="nl">completion:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这个捏合操作需要计算捏合距离并找出被捏合的元素，并且在用户捏合的时候通知布局以实现自身更新。当捏合手势结束的时候，布局会做一个批量更新动画返回原始尺寸。</p>
-
-<p>另一方面，我们的布局始终在跟踪捏合的元素以及期望尺寸，并在需要的时候提供正确的属性：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForElementsInRect:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">rect</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nl">layoutAttributesForElementsInRect:</span><span class="n">rect</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">_pinchedItem</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">attr</span> <span class="o">=</span> <span class="p">[[</span><span class="n">attrs</span> <span class="nl">filteredArrayUsingPredicate:</span><span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithFormat:</span><span class="s">@&quot;indexPath == %@&quot;</span><span class="p">,</span> <span class="n">_pinchedItem</span><span class="p">]]</span> <span class="n">firstObject</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">attr</span><span class="p">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">_pinchedItemSize</span><span class="p">;</span>
-</span><span class="line">        <span class="n">attr</span><span class="p">.</span><span class="n">zIndex</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">attrs</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>小结</h3>
-
-<p>我们通过一些例子来说明了如何在 collection view 布局中创建自定义动画。虽然 <code>UICollectionViewFlowLayout</code> 并不直接允许定制动画，但是苹果工程师提供了清晰的架构让你可以子类化并实现各种自定义行为。从本质来说，在你的 <code>UICollectionViewLayout</code> 子类中正确地响应以下信号，并对那些要求返回 <code>UICollectionViewLayoutAttributes</code> 的方法返回合适的属性，那么实现自定义布局和动画的唯一约束就是你的想象力：</p>
-
-<ul>
-<li><code>prepareLayout</code></li>
-<li><code>prepareForCollectionViewUpdates:</code></li>
-<li><code>finalizeCollectionViewUpdates</code></li>
-<li><code>prepareForAnimatedBoundsChange:</code></li>
-<li><code>finalizeAnimatedBoundsChange</code></li>
-<li><code>shouldInvalidateLayoutForBoundsChange:</code></li>
-</ul>
-
-<p>更引人入胜的动画可以结合像在 objc.io <a href="http://objccn.io/issue-5-2/">话题 #5</a> 中 UIKit 力学这样的技术来实现。</p>
-
-<h2 id="collectionviewsviewcontroller">带有 Collection views 的 View controller 转场</h2>
-
-<p>就如 <a href="https://twitter.com/chriseidhof">Chris</a> 之前在 objc.io 的<a href="http://objccn.io/issue-5-3/">文章</a>中所说的那样，iOS 7 中的一个重大更新是自定义 view controller 转场动画。与自定义转场动画相呼应，苹果也在 <code>UICollectionViewController</code> 添加了 <code>useLayoutToLayoutNavigationTransitions</code> 标记来在可复用的单个 collection view 间启用导航转场。苹果自己的照片和日历应用就是这类转场动画的非常好的代表作。</p>
-
-<h3 id="uicollectionviewcontroller">UICollectionViewController 实例之间的转场动画</h3>
-
-<p>让我们来看看我们如何能够利用上一节相同的示例项目达到类似的效果：</p>
-
-<p><img src="http://img.objccn.io/issue-12/2014-05-01-collectionview-animations-4-layout2layout.gif" alt="Layout to Layout Navigation Transitions" /></p>
-
-<p>为了使布局到布局的转场动画工作，navigation controller 的 root view controller 必须是一个 <code>useLayoutToLayoutNavigationTransitions</code> 设置为 <code>NO</code> 的 collection view controller。当另一个 <code>useLayoutToLayoutNavigationTransitions</code> 设置为 <code>YES</code> 的 <code>UICollectionViewController</code> 实例被 push 到根视图控制器之上时，navigation controller 会用布局转场动画来代替标准的 push 转场动画。这里要注意一个重要的细节，根视图控制器的 collection view 实例被回收用于在导航栈上 push 进来的 collection 控制器中，如果你试图在 <code>viewDidLoad</code> 之类的方法中中设置 collection view 属性， 它们将不会有任何反应，你也不会收到任何警告。</p>
-
-<p>这个行为可能最常见的陷阱是期望回收的 collection view 根据顶层的 collection 视图控制器来更新数据源和委托。它当然不会这样：根 collection 视图控制器会保持数据源和委托，除非我们做点什么。</p>
-
-<p>解决此问题的方法是实现 navigation controller 的委托方法，并根据导航堆栈顶部的当前视图控制器的需要正确设置 collection view 的数据源和委托。在我们简单的例子中，这可以通过以下方式实现：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">navigationController:</span><span class="p">(</span><span class="n">UINavigationController</span> <span class="o">*</span><span class="p">)</span><span class="nv">navigationController</span> <span class="nf">didShowViewController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">viewController</span> <span class="nf">animated:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">animated</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">viewController</span> <span class="nl">isKindOfClass:</span><span class="p">[</span><span class="n">FJDetailViewController</span> <span class="n">class</span><span class="p">]])</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">FJDetailViewController</span> <span class="o">*</span><span class="n">dvc</span> <span class="o">=</span> <span class="p">(</span><span class="n">FJDetailViewController</span><span class="o">*</span><span class="p">)</span><span class="n">viewController</span><span class="p">;</span>
-</span><span class="line">        <span class="n">dvc</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">dataSource</span> <span class="o">=</span> <span class="n">dvc</span><span class="p">;</span>
-</span><span class="line">        <span class="n">dvc</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">delegate</span> <span class="o">=</span> <span class="n">dvc</span><span class="p">;</span>
-</span><span class="line">        <span class="p">[</span><span class="n">dvc</span><span class="p">.</span><span class="n">collectionView</span> <span class="nl">scrollToItemAtIndexPath:</span><span class="p">[</span><span class="n">NSIndexPath</span> <span class="nl">indexPathForItem:</span><span class="n">_selectedItem</span> <span class="nl">inSection:</span><span class="mi">0</span><span class="p">]</span> <span class="nl">atScrollPosition:</span><span class="n">UICollectionViewScrollPositionCenteredVertically</span> <span class="nl">animated:</span><span class="n">NO</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">viewController</span> <span class="o">==</span> <span class="n">self</span><span class="p">){</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">dataSource</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">delegate</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>objc</p>
-
-<p>当详细页面的 collection view 被推入导航栈时，我们重新设置 collection view 的数据源到详细视图控制器，确保只有被选择的 cell 颜色显示在详细页面的 collection view 中。如果我们不打算这样做，布局依然可以正确过渡，但是collection 将显示所有的 cells。在实际应用中，detail 的数据源通常负责在转场动画过程中显示更详细的数据。</p>
-
-<h3 id="collectionview">用于常规转换的 Collection View 布局动画</h3>
-
-<p>使用了 <code>useLayoutToLayoutNavigationTransitions</code> 的布局和布局间导航转换是很有用的，但却局限于仅在 两个 view controller 都是 <code>UICollectionViewController</code> 的实例，并且转场的必须发生在顶级 collection views 之间。为了达到在任意视图控制器的任意 collection view 之间都能实现相似的过渡，我们需要自定义一个 view collection 的转场动画。</p>
-
-<p><img src="http://img.objccn.io/issue-12/2014-05-01-collectionview-animations-5-custom-transitions.gif" alt="Custom Collection View Transition" /></p>
-
-<p>针对此类自定义过渡的动画控制器，需要遵循以下步骤进行设计：</p>
-
-<ol>
-<li>对初始的 collection view 中的所有可见元素制作截图  </li>
-<li>将截图添加到转场上下文的 container view 中  </li>
-<li>运用目标 collection view 的布局计算最终位置  </li>
-<li>制作动画使快照到正确的位置  </li>
-<li>当目标 collection view 可见时删除截图</li>
-</ol>
-
-<p>一个这样的动画设计有两重缺陷：它只能对初始的 collection view 的可见元素制作动画，因为<a href="https://developer.apple.com/library/ios/documentation/uikit/reference/uiview_class/UIView/UIView.html#//apple_ref/doc/uid/TP40006816-CH3-SW198">快照 APIs </a> 只能工作于屏幕上可见的 view，另外，依赖于可见的元素数量，可能会有很多的 views 需要进行正确的跟踪并为其制作动画。但另一方面，这种设计又具有一个明显的优势，那就是它可以为所有类型的 <code>UICollectionViewLayout</code> 组合所使用。这样一个系统的实现就留给读者们去进行练习吧。</p>
-
-<p>在附带的演示项目中我们用另一种途径进行了实现，它依赖于一些 <code>UICollectionViewFlowLayout</code> 的巧合。</p>
-
-<p>基本的想法是，因为源 collection view 和目标 collection view 都拥有有效的 flow layouts，因此源 layout 的布局属性正好可以用作目标 collection view 的布局中的初始布局属性，以此驱动转场动画。一旦正确建立，就算对于那些一开始在屏幕上不可见的元素，collection view 的机制都将为我们追踪它们并进行动画。下面是我们的动画控制器中的 <code>animateTransition:</code> 的核心代码：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-<span class="line-number">50</span>
-<span class="line-number">51</span>
-<span class="line-number">52</span>
-<span class="line-number">53</span>
-<span class="line-number">54</span>
-<span class="line-number">55</span>
-<span class="line-number">56</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGRect</span> <span class="n">initialRect</span> <span class="o">=</span> <span class="p">[</span><span class="n">inView</span><span class="p">.</span><span class="n">window</span> <span class="nl">convertRect:</span><span class="n">_fromCollectionView</span><span class="p">.</span><span class="n">frame</span> <span class="nl">fromView:</span><span class="n">_fromCollectionView</span><span class="p">.</span><span class="n">superview</span><span class="p">];</span>
-</span><span class="line"><span class="n">CGRect</span> <span class="n">finalRect</span>   <span class="o">=</span> <span class="p">[</span><span class="n">transitionContext</span> <span class="nl">finalFrameForViewController:</span><span class="n">toVC</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="n">UICollectionViewFlowLayout</span> <span class="o">*</span><span class="n">toLayout</span> <span class="o">=</span> <span class="p">(</span><span class="n">UICollectionViewFlowLayout</span><span class="o">*</span><span class="p">)</span> <span class="n">_toCollectionView</span><span class="p">.</span><span class="n">collectionViewLayout</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">UICollectionViewFlowLayout</span> <span class="o">*</span><span class="n">currentLayout</span> <span class="o">=</span> <span class="p">(</span><span class="n">UICollectionViewFlowLayout</span><span class="o">*</span><span class="p">)</span> <span class="n">_fromCollectionView</span><span class="p">.</span><span class="n">collectionViewLayout</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">//制作原来布局的拷贝</span>
-</span><span class="line"><span class="n">UICollectionViewFlowLayout</span> <span class="o">*</span><span class="n">currentLayoutCopy</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UICollectionViewFlowLayout</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="n">currentLayoutCopy</span><span class="p">.</span><span class="n">itemSize</span> <span class="o">=</span> <span class="n">currentLayout</span><span class="p">.</span><span class="n">itemSize</span><span class="p">;</span>
-</span><span class="line"><span class="n">currentLayoutCopy</span><span class="p">.</span><span class="n">sectionInset</span> <span class="o">=</span> <span class="n">currentLayout</span><span class="p">.</span><span class="n">sectionInset</span><span class="p">;</span>
-</span><span class="line"><span class="n">currentLayoutCopy</span><span class="p">.</span><span class="n">minimumLineSpacing</span> <span class="o">=</span> <span class="n">currentLayout</span><span class="p">.</span><span class="n">minimumLineSpacing</span><span class="p">;</span>
-</span><span class="line"><span class="n">currentLayoutCopy</span><span class="p">.</span><span class="n">minimumInteritemSpacing</span> <span class="o">=</span> <span class="n">currentLayout</span><span class="p">.</span><span class="n">minimumInteritemSpacing</span><span class="p">;</span>
-</span><span class="line"><span class="n">currentLayoutCopy</span><span class="p">.</span><span class="n">scrollDirection</span> <span class="o">=</span> <span class="n">currentLayout</span><span class="p">.</span><span class="n">scrollDirection</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">//将拷贝赋值给源 collection view</span>
-</span><span class="line"><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">fromCollectionView</span> <span class="nl">setCollectionViewLayout:</span><span class="n">currentLayoutCopy</span> <span class="nl">animated:</span><span class="n">NO</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="n">UIEdgeInsets</span> <span class="n">contentInset</span> <span class="o">=</span> <span class="n">_toCollectionView</span><span class="p">.</span><span class="n">contentInset</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">CGFloat</span> <span class="n">oldBottomInset</span> <span class="o">=</span> <span class="n">contentInset</span><span class="p">.</span><span class="n">bottom</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">//强制在目标 collection view 中设定一个很大的 bottom inset</span>
-</span><span class="line"><span class="n">contentInset</span><span class="p">.</span><span class="n">bottom</span> <span class="o">=</span> <span class="n">CGRectGetHeight</span><span class="p">(</span><span class="n">finalRect</span><span class="p">)</span><span class="o">-</span><span class="p">(</span><span class="n">toLayout</span><span class="p">.</span><span class="n">itemSize</span><span class="p">.</span><span class="n">height</span><span class="o">+</span><span class="n">toLayout</span><span class="p">.</span><span class="n">sectionInset</span><span class="p">.</span><span class="n">bottom</span><span class="o">+</span><span class="n">toLayout</span><span class="p">.</span><span class="n">sectionInset</span><span class="p">.</span><span class="n">top</span><span class="p">);</span>
-</span><span class="line"><span class="n">self</span><span class="p">.</span><span class="n">toCollectionView</span><span class="p">.</span><span class="n">contentInset</span> <span class="o">=</span> <span class="n">contentInset</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">//将源布局设置给目标 collection view</span>
-</span><span class="line"><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">toCollectionView</span> <span class="nl">setCollectionViewLayout:</span><span class="n">currentLayout</span> <span class="nl">animated:</span><span class="n">NO</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="n">toView</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">initialRect</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">inView</span> <span class="nl">insertSubview:</span><span class="n">toView</span> <span class="nl">aboveSubview:</span><span class="n">fromView</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">UIView</span>
-</span><span class="line"> <span class="nl">animateWithDuration:</span><span class="p">[</span><span class="n">self</span> <span class="nl">transitionDuration:</span><span class="n">transitionContext</span><span class="p">]</span>
-</span><span class="line"> <span class="nl">delay:</span><span class="mi">0</span>
-</span><span class="line"> <span class="nl">options:</span><span class="n">UIViewAnimationOptionBeginFromCurrentState</span>
-</span><span class="line"> <span class="nl">animations:</span><span class="o">^</span><span class="p">{</span>
-</span><span class="line">   <span class="c1">//使用最终 frame 制作动画</span>
-</span><span class="line">     <span class="n">toView</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">finalRect</span><span class="p">;</span>
-</span><span class="line">     <span class="c1">//在 performUpdates 中设定最终的布局</span>
-</span><span class="line">     <span class="p">[</span><span class="n">_toCollectionView</span>
-</span><span class="line">      <span class="nl">performBatchUpdates:</span><span class="o">^</span><span class="p">{</span>
-</span><span class="line">          <span class="p">[</span><span class="n">_toCollectionView</span> <span class="nl">setCollectionViewLayout:</span><span class="n">toLayout</span> <span class="nl">animated:</span><span class="n">NO</span><span class="p">];</span>
-</span><span class="line">      <span class="p">}</span>
-</span><span class="line">      <span class="nl">completion:</span><span class="o">^</span><span class="p">(</span><span class="kt">BOOL</span> <span class="n">finished</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">          <span class="n">_toCollectionView</span><span class="p">.</span><span class="n">contentInset</span> <span class="o">=</span> <span class="n">UIEdgeInsetsMake</span><span class="p">(</span><span class="n">contentInset</span><span class="p">.</span><span class="n">top</span><span class="p">,</span>
-</span><span class="line">                                                            <span class="n">contentInset</span><span class="p">.</span><span class="n">left</span><span class="p">,</span>
-</span><span class="line">                                                            <span class="n">oldBottomInset</span><span class="p">,</span>
-</span><span class="line">                                                            <span class="n">contentInset</span><span class="p">.</span><span class="n">right</span><span class="p">);</span>
-</span><span class="line">      <span class="p">}];</span>
-</span><span class="line">
-</span><span class="line"> <span class="p">}</span> <span class="nl">completion:</span><span class="o">^</span><span class="p">(</span><span class="kt">BOOL</span> <span class="n">finished</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">     <span class="p">[</span><span class="n">transitionContext</span> <span class="nl">completeTransition:</span><span class="n">YES</span><span class="p">];</span>
-</span><span class="line"> <span class="p">}];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>首先，动画控制器确保目标 collection view 以与原来的 collection view 完全相同的框架和布局作为开始。接着，它将源 collection view 的布局设定给目标 collection view，以确保其不会失效。与此同时，该布局已经复制到另一个新的布局对象中，而这个布局对象则是为防止在导航回原始视图控制器时出现奇怪的布局 bug。我们还会强制在目标 collection view 的底部设定一个很大的 content inset，来确保布局在动画的初始位置时保持在一行上。观察日志的话，你会发现由于元素的尺寸加上 inset 的尺寸会比 collection view 的非滚动维度要大，因此 collection view 会在控制台警告。在这样的情况下，collection view 的行为是没有定义的，我们也只是使用这样一个不稳定的状态来作为我们转换动画的初始状态。最后，复杂的动画 block 将展现它的魅力，首先将目标 collection view 的框架设定到最终位置，然后在 <code>performBatchUpdates:completion:</code> 的 update block 中执行一个无动画的布局来改变至最终布局，紧随其后便是在 completion block 中将 content insets 重置为原始值。</p>
-
-<h3>小结</h3>
-
-<p>我们讨论了两种可以在 collection view 之间实现布局转场的途径。一种使用了内置的 <code>useLayoutToLayoutNavigationTransitions</code>，看起来令人印象深刻并且极其容易实现，缺点就是可以使用的范围较为局限。由于 <code>useLayoutToLayoutNavigationTransitions</code> 在一些案例中不能使用，想驱动自定义的过渡动画的话，就需要一个自定义的 animator。这篇文章中，我们看到了如何实现这样一个 animator，然而，由于你的应用程序大概肯定会需要在两个和本例完全不同的 view 结构中实现完全不同的动画，所以正如此例中做的那样，不要吝于尝试不同的方法来探究其是否能够工作。</p>
 
 <hr />
 <p class="post-footer">
