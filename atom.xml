@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-06-18T09:32:29+08:00</updated>
+  <updated>2014-06-20T10:34:39+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,862 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[使用VIPER构建iOS应用]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/"/>
+    <updated>2014-06-20T09:00:36+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong</id>
+    <content type="html"><![CDATA[<p>建筑领域流行这样一句话，“我们虽然在营造建筑，但建筑也会重新塑造我们”。正如所有开发者最终领悟到的，这句话同样适用于构建软件。</p>
+
+<p>编写代码中至关重要的是，需要使每一部分容易被识别，赋有一个特定而明显的目的，并与其他部分在逻辑关系中完美契合。这就是我们所说的软件架构。好的架构不仅让一个产品成功投入使用，还可以让产品具有可维护性，并让人不断头脑清醒的对它进行维护！</p>
+
+<p>在这篇文章中，我们介绍了一种称之为 <a href="http://mutualmobile.github.io/blog/2013/12/04/viper-introduction/">VIPER</a> 的 iOS 应用架构的方式。VIPER 已经在很多大型的项目上成功实践，但是出于本文的目的我们将通过一个待办事项清单 (to-do app) 来介绍 VIPER 。你可以在 <a href="https://github.com/objcio/issue-13-viper">GitHub</a> 上关注这个项目。</p>
+
+<p><video style="display:block;max-width:316px;height:auto;border:0;" poster="/issue-13/2014-06-07-viper-screenshot.png" controls="1"> <br />
+  <source src="http://img.objccn.io//issue-13/2014-06-07-viper-preview.mp4" />
+</video></p>
+
+<h2 id="viper">什么是 VIPER？</h2>
+
+<p>测试永远不是构建 iOS 应用的主要部分。当我们 (<a href="https://github.com/mutualmobile/">Mutual Mobile</a>) 着手改善我们的测试实践时，我们发现给 iOS 应用写测试代码非常困难。因此如果想要设法改变测试的现状，我们首先需要一个更好的方式来架构应用，我们称之为 VIPER。</p>
+
+<p>VIPER 是一个创建 iOS 应用<a href="http://blog.8thlight.com/uncle-bob/2012/08/13/the-clean-architecture.html">简明构架</a>的程序。VIPER 可以是视图 (View)，交互器 (Interactor)，展示器 (Presenter)，实体 (Entity) 以及路由 (Routing) 的首字母缩写。简明架构将一个应用程序的逻辑结构划分为不同的责任层。这使得它更容易隔离依赖项 (如数据库)，也更容易测试各层间的边界处的交互：</p>
+
+<p><img alt="VIPER stands for View Interactor Presenter Entity Routing." src="http://img.objccn.io/issue-13/2014-06-07-viper-intro.jpg" /></p>
+
+<p>大部分 iOS 应用利用 MVC 构建，使用 MVC 应用程序架构可以引导你将每一个类看做模型，视图或控制器中的一个。但由于大部分应用程序的逻辑不会存在于模型或视图中，所以通常最终总是在控制器里实现。这就导致一个称为<a href="https://twitter.com/Colin_Campbell/status/293167951132098560">重量级视图控制器</a>的问题，在这里，视图控制器做了太多工作。为这些重量级视图控制器<a href="http://www.objc.io/issue-1/lighter-view-controllers.html">瘦身</a>并不是 iOS 开发者寻求提高代码的质量所要面临的唯一挑战，但至少这是一个很好的开端。</p>
+
+<p>VIPER 的不同层提供了明确的程序逻辑以及导航控制代码来应对这个挑战，利用 VIPER ，你会注意到在我们的待办事项示例清单中的视图控制器可以简洁高效，意义明确地控制视图。你也会发现视图控制器中代码和所有的其他类很容易理解，容易测试，理所当然也更易维护。</p>
+
+<h2>基于用例的应用设计</h2>
+
+<p>应用通常是一些用户用例的集合。用例也被称为验收标准，或行为集，它们用来描述应用的用途。清单可以根据时间，类型以及名字排序，这就是一个用例。用例是应用程序中用来负责业务逻辑的一层，应独立于用户界面的实现，同时要足够小，并且有良好的定义。决定如何将一个复杂的应用分解成较小的用例非常具有挑战性，并且需要长期实践，但这对于缩小你解决的问题时所要面临的范围及完成的每个类的所要涉及的内容来说，是很有帮助的。</p>
+
+<p>利用 VIPER 建立一个应用需要实施一组套件来满足所有的用例，应用逻辑是实现用例的主要组成部分，但却不是唯一。用例也会影响用户界面。另一个重要的方面，是要考虑用例如何与其他应用程序的核心组件相互配合，例如网络和数据持久化。组件就好比用例的插件，VIPER 则用来描述这些组件的作用是什么，如何进行交互。</p>
+
+<p>我们其中一个用例，或者说待办事项清单中其中的一个需求是可以基于用户的选择来将待办事项分组。通过分离的逻辑将数据组织成一个用例，我们能够在测试时使用户界面代码保持干净，用例更易组装，从而确保它如我们预期的方式工作。</p>
+
+<h2 id="viper">VIPER 的主要部分</h2>
+
+<p>VIPER 的主要部分是：</p>
+
+<ul>
+<li>视图：根据展示器的要求显示界面，并将用户输入反馈给展示器。</li>
+<li>交互器：包含由用例指定的业务逻辑。</li>
+<li>展示器：包含为显示（从交互器接受的内容）做的准备工作的相关视图逻辑，并对用户输入进行反馈（从交互器获取新数据）。</li>
+<li>实体：包含交互器要使用的基本模型对象。</li>
+<li>路由：包含用来描述屏幕显示和显示顺序的导航逻辑。</li>
+</ul>
+
+<p>这种分隔形式同样遵循<a href="http://www.objectmentor.com/resources/articles/srp.pdf">单一责任原则</a>。交互器负责业务分析的部分，展示器代表交互设计师，而视图相当于视觉设计师。</p>
+
+<p>以下则是不同组件的相关图解，并展示了他们之间是如何关联的：</p>
+
+<p><img alt="VIPER breaks down an app into different components based around use cases, including components that create the user interface and the logic that powers it." src="http://img.objccn.io/issue-13/2014-06-07-viper-wireframe.png" /></p>
+
+<p>虽然在应用中 VIPER 的组件可以以任意顺序实现，我们在这里选择按照我们推荐的顺序来进行介绍。你会注意到这个顺序与构建整个应用的进程大致符合 &#8211; 首先要讨论的是产品需要做什么，以及用户会如何与之交互。</p>
+
+<h3>交互器</h3>
+
+<p>交互器在应用中代表着一个独立的用例。它具有业务逻辑以操纵模型对象（实体）执行特定的任务。交互器中的工作应当独立与任何用户界面，同样的交互器可以同时运用于 iOS 应用或者 OS X 应用中。</p>
+
+<p>由于交互器是一个 PONSO (Plain Old <code>NSObject</code>，普通的 <code>NSObject</code>)，它主要包含了逻辑，因此很容易使用 TDD 进行开发。</p>
+
+<p>示例应用的主要用例是向用户展示所有的待办事项（比如任何截止于下周末的任务）。此类用例的业务逻辑主要是找出今天至下周末之间将要到期的待办事项，然后为它们分配一个相对的截止日期，比如今天，明天，本周以内，或者下周。</p>
+
+<p>以下是来自 VTDListInteractor 的对应方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">findUpcomingItems</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">__weak</span> <span class="n">typeof</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="n">welf</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSDate</span><span class="o">*</span> <span class="n">today</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">clock</span> <span class="n">today</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSDate</span><span class="o">*</span> <span class="n">endOfNextWeek</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSCalendar</span> <span class="n">currentCalendar</span><span class="p">]</span> <span class="nl">dateForEndOfFollowingWeekWithDate:</span><span class="n">today</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dataManager</span> <span class="nl">todoItemsBetweenStartDate:</span><span class="n">today</span> <span class="nl">endDate:</span><span class="n">endOfNextWeek</span> <span class="nl">completionBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">NSArray</span><span class="o">*</span> <span class="n">todoItems</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">welf</span><span class="p">.</span><span class="n">output</span> <span class="nl">foundUpcomingItems:</span><span class="p">[</span><span class="n">welf</span> <span class="nl">upcomingItemsFromToDoItems:</span><span class="n">todoItems</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>实体</h3>
+
+<p>实体是被交互器操作的模型对象，并且它们只被交互器所操作。交互器永远不会传输实体至表现层 (比如说展示器)。</p>
+
+<p>实体也应该是 PONSOs。如果你使用 Core Data，最好是将托管对象保持在你的数据层之后，交互器不应与 NSManageObjects 协同工作。</p>
+
+<p>这里是我们的待办事项服务的实体：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">VTDTodoItem</span> : <span class="nc">NSObject</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span>   <span class="n">NSDate</span><span class="o">*</span>     <span class="n">dueDate</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span>     <span class="n">NSString</span><span class="o">*</span>   <span class="n">name</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">todoItemWithDueDate:</span><span class="p">(</span><span class="n">NSDate</span><span class="o">*</span><span class="p">)</span><span class="nv">dueDate</span> <span class="nf">name:</span><span class="p">(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">name</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>不要诧异于你的实体仅仅是数据结构，任何依赖于应用的逻辑都应该放到交互器中。</p>
+
+<h3>展示器</h3>
+
+<p>展示器是一个主要包含了驱动用户界面的逻辑的 PONSO，它总是知道何时呈现用户界面。基于其收集来自用户交互的输入功能，它可以在合适的时候更新用户界面并向交互器发送请求。</p>
+
+<p>当用户点击 “+” 键新建待办事项时，<code>addNewEntry</code> 被调用。对于此项操作，展示器会要求 <code>wireframe</code> 显示用户界面以增加新项目：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addNewEntry</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">listWireframe</span> <span class="n">presentAddInterface</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>展示器还会从交互器接收结果并将结果转换成能够在视图中有效显示的形式。</p>
+
+<p>下面是如何从交互器接受待办事项的过程，其中包含了处理数据的过程并决定展现给用户哪些内容：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">foundUpcomingItems:</span><span class="p">(</span><span class="n">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nv">upcomingItems</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">upcomingItems</span> <span class="n">count</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">userInterface</span> <span class="n">showNoContentMessage</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">else</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">updateUserInterfaceWithUpcomingItems:</span><span class="n">upcomingItems</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>实体永远不会由交互器传输给展示器，取而代之，那些无行为的简单数据结构会从交互器传输到展示器那里。这就防止了那些“真正的工作”在展示器那里进行，展示器只能负责准备那些在视图里显示的数据。</p>
+
+<h3>视图</h3>
+
+<p>视图一般是被动的，它通常等待展示器下发需要显示的内容，而不会向其索取数据。视图（例如登录界面的登录视图控件）所定义的方法应该允许展示器在高度抽象的层次与之交流。展示器通过内容进行表达，而不关心那些内容所显示的样子。展示器不知道 <code>UILabel</code>，<code>UIButton</code> 等的存在，它只知道其中包含的内容以及何时需要显示。内容如何被显示是由视图来进行控制的。</p>
+
+<p>视图是一个抽象的接口 (Interface)，在 Objective-C 中使用协议被定义。一个 <code>UIViewController</code> 或者它的一个子类会实现视图协议。比如我们的示例中 “添加” 界面会有以下接口：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddViewInterface</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">setEntryName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="n">name</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setEntryDueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">date</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>视图和视图控制器同样会操纵用户界面和相关输入。因为通常来说视图控制器是最容易处理这些输入和执行某些操作的地方，所以也就不难理解为什么视图控制器总是这么大了。为了使视图控制器保持苗条，我们需要使它们在用户进行相关操作的时候可以有途径来通知相关部分。视图控制器不应当根据这些行为进行相关决定，但是它应当将发生的事件传递到能够做决定的部分。</p>
+
+<p>在我们的例子中，Add View Controller 有一个事件处理的属性，它实现了如下接口：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddModuleInterface</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">cancelAddAction</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">saveAddActionWithName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">name</span> <span class="nf">dueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">dueDate</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>当用户点击取消键的时候，视图控制器告知这个事件处理程序用户需要其取消这次添加的动作。这样一来，事件处理程序便可以处理关闭 add view controller 并告知列表视图进行更新。</p>
+
+<p>视图和展示器之间边界处是一个使用 <a href="https://github.com/ReactiveCocoa/ReactiveCocoa">ReactiveCocoa</a> 的好地方。在这个示例中，视图控制器可以返回一个代表按钮操作的信号。这将允许展示器在不打破职责分离的前提下轻松地对那些信号进行响应。</p>
+
+<h3>路由</h3>
+
+<p>屏幕间的路径会在交互设计师创建的线框 (wireframes) 里进行定义。在 VIPER 中，路由是由两个部分来负责的：展示器和线框。一个线框对象包括 <code>UIWindow</code>，<code>UINavigationController</code>，<code>UIViewController</code> 等部分，它负责创建视图/视图控制器并将其装配到窗口中。</p>
+
+<p>由于展示器包含了响应用户输入的逻辑，因此它就拥有知晓何时导航至另一个屏幕以及具体是哪一个屏幕的能力。而同时，线框知道如何进行导航。在两者结合起来的情况下，展示器可以使用线框来进行实现导航功能，它们两者一起描述了从一个屏幕至另一个屏幕的路由过程。</p>
+
+<p>线框同时也明显是一个处理导航转场动画的地方。来看看这个 add wireframe 中的例子吧：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">VTDAddWireframe</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">presentAddInterfaceFromViewController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">viewController</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">VTDAddViewController</span> <span class="o">*</span><span class="n">addViewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">addViewController</span><span class="p">];</span>
+</span><span class="line">    <span class="n">addViewController</span><span class="p">.</span><span class="n">eventHandler</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">addPresenter</span><span class="p">;</span>
+</span><span class="line">    <span class="n">addViewController</span><span class="p">.</span><span class="n">modalPresentationStyle</span> <span class="o">=</span> <span class="n">UIModalPresentationCustom</span><span class="p">;</span>
+</span><span class="line">    <span class="n">addViewController</span><span class="p">.</span><span class="n">transitioningDelegate</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">viewController</span> <span class="nl">presentViewController:</span><span class="n">addViewController</span> <span class="nl">animated:</span><span class="n">YES</span> <span class="nl">completion:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">presentedViewController</span> <span class="o">=</span> <span class="n">viewController</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="cp">#pragma mark - UIViewControllerTransitioningDelegate Methods</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">UIViewControllerAnimatedTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nf">animationControllerForDismissedController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">dismissed</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">VTDAddDismissalTransition</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">UIViewControllerAnimatedTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nf">animationControllerForPresentedController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">presented</span>
+</span><span class="line">                                                                  <span class="nf">presentingController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">presenting</span>
+</span><span class="line">                                                                      <span class="nf">sourceController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">source</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">VTDAddPresentationTransition</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>应用使用了自定义的视图控制器转场来呈现 add view controller。因为线框部件负责实施这个转场，所以它成为了 add view controller 转场的委托，并且返回适当的转场动画。</p>
+
+<h2 id="viper">利用 VIPER 组织应用组件</h2>
+
+<p>iOS 应用的构架需要考虑到 UIKit 和 Cocoa Touch 是建立应用的主要工具。架构需要和应用的所有组件都能够和平相处，但又需要为如何使用框架的某些部分以及它们应该在什么位置提供一些指导和建议。</p>
+
+<p>iOS 应用程序的主力是 <code>UIViewController</code>，我们不难想象找一个竞争者来取代 MVC 就可以避免大量使用视图控制器。但是视图控制器现在是这个平台的核心：它们处理设备方向的变化，回应用户的输入，和类似导航控制器之类的系统系统组件集成得很好，而现在在 iOS 7 中又能实现自定义屏幕之间的转换，功能实在是太强大了。</p>
+
+<p>有了 VIPER，视图控制器便就能真正的做它本来应该做的事情了，那就是控制视图。 我们的待办事项应拥有两个视图控制器，一个是列表视图，另一个是新建待办。因为 add view controller 要做的所有事情就是控制视图，所以实现起来非常的简单基础：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">VTDAddViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">animated</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">viewDidAppear:</span><span class="n">animated</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">UITapGestureRecognizer</span> <span class="o">*</span><span class="n">gestureRecognizer</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UITapGestureRecognizer</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithTarget:</span><span class="n">self</span>
+</span><span class="line">                                                                                        <span class="nl">action:</span><span class="k">@selector</span><span class="p">(</span><span class="n">dismiss</span><span class="p">)];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">transitioningBackgroundView</span> <span class="nl">addGestureRecognizer:</span><span class="n">gestureRecognizer</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">transitioningBackgroundView</span><span class="p">.</span><span class="n">userInteractionEnabled</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dismiss</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">eventHandler</span> <span class="n">cancelAddAction</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setEntryName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">name</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">nameTextField</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">name</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setEntryDueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">date</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">datePicker</span> <span class="nl">setDate:</span><span class="n">date</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">save:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">eventHandler</span> <span class="nl">saveAddActionWithName:</span><span class="n">self</span><span class="p">.</span><span class="n">nameTextField</span><span class="p">.</span><span class="n">text</span>
+</span><span class="line">                                     <span class="nl">dueDate:</span><span class="n">self</span><span class="p">.</span><span class="n">datePicker</span><span class="p">.</span><span class="n">date</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">cancel:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">eventHandler</span> <span class="n">cancelAddAction</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="cp">#pragma mark - UITextFieldDelegate Methods</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">textFieldShouldReturn:</span><span class="p">(</span><span class="n">UITextField</span> <span class="o">*</span><span class="p">)</span><span class="nv">textField</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">textField</span> <span class="n">resignFirstResponder</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>应用在接入网络以后会变得更有用处，但是究竟该在什么时候联网呢？又由谁来负责启动网络连接呢？典型的情况下，由交互器来启动网络连接操作的项目，但是它不会直接处理网络代码。它会寻找一个像是 network manager 或者 API client 这样的依赖项。交互器可能聚合来自多个源的数据来提供所需的信息，从而完成一个用例。最终，就由展示器来采集交互器反馈的数据，然后组织并进行展示。</p>
+
+<p>数据存储模块负责提供实体给交互器。因为交互器要完成业务逻辑，因此它需要从数据存储中获取实体并操纵它们，然后将更新后的实体再放回数据存储中。数据存储管理实体的持久化，而实体应该对数据库全然不知，正因如此，实体并不知道如何对自己进行持久化。</p>
+
+<p>交互器同样不需要知道如何将实体持久化，有时交互器更希望使用一个 data manager 来使其与数据存储的交互变得容易。Data manager 可以处理更多的针对存储的操作，比如创建获取请求，构建查询等等。这就使交互器能够将更多的注意力放在应用逻辑上，而不必再了解实体是如何被聚集或持久化的。下面我们举一个例子来说明使用 data manager 有意义的，这个例子假设你在使用 Core Data。这是示例应用程序的 data manager 的接口：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">VTDListDataManager</span> : <span class="nc">NSObject</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">VTDCoreDataStore</span> <span class="o">*</span><span class="n">dataStore</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">todoItemsBetweenStartDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">startDate</span> <span class="nf">endDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">endDate</span> <span class="nf">completionBlock:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSArray</span> <span class="o">*</span><span class="n">todoItems</span><span class="p">))</span><span class="nv">completionBlock</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>当使用 TDD 来开发一个交互器时，是可以用一个测试用的模拟存储来代替生产环境的数据存储的。避免与远程服务器通讯（网络服务）以及避免读取磁盘（数据库）可以加快你测试的速度并加强其可重复性。</p>
+
+<p>将数据存储保持为一个界限清晰的特定层的原因之一是，这可以让你延迟选择一个特定的持久化技术。如果你的数据存储是一个独立的类，那你就可以使用一个基础的持久化策略来开始你的应用，然后等到有意义的时候升级至 SQLite 或者 Core Data。而因为数据存储层的存在，你的应用代码库中就不需要改变任何东西。</p>
+
+<p>在 iOS 的项目中使用 Core Data 经常比构架本身还容易引起更多争议。然而，利用 VIPER 来使用 Core Data 将给你带来使用 Core Data 的前所未有的良好体验。在持久化数据的工具层面上，Core Data 可以保持快速存取和低内存占用方面，简直是个神器。但是有个很恼人的地方，它会像触须一样把 <code>NSManagedObjectContext</code>  延伸至你所有的应用实现文件中，特别是那些它们不该待的地方。VIPER 可以使 Core Data 待在正确的地方：数据存储层。</p>
+
+<p>在待办事项示例中，应用仅有的两部分知道使用了 Core Data，其一是数据存储本身，它负责建立 Core Data 堆栈；另一个是 data manager。Data manager 执行了获取请求，将数据存储返回的 NSManagedObject 对象转换为标准的 PONSO 模型对象，并传输回业务逻辑层。这样一来，应用程序核心将不再依赖于 Core Data，附加得到的好处是，你也再也不用担心过期数据 (stale) 和没有良好组织的多线程 NSManagedObjects 来糟蹋你的工作成果了。</p>
+
+<p>在通过请求访问 Core Data 存储时，data manager 中看起来是这样的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">VTDListDataManager</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">todoItemsBetweenStartDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">startDate</span> <span class="nf">endDate:</span><span class="p">(</span><span class="n">NSDate</span><span class="o">*</span><span class="p">)</span><span class="nv">endDate</span> <span class="nf">completionBlock:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSArray</span> <span class="o">*</span><span class="n">todoItems</span><span class="p">))</span><span class="nv">completionBlock</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSCalendar</span> <span class="n">autoupdatingCurrentCalendar</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSPredicate</span> <span class="o">*</span><span class="n">predicate</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithFormat:</span><span class="s">@&quot;(date &gt;= %@) AND (date &lt;= %@)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateForBeginningOfDay:</span><span class="n">startDate</span><span class="p">],</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateForEndOfDay:</span><span class="n">endDate</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">sortDescriptors</span> <span class="o">=</span> <span class="err">@</span><span class="p">[];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">__weak</span> <span class="n">typeof</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="n">welf</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dataStore</span>
+</span><span class="line">     <span class="nl">fetchEntriesWithPredicate:</span><span class="n">predicate</span>
+</span><span class="line">     <span class="nl">sortDescriptors:</span><span class="n">sortDescriptors</span>
+</span><span class="line">     <span class="nl">completionBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">NSArray</span><span class="o">*</span> <span class="n">entries</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">         <span class="k">if</span> <span class="p">(</span><span class="n">completionBlock</span><span class="p">)</span>
+</span><span class="line">         <span class="p">{</span>
+</span><span class="line">             <span class="n">completionBlock</span><span class="p">([</span><span class="n">welf</span> <span class="nl">todoItemsFromDataStoreEntries:</span><span class="n">entries</span><span class="p">]);</span>
+</span><span class="line">         <span class="p">}</span>
+</span><span class="line">     <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nf">todoItemsFromDataStoreEntries:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">entries</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">entries</span> <span class="nl">arrayFromObjectsCollectedWithBlock:</span><span class="o">^</span><span class="kt">id</span><span class="p">(</span><span class="n">VTDManagedTodoItem</span> <span class="o">*</span><span class="n">todo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="p">[</span><span class="n">VTDTodoItem</span> <span class="nl">todoItemWithDueDate:</span><span class="n">todo</span><span class="p">.</span><span class="n">date</span> <span class="nl">name:</span><span class="n">todo</span><span class="p">.</span><span class="n">name</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>与 Core Data 一样极富争议的恐怕就是 UI 故事板了。故事板具有很多有用的功能，如果完全忽视它将会是一个错误。然而，调用故事版所能提供的所有功能来完成 VIPER 的所有目标仍然是很困难的。</p>
+
+<p>我们所能做出的妥协就是选择不使用 segues 。有时候使用 segues 是有效的，但是使用 segues 的危险性在于它们很难原封不动地保持屏幕之间的分离，以及 UI 和应用逻辑之间的分离。一般来说，如果实现 prepareForSegue 方法是必须的话，我们就尽量不去使用 segues。</p>
+
+<p>除此之外，故事板是一个实现用户界面布局有效方法，特别是在使用自动布局的时候。我们选择在实现待办事项两个界面的实例中使用故事板，并且使用这样的代码来执行自己的导航操作。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">ListViewControllerIdentifier</span> <span class="o">=</span> <span class="s">@&quot;VTDListViewController&quot;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">VTDListWireframe</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">presentListInterfaceFromWindow:</span><span class="p">(</span><span class="n">UIWindow</span> <span class="o">*</span><span class="p">)</span><span class="nv">window</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">VTDListViewController</span> <span class="o">*</span><span class="n">listViewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">listViewControllerFromStoryboard</span><span class="p">];</span>
+</span><span class="line">    <span class="n">listViewController</span><span class="p">.</span><span class="n">eventHandler</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">listPresenter</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">listPresenter</span><span class="p">.</span><span class="n">userInterface</span> <span class="o">=</span> <span class="n">listViewController</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">listViewController</span> <span class="o">=</span> <span class="n">listViewController</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">rootWireframe</span> <span class="nl">showRootViewController:</span><span class="n">listViewController</span>
+</span><span class="line">                                      <span class="nl">inWindow:</span><span class="n">window</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">VTDListViewController</span> <span class="o">*</span><span class="p">)</span><span class="nf">listViewControllerFromStoryboard</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIStoryboard</span> <span class="o">*</span><span class="n">storyboard</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">mainStoryboard</span><span class="p">];</span>
+</span><span class="line">    <span class="n">VTDListViewController</span> <span class="o">*</span><span class="n">viewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">storyboard</span> <span class="nl">instantiateViewControllerWithIdentifier:</span><span class="n">ListViewControllerIdentifier</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">viewController</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIStoryboard</span> <span class="o">*</span><span class="p">)</span><span class="nf">mainStoryboard</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIStoryboard</span> <span class="o">*</span><span class="n">storyboard</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIStoryboard</span> <span class="nl">storyboardWithName:</span><span class="s">@&quot;Main&quot;</span>
+</span><span class="line">                                                         <span class="nl">bundle:</span><span class="p">[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">storyboard</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h2 id="viper">使用 VIPER 构建模块</h2>
+
+<p>一般在使用 VIPER 的时候，你会发现一个屏幕或一组屏幕倾向于聚在一起作为一个模块。模块可以以多种形式体现，但一般最好把它想成是一种特性。在播客应用中，一个模块可能是音频播放器或订阅浏览器。然而在我们的待办事项应用中，列表和添加事项的屏幕都将作为单独的模块被建立。</p>
+
+<p>将你的应用作为一组模块来设计有很多好处，其中之一就是模块可以有非常明确和定义良好的接口，并且独立于其他的模块。这就使增加或者移除特性变得更加简单，也使在界面中向用户展示各种可变模块变得更加简单。</p>
+
+<p>我们希望能将待办事项中各模块之间分隔更加明确，我们为添加模块定义了两个协议。一个是模块接口，它定义了模块可以做什么；另一个则是模块的代理，用来描述该模块做了什么。例如：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddModuleInterface</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">cancelAddAction</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">saveAddActionWithName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">name</span> <span class="nf">dueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">dueDate</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddModuleDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">addModuleDidCancelAddAction</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addModuleDidSaveAddAction</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>因为模块必须要被展示，才能对用户产生价值，所以模块的展示器通常需要实现模型的接口。当另一个模型想要展现当前模块时，它的展示器就需要实现模型的委托协议，这样它就能在展示时知道当前模块做了些什么。</p>
+
+<p>一个模块可能包括实体，交互器和管理器的通用应用逻辑层，这些通常可用于多个屏幕。当然，这取决于这些屏幕之间的交互及它们的相似度。一个模块可以像在待办事项列表里面一样，简单的只代表一个屏幕。这样一来，应用逻辑层对于它的特定模块的行为来说就非常特有了。</p>
+
+<p>模块同样是组织代码的简便途径。将模块所有的编码都放在它自己的文件夹中并在 Xcode 中建一个 group，这会在你需要寻找和改变更加容易。当你在要寻找一个类时，它恰到好处地就在你所期待的地方，这种感觉真是无法形容的棒。</p>
+
+<p>利用 VIPER 建立模块的另一个好处是它使得扩展到多平台时变得更加简单。独立在交互器层中的所有用例的应用逻辑允许你可以专注于为平板，电话或者 Mac 构建新的用户界面，同时可以重用你的应用层。</p>
+
+<p>进一步来说，iPad 应用的用户界面能够将部分 iPhone 应用的视图，视图控制器及展示器进行再利用。在这种情况下，iPad 屏幕将由 ‘super’ 展示器和线框来代表，这样可以利用 iPhone 使用过的展示器和线框来组成屏幕。建立进而维护一个跨多平台的应用是一个巨大的挑战，但是好的构架可以对整个模型和应用层的再利用有大幅度的提升，并使其实现起来更加容易。</p>
+
+<h2 id="viper">利用 VIPER 进行测试</h2>
+
+<p>VIPER 的出现激发了一个关注点的分离，这使得采用 TDD 变得更加简便。交互器包含独立与任何 UI 的纯粹逻辑，这使测试驱动开发更加简单。同时展示器包含用来为显示准备数据的逻辑，并且它也独立于任何一个 UIKit 部件。对于这个逻辑的开发也很容易用测试来驱动。</p>
+
+<p>我们更倾向于先从交互器下手。用户界面里所有部分都服务于用例，而通过采用 TDD 来测试驱动交互器的 API 可以让你对用户界面和用例之间的关系有一个更好的了解。</p>
+
+<p>作为实例，我们来看一下负责待办事项列表的交互器。寻找待办事项的策略是要找出所有的将在下周末前截止的项目，并将这些项目分别归类至截止于今天，明天，本周或者下周。</p>
+
+<p>我们编写的第一个测试是为了保证交互器能够找到所有的截止于下周末的待办事项：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFindingUpcomingItemsRequestsAllToDoItemsFromTodayThroughEndOfNextWeek</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">dataManager</span> <span class="n">expect</span><span class="p">]</span> <span class="nl">todoItemsBetweenStartDate:</span><span class="n">self</span><span class="p">.</span><span class="n">today</span> <span class="nl">endDate:</span><span class="n">self</span><span class="p">.</span><span class="n">endOfNextWeek</span> <span class="nl">completionBlock:</span><span class="n">OCMOCK_ANY</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">interactor</span> <span class="n">findUpcomingItems</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>一旦知道了交互器找到了正确的待办事项后，我们就需要编写几个小测试用来确认它确实将待办事项分配到了正确的相对日期组内（比如说今天，明天，等等）。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFindingUpcomingItemsWithOneItemDueTodayReturnsOneUpcomingItemsForToday</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">todoItems</span> <span class="o">=</span> <span class="err">@</span><span class="p">[[</span><span class="n">VTDTodoItem</span> <span class="nl">todoItemWithDueDate:</span><span class="n">self</span><span class="p">.</span><span class="n">today</span> <span class="nl">name:</span><span class="s">@&quot;Item 1&quot;</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">dataStoreWillReturnToDoItems:</span><span class="n">todoItems</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">upcomingItems</span> <span class="o">=</span> <span class="err">@</span><span class="p">[[</span><span class="n">VTDUpcomingItem</span> <span class="nl">upcomingItemWithDateRelation:</span><span class="n">VTDNearTermDateRelationToday</span> <span class="nl">dueDate:</span><span class="n">self</span><span class="p">.</span><span class="n">today</span> <span class="nl">title:</span><span class="s">@&quot;Item 1&quot;</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">expectUpcomingItems:</span><span class="n">upcomingItems</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">interactor</span> <span class="n">findUpcomingItems</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>既然我们已经知道了交互器的 API 长什么样，接下来就是开发展示器。一旦展示器接收到了交互器传来的待办事项，我们就需要测试看看我们是否适当的将数据进行格式化并且在用户界面中正确的显示它。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFoundZeroUpcomingItemsDisplaysNoContentMessage</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">ui</span> <span class="n">expect</span><span class="p">]</span> <span class="n">showNoContentMessage</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="nl">foundUpcomingItems:</span><span class="err">@</span><span class="p">[]];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFoundUpcomingItemForTodayDisplaysUpcomingDataWithNoDay</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">VTDUpcomingDisplayData</span> <span class="o">*</span><span class="n">displayData</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">displayDataWithSectionName:</span><span class="s">@&quot;Today&quot;</span>
+</span><span class="line">                                                          <span class="nl">sectionImageName:</span><span class="s">@&quot;check&quot;</span>
+</span><span class="line">                                                                 <span class="nl">itemTitle:</span><span class="s">@&quot;Get a haircut&quot;</span>
+</span><span class="line">                                                                <span class="nl">itemDueDay:</span><span class="s">@&quot;&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">ui</span> <span class="n">expect</span><span class="p">]</span> <span class="nl">showUpcomingDisplayData:</span><span class="n">displayData</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSCalendar</span> <span class="n">gregorianCalendar</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSDate</span> <span class="o">*</span><span class="n">dueDate</span> <span class="o">=</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateWithYear:</span><span class="mi">2014</span> <span class="nl">month:</span><span class="mi">5</span> <span class="nl">day:</span><span class="mi">29</span><span class="p">];</span>
+</span><span class="line">    <span class="n">VTDUpcomingItem</span> <span class="o">*</span><span class="n">haircut</span> <span class="o">=</span> <span class="p">[</span><span class="n">VTDUpcomingItem</span> <span class="nl">upcomingItemWithDateRelation:</span><span class="n">VTDNearTermDateRelationToday</span> <span class="nl">dueDate:</span><span class="n">dueDate</span> <span class="nl">title:</span><span class="s">@&quot;Get a haircut&quot;</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="nl">foundUpcomingItems:</span><span class="err">@</span><span class="p">[</span><span class="n">haircut</span><span class="p">]];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFoundUpcomingItemForTomorrowDisplaysUpcomingDataWithDay</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">VTDUpcomingDisplayData</span> <span class="o">*</span><span class="n">displayData</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">displayDataWithSectionName:</span><span class="s">@&quot;Tomorrow&quot;</span>
+</span><span class="line">                                                          <span class="nl">sectionImageName:</span><span class="s">@&quot;alarm&quot;</span>
+</span><span class="line">                                                                 <span class="nl">itemTitle:</span><span class="s">@&quot;Buy groceries&quot;</span>
+</span><span class="line">                                                                <span class="nl">itemDueDay:</span><span class="s">@&quot;Thursday&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">ui</span> <span class="n">expect</span><span class="p">]</span> <span class="nl">showUpcomingDisplayData:</span><span class="n">displayData</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSCalendar</span> <span class="n">gregorianCalendar</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSDate</span> <span class="o">*</span><span class="n">dueDate</span> <span class="o">=</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateWithYear:</span><span class="mi">2014</span> <span class="nl">month:</span><span class="mi">5</span> <span class="nl">day:</span><span class="mi">29</span><span class="p">];</span>
+</span><span class="line">    <span class="n">VTDUpcomingItem</span> <span class="o">*</span><span class="n">groceries</span> <span class="o">=</span> <span class="p">[</span><span class="n">VTDUpcomingItem</span> <span class="nl">upcomingItemWithDateRelation:</span><span class="n">VTDNearTermDateRelationTomorrow</span> <span class="nl">dueDate:</span><span class="n">dueDate</span> <span class="nl">title:</span><span class="s">@&quot;Buy groceries&quot;</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="nl">foundUpcomingItems:</span><span class="err">@</span><span class="p">[</span><span class="n">groceries</span><span class="p">]];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>同样需要测试的是应用是否在用户想要新建待办事项时正确启动了相应操作：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testAddNewToDoItemActionPresentsAddToDoUI</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">wireframe</span> <span class="n">expect</span><span class="p">]</span> <span class="n">presentAddInterface</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="n">addNewEntry</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这时我们可以开发视图功能了，并且在没有待办事项的时候我们想要展示一个特殊的信息。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testShowingNoContentMessageShowsNoContentView</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">showNoContentMessage</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">XCTAssertEqualObjects</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">view</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">noContentView</span><span class="p">,</span> <span class="s">@&quot;the no content view should be the view&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>有待办事项出现时，我们要确保列表是显示出来的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testShowingUpcomingItemsShowsTableView</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">showUpcomingDisplayData:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">XCTAssertEqualObjects</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">view</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">tableView</span><span class="p">,</span> <span class="s">@&quot;the table view should be the view&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>首先建立交互器是一种符合 TDD 的自然规律。如果你首先开发交互器，紧接着是展示器，你就可以首先建立一个位于这些层的套件测试，并且为实现这是实例奠定基础。由于你不需要为了测试它们而去与用户界面进行交互，所以这些类可以进行快速迭代。在你需要开发视图的时候，你会有一个可以工作并测试过的逻辑和表现层来与其进行连接。在快要完成对视图的开发时，你会发现第一次运行程序时所有部件都运行良好，因为你所有已通过的测试已经告诉你它可以工作。</p>
+
+<h2>结论</h2>
+
+<p>我们希望你喜欢这篇对 VIPER 的介绍。或许你们都很好奇接下来应该做什么，如果你希望通过 VIPER 来对你下一个应用进行设计，该从哪里开始呢？</p>
+
+<p>我们竭尽全力使这篇文章和我们利用 VIPER 实现的应用实例足够明确并且进行了很好的定义。我们的待办事项里列表程序相当直接简单，但是它准确地解释了如何利用 VIPER 来建立一个应用。在实际的项目中，你可以根据你自己的挑战和约束条件来决定要如何实践这个例子。根据以往的经验，我们的每个项目在使用 VIPER 时都或多或少地改变了一些策略，但它们无一例外的都从中得益，找到了正确的方向。</p>
+
+<p>很多情况下由于某些原因，你可能会想要偏离 VIPER 所指引的道路。可能你遇到了很多 <a href="http://inessential.com/2014/03/16/smaller_please">&#8216;bunny&#8217;</a> 对象，或者你的应用使用了故事板的 segues。没关系的，在这些情况下，你只需要在做决定时稍微考虑下 VIPER 所代表的精神就好。VIPER 的核心在于它是建立在<a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">单一责任原则</a>上的架构。如果你碰到了些许麻烦，想想这些原则再考虑如何前进。</p>
+
+<p>你一定想知道在现有的应用中能否只用 VIPER 。在这种情况下，你可以考虑使用 VIPER 构建新的特性。我们许多现有项目都使用了这个方法。你可以利用 VIPER 建立一个模块，这能帮助你发现许多建立在单一责任原则基础上造成难以运用架构的现有问题。</p>
+
+<p>软件开发最伟大的事情之一就是每个应用程序都是不同的，而设计每个应用的架构的方式也是不同的。这就意味着每个应用对于我们来说都是一个学习和尝试的机遇，如果你决定开始使用 VIPER，你会受益匪浅。感谢你的阅读。</p>
+
+<h2 id="swifit">Swifit 补充</h2>
+
+<p>苹果上周在 WWDC 介绍了一门称之为 <a href="https://developer.apple.com/swift/">Swift</a> 的编程语言来作为 Cocoa 和 Cocoa Touch 开发的未来。现在发表关于 Swift 的完整意见还为时尚早，但众所周知编程语言对我们如何设计和构建应用有着重大影响。我们决定使用 <a href="https://github.com/objcio/issue-13-viper-swift">Swift 重写我们的待办事项清单</a>，帮助我们学习它对 VIPER 意味着什么。至今为止，收获颇丰。Swift 中的一些特性对于构建应用的体验有着显著的提升。</p>
+
+<h3>结构体</h3>
+
+<p>在 VIPER 中我们使用小型，轻量级的 model 类来在比如从展示器到视图这样不同的层间传递数据。这些 PONSOs 通常是只是简单地带有少量数据，并且通常这些类不会被继承。Swift 的结构体非常适合这个情况。下面的结构体的例子来自 VIPER Swift。这个结构体需要被判断是否相等，所以我们重载了 == 操作符来比较这个类型的两个实例。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">struct</span> <span class="n">UpcomingDisplayItem</span> <span class="o">:</span> <span class="n">Equatable</span><span class="p">,</span> <span class="n">Printable</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">let</span> <span class="n">title</span> <span class="o">:</span> <span class="n">String</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+</span><span class="line">    <span class="n">let</span> <span class="n">dueDate</span> <span class="o">:</span> <span class="n">String</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">var</span> <span class="n">description</span> <span class="o">:</span> <span class="n">String</span> <span class="p">{</span> <span class="n">get</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;\(title) -- \(dueDate)&quot;</span>
+</span><span class="line">    <span class="p">}}</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">init</span><span class="p">(</span><span class="nl">title:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">dueDate:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">dueDate</span> <span class="o">=</span> <span class="n">dueDate</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="n">func</span> <span class="o">==</span> <span class="p">(</span><span class="nl">leftSide:</span> <span class="n">UpcomingDisplayItem</span><span class="p">,</span> <span class="nl">rightSide:</span> <span class="n">UpcomingDisplayItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">var</span> <span class="n">hasEqualSections</span> <span class="o">=</span> <span class="n">false</span>
+</span><span class="line">    <span class="n">hasEqualSections</span> <span class="o">=</span> <span class="n">rightSide</span><span class="p">.</span><span class="n">title</span> <span class="o">==</span> <span class="n">leftSide</span><span class="p">.</span><span class="n">title</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="n">hasEqualSections</span> <span class="o">==</span> <span class="n">false</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">false</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">hasEqualSections</span> <span class="o">=</span> <span class="n">rightSide</span><span class="p">.</span><span class="n">dueDate</span> <span class="o">==</span> <span class="n">rightSide</span><span class="p">.</span><span class="n">dueDate</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">hasEqualSections</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>类型安全</h3>
+
+<p>也许 Objective-C 和 Swift 的最大区别是它们在对于类型处理上的不同。 Objective-C 是动态类型，而 Swift 故意在编译时做了严格的类型检查。对于一个类似 VIPER 的架构， 应用由不同层构成，类型安全是提升程序员效率和设计架构有非常大的好处。编译器帮助你确保正确类型的容器和对象在层的边界传递。如上所示，这是一个使用结构体的好地方。如果一个结构体的被设计为存在于两层之间，那么由于类型安全，你可以保证它将永远无法脱离这些层之间。</p>
+
+<h2>扩展阅读</h2>
+
+<ul>
+<li><a href="https://github.com/objcio/issue-13-viper">VIPER TODO, 文章示例</a></li>
+<li><a href="https://github.com/objcio/issue-13-viper-swift">VIPER SWIFT, 基于 Swift 的文章示例</a></li>
+<li><a href="https://github.com/mutualmobile/Counter">另一个计数器应用</a></li>
+<li><a href="http://mutualmobile.github.io/blog/2013/12/04/viper-introduction/">Mutual Mobile 关于 VIPER 的介绍</a></li>
+<li><a href="http://blog.8thlight.com/uncle-bob/2011/11/22/Clean-Architecture.html">简明架构</a></li>
+<li><a href="http://objccn.io/issue-1-1/">更轻量的 View Controllers</a></li>
+<li><a href="http://objccn.io/issue-1-3/">测试 View Controllers</a></li>
+<li><a href="http://inessential.com/2014/03/16/smaller_please">Bunnies</a></li>
+</ul>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[OC的子类]]></title>
@@ -5930,512 +6786,6 @@ dyld: loaded: /usr/lib/libauto.dylib
 <p>当你构建一个真正的程序时，将会链接各种各样的库。它们又会依赖其他一些 framework 和 动态库。需要加载的动态库会非常多。而对于相互依赖的符号就更多了。可能将会有上千个符号需要解析处理，这将花费很长的时间：一般是好几秒钟。</p>
 
 <p>为了缩短这个处理过程所花费时间，在 OS X 和 iOS 上的动态链接器使用了共享缓存，共享缓存存于 <code>/var/db/dyld/</code>。对于每一种架构，操作系统都有一个单独的文件，文件中包含了绝大多数的动态库，这些库都已经链接为一个文件，并且已经处理好了它们之间的符号关系。当加载一个 Mach-O 文件 (一个可执行文件或者一个库) 时，动态链接器首先会检查 <em>共享缓存</em> 看看是否存在其中，如果存在，那么就直接从共享缓存中拿出来使用。每一个进程都把这个共享缓存映射到了自己的地址空间中。这个方法大大优化了 OS X 和 iOS 上程序的启动时间。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Http,Tcp,IP协议]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/04/21/http/"/>
-    <updated>2014-04-21T10:25:35+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/04/21/http</id>
-    <content type="html"><![CDATA[<p>当 app 和服务器进行通信的时候，大多数情况下，都是采用 HTTP 协议。HTTP 最初是为 web 浏览器而定制的，如果在浏览器里输入 <a href="http://www.objc.io">http://www.objc.io</a> ，浏览器会通过 HTTP 协议和 www.objc.io 所对应的服务器进行通信。</p>
-
-<p>HTTP是运行在应用层上的应用协议，而不同的层级上都有相应的协议在运行。层级的堆栈关系一般可以这么描述：</p>
-
-<pre><code>Application Layer -- e.g. HTTP
-----
-Transport Layer -- e.g. TCP
-----
-Internet Layer -- e.g. IP
-----
-Link Layer -- e.g. IEEE 802.2
-</code></pre>
-
-<p>所谓的 <a href="https://en.wikipedia.org/wiki/OSI_model">OSI（Open Systems Interconnection，开放式系统互联）</a>模型定义了七层结构。本文会关注应用层 (application layer)、传输层 (transport layer) 和网络层 (internet layer)，它们分别代表了典型的 HTTP 的应用的 HTTP，TCP 以及 IP。在 IP 之下的是数据连接和物理层级，比如像 Ethernet 的实现之类的东西（Ethernet 拥有一个数据连接部分以及一个物理部分）。</p>
-
-<p>如上文所述，我们只关注应用层，传输层和互联网层的部分，更确切的说，着重探讨一种特殊的混合模式：基于 IP 的 TCP，以及基于 TCP 实现的 HTTP。这就是我们每天使用的 app 的基本网络配置。</p>
-
-<p>通过本文，希望大家能够对HTTP工作原理有一个细致的了解，知道一些常见的 HTTP 问题的产生原因，从而能在实践中尽量避免这些问题的发生。</p>
-
-<p>其实在互联网上传递数据的方式并不只 HTTP 一种。HTTP 之所以被广泛使用的原因是其非常稳定、易用，即便是防火墙一般也是允许 HTTP 协议穿透的。</p>
-
-<p>接下来我们从最低的一层谈起，说说 IP 网络协议。</p>
-
-<h2 id="ipipinternetproctocol">IP网络协议 (IP-Internet Proctocol)</h2>
-
-<p>TCP/IP 中的 IP 是<a href="https://en.wikipedia.org/wiki/Internet_Protocol">网络协议 (Internet Protocol)</a> 的缩写。从字面意思便知，它是互联网众多协议的基础。</p>
-
-<p>IP 实现了<a href="https://en.wikipedia.org/wiki/Packet_switching">分组交换网络</a>。在协议下，机器被叫做 <em>主机 (host)</em>，IP 协议明确了 host 之间的资料包（数据包）的传输方式。</p>
-
-<p>所谓数据包是指一段二进制数据，其中包含了发送源主机和目标主机的信息。IP 网络负责源主机与目标主机之间的数据包传输。IP 协议的特点是 <em>best effort</em>（尽力服务，其目标是提供有效服务并尽力传输）。这意味着，在传输过程中，数据包可能会丢失，也有可能被重复传送导致目标主机收到多个同样的数据包。</p>
-
-<p>IP 网络中的主机都配有自己的地址，被称为 <em>IP 地址</em>。每个数据包中都包含了源主机和目标主机的 IP 地址。IP 协议负责路径计算，即 IP 数据包在网络中的传输传输时，数据包所经过的每一个主机节点都会读取数据包中的目标主机地址信息，以便选择朝什么地方传送数据包。</p>
-
-<p>今天，绝大多数的数据包仍旧是 IPv4（Internet Protocol version 4 网际协议版本 4）的，每一个 IPv4 地址是长度为 32 位。常见采用 <a href="https://en.wikipedia.org/wiki/Dotted_decimal">dotted-decimal</a>（点分十进制）表示法，具体形式如：198.51.100.42。</p>
-
-<p>新的 IPv6 标准也正在逐渐推广中。它有更大的地址空间：长度为 128 位，这使得数据包在网络中传输时的寻址更容易一些。另外，由于有更多的地址可以分配，诸如<a href="https://en.wikipedia.org/wiki/Network_address_translation">网络地址转换</a>等问题也迎刃而解。IPv6 的表示形式为：八组十六进制数以冒号分割，比如：2001:0db8:85a3:0042:1000:8a2e:0370:7334。</p>
-
-<h2 id="iphearder">IP Hearder</h2>
-
-<p>一个 IP 数据包通常包含 header (报头信息) 和 payload (有效载荷)。</p>
-
-<p>payload 中的内容即是要传输的真正信息，而 header 承载的是与传输数据有关的元数据 (metadata)。</p>
-
-<h3 id="ipv4header">IPv4 Header</h3>
-
-<p>IPv4的 header 信息内容如下：</p>
-
-<pre><code>IPv4 Header Format
-Offsets  Octet    0                       1                       2                       3
-Octet    Bit      0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31|
- 0         0     |Version    |IHL        |DSCP            |ECN  |Total Length                                   |
- 4        32     |Identification                                |Flags   |Fragment Offset                       |
- 8        64     |Time To Live           |Protocol              |Header Checksum                                |
-12        96     |Source IP Address                                                                             |
-16       128     |Destination IP Address                                                                        |
-20       160     |Options (if IHL &gt; 5)                                                                          |
-</code></pre>
-
-<p>header 长度为 20 字节（不包含极少用到的可选项信息）。</p>
-
-<p>header 信息中最关键的是源和目标 IP 地址。除此之外，版本信息是 4，代表 IPv4。<em>protocol</em>（协议区）代表 payload 采用的传输协议。TCP 的协议号是 6。Total Length（总长度区）标明了 header 加 payload 整个数据包的大小。</p>
-
-<p>详情参看维基百科中关于 <a href="https://en.wikipedia.org/wiki/IPv4_header">IPv4 的条目</a>，里面有关于 header 各个区域信息的详细介绍。</p>
-
-<h3 id="ipv6header">IPv6 Header</h3>
-
-<p>IPv6 的地址长度为 128 位。IPv6 的 header 信息内容如下：</p>
-
-<pre><code>Offsets  Octet    0                       1                       2                       3
-Octet    Bit      0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31|
- 0         0     |Version    |Traffic Class         |Flow Label                                                 |
- 4        32     |Payload Length                                |Next Header            |Hop Limit              |
- 8        64     |Source Address                                                                                |
-12        96     |                                                                                              |
-16       128     |                                                                                              |
-20       160     |                                                                                              |
-24       192     |Destination Address                                                                           |
-28       224     |                                                                                              |
-32       256     |                                                                                              |
-36       288     |                                                                                              |
-</code></pre>
-
-<p>IPv6 header 采用固定长度 40 字节。经过多年来对 IPv4 使用的总结，如今 IPv6 的 header 信息简化了许多。</p>
-
-<p>除了源和目标地址这种必备信息外，IPv6 提供专门的 <em>next header</em> 区域来指明紧接 header 的数据是什么。也就是说，IPv6 允许在数据包中将 header 链接起来。每一个被链接的 IPv6 header 都会有一个 <em>next header</em> 字段，直到到达实际的 payload 数据。比如说，当 <em>next header</em> 的值为 6 (TCP 的协议号) 时，数据包的其他信息就是 TCP 协议要传输的数据。</p>
-
-<p>同样的，更多信息请参考维基百科上关于 <a href="https://en.wikipedia.org/wiki/IPv6_packet">IPv6 数据包的条目</a>。</p>
-
-<h2 id="fragmentation">Fragmentation (数据分片)</h2>
-
-<p>由于底部链路层对所传输的数据帧有最大长度限制（最大传输单元，MTU），所以有时候 IPv4 需要对所传数据包进行<a href="https://en.wikipedia.org/wiki/IP_fragmentation">分片</a>。具体表现为，如果数据包尺寸超过了所要经过的数据链路的最大传输限制，路由就会对数据包进行分片。当分片数据包到达目标主机后，可以根据分片信息进行数据重组。当然，数据发送源有权决定路由是否启用对传输数据包进行分片，假如所传输的数据超过了输送限制，又禁止了路由分片，发送源会收到 <a href="https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol">ICMP</a>(Internet Control Message Protocol，Internet报文控制协议) 的<em>数据帧超长</em>报告信息。</p>
-
-<p>在IPv6中，如果数据包超限制，路由会直接丢弃数据包并且向发送源回传 <a href="https://en.wikipedia.org/wiki/ICMPv6">ICMP6</a> 的<em>数据帧超长</em>报告信息。源和目标两端会基于这个特性来进行<a href="https://en.wikipedia.org/wiki/Path_MTU">路径 MTU 发现</a>，以此寻找两端之间<em>最大传输单元</em>（maximum transfer unit）所在的路由。找到 MTU 路由后，仅当上层数据包的最小 payload 确实超过了 MTU，IPv6 才会进行<a href="https://en.wikipedia.org/wiki/IPv6_packet#Fragmentation">分片</a>传输。对于 IPv6 下的 TCP 来说，这不会造成什么问题。</p>
-
-<h2 id="tcptrasnmissioncontrolprotocol">TCP - 传输控制协议 (Trasnmission Control Protocol)</h2>
-
-<p>TCP 层位于 IP 层之上，是最受欢迎的因特网通讯协议之一，人们通常用 TCP/IP 来泛指整个因特网协议族。</p>
-
-<p>刚刚提到，IP 协议允许两个主机之间传送单一数据包。为了保证对所传送数据包达到<em>尽力服务</em>的目的，最终的传输的结果可能是数据包乱序、重复甚至丢包。</p>
-
-<p>TCP 是基于 IP 层的协议。但是 TCP 是可靠的、有序的、有错误检查机制的基于字节流传输的协议。这样当两个设备上的应用通过 TCP 来传递数据的时候，总能够保证目标接收方收到的数据的顺序和内容与发送方所发出的是一致的。TCP 做的这些事看起来稀松平常，但是比起 IP 层的粗旷处理方式已经是有显著的进步了。</p>
-
-<p>应用程序之间可以通过 TCP 建立链接。TCP 建立的是双向连接，通信双方可以同时进行数据的传输。连接的双方都不需要操心数据是否分块，或者是否采用了<em>尽力服务</em>等。TCP 会确保所传输的数据的正确性，即接受方收到的数据与发出方的数据一致。</p>
-
-<p>HTTP 是典型的 TCP 应用。用户浏览器（应用 1）与 web 服务器（应用 2）建立连接后，浏览器可以通过连接发送服务请求，web 服务器可以通过同样的连接对请求做出响应。</p>
-
-<p>同一个 host 主机上可以有多个应用同时使用 TCP 协议。TCP 用不同的<em>端口</em>来区分应用。作为连接的两端，发送源和接收目标分别拥有自己的 IP 地址和端口号。凭借这样一对 IP 地址和端口号，就可以唯一标识一个连接。</p>
-
-<p>使用 HTTPS 的 web 服务器会<em>监听</em> 443 端口。浏览器作为发送源会启用一个临时端口结合自己的 IP 地址与目标服务器对应的端口和 IP 地址建立 TCP 连接。</p>
-
-<p>TCP 在 IPv4 和 IPv6 上是无差别运行的。所以，如果 IPv4 的 <em>Protocol</em> 或 IPv6 的 <em>Next Hearder</em>的协议号被设置成 6，表示执行 TCP 协议。</p>
-
-<h3 id="tcpsegmentstcp">TCP Segments (TCP 报文段)</h3>
-
-<p>主机之间传输的数据流一般先会被分块，再转化成 TCP 的报文段，最终会生成 IP 数据包中的 payload 载荷数据。</p>
-
-<p>每个 TCP 报文段都有 header 信息和对应的载荷 payload。payload 信息就是待传输的数据块。TCP 报文段的 header 信息中主要包含的是源和目标端口号，至于说源和目标的 IP 地址信息则已经包含在 IP header 信息中了。</p>
-
-<p>TCP 的报文段 header 信息中还有报文序列号、确认号等其他一些用于管理连接的信息。</p>
-
-<p>所谓序列号信息，其实就是为每个报文段分配的唯一编号。第一个报文段的序列号是随机的，比如：1721092979，其后的每一个报文段的序列号都以此号为基础依次加 1，1721092980，1721092981 等等。至于确认号，是目标端反馈给源的确认信息，通知源目前已经接到哪些报文段了。由于 TCP 是双向的，所以数据和确认信息发送也都是双向的。</p>
-
-<h3 id="tcp">TCP 连接</h3>
-
-<p>连接管理是 TCP 的核心功能之一，而且协议需要解决由于IP层采用不可靠传输引发的一系列复杂问题。下面会分别介绍TCP的连接建立、数据传输以及连接终止的详细过程。</p>
-
-<p>TCP 连接全过程的状态变化是很复杂的（参考 <a href="https://upload.wikimedia.org/wikipedia/commons/f/f6/Tcp_state_diagram_fixed_new.svg">TCP 状态图</a>）。但是大多数情况下还是比较简单的。</p>
-
-<h4>连接建立</h4>
-
-<p>TCP 连接都是建立在两个主机之间的。所以，每个连接建立过程中都存在两个角色：一端（例如 web 服务器）监听连接，另一端（例如应用）主动连接正在监听的一端（web 服务器）。服务器端的这种监听行为被称为 <em>passive open</em>（被动打开）。客户端主动连接服务器的行为被称为 <em>active open</em>（主动打开）。</p>
-
-<p>TCP 会通过三次握手来完成连接建立，具体过程是这样的：</p>
-
-<ol>
-<li>客户端首先向服务端发送一个 <strong>SYN</strong> 包和一个随机序列号 A  </li>
-<li>服务端收到后会回复客户端一个 <strong>SYN-ACK</strong> 包以及一个确认号（用于确认收到 SYN）A+1，同时再发送一个随机序列号 B  </li>
-<li>客户端收到后会发送一个 <strong>ACK</strong> 包以及确认号（用于确认收到 SYN-ACK）B+1 和序列号 A+1 给服务端</li>
-</ol>
-
-<p><strong>SYN</strong> 是 <em>synchronize sequence numbers</em> (同步序列号) 的缩写。两端在传递数据时，所传递的每个 TCP 报文段都有一个序列号。就是利用这种机制，TCP 可以确保分块传输的数据包最终都以正确的个数和顺序抵达目标端。在正式传输开始之前，源和目标端需要同步确认第一个报文的序列号。</p>
-
-<p><strong>ACK</strong> 是 <em>acknowledgment</em> (确认)的缩写。当某一端接到了报文包后，通过回传已报文序列号来确认接收到报文这件事。</p>
-
-<p>运行如下语句：</p>
-
-<pre><code>curl -4 http://www.apple.com/contact/
-</code></pre>
-
-<p>这是通过 <code>curl</code> 命令与 www.apple.com 的 80 端口创建一个 TCP 连接。</p>
-
-<p>www.apple.com 所在服务器 23.63.125.15（注意，整个 IP 不是固定的）会监听 80 端口。我们自己的 IP 地址是 <code>10.0.1.6</code>，启用的<em>临时端口</em> <code>52181</code>（这个端口是从可用端口中随机选择的）。利用 <code>tcpdump(1)</code> 输出的三次握手过程是这样的：</p>
-
-<pre><code>% sudo tcpdump -c 3 -i en3 -nS host 23.63.125.15
-18:31:29.140787 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [S], seq 1721092979, win 65535, options [mss 1460,nop,wscale 4,nop,nop,TS val 743929763 ecr 0,sackOK,eol], length 0
-18:31:29.150866 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [S.], seq 673593777, ack 1721092980, win 14480, options [mss 1460,sackOK,TS val 1433256622 ecr 743929763,nop,wscale 1], length 0
-18:31:29.150908 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [.], ack 673593778, win 8235, options [nop,nop,TS val 743929773 ecr 1433256622], length 0
-</code></pre>
-
-<p>这里信息量很大。下面要逐个分析一下。</p>
-
-<p>最左边是系统时间。当时执行命令的时间是晚上18:31。后面的 <code>IP</code> 代表的是这些都是 IP 协议数据包。</p>
-
-<p>接下来看这段 <code>10.0.1.6.52181 &gt; 23.63.125.15.80</code>，这一对是源和目标端的 IP 地址＋端口。第一行和第三行是客户端发向服务端的信息，第二行是服务端发向客户端的。<code>tcpdump</code> 会自动把端口号加到 IP 地址后头，比如 <code>10.0.1.6.52181</code> 表示 IP 地址为 10.0.1.6，端口号为 52181。</p>
-
-<p><code>Flags</code> 表示 TCP 报文段 header 信息中的一些缩写标识：<code>S</code> 代表 <strong>SYN</strong>，<code>.</code> 代表<strong>ACK</strong>，<code>P</code> 代表<strong>PUSH</strong>，<code>F</code> 是 <strong>FIN</strong>。还有一些其他的标识，这边就不罗列了。注意上面三行 Flags 中先是携带 <strong>SYN</strong> ，接着是 <strong>SYN-ACK</strong>，最后是 <strong>ACK</strong>，这就是三次握手确认的全过程。</p>
-
-<p>另外，第一行中客户端发送了一个随机序列号 1721092979 (就是上文所说的A)给服务器。第二行展示的是服务器回传给客户端的确认号 1721092980 (A+1) 和一个随机序列号 673593777 (B)。 最后在第三行，客户端将自己的确认号 673593778 (B+1) 发还给服务端。</p>
-
-<h4>其他选项</h4>
-
-<p>当然，在连接建立过程中还会配置一些其他的信息。比如第一行中客户端发送的内容：</p>
-
-<pre><code>[mss 1460,nop,wscale 4,nop,nop,TS val 743929763 ecr 0,sackOK,eol]
-</code></pre>
-
-<p>还有第二行服务端发送的：</p>
-
-<pre><code>[mss 1460,sackOK,TS val 1433256622 ecr 743929763,nop,wscale 1]
-</code></pre>
-
-<p>其中 <code>TS val</code> / <code>ecr</code> 是 TCP 用来创建 RTT 往返时间 (round-trip time) 的。<code>TS val</code> 是发送方的 <em>时间戳</em> (time stamp)，<code>ecr</code> 是<em>相应应答 (echo reply)</em> 时间戳，通常情况下就是发送方收到的最后时间戳。TCP 以 RTT 作为其拥塞控制算法 (congestion-control algorithms) 的依据。</p>
-
-<p>连接的两端都发送 <code>sackOK</code>。这样会启用<em>选择性确认 (Selective Acknowledgement)</em> 机制，使连接双方能够确认收到的字节范围。一般情况下，确认机制只是确认接受方已收到的数据的字节总数。<a href="http://tools.ietf.org/html/rfc2018#section-3">RFC  2018 第 3 部分</a>有对 SACK 的详细阐述。</p>
-
-<p><code>mss</code> 选项声明了<em>最大报文长度 (Maximum Segment Size)</em>，表示接收端希望接收的单个报文的最大长度（以字节为单位）。<code>wscale</code> 是 <em>窗口放大因子 (window scale factor)</em>，稍后会详细说明。</p>
-
-<h4>数据传输</h4>
-
-<p>一旦建立了连接，双方就可以互发数据了。发送端所发出的每个报文段都有一个序列号，这个序列号与当下已传送的字节总数有关。接收端会针对已接收的数据包向源端发送确认报文，确认信息同样是由报文 header 所携带的 <strong>ACK</strong>。</p>
-
-<p>假设现在传送的信息是除最后一个报文 5 字节外，其他都是 10 字节。具体是这样的：</p>
-
-<pre><code>host A sends segment with seq 10
-host A sends segment with seq 20
-host A sends segment with seq 30    host B sends segment with ack 10
-host A sends segment with seq 35    host B sends segment with ack 20
-                                    host B sends segment with ack 30
-                                    host B sends segment with ack 35
-</code></pre>
-
-<p>整个机制是双向运转的。A 主机会持续的发送数据包。B 收到数据包后会向 A 发送确认信息。A 发送数据包的过程不需要等待 B 的确认。</p>
-
-<p>TCP 将流量控制和其他一系列复杂机制结合起来进行拥塞控制。需要处理以下问题：针对丢失的报文采用重发机制，同时还需要动态的调整发送报文的频率。</p>
-
-<p>流量控制的原则是发送方发送数据的速度不能比接收方处理数据的速度快。接收方，也就是所谓的 <em>接收窗口 (receive window)</em> 会告知发送方自身接收窗口数据缓冲区的大小。从上面 <code>tcpdump</code> 的输出来看，窗口大小是 <code>win 65535</code>，<code>wscale</code>（窗口放大因子）是 4。这些数字的意思是说，<code>10.0.1.6</code> 主机的接收窗口大小是 4＊64 kB = 256 kB，<code>23.63.125.15</code> 主机的 <code>win</code> 是 14480，wscale 是 1，接收窗口约为 14KB。总之，不管哪一方作为数据接收方，都会向对方通报自己的接收窗口大小。</p>
-
-<p>拥塞控制要更复杂一些。所有拥塞控制的目标都是要计算出当前网络中数据传输的最佳速率。所谓最佳速率就是要达到一种微妙的平衡。一方面，是希望速度越快越好，另一方面，速度快意味着数据传输多，这样处理性能会大打折扣甚至导致崩溃。而这种<a href="https://en.wikipedia.org/wiki/Congestive_collapse#Congestive_collapse">超负荷崩溃</a>是分组交换网络的固有特点。当负载过大，数据包之间会产生拥塞，直接导致丢包率急速上升。</p>
-
-<p>拥塞控制还需要充分考虑对流量的影响。<a href="https://www.rfc-editor.org/rfc/rfc5681.txt">RFC 5681</a> 中对 TCP 拥塞控制有 6,000 字左右的阐述。发送方要时刻关注来自接收方的确认信息。要做到这点并不简单，有的时候还需要一定的妥协。要知道底部 IP 协议数据包是无序传输的，数据包会丢失也会重复。发送方需要评估 RTT 往返时间，然后基于 RTT 去确定是否收到了接收方的确认信息。重发数据包也有很大代价，除了连接延迟问题，网络的负载也会发生明显的波动。导致 TCP 需要不停的去适应当前网络情况。</p>
-
-<p>更重要的是，TCP 连接本身是易变的。除了数据传输，连接的两端还会不时的发送一些提醒和确认信息以便可以适当的调整状态来维持连接。</p>
-
-<p>基于这种一直在相互协调中的连接关系，TCP 连接往往会是短暂而低效的。在建立连接的初期，TCP 协议算法还不能完全了解当前网络状况。而在连接将要结束的时候，反馈给发送方的信息又可能不充分，这样就很难对连接状况做出实时的合理的评估。</p>
-
-<p>之前展示了客户端和服务端之间交换的三段报文。再看看关于连接的其他信息：</p>
-
-<pre><code>18:31:29.150955 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [P.], seq 1721092980:1721093065, ack 673593778, win 8235, options [nop,nop,TS val 743929773 ecr 1433256622], length 85
-18:31:29.161213 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], ack 1721093065, win 7240, options [nop,nop,TS val 1433256633 ecr 743929773], length 0
-</code></pre>
-
-<p>客户端 <code>10.0.1.6</code> 发送的第一段报文长度是 85 bytes (HTTP 请求)。由于在上一个报文发送后没有收到来自服务端的信息，所以 ACK 确认号的值不变。</p>
-
-<p>服务端 <code>23.63.125.15</code> 只是对接收客户端的数据进行确认回复，没有向客户端发送数据，所以 <code>length</code> 为 0。由于当前连接是采用<em>选择性确认 (Selective acknowledgments)</em>，所以序列号和确认号是之间的字节长度是从 1721092980 到 1721093065，也就是 85 bytes。接收方发送的 ACK 确认号是 1721093065，这代表目前已接收的数据确认累计到 1721093065 字节了。至于说为什么数字会如此之大，这要说到初次握手时发出的随机数，数字的范围和那个初始数字是相关的。</p>
-
-<p>这种模式会一直持续到全部数据传送完成：</p>
-
-<pre><code>18:31:29.189335 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], seq 673593778:673595226, ack 1721093065, win 7240, options [nop,nop,TS val 1433256660 ecr 743929773], length 1448
-18:31:29.190280 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], seq 673595226:673596674, ack 1721093065, win 7240, options [nop,nop,TS val 1433256660 ecr 743929773], length 1448
-18:31:29.190350 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [.], ack 673596674, win 8101, options [nop,nop,TS val 743929811 ecr 1433256660], length 0
-18:31:29.190597 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], seq 673596674:673598122, ack 1721093065, win 7240, options [nop,nop,TS val 1433256660 ecr 743929773], length 1448
-18:31:29.190601 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], seq 673598122:673599570, ack 1721093065, win 7240, options [nop,nop,TS val 1433256660 ecr 743929773], length 1448
-18:31:29.190614 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], seq 673599570:673601018, ack 1721093065, win 7240, options [nop,nop,TS val 1433256660 ecr 743929773], length 1448
-18:31:29.190616 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], seq 673601018:673602466, ack 1721093065, win 7240, options [nop,nop,TS val 1433256660 ecr 743929773], length 1448
-18:31:29.190617 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], seq 673602466:673603914, ack 1721093065, win 7240, options [nop,nop,TS val 1433256660 ecr 743929773], length 1448
-18:31:29.190619 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], seq 673603914:673605362, ack 1721093065, win 7240, options [nop,nop,TS val 1433256660 ecr 743929773], length 1448
-18:31:29.190621 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], seq 673605362:673606810, ack 1721093065, win 7240, options [nop,nop,TS val 1433256660 ecr 743929773], length 1448
-18:31:29.190679 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [.], ack 673599570, win 8011, options [nop,nop,TS val 743929812 ecr 1433256660], length 0
-18:31:29.190683 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [.], ack 673602466, win 7830, options [nop,nop,TS val 743929812 ecr 1433256660], length 0
-18:31:29.190688 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [.], ack 673605362, win 7830, options [nop,nop,TS val 743929812 ecr 1433256660], length 0
-18:31:29.190703 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [.], ack 673605362, win 8192, options [nop,nop,TS val 743929812 ecr 1433256660], length 0
-18:31:29.190743 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [.], ack 673606810, win 8192, options [nop,nop,TS val 743929812 ecr 1433256660], length 0
-18:31:29.190870 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [.], seq 673606810:673608258, ack 1721093065, win 7240, options [nop,nop,TS val 1433256660 ecr 743929773], length 1448
-18:31:29.198582 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [P.], seq 673608258:673608401, ack 1721093065, win 7240, options [nop,nop,TS val 1433256670 ecr 743929811], length 143
-18:31:29.198672 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [.], ack 673608401, win 8183, options [nop,nop,TS val 743929819 ecr 1433256660], length 
-</code></pre>
-
-<h4>终止连接</h4>
-
-<p>最终连接会终止（或结束）。连接的每一端都会发送 <strong>FIN</strong> 标识给另一端来声明结束传输，接着另一端会对收到 <strong>FIN</strong> 进行确认。当连接两端均发送完各自 <strong>FIN</strong> 和做出相应的确认后，连接将会彻底关闭：</p>
-
-<pre><code>18:31:29.199029 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [F.], seq 1721093065, ack 673608401, win 8192, options [nop,nop,TS val 743929819 ecr 1433256660], length 0
-18:31:29.208416 IP 23.63.125.15.80 &gt; 10.0.1.6.52181: Flags [F.], seq 673608401, ack 1721093066, win 7240, options [nop,nop,TS val 1433256680 ecr 743929819], length 0
-18:31:29.208493 IP 10.0.1.6.52181 &gt; 23.63.125.15.80: Flags [.], ack 673608402, win 8192, options [nop,nop,TS val 743929828 ecr 1433256680], length 0
-</code></pre>
-
-<p>这里值得注意的是第二行，<code>23.63.125.15</code> 发送了 <strong>FIN</strong>，同时在这个报文信息中还对第一行中另一端发送的 <strong>FIN</strong> 予以 <strong>ACK</strong>（以.代表）确认。</p>
-
-<h2 id="httphypertexttransferprotocol">HTTP — 超文本传输协议 (Hypertext Transfer Protocol)</h2>
-
-<p>1989 年，Tim Berners Lee 在 <a href="https://en.wikipedia.org/wiki/CERN">CERN</a>(European Organization for Nuclear Research 欧洲原子核研究委员会) 担任软件咨询师的时候，开发了一套程序，奠定了<a href="https://en.wikipedia.org/wiki/World_Wide_Web">万维网</a>的基础。<em>HyperText Transfer Protocol</em>（超文本转移协议，即HTTP）是用于从 WWW 服务器传输超文本到本地浏览器的传送协议。<a href="https://tools.ietf.org/html/rfc2616">RFC 2616</a> 定义了今天普遍使用的一个版本：HTTP 1.1。</p>
-
-<h3>请求与响应</h3>
-
-<p>HTTP 采用简单的请求和响应机制。在 Safari 输入 <a href="http://www.apple.com">http://www.apple.com</a> 时，会向 <code>www.appple.com</code> 所在的服务器发送一个 HTTP 请求。服务器会对请求做出一个响应，将请求结果信息返回给 Safari。</p>
-
-<p>每一个请求都有一个对应的响应信息。请求和响应遵从同样的格式。第一行是请求行或者响应状态行。接下来是 header 信息，header 信息之后会有一个空行。空行之后是 body 请求信息体。</p>
-
-<h3>一个简单请求</h3>
-
-<p>当 <a href="https://en.wikipedia.org/wiki/Safari_%28web_browser%29">Safari</a> 加载 HTML 页面 <a href="http://www.objc.io/about.html">http://www.objc.io/about.html</a> 的时候，先是发送 HTTP 请求到 <code>www.objc.io</code>，请求的内容是：</p>
-
-<pre><code>GET /about.html HTTP/1.1
-Host: www.objc.io
-Accept-Encoding: gzip, deflate
-Connection: keep-alive
-If-None-Match: "a54907f38b306fe3ae4f32c003ddd507"
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
-If-Modified-Since: Mon, 10 Feb 2014 18:08:48 GMT
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.74.9 (KHTML, like Gecko) Version/7.0.2 Safari/537.74.9
-Referer: http://www.objc.io/
-DNT: 1
-Accept-Language: en-us
-</code></pre>
-
-<p>第一行是<strong>请求行</strong>。它包含三部分信息：动作，资源信息，还有 HTTP 的版本。</p>
-
-<p>本例中，动作是 GET。所谓动作也就是常说的 HTTP <a href="https://en.wikipedia.org/wiki/HTTP_method#Request_methods">请求方法</a>。资源信息表明所请求的资源。例子中的资源信息是 <code>/about.html</code>，这表示我们想 get 服务器的在 <code>/about.html</code> 位置中的文档。当前 HTTP 版本是 <code>HTTP/1.1</code>。</p>
-
-<p>接下来 10 行是 HTTP header 信息。跟着是一行空行。例子中的请求没有 body 信息。</p>
-
-<p>header 的作用是向服务器传递一些额外的辅助信息，它的内容比较宽泛。维基百科中有<a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields">常用 HTTP header 关键字</a>信息的清单。例子中的 header 信息 <code>Host: www.objc.io</code> 表示告诉服务器，本次请求的服务器名称是什么。这样可以让同一个服务器处理针对多个<a href="https://en.wikipedia.org/wiki/Domain_names">域名</a>的请求。</p>
-
-<p>下面是一些常见的header信息:</p>
-
-<pre><code>Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
-Accept-Language: en-us
-</code></pre>
-
-<p>服务器可能具备返回多种媒体类型的能力，Accept 表示 Safari 希望接收的媒体格式类型。<code>text/html</code> 是<a href="https://en.wikipedia.org/wiki/Mime_type">互联网媒体类型</a>(Internet media types)，也被称为 MIME 类型或者是内容类型 (Content-types)。<code>q=0.9</code> 表示 Safari 对给定媒体类型的优先级要求。<code>Accept-Language</code> 代表 Safari 希望接收的自然语言清单。这会要求服务器尽可能的根据清单要求去匹配相应的语言。</p>
-
-<pre><code>Accept-Encoding: gzip, deflate
-</code></pre>
-
-<p>通过这个header，Safari 告诉服务器可以对响应 body 做压缩处理。如果 header 信息中没有设置压缩标识，那么服务器就必须返回没有压缩过的信息。压缩可以大大减少数据的传输量，在文本信息 (比如 HTML) 中尤为明显。</p>
-
-<pre><code>If-Modified-Since: Mon, 10 Feb 2014 18:08:48 GMT
-If-None-Match: "a54907f38b306fe3ae4f32c003ddd507"
-</code></pre>
-
-<p>这两行信息表明 Safari 已经对请求结果做过缓存。如果服务器上的待请求内容在 2 月 10 号以后发生过变化或者是 ETag 与 <code>a54907f38b306fe3ae4f32c003ddd507</code> 不匹配，这就表示请求结果与当前缓存信息不一致，需要服务器返回最新的请求结果。</p>
-
-<p><code>User-Agent</code> 是告知服务器当前发送请求的客户端类型。</p>
-
-<h3>一个简单响应</h3>
-
-<p>作为上面请求的响应，服务器的返回是：</p>
-
-<pre><code>HTTP/1.1 304 Not Modified
-Connection: keep-alive
-Date: Mon, 03 Mar 2014 21:09:45 GMT
-Cache-Control: max-age=3600
-ETag: "a54907f38b306fe3ae4f32c003ddd507"
-Last-Modified: Mon, 10 Feb 2014 18:08:48 GMT
-Age: 6
-X-Cache: Hit from cloudfront
-Via: 1.1 eb67cb25620df959ba21a943fbc49ef6.cloudfront.net (CloudFront)
-X-Amz-Cf-Id: dDSBgR86EKBemW6el-pBI9kAnuYJEaPQYEqGmBnilD12CbixCuZYVQ==
-</code></pre>
-
-<p>第一行是<em>状态行</em>。它包括 HTTP 版本，<a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes">状态码</a> (304) 和状态信息。</p>
-
-<p>HTTP 定义了<a href="https://en.wikipedia.org/wiki/Http_status_codes">一系列状态码</a>，它们各有用途。本例中的 <strong>304</strong> 表示所请求的信息自上次访问以来没有变化。</p>
-
-<p>响应中没有包含 body 信息。也就是说服务器通知客户端：你的版本已经是最新了，可以直接使用当前缓存信息。</p>
-
-<h3>关闭缓存</h3>
-
-<p>用 <code>curl</code> 发送一个请求：</p>
-
-<pre><code>% curl http://www.apple.com/hotnews/ &gt; /dev/null
-</code></pre>
-
-<p><code>curl</code> 没有使用本地缓存。整个请求会是这样的：</p>
-
-<pre><code>GET /hotnews/ HTTP/1.1
-User-Agent: curl/7.30.0
-Host: www.apple.com
-Accept: */*
-</code></pre>
-
-<p>这个请求与之前 Safari 发的请求很类似。但是 <code>curl</code> 请求的 header 信息中没有 <code>If-None-Match</code>，所以服务器必须将请求结果返回。</p>
-
-<p>此处 <code>curl</code> 头信息中声明的 <code>Accept: */*</code> 表示可以接收任何媒体类型。</p>
-
-<p>来自 www.apple.com 的响应：</p>
-
-<pre><code>HTTP/1.1 200 OK
-Server: Apache
-Content-Type: text/html; charset=UTF-8
-Cache-Control: max-age=424
-Expires: Mon, 03 Mar 2014 21:57:55 GMT
-Date: Mon, 03 Mar 2014 21:50:51 GMT
-Content-Length: 12342
-Connection: keep-alive
-
-&lt;!DOCTYPE html&gt;
-&lt;html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US"&gt;
-&lt;head&gt;
-    &lt;meta charset="utf-8" /&gt;
-</code></pre>
-
-<p>后面还会有一些，现在收到的响应里 body 中包含了 HTML 文档信息。</p>
-
-<p>Apple 服务器响应的<a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes">状态码</a>是 <em>200</em>，这是标准的表示 HTTP 请求成功的状态码。</p>
-
-<p>服务器同时还告知响应媒体类型是 <code>text/html</code>；字符集 <code>charset=UTF-8</code>；内容长度 <code>Content-Length：12342</code>，代表了 body 信息的大小。</p>
-
-<h2 id="httpshttp">HTTPS - 安全的 HTTP</h2>
-
-<p><a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">Transport Layer Security</a> (安全传输层协议，TLS) 是一种基于 TCP 的加密协议。它支持两件事：传输的两端可以互相验证对方的身份，以及加密所传输的数据。基于 TLS 的 HTTP 请求就是 HTTPS。</p>
-
-<p>用 HTTPS 去替代 HTTP，在安全方面会有显著的提升。也许你还会采用一些其他的安全措施，总之这都会为安全通信提供保障。</p>
-
-<h3 id="tls12">TLS 1.2</h3>
-
-<p>如果服务器支持的话，你应该将 <code>TLSMinimumSupportedProtocol</code> 设置为 <code>kTLSProtocol12</code>，以要求使用 <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_1.2">TLS 1.2</a> 版本。这能有效的防御<a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">中间人攻击</a>。</p>
-
-<h3 id="certificatepinning">证书锁定 (Certificate Pinning)</h3>
-
-<p>如果不确定数据接收方的身份，那么即便对所传输数据进行加密也没什么意义。服务器的证书可以表明服务器的身份，只允许和持有某个特定证书的一方建立连接，就就是<a href="https://en.wikipedia.org/wiki/Certificate_pinning#Certificate_pinning">证书锁定</a>。</p>
-
-<p>如果一个客户端通过 TLS 和服务器建立连接，操作系统会验证服务器证书的有效性。当然，有很多手段可以绕开这个校验，最直接的是在 iOS 设备上安装证书并且将其设置为可信的。这种情况下，实施<a href="https://en.wikipedia.org/wiki/Man-in-the-middle_attack">中间人攻击</a>也不是什么难事。</p>
-
-<p>可以使用证书锁定来规避这种风险（或者说是将风险降到最低）。当建立 TLS 连接后，应立即检查服务器的证书，不仅要验证证书的有效性，还需要确定证书和其持有者是否匹配。考虑到应用和服务器需要同时升级证书的要求，这种方式比较适合应用在访问自家服务器的情况下。</p>
-
-<p>为了实现证书锁定，在建立连接的过程中需要对服务器进行信任检查 (<em>server trust</em>)。每当通过 <code>NSURLSession</code> 创建了连接，<code>NSURLSession</code> 的代理就会收到一个 <code>-URLSession:didReceiveChallenge:completionHandler:</code> 的调用。传递的参数 <code>NSURLAuthenticationChallenge</code> 有一个属性 <code>protectionSpace</code>，它是 <code>NSURLProtectionSpace</code> 的实例，它有一个 <code>serverTrust</code> 属性。</p>
-
-<p><code>serverTrust</code> 是一个 <code>SecTrustRef</code> 对象。<code>Security</code> 框架提供了很多方法用于验证 <code>SecTrustRef</code>。AFNetworking 项目中的 <a href="https://github.com/AFNetworking/AFNetworking/blob/7f2c395ba185b586468557b22977ccd2b79fae66/AFNetworking/AFSecurityPolicy.m"><code>AFSecurityPolicy</code></a> 就是一个不错的使用。一如既往的提醒大家，如果要自己构建安全验证相关的代码，请一定要认真做好代码审查，千万不要再出现诸如 <a href="https://www.imperialviolet.org/2014/02/22/applebug.html"><code>goto fail;</code></a> 这类 bug。</p>
-
-<h2>综合讨论</h2>
-
-<p>现在大家对 IP，TCP 和 HTTP 的工作原理有了一定的了解了。下面说说还可以做些什么以及一些相关注意事项。</p>
-
-<h3>有效地使用连接</h3>
-
-<p>TCP 连接容易在两个时点出现问题：初始设置，以及通过连接传输的最后一部分报文。</p>
-
-<h4>建立连接</h4>
-
-<p>连接设置可能会非常耗时。正如前文所说，TCP 建立连接的过程中需要进行三次握手。这个过程中本身没有太多的数据需要传递。但是，对于移动网络来说，从手机端向服务器端发送一个数据包普遍需要 250ms，也就是四分之一秒。推及到三次握手，也就是说在还没有传送任何数据之前，光建立连接就要花费 750ms。</p>
-
-<p>HTTPS 的情况更夸张，由于 HTTPS 是基于 TLS 的 HTTP，而 HTTP 又基于 TCP。TCP 连接就要执行三次握手，然后到了 TLS 层还会再握手三次。估算一下，建立一个 HTTPS 连接的耗时至少是创建一个 HTTP 连接的两倍。如果 RTT 时间是 500ms（假设单程 250ms），HTTPS 建立连接累计总耗时将达1.5秒。</p>
-
-<p>不管建立连接后是要传递多少数据，建立连接本身都太过耗时了。</p>
-
-<p>另一个影响 TCP 连接的因素是传送大规模数据。如果要在网络情况未知的条件下传送报文，TCP 需要侦测当前网络的能力。换句话说，TCP 得花费一定的时间去计算此网络的最佳传输速率。上文提到过，TCP 需要逐步调整以便找到最佳速度。这种算法被称为 <a href="https://en.wikipedia.org/wiki/Slow-start">慢启动 (slow-start)</a>。还有一点值得注意，慢启动策略在那些数据链路层传输质量较差的网络环境中的表现更差，无线网络就是典型的例子。</p>
-
-<h4>结束连接</h4>
-
-<p>另一个问题主要存在于数据传输的最后阶段。每当客户端发起 HTTP 请求某些资源的时候，服务器会持续的向客户端主机发送 TCP 报文数据，客户端收到数据后会给服务器反馈 <strong>ACK</strong> 确认信息。假如某个报文在传输过程中发生丢包，那么服务器也就不会收到该包的确认 ACK。一旦服务器发现有数据包没有 ACK 反馈，就会触发<a href="https://en.wikipedia.org/wiki/Fast_retransmit">快速重传 (fast retransmit)</a>。</p>
-
-<p>每当某个数据包丢失，数据接收方在收到下个数据包后发出的确认 <strong>ACK</strong> 与所接收的前一个数据包的确认 <strong>ACK</strong> 相同。那么数据发送方自然就会收到重复的 ACK。除了报文丢失，还有很多种网络状况会导致重复 ACK 的问题。一般情况下，如果数据发送方连续收到 3 个重复的 ACK 就会立即进行快速重发。</p>
-
-<p>这所导致的问题将发生在数据传输的收尾阶段。如果发送方完成数据发送，接受方自然会停止发送 ACK 确认。在最后四个报文传输的过程中，快速重发算法是没有办法处理这四个报文的数据包的丢失问题的（因为不会收到三个相同的确认 ACK，所以不能界定传输丢包）。在常规网络环境下，四个数据包相当于 5.7kB 的数据规模。总之，在这最后 5.7kB 的传输的过程中，快速重发机制是无效的。针对这种情况，TCP 会启用其他机制来侦测丢包问题。对于这种情况，重传操作可能要消耗几秒钟去执行，这并不奇怪。</p>
-
-<h4>长连接和管线化</h4>
-
-<p>HTTP 有两种策略来解决这些问题。最简单的是 <a href="https://en.wikipedia.org/wiki/HTTP_persistent_connection">HTTP 持久连接 (persistent connection)</a>，也被称为<em>长连接</em> (keep-alive)。具体就是，每当 HTTP 完成一组请求－响应处理后，还会继续复用相同的 TCP 连接。而 HTTPS 会复用同样的 TLS 连接：</p>
-
-<pre><code>open connection
-client sends HTTP request 1 -&gt;
-                            &lt;- server sends HTTP response 1
-client sends HTTP request 2 -&gt;
-                            &lt;- server sends HTTP response 2
-client sends HTTP request 3 -&gt;
-                            &lt;- server sends HTTP response 3
-close connection
-</code></pre>
-
-<p>第二步就利用了 <a href="https://en.wikipedia.org/wiki/Http_pipelining">HTTP 管线 (pipelining)</a> 处理，即允许客户端利用同样的连接并行发送多个请求，也就是说无需等待上一个请求的响应完成可以发下一个请求。这表示能同时处理请求和响应，请求处理的顺序采用<a href="https://en.wikipedia.org/wiki/FIFO">先进先出</a>原则，响应结果会按照请求发出的顺序依次返还给客户端。</p>
-
-<p>稍微简化一下，看起来会是这样：</p>
-
-<pre><code>open connection
-client sends HTTP request 1 -&gt;
-client sends HTTP request 2 -&gt;
-client sends HTTP request 3 -&gt;
-client sends HTTP request 4 -&gt;
-                            &lt;- server sends HTTP response 1
-                            &lt;- server sends HTTP response 2
-                            &lt;- server sends HTTP response 3
-                            &lt;- server sends HTTP response 4
-close connection
-</code></pre>
-
-<p>注意，服务器发出的响应是实时的，不会等到接收完全部请求才处理。</p>
-
-<p>可以利用这个特点来提升 TCP 的效率。只需要在建立连接初始阶段执行握手，而后一直复用同样的连接，这样 TCP 就可以最大限度的利用带宽。此种情况下，拥塞控制也会随之提升。因为快速重发机制无法处理的最末四个报文丢失情况只会发生在使用本连接的最后一个请求－响应中，而不是像之前那样每一个请求－响应都需要建立自己的连接，每个连接中都可能出现最后四个报文丢失的问题。</p>
-
-<p>HTTP 管线化对高网络延迟连接的通讯性能提升尤为显著，在你的 iPhone 没有通过 Wi-Fi 访问网络的时候，此类网络连接就属于高延迟范畴。实际上，有<a href="http://research.microsoft.com/pubs/170059/A%20comparison%20of%20SPDY%20and%20HTTP%20performance.pdf">调查</a>显示，在移动网络环境下，<a href="https://en.wikipedia.org/wiki/SPDY">SPDY</a> 的通讯性能并不优于 HTTP 管线。</p>
-
-<p><a href="https://tools.ietf.org/html/rfc2616">RFC 2616</a> 指明，在与同一个服务器通讯的时候，如果启用了 HTTP 管线，建议启用两个连接。按照说明所述，这样能获得最优响应效率，能最大限度避免拥塞。增加更多的连接也不会再对性能有什么明显改善。</p>
-
-<p>遗憾的是，还是有相当多的服务器不支持管线化。由于这个原因，HTTP 管线在 <code>NSURLSession</code> 中默认是关闭的。如果想要启用 HTTP 管线，需要将 <code>NSURLSessionConfiguration</code> 中的 <code>HTTPShouldUsePipelining</code> 设置为 <code>YES</code>。另外，建议服务器最好还是支持管线化。</p>
-
-<h3>超时处理</h3>
-
-<p>我们都有在网络不太好的情况下使用 app 的经历。很多 app 大概 15 秒左右就会结束请求并且反馈一个超时信息。这种设计其实是很不友好的。应该给用户一个他们可以理解的友好提示，诸如“你好，现在网络状况不太好，您需要多等一会儿。”。但是即便网络状况不好，只要连接还在，TCP 都会保证将请求发出去并且会一直等待响应的返回，只是时间长短的问题。</p>
-
-<p>从另一个角度来说：在较慢的网络中，请求－响应的RTT时间可能会有 17 秒。如果 15 秒就决定中止请求，就算用户有足够的耐心，他们也没机会等到想要的操作结果。反过来，如果我们给出用户相应的提示信息，而他们又刚好愿意多等一会，用户可能会更喜欢使用这样的应用。</p>
-
-<p>一直以来都有一种误解，用重发请求来解决上面的问题。注意，这不是问题的关键，因为 TCP 有自己的重发机制。</p>
-
-<p>正确的处理方式应该是：每当发起一个请求的时候，同时启动一个 10 秒计时器。如果请求在 10 秒之内返回，就把计时器停掉。如果超过 10 秒，可以给用户一个提示“网络不好，请稍后。”，我建议再给用户一个取消按钮，让他们可以自行选择等待还是取消请求，当然提示信息的具体内容和是否配备取消按钮，这个可以视乎各 app 的情况去决定。总而言之，开发者最好不要直接替用户做决定，比如直接中止他们的请求。</p>
-
-<p>只要连接双方的 IP 地址是不变的、可用的，连接就一定会是“活跃”的。如果把 iPhone 从 Wi-Fi 连接切换到 3G 网络，这样连接就会变得不可用，因为手机的 IP 地址发生了变化，基于原 IP 地址创建的路由自然是失效的。</p>
-
-<h3>缓存</h3>
-
-<p>看看第一个例子中发送的这段 header 信息：</p>
-
-<pre><code>If-None-Match: "a54907f38b306fe3ae4f32c003ddd507"
-</code></pre>
-
-<p>这表示客户端本地已经针对所请求的资源做过缓存了，如果服务器上的资源有过更新，需要将最新的资源返回给客户端，否则不需要返回。如果自己构建客户端和服务器的数据通信，建议充分利用这个机制。这种机制叫做 <a href="https://en.wikipedia.org/wiki/HTTP_ETag">HTTP ETag</a>，如果使用得当，会对通讯的速度有明显的优化。</p>
-
-<p>记住“最快的请求是不发请求”。举个极端的例子，拿一个请求来说，哪怕你有最好的网络，请求的数据量极小，有超快的服务器，你也不大可能在 50ms 内拿到请求的响应。这还只是一个请求。想想吧，如果有可能在本地创建相同的数据，而且耗时小于 50ms，那就不要发这样的请求。</p>
-
-<p>针对已请求的资源，只要服务器上对应的资源具备在一定时间内不发生变化特性，建议在本地缓存起来。注意检查 header 中缓存过期的相关属性，也可以直接利用 <code>NSURLSession</code> 中的 <code>NSURLRequestUseProtocolCachePolicy</code> 策略。</p>
-
-<h2>总结</h2>
-
-<p>利用 <code>NSURLSession</code> 发 HTTP 请求是非常简单便捷的。但是请求背后有很多技术点做支撑。只有知晓和理解其中的细节和内涵才能更好的去优化 HTTP 请求。用户期望的是我们的 app 时时刻刻都是好用的。只有深刻理解 IP，TCP 和 HTTP 的工作原理才能更好的去满足用户的期望。</p>
 
 <hr />
 <p class="post-footer">

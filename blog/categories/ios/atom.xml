@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-06-18T09:32:29+08:00</updated>
+  <updated>2014-06-20T10:34:39+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,626 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[使用VIPER构建iOS应用]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/"/>
+    <updated>2014-06-20T09:00:36+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong</id>
+    <content type="html"><![CDATA[<p>建筑领域流行这样一句话，“我们虽然在营造建筑，但建筑也会重新塑造我们”。正如所有开发者最终领悟到的，这句话同样适用于构建软件。</p>
+
+<p>编写代码中至关重要的是，需要使每一部分容易被识别，赋有一个特定而明显的目的，并与其他部分在逻辑关系中完美契合。这就是我们所说的软件架构。好的架构不仅让一个产品成功投入使用，还可以让产品具有可维护性，并让人不断头脑清醒的对它进行维护！</p>
+
+<p>在这篇文章中，我们介绍了一种称之为 <a href="http://mutualmobile.github.io/blog/2013/12/04/viper-introduction/">VIPER</a> 的 iOS 应用架构的方式。VIPER 已经在很多大型的项目上成功实践，但是出于本文的目的我们将通过一个待办事项清单 (to-do app) 来介绍 VIPER 。你可以在 <a href="https://github.com/objcio/issue-13-viper">GitHub</a> 上关注这个项目。</p>
+
+<p><video style="display:block;max-width:316px;height:auto;border:0;" poster="/issue-13/2014-06-07-viper-screenshot.png" controls="1"> <br />
+  <source src="http://img.objccn.io//issue-13/2014-06-07-viper-preview.mp4" />
+</video></p>
+
+<h2 id="viper">什么是 VIPER？</h2>
+
+<p>测试永远不是构建 iOS 应用的主要部分。当我们 (<a href="https://github.com/mutualmobile/">Mutual Mobile</a>) 着手改善我们的测试实践时，我们发现给 iOS 应用写测试代码非常困难。因此如果想要设法改变测试的现状，我们首先需要一个更好的方式来架构应用，我们称之为 VIPER。</p>
+
+<p>VIPER 是一个创建 iOS 应用<a href="http://blog.8thlight.com/uncle-bob/2012/08/13/the-clean-architecture.html">简明构架</a>的程序。VIPER 可以是视图 (View)，交互器 (Interactor)，展示器 (Presenter)，实体 (Entity) 以及路由 (Routing) 的首字母缩写。简明架构将一个应用程序的逻辑结构划分为不同的责任层。这使得它更容易隔离依赖项 (如数据库)，也更容易测试各层间的边界处的交互：</p>
+
+<p><img alt="VIPER stands for View Interactor Presenter Entity Routing." src="http://img.objccn.io/issue-13/2014-06-07-viper-intro.jpg" /></p>
+
+<p>大部分 iOS 应用利用 MVC 构建，使用 MVC 应用程序架构可以引导你将每一个类看做模型，视图或控制器中的一个。但由于大部分应用程序的逻辑不会存在于模型或视图中，所以通常最终总是在控制器里实现。这就导致一个称为<a href="https://twitter.com/Colin_Campbell/status/293167951132098560">重量级视图控制器</a>的问题，在这里，视图控制器做了太多工作。为这些重量级视图控制器<a href="http://www.objc.io/issue-1/lighter-view-controllers.html">瘦身</a>并不是 iOS 开发者寻求提高代码的质量所要面临的唯一挑战，但至少这是一个很好的开端。</p>
+
+<p>VIPER 的不同层提供了明确的程序逻辑以及导航控制代码来应对这个挑战，利用 VIPER ，你会注意到在我们的待办事项示例清单中的视图控制器可以简洁高效，意义明确地控制视图。你也会发现视图控制器中代码和所有的其他类很容易理解，容易测试，理所当然也更易维护。</p>
+
+<h2>基于用例的应用设计</h2>
+
+<p>应用通常是一些用户用例的集合。用例也被称为验收标准，或行为集，它们用来描述应用的用途。清单可以根据时间，类型以及名字排序，这就是一个用例。用例是应用程序中用来负责业务逻辑的一层，应独立于用户界面的实现，同时要足够小，并且有良好的定义。决定如何将一个复杂的应用分解成较小的用例非常具有挑战性，并且需要长期实践，但这对于缩小你解决的问题时所要面临的范围及完成的每个类的所要涉及的内容来说，是很有帮助的。</p>
+
+<p>利用 VIPER 建立一个应用需要实施一组套件来满足所有的用例，应用逻辑是实现用例的主要组成部分，但却不是唯一。用例也会影响用户界面。另一个重要的方面，是要考虑用例如何与其他应用程序的核心组件相互配合，例如网络和数据持久化。组件就好比用例的插件，VIPER 则用来描述这些组件的作用是什么，如何进行交互。</p>
+
+<p>我们其中一个用例，或者说待办事项清单中其中的一个需求是可以基于用户的选择来将待办事项分组。通过分离的逻辑将数据组织成一个用例，我们能够在测试时使用户界面代码保持干净，用例更易组装，从而确保它如我们预期的方式工作。</p>
+
+<h2 id="viper">VIPER 的主要部分</h2>
+
+<p>VIPER 的主要部分是：</p>
+
+<ul>
+<li>视图：根据展示器的要求显示界面，并将用户输入反馈给展示器。</li>
+<li>交互器：包含由用例指定的业务逻辑。</li>
+<li>展示器：包含为显示（从交互器接受的内容）做的准备工作的相关视图逻辑，并对用户输入进行反馈（从交互器获取新数据）。</li>
+<li>实体：包含交互器要使用的基本模型对象。</li>
+<li>路由：包含用来描述屏幕显示和显示顺序的导航逻辑。</li>
+</ul>
+
+<p>这种分隔形式同样遵循<a href="http://www.objectmentor.com/resources/articles/srp.pdf">单一责任原则</a>。交互器负责业务分析的部分，展示器代表交互设计师，而视图相当于视觉设计师。</p>
+
+<p>以下则是不同组件的相关图解，并展示了他们之间是如何关联的：</p>
+
+<p><img alt="VIPER breaks down an app into different components based around use cases, including components that create the user interface and the logic that powers it." src="http://img.objccn.io/issue-13/2014-06-07-viper-wireframe.png" /></p>
+
+<p>虽然在应用中 VIPER 的组件可以以任意顺序实现，我们在这里选择按照我们推荐的顺序来进行介绍。你会注意到这个顺序与构建整个应用的进程大致符合 -- 首先要讨论的是产品需要做什么，以及用户会如何与之交互。</p>
+
+<h3>交互器</h3>
+
+<p>交互器在应用中代表着一个独立的用例。它具有业务逻辑以操纵模型对象（实体）执行特定的任务。交互器中的工作应当独立与任何用户界面，同样的交互器可以同时运用于 iOS 应用或者 OS X 应用中。</p>
+
+<p>由于交互器是一个 PONSO (Plain Old <code>NSObject</code>，普通的 <code>NSObject</code>)，它主要包含了逻辑，因此很容易使用 TDD 进行开发。</p>
+
+<p>示例应用的主要用例是向用户展示所有的待办事项（比如任何截止于下周末的任务）。此类用例的业务逻辑主要是找出今天至下周末之间将要到期的待办事项，然后为它们分配一个相对的截止日期，比如今天，明天，本周以内，或者下周。</p>
+
+<p>以下是来自 VTDListInteractor 的对应方法：</p>
+
+<p><code>objc
+- (void)findUpcomingItems
+{
+    __weak typeof(self) welf = self;
+    NSDate* today = [self.clock today];
+    NSDate* endOfNextWeek = [[NSCalendar currentCalendar] dateForEndOfFollowingWeekWithDate:today];
+    [self.dataManager todoItemsBetweenStartDate:today endDate:endOfNextWeek completionBlock:^(NSArray* todoItems) {
+        [welf.output foundUpcomingItems:[welf upcomingItemsFromToDoItems:todoItems]];
+    }];
+}
+</code></p>
+
+<h3>实体</h3>
+
+<p>实体是被交互器操作的模型对象，并且它们只被交互器所操作。交互器永远不会传输实体至表现层 (比如说展示器)。</p>
+
+<p>实体也应该是 PONSOs。如果你使用 Core Data，最好是将托管对象保持在你的数据层之后，交互器不应与 NSManageObjects 协同工作。</p>
+
+<p>这里是我们的待办事项服务的实体：</p>
+
+<p>```objc
+@interface VTDTodoItem : NSObject</p>
+
+<p>@property (nonatomic, strong)   NSDate*     dueDate;
+@property (nonatomic, copy)     NSString*   name;</p>
+
+<ul>
+  <li>(instancetype)todoItemWithDueDate:(NSDate<em>)dueDate name:(NSString</em>)name;</li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>不要诧异于你的实体仅仅是数据结构，任何依赖于应用的逻辑都应该放到交互器中。</p>
+
+<h3>展示器</h3>
+
+<p>展示器是一个主要包含了驱动用户界面的逻辑的 PONSO，它总是知道何时呈现用户界面。基于其收集来自用户交互的输入功能，它可以在合适的时候更新用户界面并向交互器发送请求。</p>
+
+<p>当用户点击 “+” 键新建待办事项时，<code>addNewEntry</code> 被调用。对于此项操作，展示器会要求 <code>wireframe</code> 显示用户界面以增加新项目：</p>
+
+<p><code>objc
+- (void)addNewEntry
+{
+    [self.listWireframe presentAddInterface];
+}
+</code></p>
+
+<p>展示器还会从交互器接收结果并将结果转换成能够在视图中有效显示的形式。</p>
+
+<p>下面是如何从交互器接受待办事项的过程，其中包含了处理数据的过程并决定展现给用户哪些内容：</p>
+
+<p><code>objc
+- (void)foundUpcomingItems:(NSArray*)upcomingItems
+{
+    if ([upcomingItems count] == 0)
+    {
+        [self.userInterface showNoContentMessage];
+    }
+    else
+    {
+        [self updateUserInterfaceWithUpcomingItems:upcomingItems];
+    }
+}
+</code></p>
+
+<p>实体永远不会由交互器传输给展示器，取而代之，那些无行为的简单数据结构会从交互器传输到展示器那里。这就防止了那些“真正的工作”在展示器那里进行，展示器只能负责准备那些在视图里显示的数据。</p>
+
+<h3>视图</h3>
+
+<p>视图一般是被动的，它通常等待展示器下发需要显示的内容，而不会向其索取数据。视图（例如登录界面的登录视图控件）所定义的方法应该允许展示器在高度抽象的层次与之交流。展示器通过内容进行表达，而不关心那些内容所显示的样子。展示器不知道 <code>UILabel</code>，<code>UIButton</code> 等的存在，它只知道其中包含的内容以及何时需要显示。内容如何被显示是由视图来进行控制的。</p>
+
+<p>视图是一个抽象的接口 (Interface)，在 Objective-C 中使用协议被定义。一个 <code>UIViewController</code> 或者它的一个子类会实现视图协议。比如我们的示例中 “添加” 界面会有以下接口：</p>
+
+<p>```objc
+@protocol VTDAddViewInterface <nsobject /></p>
+
+<ul>
+  <li>(void)setEntryName:(NSString *)name;</li>
+  <li>(void)setEntryDueDate:(NSDate *)date;</li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>视图和视图控制器同样会操纵用户界面和相关输入。因为通常来说视图控制器是最容易处理这些输入和执行某些操作的地方，所以也就不难理解为什么视图控制器总是这么大了。为了使视图控制器保持苗条，我们需要使它们在用户进行相关操作的时候可以有途径来通知相关部分。视图控制器不应当根据这些行为进行相关决定，但是它应当将发生的事件传递到能够做决定的部分。</p>
+
+<p>在我们的例子中，Add View Controller 有一个事件处理的属性，它实现了如下接口：</p>
+
+<p>```objc
+@protocol VTDAddModuleInterface <nsobject /></p>
+
+<ul>
+  <li>(void)cancelAddAction;</li>
+  <li>(void)saveAddActionWithName:(NSString *)name dueDate:(NSDate *)dueDate</li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>当用户点击取消键的时候，视图控制器告知这个事件处理程序用户需要其取消这次添加的动作。这样一来，事件处理程序便可以处理关闭 add view controller 并告知列表视图进行更新。</p>
+
+<p>视图和展示器之间边界处是一个使用 <a href="https://github.com/ReactiveCocoa/ReactiveCocoa">ReactiveCocoa</a> 的好地方。在这个示例中，视图控制器可以返回一个代表按钮操作的信号。这将允许展示器在不打破职责分离的前提下轻松地对那些信号进行响应。</p>
+
+<h3>路由</h3>
+
+<p>屏幕间的路径会在交互设计师创建的线框 (wireframes) 里进行定义。在 VIPER 中，路由是由两个部分来负责的：展示器和线框。一个线框对象包括 <code>UIWindow</code>，<code>UINavigationController</code>，<code>UIViewController</code> 等部分，它负责创建视图/视图控制器并将其装配到窗口中。</p>
+
+<p>由于展示器包含了响应用户输入的逻辑，因此它就拥有知晓何时导航至另一个屏幕以及具体是哪一个屏幕的能力。而同时，线框知道如何进行导航。在两者结合起来的情况下，展示器可以使用线框来进行实现导航功能，它们两者一起描述了从一个屏幕至另一个屏幕的路由过程。</p>
+
+<p>线框同时也明显是一个处理导航转场动画的地方。来看看这个 add wireframe 中的例子吧：</p>
+
+<p>```objc
+@implementation VTDAddWireframe</p>
+
+<ul>
+  <li>
+    <p>(void)presentAddInterfaceFromViewController:(UIViewController *)viewController 
+{
+  VTDAddViewController *addViewController = [self addViewController];
+  addViewController.eventHandler = self.addPresenter;
+  addViewController.modalPresentationStyle = UIModalPresentationCustom;
+  addViewController.transitioningDelegate = self;</p>
+
+    <p>[viewController presentViewController:addViewController animated:YES completion:nil];</p>
+
+    <p>self.presentedViewController = viewController;
+}</p>
+  </li>
+</ul>
+
+<h1 id="pragma-mark---uiviewcontrollertransitioningdelegate-methods">pragma mark - UIViewControllerTransitioningDelegate Methods</h1>
+
+<ul>
+  <li>
+    <p>(id<uiviewcontrolleranimatedtransitioning>)animationControllerForDismissedController:(UIViewController *)dismissed 
+{
+  return [[VTDAddDismissalTransition alloc] init];
+}</uiviewcontrolleranimatedtransitioning></p>
+  </li>
+  <li>
+    <p>(id<uiviewcontrolleranimatedtransitioning>)animationControllerForPresentedController:(UIViewController *)presented
+                                                                presentingController:(UIViewController *)presenting
+                                                                    sourceController:(UIViewController *)source 
+{
+  return [[VTDAddPresentationTransition alloc] init];
+}</uiviewcontrolleranimatedtransitioning></p>
+  </li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>应用使用了自定义的视图控制器转场来呈现 add view controller。因为线框部件负责实施这个转场，所以它成为了 add view controller 转场的委托，并且返回适当的转场动画。</p>
+
+<h2 id="viper">利用 VIPER 组织应用组件</h2>
+
+<p>iOS 应用的构架需要考虑到 UIKit 和 Cocoa Touch 是建立应用的主要工具。架构需要和应用的所有组件都能够和平相处，但又需要为如何使用框架的某些部分以及它们应该在什么位置提供一些指导和建议。</p>
+
+<p>iOS 应用程序的主力是 <code>UIViewController</code>，我们不难想象找一个竞争者来取代 MVC 就可以避免大量使用视图控制器。但是视图控制器现在是这个平台的核心：它们处理设备方向的变化，回应用户的输入，和类似导航控制器之类的系统系统组件集成得很好，而现在在 iOS 7 中又能实现自定义屏幕之间的转换，功能实在是太强大了。</p>
+
+<p>有了 VIPER，视图控制器便就能真正的做它本来应该做的事情了，那就是控制视图。 我们的待办事项应拥有两个视图控制器，一个是列表视图，另一个是新建待办。因为 add view controller 要做的所有事情就是控制视图，所以实现起来非常的简单基础：</p>
+
+<p>```objc
+@implementation VTDAddViewController</p>
+
+<ul>
+  <li>
+    <p>(void)viewDidAppear:(BOOL)animated 
+{
+  [super viewDidAppear:animated];</p>
+
+    <p>UITapGestureRecognizer *gestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                                                      action:@selector(dismiss)];
+  [self.transitioningBackgroundView addGestureRecognizer:gestureRecognizer];
+  self.transitioningBackgroundView.userInteractionEnabled = YES;
+}</p>
+  </li>
+  <li>
+    <p>(void)dismiss 
+{
+  [self.eventHandler cancelAddAction];
+}</p>
+  </li>
+  <li>
+    <p>(void)setEntryName:(NSString *)name 
+{
+  self.nameTextField.text = name;
+}</p>
+  </li>
+  <li>
+    <p>(void)setEntryDueDate:(NSDate *)date 
+{
+  [self.datePicker setDate:date];
+}</p>
+  </li>
+  <li>
+    <p>(IBAction)save:(id)sender 
+{
+  [self.eventHandler saveAddActionWithName:self.nameTextField.text
+                                   dueDate:self.datePicker.date];
+}</p>
+  </li>
+  <li>
+    <p>(IBAction)cancel:(id)sender 
+{
+  [self.eventHandler cancelAddAction];
+}</p>
+  </li>
+</ul>
+
+<h1 id="pragma-mark---uitextfielddelegate-methods">pragma mark - UITextFieldDelegate Methods</h1>
+
+<ul>
+  <li>
+    <p>(BOOL)textFieldShouldReturn:(UITextField *)textField 
+{
+  [textField resignFirstResponder];</p>
+
+    <p>return YES;
+}</p>
+  </li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>应用在接入网络以后会变得更有用处，但是究竟该在什么时候联网呢？又由谁来负责启动网络连接呢？典型的情况下，由交互器来启动网络连接操作的项目，但是它不会直接处理网络代码。它会寻找一个像是 network manager 或者 API client 这样的依赖项。交互器可能聚合来自多个源的数据来提供所需的信息，从而完成一个用例。最终，就由展示器来采集交互器反馈的数据，然后组织并进行展示。</p>
+
+<p>数据存储模块负责提供实体给交互器。因为交互器要完成业务逻辑，因此它需要从数据存储中获取实体并操纵它们，然后将更新后的实体再放回数据存储中。数据存储管理实体的持久化，而实体应该对数据库全然不知，正因如此，实体并不知道如何对自己进行持久化。</p>
+
+<p>交互器同样不需要知道如何将实体持久化，有时交互器更希望使用一个 data manager 来使其与数据存储的交互变得容易。Data manager 可以处理更多的针对存储的操作，比如创建获取请求，构建查询等等。这就使交互器能够将更多的注意力放在应用逻辑上，而不必再了解实体是如何被聚集或持久化的。下面我们举一个例子来说明使用 data manager 有意义的，这个例子假设你在使用 Core Data。这是示例应用程序的 data manager 的接口：</p>
+
+<p>```objc
+@interface VTDListDataManager : NSObject</p>
+
+<p>@property (nonatomic, strong) VTDCoreDataStore *dataStore;</p>
+
+<ul>
+  <li>(void)todoItemsBetweenStartDate:(NSDate *)startDate endDate:(NSDate *)endDate completionBlock:(void (^)(NSArray *todoItems))completionBlock;</li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>当使用 TDD 来开发一个交互器时，是可以用一个测试用的模拟存储来代替生产环境的数据存储的。避免与远程服务器通讯（网络服务）以及避免读取磁盘（数据库）可以加快你测试的速度并加强其可重复性。</p>
+
+<p>将数据存储保持为一个界限清晰的特定层的原因之一是，这可以让你延迟选择一个特定的持久化技术。如果你的数据存储是一个独立的类，那你就可以使用一个基础的持久化策略来开始你的应用，然后等到有意义的时候升级至 SQLite 或者 Core Data。而因为数据存储层的存在，你的应用代码库中就不需要改变任何东西。</p>
+
+<p>在 iOS 的项目中使用 Core Data 经常比构架本身还容易引起更多争议。然而，利用 VIPER 来使用 Core Data 将给你带来使用 Core Data 的前所未有的良好体验。在持久化数据的工具层面上，Core Data 可以保持快速存取和低内存占用方面，简直是个神器。但是有个很恼人的地方，它会像触须一样把 <code>NSManagedObjectContext</code>  延伸至你所有的应用实现文件中，特别是那些它们不该待的地方。VIPER 可以使 Core Data 待在正确的地方：数据存储层。</p>
+
+<p>在待办事项示例中，应用仅有的两部分知道使用了 Core Data，其一是数据存储本身，它负责建立 Core Data 堆栈；另一个是 data manager。Data manager 执行了获取请求，将数据存储返回的 NSManagedObject 对象转换为标准的 PONSO 模型对象，并传输回业务逻辑层。这样一来，应用程序核心将不再依赖于 Core Data，附加得到的好处是，你也再也不用担心过期数据 (stale) 和没有良好组织的多线程 NSManagedObjects 来糟蹋你的工作成果了。</p>
+
+<p>在通过请求访问 Core Data 存储时，data manager 中看起来是这样的：</p>
+
+<p>```objc
+@implementation VTDListDataManager</p>
+
+<ul>
+  <li>
+    <p>(void)todoItemsBetweenStartDate:(NSDate <em>)startDate endDate:(NSDate</em>)endDate completionBlock:(void (^)(NSArray *todoItems))completionBlock
+{
+  NSCalendar *calendar = [NSCalendar autoupdatingCurrentCalendar];</p>
+
+    <p>NSPredicate *predicate = [NSPredicate predicateWithFormat:@”(date &gt;= %@) AND (date &lt;= %@)”, [calendar dateForBeginningOfDay:startDate], [calendar dateForEndOfDay:endDate]];
+  NSArray *sortDescriptors = @[];</p>
+
+    <p>__weak typeof(self) welf = self;
+  [self.dataStore
+   fetchEntriesWithPredicate:predicate
+   sortDescriptors:sortDescriptors
+   completionBlock:^(NSArray* entries) {
+       if (completionBlock)
+       {
+           completionBlock([welf todoItemsFromDataStoreEntries:entries]);
+       }
+   }];
+}</p>
+  </li>
+  <li>
+    <p>(NSArray*)todoItemsFromDataStoreEntries:(NSArray *)entries
+{
+  return [entries arrayFromObjectsCollectedWithBlock:^id(VTDManagedTodoItem *todo) {
+      return [VTDTodoItem todoItemWithDueDate:todo.date name:todo.name];
+  }];
+}</p>
+  </li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>与 Core Data 一样极富争议的恐怕就是 UI 故事板了。故事板具有很多有用的功能，如果完全忽视它将会是一个错误。然而，调用故事版所能提供的所有功能来完成 VIPER 的所有目标仍然是很困难的。</p>
+
+<p>我们所能做出的妥协就是选择不使用 segues 。有时候使用 segues 是有效的，但是使用 segues 的危险性在于它们很难原封不动地保持屏幕之间的分离，以及 UI 和应用逻辑之间的分离。一般来说，如果实现 prepareForSegue 方法是必须的话，我们就尽量不去使用 segues。</p>
+
+<p>除此之外，故事板是一个实现用户界面布局有效方法，特别是在使用自动布局的时候。我们选择在实现待办事项两个界面的实例中使用故事板，并且使用这样的代码来执行自己的导航操作。</p>
+
+<p>```objc
+static NSString *ListViewControllerIdentifier = @”VTDListViewController”;</p>
+
+<p>@implementation VTDListWireframe</p>
+
+<ul>
+  <li>
+    <p>(void)presentListInterfaceFromWindow:(UIWindow *)window 
+{
+  VTDListViewController *listViewController = [self listViewControllerFromStoryboard];
+  listViewController.eventHandler = self.listPresenter;
+  self.listPresenter.userInterface = listViewController;
+  self.listViewController = listViewController;</p>
+
+    <p>[self.rootWireframe showRootViewController:listViewController
+                                    inWindow:window];
+}</p>
+  </li>
+  <li>
+    <p>(VTDListViewController *)listViewControllerFromStoryboard 
+{
+  UIStoryboard *storyboard = [self mainStoryboard];
+  VTDListViewController *viewController = [storyboard instantiateViewControllerWithIdentifier:ListViewControllerIdentifier];
+  return viewController;
+}</p>
+  </li>
+  <li>
+    <p>(UIStoryboard *)mainStoryboard 
+{
+  UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@”Main”
+                                                       bundle:[NSBundle mainBundle]];
+  return storyboard;
+}</p>
+  </li>
+</ul>
+
+<p>@end
+```</p>
+
+<h2 id="viper">使用 VIPER 构建模块</h2>
+
+<p>一般在使用 VIPER 的时候，你会发现一个屏幕或一组屏幕倾向于聚在一起作为一个模块。模块可以以多种形式体现，但一般最好把它想成是一种特性。在播客应用中，一个模块可能是音频播放器或订阅浏览器。然而在我们的待办事项应用中，列表和添加事项的屏幕都将作为单独的模块被建立。</p>
+
+<p>将你的应用作为一组模块来设计有很多好处，其中之一就是模块可以有非常明确和定义良好的接口，并且独立于其他的模块。这就使增加或者移除特性变得更加简单，也使在界面中向用户展示各种可变模块变得更加简单。</p>
+
+<p>我们希望能将待办事项中各模块之间分隔更加明确，我们为添加模块定义了两个协议。一个是模块接口，它定义了模块可以做什么；另一个则是模块的代理，用来描述该模块做了什么。例如：</p>
+
+<p>```objc
+@protocol VTDAddModuleInterface <nsobject /></p>
+
+<ul>
+  <li>(void)cancelAddAction;</li>
+  <li>(void)saveAddActionWithName:(NSString *)name dueDate:(NSDate *)dueDate;</li>
+</ul>
+
+<p>@end</p>
+
+<p>@protocol VTDAddModuleDelegate <nsobject /></p>
+
+<ul>
+  <li>(void)addModuleDidCancelAddAction;</li>
+  <li>(void)addModuleDidSaveAddAction;</li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>因为模块必须要被展示，才能对用户产生价值，所以模块的展示器通常需要实现模型的接口。当另一个模型想要展现当前模块时，它的展示器就需要实现模型的委托协议，这样它就能在展示时知道当前模块做了些什么。</p>
+
+<p>一个模块可能包括实体，交互器和管理器的通用应用逻辑层，这些通常可用于多个屏幕。当然，这取决于这些屏幕之间的交互及它们的相似度。一个模块可以像在待办事项列表里面一样，简单的只代表一个屏幕。这样一来，应用逻辑层对于它的特定模块的行为来说就非常特有了。</p>
+
+<p>模块同样是组织代码的简便途径。将模块所有的编码都放在它自己的文件夹中并在 Xcode 中建一个 group，这会在你需要寻找和改变更加容易。当你在要寻找一个类时，它恰到好处地就在你所期待的地方，这种感觉真是无法形容的棒。</p>
+
+<p>利用 VIPER 建立模块的另一个好处是它使得扩展到多平台时变得更加简单。独立在交互器层中的所有用例的应用逻辑允许你可以专注于为平板，电话或者 Mac 构建新的用户界面，同时可以重用你的应用层。</p>
+
+<p>进一步来说，iPad 应用的用户界面能够将部分 iPhone 应用的视图，视图控制器及展示器进行再利用。在这种情况下，iPad 屏幕将由 ‘super’ 展示器和线框来代表，这样可以利用 iPhone 使用过的展示器和线框来组成屏幕。建立进而维护一个跨多平台的应用是一个巨大的挑战，但是好的构架可以对整个模型和应用层的再利用有大幅度的提升，并使其实现起来更加容易。</p>
+
+<h2 id="viper">利用 VIPER 进行测试</h2>
+
+<p>VIPER 的出现激发了一个关注点的分离，这使得采用 TDD 变得更加简便。交互器包含独立与任何 UI 的纯粹逻辑，这使测试驱动开发更加简单。同时展示器包含用来为显示准备数据的逻辑，并且它也独立于任何一个 UIKit 部件。对于这个逻辑的开发也很容易用测试来驱动。</p>
+
+<p>我们更倾向于先从交互器下手。用户界面里所有部分都服务于用例，而通过采用 TDD 来测试驱动交互器的 API 可以让你对用户界面和用例之间的关系有一个更好的了解。</p>
+
+<p>作为实例，我们来看一下负责待办事项列表的交互器。寻找待办事项的策略是要找出所有的将在下周末前截止的项目，并将这些项目分别归类至截止于今天，明天，本周或者下周。</p>
+
+<p>我们编写的第一个测试是为了保证交互器能够找到所有的截止于下周末的待办事项：</p>
+
+<p><code>objc
+- (void)testFindingUpcomingItemsRequestsAllToDoItemsFromTodayThroughEndOfNextWeek
+{
+    [[self.dataManager expect] todoItemsBetweenStartDate:self.today endDate:self.endOfNextWeek completionBlock:OCMOCK_ANY];
+    [self.interactor findUpcomingItems];
+}
+</code></p>
+
+<p>一旦知道了交互器找到了正确的待办事项后，我们就需要编写几个小测试用来确认它确实将待办事项分配到了正确的相对日期组内（比如说今天，明天，等等）。</p>
+
+<p>```objc
+- (void)testFindingUpcomingItemsWithOneItemDueTodayReturnsOneUpcomingItemsForToday
+{
+    NSArray *todoItems = @[[VTDTodoItem todoItemWithDueDate:self.today name:@”Item 1”]];
+    [self dataStoreWillReturnToDoItems:todoItems];</p>
+
+<pre><code>NSArray *upcomingItems = @[[VTDUpcomingItem upcomingItemWithDateRelation:VTDNearTermDateRelationToday dueDate:self.today title:@"Item 1"]];
+[self expectUpcomingItems:upcomingItems];
+
+[self.interactor findUpcomingItems]; } ```
+</code></pre>
+
+<p>既然我们已经知道了交互器的 API 长什么样，接下来就是开发展示器。一旦展示器接收到了交互器传来的待办事项，我们就需要测试看看我们是否适当的将数据进行格式化并且在用户界面中正确的显示它。</p>
+
+<p>```objc
+- (void)testFoundZeroUpcomingItemsDisplaysNoContentMessage
+{
+    [[self.ui expect] showNoContentMessage];</p>
+
+<pre><code>[self.presenter foundUpcomingItems:@[]]; }
+</code></pre>
+
+<ul>
+  <li>
+    <p>(void)testFoundUpcomingItemForTodayDisplaysUpcomingDataWithNoDay
+{
+  VTDUpcomingDisplayData *displayData = [self displayDataWithSectionName:@”Today”
+                                                        sectionImageName:@”check”
+                                                               itemTitle:@”Get a haircut”
+                                                              itemDueDay:@””];
+  [[self.ui expect] showUpcomingDisplayData:displayData];</p>
+
+    <p>NSCalendar *calendar = [NSCalendar gregorianCalendar];
+  NSDate *dueDate = [calendar dateWithYear:2014 month:5 day:29];
+  VTDUpcomingItem *haircut = [VTDUpcomingItem upcomingItemWithDateRelation:VTDNearTermDateRelationToday dueDate:dueDate title:@”Get a haircut”];</p>
+
+    <p>[self.presenter foundUpcomingItems:@[haircut]];
+}</p>
+  </li>
+  <li>
+    <p>(void)testFoundUpcomingItemForTomorrowDisplaysUpcomingDataWithDay
+{
+  VTDUpcomingDisplayData *displayData = [self displayDataWithSectionName:@”Tomorrow”
+                                                        sectionImageName:@”alarm”
+                                                               itemTitle:@”Buy groceries”
+                                                              itemDueDay:@”Thursday”];
+  [[self.ui expect] showUpcomingDisplayData:displayData];</p>
+
+    <p>NSCalendar *calendar = [NSCalendar gregorianCalendar];
+  NSDate *dueDate = [calendar dateWithYear:2014 month:5 day:29];
+  VTDUpcomingItem *groceries = [VTDUpcomingItem upcomingItemWithDateRelation:VTDNearTermDateRelationTomorrow dueDate:dueDate title:@”Buy groceries”];</p>
+
+    <p>[self.presenter foundUpcomingItems:@[groceries]];
+}
+```</p>
+  </li>
+</ul>
+
+<p>同样需要测试的是应用是否在用户想要新建待办事项时正确启动了相应操作：</p>
+
+<p>```objc
+- (void)testAddNewToDoItemActionPresentsAddToDoUI
+{
+    [[self.wireframe expect] presentAddInterface];</p>
+
+<pre><code>[self.presenter addNewEntry]; } ```
+</code></pre>
+
+<p>这时我们可以开发视图功能了，并且在没有待办事项的时候我们想要展示一个特殊的信息。</p>
+
+<p>```objc
+- (void)testShowingNoContentMessageShowsNoContentView
+{
+    [self.view showNoContentMessage];</p>
+
+<pre><code>XCTAssertEqualObjects(self.view.view, self.view.noContentView, @"the no content view should be the view"); } ```
+</code></pre>
+
+<p>有待办事项出现时，我们要确保列表是显示出来的：</p>
+
+<p>```objc
+- (void)testShowingUpcomingItemsShowsTableView
+{
+    [self.view showUpcomingDisplayData:nil];</p>
+
+<pre><code>XCTAssertEqualObjects(self.view.view, self.view.tableView, @"the table view should be the view"); } ```
+</code></pre>
+
+<p>首先建立交互器是一种符合 TDD 的自然规律。如果你首先开发交互器，紧接着是展示器，你就可以首先建立一个位于这些层的套件测试，并且为实现这是实例奠定基础。由于你不需要为了测试它们而去与用户界面进行交互，所以这些类可以进行快速迭代。在你需要开发视图的时候，你会有一个可以工作并测试过的逻辑和表现层来与其进行连接。在快要完成对视图的开发时，你会发现第一次运行程序时所有部件都运行良好，因为你所有已通过的测试已经告诉你它可以工作。</p>
+
+<h2>结论</h2>
+
+<p>我们希望你喜欢这篇对 VIPER 的介绍。或许你们都很好奇接下来应该做什么，如果你希望通过 VIPER 来对你下一个应用进行设计，该从哪里开始呢？</p>
+
+<p>我们竭尽全力使这篇文章和我们利用 VIPER 实现的应用实例足够明确并且进行了很好的定义。我们的待办事项里列表程序相当直接简单，但是它准确地解释了如何利用 VIPER 来建立一个应用。在实际的项目中，你可以根据你自己的挑战和约束条件来决定要如何实践这个例子。根据以往的经验，我们的每个项目在使用 VIPER 时都或多或少地改变了一些策略，但它们无一例外的都从中得益，找到了正确的方向。</p>
+
+<p>很多情况下由于某些原因，你可能会想要偏离 VIPER 所指引的道路。可能你遇到了很多 <a href="http://inessential.com/2014/03/16/smaller_please">'bunny'</a> 对象，或者你的应用使用了故事板的 segues。没关系的，在这些情况下，你只需要在做决定时稍微考虑下 VIPER 所代表的精神就好。VIPER 的核心在于它是建立在<a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">单一责任原则</a>上的架构。如果你碰到了些许麻烦，想想这些原则再考虑如何前进。</p>
+
+<p>你一定想知道在现有的应用中能否只用 VIPER 。在这种情况下，你可以考虑使用 VIPER 构建新的特性。我们许多现有项目都使用了这个方法。你可以利用 VIPER 建立一个模块，这能帮助你发现许多建立在单一责任原则基础上造成难以运用架构的现有问题。</p>
+
+<p>软件开发最伟大的事情之一就是每个应用程序都是不同的，而设计每个应用的架构的方式也是不同的。这就意味着每个应用对于我们来说都是一个学习和尝试的机遇，如果你决定开始使用 VIPER，你会受益匪浅。感谢你的阅读。</p>
+
+<h2 id="swifit">Swifit 补充</h2>
+
+<p>苹果上周在 WWDC 介绍了一门称之为 <a href="https://developer.apple.com/swift/">Swift</a> 的编程语言来作为 Cocoa 和 Cocoa Touch 开发的未来。现在发表关于 Swift 的完整意见还为时尚早，但众所周知编程语言对我们如何设计和构建应用有着重大影响。我们决定使用 <a href="https://github.com/objcio/issue-13-viper-swift">Swift 重写我们的待办事项清单</a>，帮助我们学习它对 VIPER 意味着什么。至今为止，收获颇丰。Swift 中的一些特性对于构建应用的体验有着显著的提升。</p>
+
+<h3>结构体</h3>
+
+<p>在 VIPER 中我们使用小型，轻量级的 model 类来在比如从展示器到视图这样不同的层间传递数据。这些 PONSOs 通常是只是简单地带有少量数据，并且通常这些类不会被继承。Swift 的结构体非常适合这个情况。下面的结构体的例子来自 VIPER Swift。这个结构体需要被判断是否相等，所以我们重载了 == 操作符来比较这个类型的两个实例。</p>
+
+<p>```objc
+struct UpcomingDisplayItem : Equatable, Printable {
+    let title : String = “”
+    let dueDate : String = “”</p>
+
+<pre><code>var description : String { get {
+    return "\(title) -- \(dueDate)"
+}}
+
+init(title: String, dueDate: String) {
+    self.title = title
+    self.dueDate = dueDate
+} }
+</code></pre>
+
+<p>func == (leftSide: UpcomingDisplayItem, rightSide: UpcomingDisplayItem) -&gt; Bool {
+    var hasEqualSections = false
+    hasEqualSections = rightSide.title == leftSide.title</p>
+
+<pre><code>if hasEqualSections == false {
+    return false
+}
+
+hasEqualSections = rightSide.dueDate == rightSide.dueDate
+
+return hasEqualSections } ```
+</code></pre>
+
+<h3>类型安全</h3>
+
+<p>也许 Objective-C 和 Swift 的最大区别是它们在对于类型处理上的不同。 Objective-C 是动态类型，而 Swift 故意在编译时做了严格的类型检查。对于一个类似 VIPER 的架构， 应用由不同层构成，类型安全是提升程序员效率和设计架构有非常大的好处。编译器帮助你确保正确类型的容器和对象在层的边界传递。如上所示，这是一个使用结构体的好地方。如果一个结构体的被设计为存在于两层之间，那么由于类型安全，你可以保证它将永远无法脱离这些层之间。</p>
+
+<h2>扩展阅读</h2>
+
+<ul>
+<li><a href="https://github.com/objcio/issue-13-viper">VIPER TODO, 文章示例</a></li>
+<li><a href="https://github.com/objcio/issue-13-viper-swift">VIPER SWIFT, 基于 Swift 的文章示例</a></li>
+<li><a href="https://github.com/mutualmobile/Counter">另一个计数器应用</a></li>
+<li><a href="http://mutualmobile.github.io/blog/2013/12/04/viper-introduction/">Mutual Mobile 关于 VIPER 的介绍</a></li>
+<li><a href="http://blog.8thlight.com/uncle-bob/2011/11/22/Clean-Architecture.html">简明架构</a></li>
+<li><a href="http://objccn.io/issue-1-1/">更轻量的 View Controllers</a></li>
+<li><a href="http://objccn.io/issue-1-3/">测试 View Controllers</a></li>
+<li><a href="http://inessential.com/2014/03/16/smaller_please">Bunnies</a></li>
+</ul>
+
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[OC的子类]]></title>
@@ -966,197 +1586,6 @@ return [[NSAttributedString alloc] initWithString:string attributes:attributes];
 <p>我们的格式器还可以做更多自定义的事情。例如，在没查找到一个你需要的颜色名字时，我们可以返回给你最相近的颜色名字。有时，你可能需要我们的格式器有一个 Boolean 属性来控制该功能。或许我们的属性化字符串的格式化不是你想要的，并且应该支持更多自定义操作。</p>
 
 <p>就此，我们完成了一个非常可靠的格式器。所有的代码（伴有 OS X 示例）都放在了 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github</a> 上， 并且你也可以在 <a href="http://cocoapods.org/">CocoaPods</a> 上看到。如果你应用需要此功能，可以将 "KPAColorFormatter" 放在你的 Podfile 中，开始使用它吧。</p>
-
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[消息传递机制]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/"/>
-    <updated>2014-05-14T21:31:58+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi</id>
-    <content type="html"><![CDATA[<p>每个应用或多或少都由一些需要相互传递消息的对象结合起来以完成任务。在这篇文章里，我们将介绍所有可用的消息传递机制，并通过例子来介绍怎样在苹果的框架里使用。我们还会选择一些最佳范例来介绍什么时候该用什么机制。</p>
-
-<p>虽然这一期的主题是关于 Foundation 框架的，但是我们会超出 Foundation 的消息传递机制 (KVO 和 通知) 来讲一讲 delegation，block 和 target-action 几种机制。</p>
-
-<p>当然，有些情况下该使用什么机制没有唯一的答案，所以应该按照自己的喜好去试试。另外大多数情况下该使用什么机制应该是很清楚的。</p>
-
-<p>本文中，我们会常常提及“接收者”和“发送者”。它们在消息传递中的意思可以通过以下的例子解释：一个 table view 是发送者，它的 delegate 就是接收者。Core Data managed object context 是它所发出的 notification 的发送者，获取 notification 的就是接收者。一个滑块 (slider) 是 action 消息的发送者，而实现这个 action （方法）的是它的接收者。任何修改一个支持 KVO 的对象的对象是发送者，这个 KVO 对象的观察者就是接收者。明白精髓了吗？</p>
-
-<h2>几种消息传递机制</h2>
-
-<p>首先我们来看看每种机制的具体特点。在这个基础上，下一节我们会画一个流程图来帮我们在具体情况下正确选择应该使用的机制。最后，我们会介绍一些苹果框架里的例子并且解释为什么在那些用例中会选择这样的机制。</p>
-
-<h3 id="kvo">KVO</h3>
-
-<p>KVO 是提供对象属性被改变时的通知的机制。KVO 的实现在 Foundation 中，很多基于 Foundation 的框架都依赖它。想要了解更多有关 KVO 的最佳实践，请阅读本期 Daniel 写的 <a href="http://objccn.io/issue-7-3">KVO 和 KVC 文章</a>。</p>
-
-<p>如果只对某个对象的值的改变感兴趣的话，就可以使用 KVO 消息传递。不过有一些前提：第一，接收者（接收对象改变的通知的对象）需要知道发送者 （值会改变的对象）；第二，接收者需要知道发送者的生命周期，因为它需要在发送者被销毁前注销观察者身份。如果这两个要去符合的话，这个消息传递机制可以一对多（多个观察者可以注册观察同一个对象的变化）</p>
-
-<p>If you plan to use KVO on Core Data objects, you have to know that things work a bit differently here. This has to do with Core Data's faulting mechanism. Once a managed object turns into a fault, it will fire the observers on its properties although their values haven't changed.</p>
-
-<p>如果要在 Core Data 上使用 KVO 的话，方法会有些许差别。这和 Core Data 的 faulting 机制有关。一旦一个 managed object 被 faulting 处理的话，即使它的属性没有被改变，它还是会触发相应的观察者。</p>
-
-<blockquote>
-  <span class="secondary radius label">编者注</span> 把属性值先取入缓存中，在对象需要的时候再进行一次访问，这在 Core Data 中是默认行为，这种技术称为 Faulting。这么做可以避免降低内存开销，但是如果你确定将访问结果对象的具体属性值时，可以禁用 Faults 以提高获取性能。关于这个技术更多的情况，请移步<a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreData/Articles/cdFaultingUniquing.html">官方文档</a>
-</blockquote>
-
-<h3>通知</h3>
-
-<p>要在代码中的两个不相关的模块中传递消息时，通知机制是非常好的工具。通知机制广播消息，当消息内容丰富而且无需指望接收者一定要关注的话这一招特别有用。</p>
-
-<p>通知可以用来发送任意消息，甚至可以包含一个 <code>userInfo</code> 字典。你也可以继承 <code>NSNotification</code> 写一个自己的通知类来自定义行为。通知的独特之处在于，发送者和接收者不需要相互知道对方，所以通知可以被用来在不同的相隔很远的模块之间传递消息。这就意味着这种消息传递是单向的，我们不能回复一个通知。</p>
-
-<h3 id="delegation">委托 (Delegation)</h3>
-
-<p>Delegation 在苹果的框架中广泛存在。它让我们能自定义对象的行为，并收到一些触发的事件。要使用 delegation 模式的话，发送者需要知道接收者，但是反过来没有要求。因为发送者只需要知道接收者符合一定的协议，所以它们两者结合的很松。</p>
-
-<p>因为 delegate 协议可以定义任何的方法，我们可以照着自己的需求来传递消息。可以用方法参数来传递消息内容，delegate 可以通过返回值的形式来给发送者作出回应。如果只要在相对接近的两个模块间传递消息，delgation 是很灵活很直接的消息传递机制。</p>
-
-<p>过度使用 delegation 也会带来风险。如果两个对象结合得很紧密，任何其中一个对象都不能单独运转，那么就不需要用 delegate 协议了。这些情况下，对象已经知道各自的类型，可以直接交流。两个比较新的例子是 <code>UICollectionViewLayout</code> 和 <code>NSURLSessionConfiguration</code>。</p>
-
-<p><a name="blocks"> </a>  </p>
-
-<h3 id="block">Block</h3>
-
-<p>Block 是最近才加入 Objective-C 的，首次出现在 OS X 10.6 和 iOS 4 平台上。Block 通常可以完全替代 delegation 消息传递机制的角色。不过这两种机制都有它们自己的独特需求和优势。</p>
-
-<p>一个不使用 block 的理由通常是 block 会存在导致 retain 环 (<a href="https://developer.apple.com/library/mac/documentation/cocoa/conceptual/memorymgmt/Articles/mmPractical.html#//apple_ref/doc/uid/TP40004447-1000810">retain cycles</a>) 的风险。如果发送者需要 retain block 但又不能确保引用在什么时候被赋值为 <code>nil</code>， 那么所有在 block 内对 <code>self</code> 的引用就会发生潜在的 retain 环。</p>
-
-<p>假设我们要实现一个用 block 回调而不是 delegate 机制的 table view 里的选择方法，如下所示：</p>
-
-<pre><code>self.myTableView.selectionHandler = ^void(NSIndexPath *selectedIndexPath) {
-    // 处理选择
-};
-</code></pre>
-
-<p>这儿的问题是，<code>self</code> 会 retain table view，table view 为了让 block 之后可以使用而又需要 retain 这个 block。然而 table view 不能把这个引用设为 nil，因为它不知道什么时候不需要这个 block 了。如果我们不能保证打破 retain 环并且我们需要 retain 发送者，那么 block 就不是一个的好选择。</p>
-
-<p><code>NSOperation</code> 是使用 block 的一个好范例。因为它在一定的地方打破了 retain 环，解决了上述的问题。</p>
-
-<p><code>objc
-self.queue = [[NSOperationQueue alloc] init];
-MyOperation *operation = [[MyOperation alloc] init];
-operation.completionBlock = ^{
-    [self finishedOperation];
-};
-[self.queue addOperation:operation];
-</code></p>
-
-<p>一眼看来好像上面的代码有一个 retain 环：<code>self</code> retain 了 queue，queue retain 了 operation， operation retain 了 completionBlock， 而 completionBlock retain 了 <code>self</code>。然而，把 operation 加入 queue 中会使 operation 在某个时间被执行，然后被从 queue 中移除。（如果没被执行，问题就大了。）一旦 queue 把 operation 移除，retain 环就被打破了。</p>
-
-<p>另一个例子是：我们在写一个视频编码器的类，在类里面我们会调用一个 <code>encodeWithCompletionHandler:</code> 的方法。为了不出问题，我们需要保证编码器对象在某个时间点会释放对 block 的引用。其代码如下所示：</p>
-
-<p>```objc
-@interface Encoder ()
-@property (nonatomic, copy) void (^completionHandler)();
-@end</p>
-
-<p>@implementation Encoder</p>
-
-<ul>
-  <li>(void)encodeWithCompletionHandler:(void (^)())handler
-{
-  self.completionHandler = handler;
-  // 进行异步处理…
-}</li>
-</ul>
-
-<p>// 这个方法会在完成后被调用一次
-- (void)finishedEncoding
-{
-    self.completionHandler();
-    self.completionHandler = nil; // &lt;- 不要忘了这个!
-}</p>
-
-<p>@end
-```</p>
-
-<p>一旦任务完成，completion block 调用过了以后，我们就应该把它设为 <code>nil</code>。</p>
-
-<p>如果一个被调用的方法需要发送一个一次性的消息作为回复，那么使用 block 是很好的选择， 因为这样做我们可以打破潜在的 retain 环。另外，如果将处理的消息和对消息的调用放在一起可以增强可读性的话，我们也很难拒绝使用 block 来进行处理。在用例之中，使用 block 来做完成的回调，错误的回调，或者类似的事情，是很常见的情况。</p>
-
-<h3 id="targetaction">Target-Action</h3>
-
-<p>Target-Action 是回应 UI 事件时典型的消息传递方式。iOS 上的 <code>UIControl</code> 和 Mac 上的 <code>NSControl</code>/<code>NSCell</code> 都支持这个机制。Target-Action 在消息的发送者和接收者之间建立了一个松散的关系。消息的接收者不知道发送者，甚至消息的发送者也不知道消息的接收者会是什么。如果 target 是 <code>nil</code>，action 会在<a href="https://developer.apple.com/library/ios/documentation/general/conceptual/Devpedia-CocoaApp/Responder.html">响应链 (responder chain)</a> 中被传递下去，直到找到一个响应它的对象。在 iOS 中，每个控件甚至可以和多个 target-action 关联。</p>
-
-<p>基于 target-action 传递机制的一个局限是，发送的消息不能携带自定义的信息。在 Mac 平台上 action 方法的第一个参数永远接收者。iOS 中，可以选择性的把发送者和触发 action 的事件作为参数。除此之外就没有别的控制 action 消息内容的方法了。</p>
-
-<h2>做出正确的选择</h2>
-
-<p>基于上述对不同消息传递机制的特点，我们画了一个流程图来帮助我们在不同情境下做出不同的选择。一句忠告：流程图的建议不代表最终答案。有些时候别的选择依然能达到应有的效果。只不过大多数情况下这张图能引导你做出正确的决定。</p>
-
-<p><img src="http://img.objccn.io/issue-7/communication-patterns-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="688" /></p>
-
-<p>图中有些细节值得深究：</p>
-
-<p>有个框中说到： <em>发送者支持 KVO</em>。这不仅仅是说发送者会在值改变的时候发送 KVO 通知，而且说明观察者需要知道发送者的生命周期。如果发送者被存在一个 weak 属性中，那么发送者有可能会自己变成 nil，那时观察者会导致内存泄露。</p>
-
-<p>一个在最后一行的框里说，<em>消息直接响应方法调用</em>。也就是说方法调用的接收者需要给调用者一个消息作为方法调用的直接反馈。这也就是说处理消息的代码和调用方法的代码必须在同一个地方。</p>
-
-<p>最后在右下角的地方，一个选择分支这样说：<em>发送者能确保释放对 block 的引用吗？</em>这涉及到了我们<a href="#block">之前</a>讨论 block 的 API 存在潜在的 retain 环的问题。如果发送者不能保证在某个时间点会释放对 block 的引用，那么你会惹上 retain 环的麻烦。</p>
-
-<h2 id="framework">Framework 示例</h2>
-
-<p>本节我们通过一些苹果框架里的例子来验证流程图的选择是否有道理，同时解释为什么苹果会选择用这些机制。</p>
-
-<h3 id="kvo">KVO</h3>
-
-<p><code>NSOperationQueue</code> 用了 KVO 观察队列中的 operation 状态属性的改变情况 (<code>isFinished</code>，<code>isExecuting</code>，<code>isCancelled</code>)。当状态改变的时候，队列会收到 KVO 通知。为什么 operation 队列要用 KVO 呢？</p>
-
-<p>消息的接收者（operation 队列）知道消息的发送者（operation），并 retain 它并控制后者的生命周期。另外，在这种情况下只需要单向的消息传递机制。当然如果考虑到 oepration 队列只关心那些改变 operation 的值的改变情况的话，就还不足以说服大家使用 KVO 了。但我们可以这么理解：被传递的消息可以被当成值的改变来处理。因为 state 属性在 operation 队列以外也是有用的，所以这里适合用 KVO。</p>
-
-<p><img src="http://img.objccn.io/issue-7/kvo-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="678" /></p>
-
-<p>当然 KVO 不是唯一的选择。我们也可以将 operation 队列作为 operation 的 delegate 来使用，operation 会调用类似 <code>operationDidFinish:</code> 或者 <code>operationDidBeginExecuting:</code> 等方法把它的 state 传递给 queue。这样就不太方便了，因为 operation 要保存 state 属性，以便于调用这些 delegate 方法。另外，由于 queue 不能主动获取 state 信息，所以 queue 也必须保存所有 operation 的 state。</p>
-
-<h3 id="notifications">Notifications</h3>
-
-<p>Core Data 使用 notification 传递事件（例如一个 managed object context 中的改变————<code>NSManagedObjectContextObjectsDidChangeNotification</code>）</p>
-
-<p>发生改变时触发的 notification 是由 managed object contexts 发出的，所以我们不能假定消息的接收者知道消息的发送者。因为消息的源头不是一个 UI 事件，很多接收者可能在关注着此消息，并且消息传递是单向的，所以 notification 是唯一可行的选择。</p>
-
-<p><img src="http://img.objccn.io/issue-7/notification-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="687" /></p>
-
-<h3 id="delegation">Delegation</h3>
-
-<p>Table view 的 delegate 有多重功能，它可以从管理 accessory view，直到追踪在屏幕上显示的 cell。例如我们可以看看 <code>tableView:didSelectRowAtIndexPath:</code> 方法。为什么用 delegate 实现而不是 target-action 机制？</p>
-
-<p>正如我们在上述流程图中看到的，用 target-action 时，不能传递自定义的数据。而选中 table view 的某个 cell 时，collection view 不仅需要告诉我们一个 cell 被选中了，也要通过 index path 告诉我们哪个 cell 被选中了。如果我们照着这个思路，流程图会引导我们使用 delegation 机制。</p>
-
-<p><img src="http://img.objccn.io/issue-7/delegation-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="687" /></p>
-
-<p>如果不在消息传递中包含选中 cell 的 index path，而是让选中项改变时我们像 table view 主动询问并获取选中 cell 的相关信息，会怎样呢？这会非常不方便，因为我们必须记住当前选中项的数据，这样才能在多选择中知道哪些 cell 是被新选中的。</p>
-
-<p>同理，我们可以想象通过观察 table view 选中项的 index path 属性，当该值发生改变的时候，获得一个选中项改变的通知。不过我们会遇到上述相似问题：不做记录的话我们就不能分辨哪一个 cell 被选择或取消选择了。</p>
-
-<h3 id="block">Block</h3>
-
-<p>我们用 <code>-[NSURLSession dataTaskWithURL:completionHandler:]</code> 来作为一个 block API 的介绍。那么从 URL 加载部分返回给调用者是怎么传递消息的呢？首先，作为 API 的调用者，我们知道消息的发送者，但是我们并没有 retain 它。另外，这是个单向的消息传递————它直接调用 <code>dataTaskWithURL:</code> 的方法。如果我们对照流程图，会发现这属于 block 消息传递机制。</p>
-
-<p><img src="http://img.objccn.io/issue-7/block-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="688" /></p>
-
-<p>有其他的选项吗？当然，苹果自己的 <code>NSURLConnection</code> 就是最好的例子。<code>NSURLConnection</code>在 block 问世之前就存在了，所以它并没有用 block 来实现消息传递，而是使用 delegation 来完成。当 block 出现以后，苹果就在 OS X 10.7 和 iOS 5 平台上的 <code>NSURLConnection</code> 中加了 <code>sendAsynchronousRequest:queue:completionHandler:</code>，所以我们不再在简单的任务中使用 delegate 了。</p>
-
-<p>因为 <code>NSURLSession</code> 是个最近在 OS X 10.9 和 iOS 7 才出现的 API，所以它们使用 block 来实现消息传递机制（<code>NSURLSession</code> 有一个 delegate，但是是用于其他目的）。</p>
-
-<h3 id="targetaction">Target-Action</h3>
-
-<p>一个明显的 target-action 用例是按钮。按钮在不被按下的时候不需要发送任何的信息。为了这个目的，target-action 是 UI 中消息传递的最佳选择。</p>
-
-<p><img src="http://img.objccn.io/issue-7/target-action-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="678" /></p>
-
-<p>如果 target 是明确指定的，那么 action 消息会发送给指定的对象。如果 target 是 <code>nil</code>， action 消息会一直在响应链中被传递下去，直到找到一个能处理它的对象。在这种情况下，我们有一个完全解耦的消息传递机制：发送者不需要知道接收者，反之亦然。</p>
-
-<p>Target-action 机制非常适合响应 UI 的事件。没有其他的消息传递机制能够提供相同的功能。虽然 notification 在发送者和接收者的松散关系上最接近它，但是 target-action 可以用于响应链——只有一个对象获得 action 并响应，action 在响应链中传递，直到能遇到响应这个 action 的对象。</p>
-
-<h2>总结</h2>
-
-<p>一开始接触这么多的消息传递机制的时候，我们可能有些无所适从，觉得所有的机制都可以被选用。不过一旦我们仔细分析每个机制的时候，它们各自都有特殊的要求和能力。</p>
-
-<p>文中的选择流程图是帮助你清楚认识这些机制的好的开始，当然它不是所有问题的答案。如果你觉得这和你自己选择机制的方式相似或是有任何缺漏，欢迎来信指正。</p>
 
 <hr />
 

@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Jun 18th, 2014 iOS Comments OC的子类 这篇文章跟我以往的文章有点不一样。它主要是一些思想与模式的汇集，而不是一篇指南。下面我所写的模式几乎全都来之不易，都是我犯了错之后才学到的。我并不认为自己是子类方面的权威，但我确实想把我学到的一些东西分享出来。 &hellip;">
+	<meta name="description" content="Jun 20th, 2014 iOS Comments 使用VIPER构建iOS应用 建筑领域流行这样一句话，“我们虽然在营造建筑，但建筑也会重新塑造我们”。正如所有开发者最终领悟到的，这句话同样适用于构建软件。 编写代码中至关重要的是，需要使每一部分容易被识别，赋有一个特定而明显的目的， &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -98,6 +98,890 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-06-20T09:00:36+08:00" data-updated="true" itemprop="datePublished">Jun 20<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/" itemprop="url">使用VIPER构建iOS应用</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>建筑领域流行这样一句话，“我们虽然在营造建筑，但建筑也会重新塑造我们”。正如所有开发者最终领悟到的，这句话同样适用于构建软件。</p>
+
+<p>编写代码中至关重要的是，需要使每一部分容易被识别，赋有一个特定而明显的目的，并与其他部分在逻辑关系中完美契合。这就是我们所说的软件架构。好的架构不仅让一个产品成功投入使用，还可以让产品具有可维护性，并让人不断头脑清醒的对它进行维护！</p>
+
+<p>在这篇文章中，我们介绍了一种称之为 <a href="http://mutualmobile.github.io/blog/2013/12/04/viper-introduction/">VIPER</a> 的 iOS 应用架构的方式。VIPER 已经在很多大型的项目上成功实践，但是出于本文的目的我们将通过一个待办事项清单 (to-do app) 来介绍 VIPER 。你可以在 <a href="https://github.com/objcio/issue-13-viper">GitHub</a> 上关注这个项目。</p>
+
+<p><video style="display:block;max-width:316px;height:auto;border:0;" poster="/issue-13/2014-06-07-viper-screenshot.png" controls="1"> <br />
+  <source src="http://img.objccn.io//issue-13/2014-06-07-viper-preview.mp4" />
+</video></p>
+
+<h2 id="viper">什么是 VIPER？</h2>
+
+<p>测试永远不是构建 iOS 应用的主要部分。当我们 (<a href="https://github.com/mutualmobile/">Mutual Mobile</a>) 着手改善我们的测试实践时，我们发现给 iOS 应用写测试代码非常困难。因此如果想要设法改变测试的现状，我们首先需要一个更好的方式来架构应用，我们称之为 VIPER。</p>
+
+<p>VIPER 是一个创建 iOS 应用<a href="http://blog.8thlight.com/uncle-bob/2012/08/13/the-clean-architecture.html">简明构架</a>的程序。VIPER 可以是视图 (View)，交互器 (Interactor)，展示器 (Presenter)，实体 (Entity) 以及路由 (Routing) 的首字母缩写。简明架构将一个应用程序的逻辑结构划分为不同的责任层。这使得它更容易隔离依赖项 (如数据库)，也更容易测试各层间的边界处的交互：</p>
+
+<p><img alt="VIPER stands for View Interactor Presenter Entity Routing." src="http://img.objccn.io/issue-13/2014-06-07-viper-intro.jpg" /></p>
+
+<p>大部分 iOS 应用利用 MVC 构建，使用 MVC 应用程序架构可以引导你将每一个类看做模型，视图或控制器中的一个。但由于大部分应用程序的逻辑不会存在于模型或视图中，所以通常最终总是在控制器里实现。这就导致一个称为<a href="https://twitter.com/Colin_Campbell/status/293167951132098560">重量级视图控制器</a>的问题，在这里，视图控制器做了太多工作。为这些重量级视图控制器<a href="http://www.objc.io/issue-1/lighter-view-controllers.html">瘦身</a>并不是 iOS 开发者寻求提高代码的质量所要面临的唯一挑战，但至少这是一个很好的开端。</p>
+
+<p>VIPER 的不同层提供了明确的程序逻辑以及导航控制代码来应对这个挑战，利用 VIPER ，你会注意到在我们的待办事项示例清单中的视图控制器可以简洁高效，意义明确地控制视图。你也会发现视图控制器中代码和所有的其他类很容易理解，容易测试，理所当然也更易维护。</p>
+
+<h2>基于用例的应用设计</h2>
+
+<p>应用通常是一些用户用例的集合。用例也被称为验收标准，或行为集，它们用来描述应用的用途。清单可以根据时间，类型以及名字排序，这就是一个用例。用例是应用程序中用来负责业务逻辑的一层，应独立于用户界面的实现，同时要足够小，并且有良好的定义。决定如何将一个复杂的应用分解成较小的用例非常具有挑战性，并且需要长期实践，但这对于缩小你解决的问题时所要面临的范围及完成的每个类的所要涉及的内容来说，是很有帮助的。</p>
+
+<p>利用 VIPER 建立一个应用需要实施一组套件来满足所有的用例，应用逻辑是实现用例的主要组成部分，但却不是唯一。用例也会影响用户界面。另一个重要的方面，是要考虑用例如何与其他应用程序的核心组件相互配合，例如网络和数据持久化。组件就好比用例的插件，VIPER 则用来描述这些组件的作用是什么，如何进行交互。</p>
+
+<p>我们其中一个用例，或者说待办事项清单中其中的一个需求是可以基于用户的选择来将待办事项分组。通过分离的逻辑将数据组织成一个用例，我们能够在测试时使用户界面代码保持干净，用例更易组装，从而确保它如我们预期的方式工作。</p>
+
+<h2 id="viper">VIPER 的主要部分</h2>
+
+<p>VIPER 的主要部分是：</p>
+
+<ul>
+<li>视图：根据展示器的要求显示界面，并将用户输入反馈给展示器。</li>
+<li>交互器：包含由用例指定的业务逻辑。</li>
+<li>展示器：包含为显示（从交互器接受的内容）做的准备工作的相关视图逻辑，并对用户输入进行反馈（从交互器获取新数据）。</li>
+<li>实体：包含交互器要使用的基本模型对象。</li>
+<li>路由：包含用来描述屏幕显示和显示顺序的导航逻辑。</li>
+</ul>
+
+<p>这种分隔形式同样遵循<a href="http://www.objectmentor.com/resources/articles/srp.pdf">单一责任原则</a>。交互器负责业务分析的部分，展示器代表交互设计师，而视图相当于视觉设计师。</p>
+
+<p>以下则是不同组件的相关图解，并展示了他们之间是如何关联的：</p>
+
+<p><img alt="VIPER breaks down an app into different components based around use cases, including components that create the user interface and the logic that powers it." src="http://img.objccn.io/issue-13/2014-06-07-viper-wireframe.png" /></p>
+
+<p>虽然在应用中 VIPER 的组件可以以任意顺序实现，我们在这里选择按照我们推荐的顺序来进行介绍。你会注意到这个顺序与构建整个应用的进程大致符合 &#8211; 首先要讨论的是产品需要做什么，以及用户会如何与之交互。</p>
+
+<h3>交互器</h3>
+
+<p>交互器在应用中代表着一个独立的用例。它具有业务逻辑以操纵模型对象（实体）执行特定的任务。交互器中的工作应当独立与任何用户界面，同样的交互器可以同时运用于 iOS 应用或者 OS X 应用中。</p>
+
+<p>由于交互器是一个 PONSO (Plain Old <code>NSObject</code>，普通的 <code>NSObject</code>)，它主要包含了逻辑，因此很容易使用 TDD 进行开发。</p>
+
+<p>示例应用的主要用例是向用户展示所有的待办事项（比如任何截止于下周末的任务）。此类用例的业务逻辑主要是找出今天至下周末之间将要到期的待办事项，然后为它们分配一个相对的截止日期，比如今天，明天，本周以内，或者下周。</p>
+
+<p>以下是来自 VTDListInteractor 的对应方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">findUpcomingItems</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">__weak</span> <span class="n">typeof</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="n">welf</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSDate</span><span class="o">*</span> <span class="n">today</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">clock</span> <span class="n">today</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSDate</span><span class="o">*</span> <span class="n">endOfNextWeek</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSCalendar</span> <span class="n">currentCalendar</span><span class="p">]</span> <span class="nl">dateForEndOfFollowingWeekWithDate:</span><span class="n">today</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dataManager</span> <span class="nl">todoItemsBetweenStartDate:</span><span class="n">today</span> <span class="nl">endDate:</span><span class="n">endOfNextWeek</span> <span class="nl">completionBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">NSArray</span><span class="o">*</span> <span class="n">todoItems</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">welf</span><span class="p">.</span><span class="n">output</span> <span class="nl">foundUpcomingItems:</span><span class="p">[</span><span class="n">welf</span> <span class="nl">upcomingItemsFromToDoItems:</span><span class="n">todoItems</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>实体</h3>
+
+<p>实体是被交互器操作的模型对象，并且它们只被交互器所操作。交互器永远不会传输实体至表现层 (比如说展示器)。</p>
+
+<p>实体也应该是 PONSOs。如果你使用 Core Data，最好是将托管对象保持在你的数据层之后，交互器不应与 NSManageObjects 协同工作。</p>
+
+<p>这里是我们的待办事项服务的实体：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">VTDTodoItem</span> : <span class="nc">NSObject</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span>   <span class="n">NSDate</span><span class="o">*</span>     <span class="n">dueDate</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span>     <span class="n">NSString</span><span class="o">*</span>   <span class="n">name</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">todoItemWithDueDate:</span><span class="p">(</span><span class="n">NSDate</span><span class="o">*</span><span class="p">)</span><span class="nv">dueDate</span> <span class="nf">name:</span><span class="p">(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">name</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>不要诧异于你的实体仅仅是数据结构，任何依赖于应用的逻辑都应该放到交互器中。</p>
+
+<h3>展示器</h3>
+
+<p>展示器是一个主要包含了驱动用户界面的逻辑的 PONSO，它总是知道何时呈现用户界面。基于其收集来自用户交互的输入功能，它可以在合适的时候更新用户界面并向交互器发送请求。</p>
+
+<p>当用户点击 “+” 键新建待办事项时，<code>addNewEntry</code> 被调用。对于此项操作，展示器会要求 <code>wireframe</code> 显示用户界面以增加新项目：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addNewEntry</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">listWireframe</span> <span class="n">presentAddInterface</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>展示器还会从交互器接收结果并将结果转换成能够在视图中有效显示的形式。</p>
+
+<p>下面是如何从交互器接受待办事项的过程，其中包含了处理数据的过程并决定展现给用户哪些内容：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">foundUpcomingItems:</span><span class="p">(</span><span class="n">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nv">upcomingItems</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">upcomingItems</span> <span class="n">count</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">userInterface</span> <span class="n">showNoContentMessage</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">else</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">updateUserInterfaceWithUpcomingItems:</span><span class="n">upcomingItems</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>实体永远不会由交互器传输给展示器，取而代之，那些无行为的简单数据结构会从交互器传输到展示器那里。这就防止了那些“真正的工作”在展示器那里进行，展示器只能负责准备那些在视图里显示的数据。</p>
+
+<h3>视图</h3>
+
+<p>视图一般是被动的，它通常等待展示器下发需要显示的内容，而不会向其索取数据。视图（例如登录界面的登录视图控件）所定义的方法应该允许展示器在高度抽象的层次与之交流。展示器通过内容进行表达，而不关心那些内容所显示的样子。展示器不知道 <code>UILabel</code>，<code>UIButton</code> 等的存在，它只知道其中包含的内容以及何时需要显示。内容如何被显示是由视图来进行控制的。</p>
+
+<p>视图是一个抽象的接口 (Interface)，在 Objective-C 中使用协议被定义。一个 <code>UIViewController</code> 或者它的一个子类会实现视图协议。比如我们的示例中 “添加” 界面会有以下接口：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddViewInterface</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">setEntryName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="n">name</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setEntryDueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">date</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>视图和视图控制器同样会操纵用户界面和相关输入。因为通常来说视图控制器是最容易处理这些输入和执行某些操作的地方，所以也就不难理解为什么视图控制器总是这么大了。为了使视图控制器保持苗条，我们需要使它们在用户进行相关操作的时候可以有途径来通知相关部分。视图控制器不应当根据这些行为进行相关决定，但是它应当将发生的事件传递到能够做决定的部分。</p>
+
+<p>在我们的例子中，Add View Controller 有一个事件处理的属性，它实现了如下接口：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddModuleInterface</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">cancelAddAction</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">saveAddActionWithName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">name</span> <span class="nf">dueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">dueDate</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>当用户点击取消键的时候，视图控制器告知这个事件处理程序用户需要其取消这次添加的动作。这样一来，事件处理程序便可以处理关闭 add view controller 并告知列表视图进行更新。</p>
+
+<p>视图和展示器之间边界处是一个使用 <a href="https://github.com/ReactiveCocoa/ReactiveCocoa">ReactiveCocoa</a> 的好地方。在这个示例中，视图控制器可以返回一个代表按钮操作的信号。这将允许展示器在不打破职责分离的前提下轻松地对那些信号进行响应。</p>
+
+<h3>路由</h3>
+
+<p>屏幕间的路径会在交互设计师创建的线框 (wireframes) 里进行定义。在 VIPER 中，路由是由两个部分来负责的：展示器和线框。一个线框对象包括 <code>UIWindow</code>，<code>UINavigationController</code>，<code>UIViewController</code> 等部分，它负责创建视图/视图控制器并将其装配到窗口中。</p>
+
+<p>由于展示器包含了响应用户输入的逻辑，因此它就拥有知晓何时导航至另一个屏幕以及具体是哪一个屏幕的能力。而同时，线框知道如何进行导航。在两者结合起来的情况下，展示器可以使用线框来进行实现导航功能，它们两者一起描述了从一个屏幕至另一个屏幕的路由过程。</p>
+
+<p>线框同时也明显是一个处理导航转场动画的地方。来看看这个 add wireframe 中的例子吧：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">VTDAddWireframe</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">presentAddInterfaceFromViewController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">viewController</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">VTDAddViewController</span> <span class="o">*</span><span class="n">addViewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">addViewController</span><span class="p">];</span>
+</span><span class="line">    <span class="n">addViewController</span><span class="p">.</span><span class="n">eventHandler</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">addPresenter</span><span class="p">;</span>
+</span><span class="line">    <span class="n">addViewController</span><span class="p">.</span><span class="n">modalPresentationStyle</span> <span class="o">=</span> <span class="n">UIModalPresentationCustom</span><span class="p">;</span>
+</span><span class="line">    <span class="n">addViewController</span><span class="p">.</span><span class="n">transitioningDelegate</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">viewController</span> <span class="nl">presentViewController:</span><span class="n">addViewController</span> <span class="nl">animated:</span><span class="n">YES</span> <span class="nl">completion:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">presentedViewController</span> <span class="o">=</span> <span class="n">viewController</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="cp">#pragma mark - UIViewControllerTransitioningDelegate Methods</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">UIViewControllerAnimatedTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nf">animationControllerForDismissedController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">dismissed</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">VTDAddDismissalTransition</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">UIViewControllerAnimatedTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nf">animationControllerForPresentedController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">presented</span>
+</span><span class="line">                                                                  <span class="nf">presentingController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">presenting</span>
+</span><span class="line">                                                                      <span class="nf">sourceController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">source</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">VTDAddPresentationTransition</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>应用使用了自定义的视图控制器转场来呈现 add view controller。因为线框部件负责实施这个转场，所以它成为了 add view controller 转场的委托，并且返回适当的转场动画。</p>
+
+<h2 id="viper">利用 VIPER 组织应用组件</h2>
+
+<p>iOS 应用的构架需要考虑到 UIKit 和 Cocoa Touch 是建立应用的主要工具。架构需要和应用的所有组件都能够和平相处，但又需要为如何使用框架的某些部分以及它们应该在什么位置提供一些指导和建议。</p>
+
+<p>iOS 应用程序的主力是 <code>UIViewController</code>，我们不难想象找一个竞争者来取代 MVC 就可以避免大量使用视图控制器。但是视图控制器现在是这个平台的核心：它们处理设备方向的变化，回应用户的输入，和类似导航控制器之类的系统系统组件集成得很好，而现在在 iOS 7 中又能实现自定义屏幕之间的转换，功能实在是太强大了。</p>
+
+<p>有了 VIPER，视图控制器便就能真正的做它本来应该做的事情了，那就是控制视图。 我们的待办事项应拥有两个视图控制器，一个是列表视图，另一个是新建待办。因为 add view controller 要做的所有事情就是控制视图，所以实现起来非常的简单基础：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">VTDAddViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">animated</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">viewDidAppear:</span><span class="n">animated</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">UITapGestureRecognizer</span> <span class="o">*</span><span class="n">gestureRecognizer</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UITapGestureRecognizer</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithTarget:</span><span class="n">self</span>
+</span><span class="line">                                                                                        <span class="nl">action:</span><span class="k">@selector</span><span class="p">(</span><span class="n">dismiss</span><span class="p">)];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">transitioningBackgroundView</span> <span class="nl">addGestureRecognizer:</span><span class="n">gestureRecognizer</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">transitioningBackgroundView</span><span class="p">.</span><span class="n">userInteractionEnabled</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dismiss</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">eventHandler</span> <span class="n">cancelAddAction</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setEntryName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">name</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">nameTextField</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">name</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setEntryDueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">date</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">datePicker</span> <span class="nl">setDate:</span><span class="n">date</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">save:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">eventHandler</span> <span class="nl">saveAddActionWithName:</span><span class="n">self</span><span class="p">.</span><span class="n">nameTextField</span><span class="p">.</span><span class="n">text</span>
+</span><span class="line">                                     <span class="nl">dueDate:</span><span class="n">self</span><span class="p">.</span><span class="n">datePicker</span><span class="p">.</span><span class="n">date</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">cancel:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">eventHandler</span> <span class="n">cancelAddAction</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="cp">#pragma mark - UITextFieldDelegate Methods</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">textFieldShouldReturn:</span><span class="p">(</span><span class="n">UITextField</span> <span class="o">*</span><span class="p">)</span><span class="nv">textField</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">textField</span> <span class="n">resignFirstResponder</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>应用在接入网络以后会变得更有用处，但是究竟该在什么时候联网呢？又由谁来负责启动网络连接呢？典型的情况下，由交互器来启动网络连接操作的项目，但是它不会直接处理网络代码。它会寻找一个像是 network manager 或者 API client 这样的依赖项。交互器可能聚合来自多个源的数据来提供所需的信息，从而完成一个用例。最终，就由展示器来采集交互器反馈的数据，然后组织并进行展示。</p>
+
+<p>数据存储模块负责提供实体给交互器。因为交互器要完成业务逻辑，因此它需要从数据存储中获取实体并操纵它们，然后将更新后的实体再放回数据存储中。数据存储管理实体的持久化，而实体应该对数据库全然不知，正因如此，实体并不知道如何对自己进行持久化。</p>
+
+<p>交互器同样不需要知道如何将实体持久化，有时交互器更希望使用一个 data manager 来使其与数据存储的交互变得容易。Data manager 可以处理更多的针对存储的操作，比如创建获取请求，构建查询等等。这就使交互器能够将更多的注意力放在应用逻辑上，而不必再了解实体是如何被聚集或持久化的。下面我们举一个例子来说明使用 data manager 有意义的，这个例子假设你在使用 Core Data。这是示例应用程序的 data manager 的接口：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">VTDListDataManager</span> : <span class="nc">NSObject</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">VTDCoreDataStore</span> <span class="o">*</span><span class="n">dataStore</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">todoItemsBetweenStartDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">startDate</span> <span class="nf">endDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">endDate</span> <span class="nf">completionBlock:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSArray</span> <span class="o">*</span><span class="n">todoItems</span><span class="p">))</span><span class="nv">completionBlock</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>当使用 TDD 来开发一个交互器时，是可以用一个测试用的模拟存储来代替生产环境的数据存储的。避免与远程服务器通讯（网络服务）以及避免读取磁盘（数据库）可以加快你测试的速度并加强其可重复性。</p>
+
+<p>将数据存储保持为一个界限清晰的特定层的原因之一是，这可以让你延迟选择一个特定的持久化技术。如果你的数据存储是一个独立的类，那你就可以使用一个基础的持久化策略来开始你的应用，然后等到有意义的时候升级至 SQLite 或者 Core Data。而因为数据存储层的存在，你的应用代码库中就不需要改变任何东西。</p>
+
+<p>在 iOS 的项目中使用 Core Data 经常比构架本身还容易引起更多争议。然而，利用 VIPER 来使用 Core Data 将给你带来使用 Core Data 的前所未有的良好体验。在持久化数据的工具层面上，Core Data 可以保持快速存取和低内存占用方面，简直是个神器。但是有个很恼人的地方，它会像触须一样把 <code>NSManagedObjectContext</code>  延伸至你所有的应用实现文件中，特别是那些它们不该待的地方。VIPER 可以使 Core Data 待在正确的地方：数据存储层。</p>
+
+<p>在待办事项示例中，应用仅有的两部分知道使用了 Core Data，其一是数据存储本身，它负责建立 Core Data 堆栈；另一个是 data manager。Data manager 执行了获取请求，将数据存储返回的 NSManagedObject 对象转换为标准的 PONSO 模型对象，并传输回业务逻辑层。这样一来，应用程序核心将不再依赖于 Core Data，附加得到的好处是，你也再也不用担心过期数据 (stale) 和没有良好组织的多线程 NSManagedObjects 来糟蹋你的工作成果了。</p>
+
+<p>在通过请求访问 Core Data 存储时，data manager 中看起来是这样的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">VTDListDataManager</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">todoItemsBetweenStartDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">startDate</span> <span class="nf">endDate:</span><span class="p">(</span><span class="n">NSDate</span><span class="o">*</span><span class="p">)</span><span class="nv">endDate</span> <span class="nf">completionBlock:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSArray</span> <span class="o">*</span><span class="n">todoItems</span><span class="p">))</span><span class="nv">completionBlock</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSCalendar</span> <span class="n">autoupdatingCurrentCalendar</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSPredicate</span> <span class="o">*</span><span class="n">predicate</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithFormat:</span><span class="s">@&quot;(date &gt;= %@) AND (date &lt;= %@)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateForBeginningOfDay:</span><span class="n">startDate</span><span class="p">],</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateForEndOfDay:</span><span class="n">endDate</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">sortDescriptors</span> <span class="o">=</span> <span class="err">@</span><span class="p">[];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">__weak</span> <span class="n">typeof</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="n">welf</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dataStore</span>
+</span><span class="line">     <span class="nl">fetchEntriesWithPredicate:</span><span class="n">predicate</span>
+</span><span class="line">     <span class="nl">sortDescriptors:</span><span class="n">sortDescriptors</span>
+</span><span class="line">     <span class="nl">completionBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">NSArray</span><span class="o">*</span> <span class="n">entries</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">         <span class="k">if</span> <span class="p">(</span><span class="n">completionBlock</span><span class="p">)</span>
+</span><span class="line">         <span class="p">{</span>
+</span><span class="line">             <span class="n">completionBlock</span><span class="p">([</span><span class="n">welf</span> <span class="nl">todoItemsFromDataStoreEntries:</span><span class="n">entries</span><span class="p">]);</span>
+</span><span class="line">         <span class="p">}</span>
+</span><span class="line">     <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nf">todoItemsFromDataStoreEntries:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">entries</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">entries</span> <span class="nl">arrayFromObjectsCollectedWithBlock:</span><span class="o">^</span><span class="kt">id</span><span class="p">(</span><span class="n">VTDManagedTodoItem</span> <span class="o">*</span><span class="n">todo</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="p">[</span><span class="n">VTDTodoItem</span> <span class="nl">todoItemWithDueDate:</span><span class="n">todo</span><span class="p">.</span><span class="n">date</span> <span class="nl">name:</span><span class="n">todo</span><span class="p">.</span><span class="n">name</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>与 Core Data 一样极富争议的恐怕就是 UI 故事板了。故事板具有很多有用的功能，如果完全忽视它将会是一个错误。然而，调用故事版所能提供的所有功能来完成 VIPER 的所有目标仍然是很困难的。</p>
+
+<p>我们所能做出的妥协就是选择不使用 segues 。有时候使用 segues 是有效的，但是使用 segues 的危险性在于它们很难原封不动地保持屏幕之间的分离，以及 UI 和应用逻辑之间的分离。一般来说，如果实现 prepareForSegue 方法是必须的话，我们就尽量不去使用 segues。</p>
+
+<p>除此之外，故事板是一个实现用户界面布局有效方法，特别是在使用自动布局的时候。我们选择在实现待办事项两个界面的实例中使用故事板，并且使用这样的代码来执行自己的导航操作。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">ListViewControllerIdentifier</span> <span class="o">=</span> <span class="s">@&quot;VTDListViewController&quot;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">VTDListWireframe</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">presentListInterfaceFromWindow:</span><span class="p">(</span><span class="n">UIWindow</span> <span class="o">*</span><span class="p">)</span><span class="nv">window</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">VTDListViewController</span> <span class="o">*</span><span class="n">listViewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">listViewControllerFromStoryboard</span><span class="p">];</span>
+</span><span class="line">    <span class="n">listViewController</span><span class="p">.</span><span class="n">eventHandler</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">listPresenter</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">listPresenter</span><span class="p">.</span><span class="n">userInterface</span> <span class="o">=</span> <span class="n">listViewController</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">listViewController</span> <span class="o">=</span> <span class="n">listViewController</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">rootWireframe</span> <span class="nl">showRootViewController:</span><span class="n">listViewController</span>
+</span><span class="line">                                      <span class="nl">inWindow:</span><span class="n">window</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">VTDListViewController</span> <span class="o">*</span><span class="p">)</span><span class="nf">listViewControllerFromStoryboard</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIStoryboard</span> <span class="o">*</span><span class="n">storyboard</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">mainStoryboard</span><span class="p">];</span>
+</span><span class="line">    <span class="n">VTDListViewController</span> <span class="o">*</span><span class="n">viewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">storyboard</span> <span class="nl">instantiateViewControllerWithIdentifier:</span><span class="n">ListViewControllerIdentifier</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">viewController</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIStoryboard</span> <span class="o">*</span><span class="p">)</span><span class="nf">mainStoryboard</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIStoryboard</span> <span class="o">*</span><span class="n">storyboard</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIStoryboard</span> <span class="nl">storyboardWithName:</span><span class="s">@&quot;Main&quot;</span>
+</span><span class="line">                                                         <span class="nl">bundle:</span><span class="p">[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">storyboard</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h2 id="viper">使用 VIPER 构建模块</h2>
+
+<p>一般在使用 VIPER 的时候，你会发现一个屏幕或一组屏幕倾向于聚在一起作为一个模块。模块可以以多种形式体现，但一般最好把它想成是一种特性。在播客应用中，一个模块可能是音频播放器或订阅浏览器。然而在我们的待办事项应用中，列表和添加事项的屏幕都将作为单独的模块被建立。</p>
+
+<p>将你的应用作为一组模块来设计有很多好处，其中之一就是模块可以有非常明确和定义良好的接口，并且独立于其他的模块。这就使增加或者移除特性变得更加简单，也使在界面中向用户展示各种可变模块变得更加简单。</p>
+
+<p>我们希望能将待办事项中各模块之间分隔更加明确，我们为添加模块定义了两个协议。一个是模块接口，它定义了模块可以做什么；另一个则是模块的代理，用来描述该模块做了什么。例如：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddModuleInterface</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">cancelAddAction</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">saveAddActionWithName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">name</span> <span class="nf">dueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">dueDate</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddModuleDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">addModuleDidCancelAddAction</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addModuleDidSaveAddAction</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>因为模块必须要被展示，才能对用户产生价值，所以模块的展示器通常需要实现模型的接口。当另一个模型想要展现当前模块时，它的展示器就需要实现模型的委托协议，这样它就能在展示时知道当前模块做了些什么。</p>
+
+<p>一个模块可能包括实体，交互器和管理器的通用应用逻辑层，这些通常可用于多个屏幕。当然，这取决于这些屏幕之间的交互及它们的相似度。一个模块可以像在待办事项列表里面一样，简单的只代表一个屏幕。这样一来，应用逻辑层对于它的特定模块的行为来说就非常特有了。</p>
+
+<p>模块同样是组织代码的简便途径。将模块所有的编码都放在它自己的文件夹中并在 Xcode 中建一个 group，这会在你需要寻找和改变更加容易。当你在要寻找一个类时，它恰到好处地就在你所期待的地方，这种感觉真是无法形容的棒。</p>
+
+<p>利用 VIPER 建立模块的另一个好处是它使得扩展到多平台时变得更加简单。独立在交互器层中的所有用例的应用逻辑允许你可以专注于为平板，电话或者 Mac 构建新的用户界面，同时可以重用你的应用层。</p>
+
+<p>进一步来说，iPad 应用的用户界面能够将部分 iPhone 应用的视图，视图控制器及展示器进行再利用。在这种情况下，iPad 屏幕将由 ‘super’ 展示器和线框来代表，这样可以利用 iPhone 使用过的展示器和线框来组成屏幕。建立进而维护一个跨多平台的应用是一个巨大的挑战，但是好的构架可以对整个模型和应用层的再利用有大幅度的提升，并使其实现起来更加容易。</p>
+
+<h2 id="viper">利用 VIPER 进行测试</h2>
+
+<p>VIPER 的出现激发了一个关注点的分离，这使得采用 TDD 变得更加简便。交互器包含独立与任何 UI 的纯粹逻辑，这使测试驱动开发更加简单。同时展示器包含用来为显示准备数据的逻辑，并且它也独立于任何一个 UIKit 部件。对于这个逻辑的开发也很容易用测试来驱动。</p>
+
+<p>我们更倾向于先从交互器下手。用户界面里所有部分都服务于用例，而通过采用 TDD 来测试驱动交互器的 API 可以让你对用户界面和用例之间的关系有一个更好的了解。</p>
+
+<p>作为实例，我们来看一下负责待办事项列表的交互器。寻找待办事项的策略是要找出所有的将在下周末前截止的项目，并将这些项目分别归类至截止于今天，明天，本周或者下周。</p>
+
+<p>我们编写的第一个测试是为了保证交互器能够找到所有的截止于下周末的待办事项：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFindingUpcomingItemsRequestsAllToDoItemsFromTodayThroughEndOfNextWeek</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">dataManager</span> <span class="n">expect</span><span class="p">]</span> <span class="nl">todoItemsBetweenStartDate:</span><span class="n">self</span><span class="p">.</span><span class="n">today</span> <span class="nl">endDate:</span><span class="n">self</span><span class="p">.</span><span class="n">endOfNextWeek</span> <span class="nl">completionBlock:</span><span class="n">OCMOCK_ANY</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">interactor</span> <span class="n">findUpcomingItems</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>一旦知道了交互器找到了正确的待办事项后，我们就需要编写几个小测试用来确认它确实将待办事项分配到了正确的相对日期组内（比如说今天，明天，等等）。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFindingUpcomingItemsWithOneItemDueTodayReturnsOneUpcomingItemsForToday</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">todoItems</span> <span class="o">=</span> <span class="err">@</span><span class="p">[[</span><span class="n">VTDTodoItem</span> <span class="nl">todoItemWithDueDate:</span><span class="n">self</span><span class="p">.</span><span class="n">today</span> <span class="nl">name:</span><span class="s">@&quot;Item 1&quot;</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">dataStoreWillReturnToDoItems:</span><span class="n">todoItems</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">upcomingItems</span> <span class="o">=</span> <span class="err">@</span><span class="p">[[</span><span class="n">VTDUpcomingItem</span> <span class="nl">upcomingItemWithDateRelation:</span><span class="n">VTDNearTermDateRelationToday</span> <span class="nl">dueDate:</span><span class="n">self</span><span class="p">.</span><span class="n">today</span> <span class="nl">title:</span><span class="s">@&quot;Item 1&quot;</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">expectUpcomingItems:</span><span class="n">upcomingItems</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">interactor</span> <span class="n">findUpcomingItems</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>既然我们已经知道了交互器的 API 长什么样，接下来就是开发展示器。一旦展示器接收到了交互器传来的待办事项，我们就需要测试看看我们是否适当的将数据进行格式化并且在用户界面中正确的显示它。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFoundZeroUpcomingItemsDisplaysNoContentMessage</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">ui</span> <span class="n">expect</span><span class="p">]</span> <span class="n">showNoContentMessage</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="nl">foundUpcomingItems:</span><span class="err">@</span><span class="p">[]];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFoundUpcomingItemForTodayDisplaysUpcomingDataWithNoDay</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">VTDUpcomingDisplayData</span> <span class="o">*</span><span class="n">displayData</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">displayDataWithSectionName:</span><span class="s">@&quot;Today&quot;</span>
+</span><span class="line">                                                          <span class="nl">sectionImageName:</span><span class="s">@&quot;check&quot;</span>
+</span><span class="line">                                                                 <span class="nl">itemTitle:</span><span class="s">@&quot;Get a haircut&quot;</span>
+</span><span class="line">                                                                <span class="nl">itemDueDay:</span><span class="s">@&quot;&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">ui</span> <span class="n">expect</span><span class="p">]</span> <span class="nl">showUpcomingDisplayData:</span><span class="n">displayData</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSCalendar</span> <span class="n">gregorianCalendar</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSDate</span> <span class="o">*</span><span class="n">dueDate</span> <span class="o">=</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateWithYear:</span><span class="mi">2014</span> <span class="nl">month:</span><span class="mi">5</span> <span class="nl">day:</span><span class="mi">29</span><span class="p">];</span>
+</span><span class="line">    <span class="n">VTDUpcomingItem</span> <span class="o">*</span><span class="n">haircut</span> <span class="o">=</span> <span class="p">[</span><span class="n">VTDUpcomingItem</span> <span class="nl">upcomingItemWithDateRelation:</span><span class="n">VTDNearTermDateRelationToday</span> <span class="nl">dueDate:</span><span class="n">dueDate</span> <span class="nl">title:</span><span class="s">@&quot;Get a haircut&quot;</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="nl">foundUpcomingItems:</span><span class="err">@</span><span class="p">[</span><span class="n">haircut</span><span class="p">]];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFoundUpcomingItemForTomorrowDisplaysUpcomingDataWithDay</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">VTDUpcomingDisplayData</span> <span class="o">*</span><span class="n">displayData</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">displayDataWithSectionName:</span><span class="s">@&quot;Tomorrow&quot;</span>
+</span><span class="line">                                                          <span class="nl">sectionImageName:</span><span class="s">@&quot;alarm&quot;</span>
+</span><span class="line">                                                                 <span class="nl">itemTitle:</span><span class="s">@&quot;Buy groceries&quot;</span>
+</span><span class="line">                                                                <span class="nl">itemDueDay:</span><span class="s">@&quot;Thursday&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">ui</span> <span class="n">expect</span><span class="p">]</span> <span class="nl">showUpcomingDisplayData:</span><span class="n">displayData</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSCalendar</span> <span class="n">gregorianCalendar</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSDate</span> <span class="o">*</span><span class="n">dueDate</span> <span class="o">=</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateWithYear:</span><span class="mi">2014</span> <span class="nl">month:</span><span class="mi">5</span> <span class="nl">day:</span><span class="mi">29</span><span class="p">];</span>
+</span><span class="line">    <span class="n">VTDUpcomingItem</span> <span class="o">*</span><span class="n">groceries</span> <span class="o">=</span> <span class="p">[</span><span class="n">VTDUpcomingItem</span> <span class="nl">upcomingItemWithDateRelation:</span><span class="n">VTDNearTermDateRelationTomorrow</span> <span class="nl">dueDate:</span><span class="n">dueDate</span> <span class="nl">title:</span><span class="s">@&quot;Buy groceries&quot;</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="nl">foundUpcomingItems:</span><span class="err">@</span><span class="p">[</span><span class="n">groceries</span><span class="p">]];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>同样需要测试的是应用是否在用户想要新建待办事项时正确启动了相应操作：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testAddNewToDoItemActionPresentsAddToDoUI</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">wireframe</span> <span class="n">expect</span><span class="p">]</span> <span class="n">presentAddInterface</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="n">addNewEntry</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这时我们可以开发视图功能了，并且在没有待办事项的时候我们想要展示一个特殊的信息。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testShowingNoContentMessageShowsNoContentView</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">showNoContentMessage</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">XCTAssertEqualObjects</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">view</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">noContentView</span><span class="p">,</span> <span class="s">@&quot;the no content view should be the view&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>有待办事项出现时，我们要确保列表是显示出来的：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testShowingUpcomingItemsShowsTableView</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">showUpcomingDisplayData:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">XCTAssertEqualObjects</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">view</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">tableView</span><span class="p">,</span> <span class="s">@&quot;the table view should be the view&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>首先建立交互器是一种符合 TDD 的自然规律。如果你首先开发交互器，紧接着是展示器，你就可以首先建立一个位于这些层的套件测试，并且为实现这是实例奠定基础。由于你不需要为了测试它们而去与用户界面进行交互，所以这些类可以进行快速迭代。在你需要开发视图的时候，你会有一个可以工作并测试过的逻辑和表现层来与其进行连接。在快要完成对视图的开发时，你会发现第一次运行程序时所有部件都运行良好，因为你所有已通过的测试已经告诉你它可以工作。</p>
+
+<h2>结论</h2>
+
+<p>我们希望你喜欢这篇对 VIPER 的介绍。或许你们都很好奇接下来应该做什么，如果你希望通过 VIPER 来对你下一个应用进行设计，该从哪里开始呢？</p>
+
+<p>我们竭尽全力使这篇文章和我们利用 VIPER 实现的应用实例足够明确并且进行了很好的定义。我们的待办事项里列表程序相当直接简单，但是它准确地解释了如何利用 VIPER 来建立一个应用。在实际的项目中，你可以根据你自己的挑战和约束条件来决定要如何实践这个例子。根据以往的经验，我们的每个项目在使用 VIPER 时都或多或少地改变了一些策略，但它们无一例外的都从中得益，找到了正确的方向。</p>
+
+<p>很多情况下由于某些原因，你可能会想要偏离 VIPER 所指引的道路。可能你遇到了很多 <a href="http://inessential.com/2014/03/16/smaller_please">&#8216;bunny&#8217;</a> 对象，或者你的应用使用了故事板的 segues。没关系的，在这些情况下，你只需要在做决定时稍微考虑下 VIPER 所代表的精神就好。VIPER 的核心在于它是建立在<a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">单一责任原则</a>上的架构。如果你碰到了些许麻烦，想想这些原则再考虑如何前进。</p>
+
+<p>你一定想知道在现有的应用中能否只用 VIPER 。在这种情况下，你可以考虑使用 VIPER 构建新的特性。我们许多现有项目都使用了这个方法。你可以利用 VIPER 建立一个模块，这能帮助你发现许多建立在单一责任原则基础上造成难以运用架构的现有问题。</p>
+
+<p>软件开发最伟大的事情之一就是每个应用程序都是不同的，而设计每个应用的架构的方式也是不同的。这就意味着每个应用对于我们来说都是一个学习和尝试的机遇，如果你决定开始使用 VIPER，你会受益匪浅。感谢你的阅读。</p>
+
+<h2 id="swifit">Swifit 补充</h2>
+
+<p>苹果上周在 WWDC 介绍了一门称之为 <a href="https://developer.apple.com/swift/">Swift</a> 的编程语言来作为 Cocoa 和 Cocoa Touch 开发的未来。现在发表关于 Swift 的完整意见还为时尚早，但众所周知编程语言对我们如何设计和构建应用有着重大影响。我们决定使用 <a href="https://github.com/objcio/issue-13-viper-swift">Swift 重写我们的待办事项清单</a>，帮助我们学习它对 VIPER 意味着什么。至今为止，收获颇丰。Swift 中的一些特性对于构建应用的体验有着显著的提升。</p>
+
+<h3>结构体</h3>
+
+<p>在 VIPER 中我们使用小型，轻量级的 model 类来在比如从展示器到视图这样不同的层间传递数据。这些 PONSOs 通常是只是简单地带有少量数据，并且通常这些类不会被继承。Swift 的结构体非常适合这个情况。下面的结构体的例子来自 VIPER Swift。这个结构体需要被判断是否相等，所以我们重载了 == 操作符来比较这个类型的两个实例。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">struct</span> <span class="n">UpcomingDisplayItem</span> <span class="o">:</span> <span class="n">Equatable</span><span class="p">,</span> <span class="n">Printable</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">let</span> <span class="n">title</span> <span class="o">:</span> <span class="n">String</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+</span><span class="line">    <span class="n">let</span> <span class="n">dueDate</span> <span class="o">:</span> <span class="n">String</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">var</span> <span class="n">description</span> <span class="o">:</span> <span class="n">String</span> <span class="p">{</span> <span class="n">get</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="s">&quot;\(title) -- \(dueDate)&quot;</span>
+</span><span class="line">    <span class="p">}}</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">init</span><span class="p">(</span><span class="nl">title:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">dueDate:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">dueDate</span> <span class="o">=</span> <span class="n">dueDate</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="n">func</span> <span class="o">==</span> <span class="p">(</span><span class="nl">leftSide:</span> <span class="n">UpcomingDisplayItem</span><span class="p">,</span> <span class="nl">rightSide:</span> <span class="n">UpcomingDisplayItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">var</span> <span class="n">hasEqualSections</span> <span class="o">=</span> <span class="n">false</span>
+</span><span class="line">    <span class="n">hasEqualSections</span> <span class="o">=</span> <span class="n">rightSide</span><span class="p">.</span><span class="n">title</span> <span class="o">==</span> <span class="n">leftSide</span><span class="p">.</span><span class="n">title</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="n">hasEqualSections</span> <span class="o">==</span> <span class="n">false</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">false</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">hasEqualSections</span> <span class="o">=</span> <span class="n">rightSide</span><span class="p">.</span><span class="n">dueDate</span> <span class="o">==</span> <span class="n">rightSide</span><span class="p">.</span><span class="n">dueDate</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">hasEqualSections</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>类型安全</h3>
+
+<p>也许 Objective-C 和 Swift 的最大区别是它们在对于类型处理上的不同。 Objective-C 是动态类型，而 Swift 故意在编译时做了严格的类型检查。对于一个类似 VIPER 的架构， 应用由不同层构成，类型安全是提升程序员效率和设计架构有非常大的好处。编译器帮助你确保正确类型的容器和对象在层的边界传递。如上所示，这是一个使用结构体的好地方。如果一个结构体的被设计为存在于两层之间，那么由于类型安全，你可以保证它将永远无法脱离这些层之间。</p>
+
+<h2>扩展阅读</h2>
+
+<ul>
+<li><a href="https://github.com/objcio/issue-13-viper">VIPER TODO, 文章示例</a></li>
+<li><a href="https://github.com/objcio/issue-13-viper-swift">VIPER SWIFT, 基于 Swift 的文章示例</a></li>
+<li><a href="https://github.com/mutualmobile/Counter">另一个计数器应用</a></li>
+<li><a href="http://mutualmobile.github.io/blog/2013/12/04/viper-introduction/">Mutual Mobile 关于 VIPER 的介绍</a></li>
+<li><a href="http://blog.8thlight.com/uncle-bob/2011/11/22/Clean-Architecture.html">简明架构</a></li>
+<li><a href="http://objccn.io/issue-1-1/">更轻量的 View Controllers</a></li>
+<li><a href="http://objccn.io/issue-1-3/">测试 View Controllers</a></li>
+<li><a href="http://inessential.com/2014/03/16/smaller_please">Bunnies</a></li>
+</ul>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -2624,575 +3508,6 @@
 <h2>结论</h2>
 
 <p>处理自然语言是很困难的，苹果给我们提供了一个非常好的工具，这个工具可以简便地支持绝大多数使用情况。当然，它也不是完美无缺的，即使最先进的语言处理工具也不是完美无缺的。iOS 目前只支持英语，不过随着技术改善，以及如果有足够大的内存来储存（毫无疑问会很大的）语言模型的话，这将有所改变。在此之前，我们会受到一些限制。不过还是有很多方法可以给应用程序添加语言支持。在文本编辑器中突出动词，理解用户键入的内容，或者处理外部数据文件等工作还是很简单的，<code>NSLinguisticTagger</code> 可以帮助你做到这一点。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-05-14T11:30:43+08:00" data-updated="true" itemprop="datePublished">May 14<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/05/14/view-layerxie-zuo/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/05/14/view-layerxie-zuo/" itemprop="url">View-Layer协作</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>在 iOS 中，所有的 view 都是由一个底层的 layer 来驱动的。view 和它的 layer 之间有着紧密的联系，view 其实直接从 layer 对象中获取了绝大多数它所需要的数据。在 iOS 中也有一些单独的 layer，比如 <code>AVCaptureVideoPreviewLayer</code> 和 <code>CAShapeLayer</code>，它们不需要附加到 view 上就可以在屏幕上显示内容。两种情况下其实都是 layer 在起决定作用。当然了，附加到 view 上的 layer 和单独的 layer 在行为上还是稍有不同的。</p>
-
-<p>基本上你改变一个单独的 layer 的任何属性的时候，都会触发一个从旧的值过渡到新值的简单动画（这就是所谓的可动画 <code>animatable</code>）。然而，如果你改变的是 view 中 layer 的同一个属性，它只会从这一帧直接跳变到下一帧。尽管两种情况中都有 layer，但是当 layer 附加在 view 上时，它的默认的隐式动画的 layer 行为就不起作用了。</p>
-
-<blockquote>
-  <p>animatable；几乎所有的层的属性都是隐性可动画的。你可以在文档中看到它们的简介是以 &#8216;animatable&#8217; 结尾的。这不仅包括了比如位置，尺寸，颜色或者透明度这样的绝大多数的数值属性，甚至也囊括了像 isHidden 和 doubleSided 这样的布尔值。 像 paths 这样的属性也是 animatable 的，但是它不支持隐式动画。</p>
-</blockquote>
-
-<p>在 Core Animation 编程指南的 “How to Animate Layer-Backed Views” 中，对<em>为什么</em>会这样做出了一个解释：</p>
-
-<blockquote>
-  <p>UIView 默认情况下禁止了 layer 动画，但是在 animation block 中又重新启用了它们</p>
-</blockquote>
-
-<p>这正是我们所看到的行为；当一个属性在动画 block 之外被改变时，没有动画，但是当属性在动画 block 内被改变时，就带上了动画。对于这是<em>如何</em>发生的这一问题的答案十分简单和优雅，它优美地阐明和揭示了 view 和 layer 之间是如何协同工作和被精心设计的。</p>
-
-<p>无论何时一个可动画的 layer 属性改变时，layer 都会寻找并运行合适的 &#8216;action&#8217; 来实行这个改变。在 Core Animation 的专业术语中就把这样的动画统称为动作 (action，或者 <code>CAAction</code>)。</p>
-
-<blockquote>
-  <p>CAAction：技术上来说，这是一个接口，并可以用来做各种事情。但是实际中，某种程度上你可以只把它理解为用来处理动画。</p>
-</blockquote>
-
-<p>layer 将像文档中所写的的那样去寻找动作，整个过程分为五个步骤。第一步中的在 view 和 layer 中交互的部分是最有意思的：</p>
-
-<p>layer 通过向它的 delegate 发送 <code>actionForLayer:forKey:</code> 消息来询问提供一个对应属性变化的 action。delegate 可以通过返回以下三者之一来进行响应：</p>
-
-<ol>
-<li>它可以返回一个动作对象，这种情况下 layer 将使用这个动作。  </li>
-<li>它可以返回一个 <code>nil</code>， 这样 layer 就会到其他地方继续寻找。  </li>
-<li>它可以返回一个 <code>NSNull</code> 对象，告诉 layer 这里不需要执行一个动作，搜索也会就此停止。</li>
-</ol>
-
-<p>而让这一切变得有趣的是，当 layer 在背后支持一个 view 的时候，view 就是它的 delegate；</p>
-
-<blockquote>
-  <p>在 iOS 中，如果 layer 与一个 UIView 对象关联时，这个属性<code>必须</code>被设置为持有这个 layer 的那个 view。</p>
-</blockquote>
-
-<p>理解这些之后，前一分钟解释起来还复杂无比的现象瞬间就易如反掌了：属性改变时 layer 会向 view 请求一个动作，而一般情况下 view 将返回一个 <code>NSNull</code>，只有当属性改变发生在动画 block 中时，view 才会返回实际的动作。哈，但是请别轻信我的这些话，你可以非常容易地验证到底是不是这样。只要对一个一般来说可以动画的 layer 属性向 view 询问动作就可以了，比如对于 &#8216;position&#8217;：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;outside animation block: %@&quot;</span><span class="p">,</span>
-</span><span class="line">      <span class="p">[</span><span class="n">myView</span> <span class="nl">actionForLayer:</span><span class="n">myView</span><span class="p">.</span><span class="n">layer</span> <span class="nl">forKey:</span><span class="s">@&quot;position&quot;</span><span class="p">]);</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">UIView</span> <span class="nl">animateWithDuration:</span><span class="mf">0.3</span> <span class="nl">animations:</span><span class="o">^</span><span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;inside animation block: %@&quot;</span><span class="p">,</span>
-</span><span class="line">          <span class="p">[</span><span class="n">myView</span> <span class="nl">actionForLayer:</span><span class="n">myView</span><span class="p">.</span><span class="n">layer</span> <span class="nl">forKey:</span><span class="s">@&quot;position&quot;</span><span class="p">]);</span>
-</span><span class="line"><span class="p">}];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>运行上面的代码，可以看到在 block 外 view 返回的是 NSNull 对象，而在 block 中时返回的是一个 CABasicAnimation。很优雅，对吧？值得注意的是打印出的 NSNull 是带着一对尖括号的 (&#8221;<code>&lt;null&gt;</code>&#8221;)，这和其他对象一样，而打印 nil 的时候我们得到的是普通括号(<code>(null)</code>)： </p>
-
-<pre><code>outside animation block: &lt;null&gt;
-inside animation block: &lt;CABasicAnimation: 0x8c2ff10&gt;
-</code></pre>
-
-<p>对于 view 中的 layer 来说，对动作的搜索只会到第一步为止（至少我没有见过 view 返回一个 <code>nil</code> 然后导致继续搜索动作的情况）。对于单独的 layer 来说，剩余的四个步骤可以在 <a href="https://developer.apple.com/library/mac/documentation/graphicsimaging/reference/CALayer_class/Introduction/Introduction.html#//apple_ref/occ/instm/CALayer/actionForKey:">CALayer 的 <code>actionForKey:</code> 文档</a>中找到。</p>
-
-<h1 id="uikit">从 UIKit 中学习</h1>
-
-<p>我很确定我们都会同意 UIView 动画是一组非常优秀的 API，它简洁明确。实际上，它使用了 Core Animation 来执行动画，这给了我们一个绝佳的机会来深入研究 UIKit 是如何使用 Core Animation 的。在这里甚至还有很多非常棒的实践和技巧可以让我们借鉴。:)</p>
-
-<p>当属性在动画 block 中改变时，view 将向 layer 返回一个基本的动画，然后动画通过通常的 <code>addAnimation:forKey:</code> 方法被添加到 layer 中，就像显式地添加动画那样。再一次，别直接信我，让我们实践检验一下。</p>
-
-<p>归功于 UIView 的 <code>+layerClass</code> 类方法，view 和 layer 之间的交互很容易被观测到。通过这个方法我们可以在为 view 创建 layer 时为其指定要使用的类。通过子类一个 UIView，以及用这个方法返回一个自定义的 layer 类，我们就可以重写 layer 子类中的 <code>addAnimation:forKey:</code> 并输出一些东西来验证它是否确实被调用。唯一要记住的是我们需要调用 super 方法，不然的话我们就把要观测的行为完全改变了：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">DRInspectionLayer</span> : <span class="nc">CALayer</span>
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">DRInspectionLayer</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addAnimation:</span><span class="p">(</span><span class="n">CAAnimation</span> <span class="o">*</span><span class="p">)</span><span class="nv">anim</span> <span class="nf">forKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;adding animation: %@&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">anim</span> <span class="n">debugDescription</span><span class="p">]);</span>
-</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">addAnimation:</span><span class="n">anim</span> <span class="nl">forKey:</span><span class="n">key</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line">
-</span><span class="line"><span class="k">@interface</span> <span class="nc">DRInspectionView</span> : <span class="nc">UIView</span>
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">DRInspectionView</span>
-</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">Class</span><span class="p">)</span><span class="nf">layerClass</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">DRInspectionLayer</span> <span class="n">class</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>通过输出动画的 debug 信息，我们不仅可以验证它确实如预期一样被调用了，还可以看到动画是如何组织构建的：</p>
-
-<pre><code>&lt;CABasicAnimation:0x8c73680; 
-    delegate = &lt;UIViewAnimationState: 0x8e91fa0&gt;;
-    fillMode = both; 
-    timingFunction = easeInEaseOut; 
-    duration = 0.3; 
-    fromValue = NSPoint: {5, 5}; 
-    keyPath = position
-&gt;
-</code></pre>
-
-<p>当动画刚被添加到 layer 时，属性的新值还没有被改变。在构建动画时，只有 <code>fromValue</code> (也就是当前值) 被显式地指定了。<a href="https://developer.apple.com/library/ios/documentation/GraphicsImaging/Reference/CABasicAnimation_class/Introduction/Introduction.html">CABasicAnimation 的文档</a>向我们简单介绍了这么做对于动画的插值来说的的行为应该是：</p>
-
-<blockquote>
-  <p>只有 <code>fromValue</code> 不是 <code>nil</code> 时，在 <code>fromValue</code> 和属性当前显示层的值之间进行插值。</p>
-</blockquote>
-
-<p>这也是我在处理显式动画时选择的做法，将一个属性改变为新的值，然后将动画对象添加到 layer 上：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">fadeIn</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="s">@&quot;opacity&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="n">fadeIn</span><span class="p">.</span><span class="n">duration</span>  <span class="o">=</span> <span class="mf">0.75</span><span class="p">;</span>
-</span><span class="line"><span class="n">fadeIn</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">0</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">myLayer</span><span class="p">.</span><span class="n">opacity</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span> <span class="c1">// 更改 model 的值 ...</span>
-</span><span class="line"><span class="c1">// ... 然后添加动画对象</span>
-</span><span class="line"><span class="p">[</span><span class="n">myLayer</span> <span class="nl">addAnimation:</span><span class="n">fadeIn</span> <span class="nl">forKey:</span><span class="s">@&quot;fade in slowly&quot;</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这很简洁，你也不需要在动画被移除的时候做什么额外操作。如果动画是在一段延迟后才开始的话，你可以使用 backward 填充模式 (或者 &#8216;both&#8217; 填充模式)，就像 UIKit 所创建的动画那样。</p>
-
-<p>可能你看见上面输出中的动画的 delegate 了，想知道这个类是用来做什么的吗？我们可以来看看 <a href="https://github.com/rpetrich/iphoneheaders/blob/master/UIKit/UIViewAnimationState.h">dump 出来的头文件</a>，它主要用来维护动画的一些状态 (持续时间，延时，重复次数等等)。它还负责对一个栈做 push 和 pop，这是为了在多个动画 block 嵌套时能够获取正确的动画状态。这些都是些实现细节，除非你想要写一套自己的基于 block 的动画 API，否则可能你不会用到它们 (实际上这是一个很有趣的点子)。</p>
-
-<p>然后真正<em>有意思</em>的是这个 delegate 实现了 <code>animationDidStart:</code> 和 <code>animationDidStop:finished:</code>，并将信息传给了它自己的 delegate。</p>
-
-<blockquote>
-  <p><span class="secondary radius label">编者注</span> 这里不太容易理解，加以说明：从上面的头文件中可以看出，作为 CAAnimation 的 delegate 的私有类 <code>UIViewAnimationState</code> 中还有一个 <code>_delegate</code> 成员，并且 <code>animationDidStart:</code> 和 <code>animationDidStop:finished:</code> 也是典型的 delegate 的实现方法。</p>
-</blockquote>
-
-<p>通过打印这个 delegate 的 delegate，我们可以发现它也是一个私有类：UIViewAnimationBlockDelegate。同样进行 <a href="https://github.com/EthanArbuckle/IOS-7-Headers/blob/master/Frameworks/UIKit.framework/UIViewAnimationBlockDelegate.h">class dump 得到它的头文件</a>，这是一个很小的类，只负责一件事情：响应动画的 delegate 回调并且执行相应的 block。如果我们使用自己的 Core Animation 代码，并且选择 block 而不是 delegate 做回调的话，添加这个是很容易的：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">DRAnimationBlockDelegate</span> : <span class="nc">NSObject</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">copy</span><span class="p">)</span> <span class="kt">void</span><span class="p">(</span><span class="o">^</span><span class="n">start</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">copy</span><span class="p">)</span> <span class="kt">void</span><span class="p">(</span><span class="o">^</span><span class="n">stop</span><span class="p">)(</span><span class="kt">BOOL</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line"><span class="k">+</span><span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">animationDelegateWithBeginning:</span><span class="p">(</span><span class="kt">void</span><span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="kt">void</span><span class="p">))</span><span class="nv">beginning</span>
-</span><span class="line">                                   <span class="nf">completion:</span><span class="p">(</span><span class="kt">void</span><span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="kt">BOOL</span> <span class="n">finished</span><span class="p">))</span><span class="nv">completion</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">DRAnimationBlockDelegate</span>
-</span><span class="line">
-</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">animationDelegateWithBeginning:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="kt">void</span><span class="p">))</span><span class="nv">beginning</span>
-</span><span class="line">                                    <span class="nf">completion:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="kt">BOOL</span><span class="p">))</span><span class="nv">completion</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">DRAnimationBlockDelegate</span> <span class="o">*</span><span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">DRAnimationBlockDelegate</span> <span class="n">new</span><span class="p">];</span>
-</span><span class="line">    <span class="n">result</span><span class="p">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">beginning</span><span class="p">;</span>
-</span><span class="line">    <span class="n">result</span><span class="p">.</span><span class="n">stop</span>  <span class="o">=</span> <span class="n">completion</span><span class="p">;</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animationDidStart:</span><span class="p">(</span><span class="n">CAAnimation</span> <span class="o">*</span><span class="p">)</span><span class="nv">anim</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">start</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">start</span><span class="p">();</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">start</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animationDidStop:</span><span class="p">(</span><span class="n">CAAnimation</span> <span class="o">*</span><span class="p">)</span><span class="nv">anim</span> <span class="nf">finished:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">flag</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">stop</span><span class="p">(</span><span class="n">flag</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">stop</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>虽然是我个人的喜好，但是我觉得像这样的基于 block 的回调风格可能会比实现一个 delegate 回调更适合你的代码：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">fadeIn</span><span class="p">.</span><span class="n">delegate</span> <span class="o">=</span> <span class="p">[</span><span class="n">DRAnimationBlockDelegate</span> <span class="nl">animationDelegateWithBeginning:</span><span class="o">^</span><span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;beginning to fade in&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span> <span class="nl">completion:</span><span class="o">^</span><span class="p">(</span><span class="kt">BOOL</span> <span class="n">finished</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;did fade %@&quot;</span><span class="p">,</span> <span class="n">finished</span> <span class="o">?</span> <span class="s">@&quot;to the end&quot;</span> <span class="o">:</span> <span class="s">@&quot;but was cancelled&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h1 id="blockapis">自定义基于 block 的动画 APIs</h1>
-
-<p>一旦你知道了 <code>actionForKey:</code> 的机理之后，UIView 就远没有它一开始看起来那么神秘了。实际上我们完全可以按照我们的需求量身定制地写出一套自己的基于 block 的动画 APIs。我所设计的动画将通过在 block 中用一个很激进的时间曲线来做动画，以吸引用户对该 view 的注意，之后做一个缓慢的动画回到原始状态。你可以把它看作一种类似 pop (请不要和 Facebook 最新的 Pop 框架弄混了)的行为。与一般使用 <code>UIViewAnimationOptionAutoreverse</code> 的动画 block 不同，因为动画设计和概念上的需要，我自己实现了将 model 值改变回原始值的过程。自定义的动画 API 的使用方法就像这样：</p>
-
-<pre><code>[UIView DR_popAnimationWithDuration:0.7
-                             animations:^{
-                                 myView.transform = CGAffineTransformMakeRotation(M_PI_2);
-                                }];
-</code></pre>
-
-<p>当我们完成后，效果是这个样子的 (对四个不同的 view 为位置，尺寸，颜色和旋转进行动画)：</p>
-
-<p><img alt="The custom block animation API, used to animate the position, size, color, and rotation of four different views" src="http://img.objccn.io/issue-12/2014-05-01-view-layer-synergy-custom-block-animations.gif" width="238" /></p>
-
-<p>要开始实现它，我们首先要做的是当一个 layer 属性变化时获取 delegate 的回调。因为我们无法事先预测 layer 要改变什么，所以我选择在一个 UIView 的 category 中 swizzle <code>actionForLayer:forKey:</code> 方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">UIView</span> <span class="nl">(DR_CustomBlockAnimations)</span>
-</span><span class="line">
-</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">load</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="kt">SEL</span> <span class="n">originalSelector</span> <span class="o">=</span> <span class="k">@selector</span><span class="p">(</span><span class="nl">actionForLayer:forKey:</span><span class="p">);</span>
-</span><span class="line">    <span class="kt">SEL</span> <span class="n">extendedSelector</span> <span class="o">=</span> <span class="k">@selector</span><span class="p">(</span><span class="nl">DR_actionForLayer:forKey:</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">Method</span> <span class="n">originalMethod</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">originalSelector</span><span class="p">);</span>
-</span><span class="line">    <span class="n">Method</span> <span class="n">extendedMethod</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">extendedSelector</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">NSAssert</span><span class="p">(</span><span class="n">originalMethod</span><span class="p">,</span> <span class="s">@&quot;original method should exist&quot;</span><span class="p">);</span>
-</span><span class="line">    <span class="n">NSAssert</span><span class="p">(</span><span class="n">extendedMethod</span><span class="p">,</span> <span class="s">@&quot;exchanged method should exist&quot;</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span><span class="p">(</span><span class="n">class_addMethod</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">originalSelector</span><span class="p">,</span> <span class="n">method_getImplementation</span><span class="p">(</span><span class="n">extendedMethod</span><span class="p">),</span> <span class="n">method_getTypeEncoding</span><span class="p">(</span><span class="n">extendedMethod</span><span class="p">)))</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">class_replaceMethod</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">extendedSelector</span><span class="p">,</span> <span class="n">method_getImplementation</span><span class="p">(</span><span class="n">originalMethod</span><span class="p">),</span> <span class="n">method_getTypeEncoding</span><span class="p">(</span><span class="n">originalMethod</span><span class="p">));</span>
-</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">originalMethod</span><span class="p">,</span> <span class="n">extendedMethod</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>为了保证我们不破坏其他依赖于 <code>actionForLayer:forKey:</code> 回调的代码，我们使用一个静态变量来判断现在是不是处于我们自己定义的上下文中。对于这个例子来说一个简单的 <code>BOOL</code> 其实就够了，但是如果我们之后要写更多内容的话，上下文的话就要灵活得多了：</p>
-
-<pre><code>static void *DR_currentAnimationContext = NULL;
-static void *DR_popAnimationContext     = &amp;DR_popAnimationContext;
-
-- (id&lt;CAAction&gt;)DR_actionForLayer:(CALayer *)layer forKey:(NSString *)event
-{
-    if (DR_currentAnimationContext == DR_popAnimationContext) {
-        // 这里写我们自定义的代码...
-    }
-
-    // 调用原始方法
-    return [self DR_actionForLayer:layer forKey:event]; // 没错，你没看错。因为它们已经被交换了
-}
-</code></pre>
-
-<p>在我们的实现中，我们要确保在执行动画 block 之前设置动画的上下文，并且在执行后恢复上下文：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"> <span class="o">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">DR_popAnimationWithDuration:</span><span class="p">(</span><span class="n">NSTimeInterval</span><span class="p">)</span><span class="n">duration</span>
-</span><span class="line">                          <span class="nl">animations:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="kt">void</span><span class="p">))</span><span class="n">animations</span>
-</span><span class="line"> <span class="p">{</span>
-</span><span class="line">     <span class="n">DR_currentAnimationContext</span> <span class="o">=</span> <span class="n">DR_popAnimationContext</span><span class="p">;</span>
-</span><span class="line">     <span class="c1">// 执行动画 (它将触发交换后的 delegate 方法)</span>
-</span><span class="line">     <span class="n">animations</span><span class="p">();</span>
-</span><span class="line">     <span class="cm">/* 一会儿再添加 */</span>
-</span><span class="line">     <span class="n">DR_currentAnimationContext</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class="line"> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>如果我们想要做的不过是添加一个从旧的值向新的值过度的动画的话，我们可以直接在 delegate 的回调中来做。然而因为我们想要更精确地控制动画，我们需要用一个帧动画来实现。帧动画需要所有的值都是已知的，而对我们的情况来说，新的值还没有被设定，因此我们也就无从知晓。</p>
-
-<p>有意思的是，iOS 添加的一个基于 block 的动画 API 也遇到了同样的问题。使用和上面一样的观察手段，我们就能知道它是如何绕开这个麻烦的。对于每个关键帧，在属性变化时，view 返回 <code>nil</code>，但是却存储下需要的状态。这样就能在所有关键帧 block 执行后创建一个 <code>CAKeyframeAnimationz</code> 对象。</p>
-
-<p>受到这种方法的启发，我们可以创建一个小的类来存储我们创建动画时所需要的信息：什么 layer 被更改了，什么 key path 的值被改变了，以及原来的值是什么：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"> <span class="k">@interface</span> <span class="nc">DRSavedPopAnimationState</span> : <span class="nc">NSObject</span>
-</span><span class="line">
-</span><span class="line"> <span class="k">@property</span> <span class="p">(</span><span class="n">strong</span><span class="p">)</span> <span class="n">CALayer</span>  <span class="o">*</span><span class="n">layer</span><span class="p">;</span>
-</span><span class="line"> <span class="k">@property</span> <span class="p">(</span><span class="n">copy</span><span class="p">)</span>   <span class="n">NSString</span> <span class="o">*</span><span class="n">keyPath</span><span class="p">;</span>
-</span><span class="line"> <span class="k">@property</span> <span class="p">(</span><span class="n">strong</span><span class="p">)</span> <span class="kt">id</span>        <span class="n">oldValue</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"> <span class="o">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nl">savedStateWithLayer:</span><span class="p">(</span><span class="n">CALayer</span> <span class="o">*</span><span class="p">)</span><span class="n">layer</span>
-</span><span class="line">                             <span class="nl">keyPath:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="n">keyPath</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"> <span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"> <span class="k">@implementation</span> <span class="nc">DRSavedPopAnimationState</span>
-</span><span class="line">
-</span><span class="line"> <span class="o">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nl">savedStateWithLayer:</span><span class="p">(</span><span class="n">CALayer</span> <span class="o">*</span><span class="p">)</span><span class="n">layer</span>
-</span><span class="line">                             <span class="nl">keyPath:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="n">keyPath</span>
-</span><span class="line"> <span class="p">{</span>
-</span><span class="line">     <span class="n">DRSavedPopAnimationState</span> <span class="o">*</span><span class="n">savedState</span> <span class="o">=</span> <span class="p">[</span><span class="n">DRSavedPopAnimationState</span> <span class="n">new</span><span class="p">];</span>
-</span><span class="line">     <span class="n">savedState</span><span class="p">.</span><span class="n">layer</span>    <span class="o">=</span> <span class="n">layer</span><span class="p">;</span>
-</span><span class="line">     <span class="n">savedState</span><span class="p">.</span><span class="n">keyPath</span>  <span class="o">=</span> <span class="n">keyPath</span><span class="p">;</span>
-</span><span class="line">     <span class="n">savedState</span><span class="p">.</span><span class="n">oldValue</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span> <span class="nl">valueForKeyPath:</span><span class="n">keyPath</span><span class="p">];</span>
-</span><span class="line">     <span class="k">return</span> <span class="n">savedState</span><span class="p">;</span>
-</span><span class="line"> <span class="p">}</span>
-</span><span class="line">
-</span><span class="line"> <span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>接下来，在我们的交换后的 delegate 回调中，我们简单地将被变更的属性的状态存入一个静态可变数组中：</p>
-
-<pre><code> if (DR_currentAnimationContext == DR_popAnimationContext) {
-       [[UIView DR_savedPopAnimationStates] addObject:[DRSavedPopAnimationState savedStateWithLayer:layer
-                                                                                 keyPath:event]];
-
-       // 没有隐式的动画 (稍后添加)
-       return (id&lt;CAAction&gt;)[NSNull null];
-   }
-</code></pre>
-
-<p>在动画 block 执行完毕后，所有的属性都被变更了，它们的状态也被保存了。现在，创建关键帧动画：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"> <span class="o">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">DR_popAnimationWithDuration:</span><span class="p">(</span><span class="n">NSTimeInterval</span><span class="p">)</span><span class="n">duration</span>
-</span><span class="line">                          <span class="nl">animations:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="kt">void</span><span class="p">))</span><span class="n">animations</span>
-</span><span class="line"> <span class="p">{</span>
-</span><span class="line">     <span class="n">DR_currentAnimationContext</span> <span class="o">=</span> <span class="n">DR_popAnimationContext</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">     <span class="c1">// 执行动画 (它将触发交换后的 delegate 方法)</span>
-</span><span class="line">     <span class="n">animations</span><span class="p">();</span>
-</span><span class="line">
-</span><span class="line">     <span class="p">[[</span><span class="n">self</span> <span class="n">DR_savedPopAnimationStates</span><span class="p">]</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="kt">id</span> <span class="n">obj</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">         <span class="n">DRSavedPopAnimationState</span> <span class="o">*</span><span class="n">savedState</span>   <span class="o">=</span> <span class="p">(</span><span class="n">DRSavedPopAnimationState</span> <span class="o">*</span><span class="p">)</span><span class="n">obj</span><span class="p">;</span>
-</span><span class="line">         <span class="n">CALayer</span> <span class="o">*</span><span class="n">layer</span>    <span class="o">=</span> <span class="n">savedState</span><span class="p">.</span><span class="n">layer</span><span class="p">;</span>
-</span><span class="line">         <span class="n">NSString</span> <span class="o">*</span><span class="n">keyPath</span> <span class="o">=</span> <span class="n">savedState</span><span class="p">.</span><span class="n">keyPath</span><span class="p">;</span>
-</span><span class="line">         <span class="kt">id</span> <span class="n">oldValue</span>       <span class="o">=</span> <span class="n">savedState</span><span class="p">.</span><span class="n">oldValue</span><span class="p">;</span>
-</span><span class="line">         <span class="kt">id</span> <span class="n">newValue</span>       <span class="o">=</span> <span class="p">[</span><span class="n">layer</span> <span class="nl">valueForKeyPath:</span><span class="n">keyPath</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">         <span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">anim</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="n">keyPath</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">         <span class="n">CGFloat</span> <span class="n">easing</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">;</span>
-</span><span class="line">         <span class="n">CAMediaTimingFunction</span> <span class="o">*</span><span class="n">easeIn</span>  <span class="o">=</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithControlPoints:</span><span class="mf">1.0</span> <span class="o">:</span><span class="mf">0.0</span> <span class="o">:</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">easing</span><span class="p">)</span> <span class="o">:</span><span class="mf">1.0</span><span class="p">];</span>
-</span><span class="line">         <span class="n">CAMediaTimingFunction</span> <span class="o">*</span><span class="n">easeOut</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithControlPoints:</span><span class="n">easing</span> <span class="o">:</span><span class="mf">0.0</span> <span class="o">:</span><span class="mf">0.0</span> <span class="o">:</span><span class="mf">1.0</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">         <span class="n">anim</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="n">duration</span><span class="p">;</span>
-</span><span class="line">         <span class="n">anim</span><span class="p">.</span><span class="n">keyTimes</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span><span class="err">@</span><span class="mi">0</span><span class="p">,</span> <span class="err">@</span><span class="p">(</span><span class="mf">0.35</span><span class="p">),</span> <span class="err">@</span><span class="mi">1</span><span class="p">];</span>
-</span><span class="line">         <span class="n">anim</span><span class="p">.</span><span class="n">values</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span><span class="n">oldValue</span><span class="p">,</span> <span class="n">newValue</span><span class="p">,</span> <span class="n">oldValue</span><span class="p">];</span>
-</span><span class="line">         <span class="n">anim</span><span class="p">.</span><span class="n">timingFunctions</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span><span class="n">easeIn</span><span class="p">,</span> <span class="n">easeOut</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">         <span class="c1">// 不带动画地返回原来的值</span>
-</span><span class="line">         <span class="p">[</span><span class="n">CATransaction</span> <span class="n">begin</span><span class="p">];</span>
-</span><span class="line">         <span class="p">[</span><span class="n">CATransaction</span> <span class="nl">setDisableActions:</span><span class="n">YES</span><span class="p">];</span>
-</span><span class="line">         <span class="p">[</span><span class="n">layer</span> <span class="nl">setValue:</span><span class="n">oldValue</span> <span class="nl">forKeyPath:</span><span class="n">keyPath</span><span class="p">];</span>
-</span><span class="line">         <span class="p">[</span><span class="n">CATransaction</span> <span class="n">commit</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">         <span class="c1">// 添加 &quot;pop&quot; 动画</span>
-</span><span class="line">         <span class="p">[</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">anim</span> <span class="nl">forKey:</span><span class="n">keyPath</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">     <span class="p">}];</span>
-</span><span class="line">
-</span><span class="line">     <span class="c1">// 扫除工作 (移除所有存储的状态)</span>
-</span><span class="line">     <span class="p">[[</span><span class="n">self</span> <span class="n">DR_savedPopAnimationStates</span><span class="p">]</span> <span class="n">removeAllObjects</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">     <span class="n">DR_currentAnimationContext</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line"> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>注意老的 model 值被射到了 layer 上，所以在当动画结束和移除后，model 的值和 presentation 的值是相符合的。</p>
-
-<p>创建像这样的你自己的 API 不会对没种情况都很适合，但是如果你需要在你的应用中的很多地方都做同样的动画的话，这可以帮助你写出整洁的代码，并减少重复。就算你之后从来不会使用这种方法，实际做一遍也能帮助你搞懂 UIView block 动画的 APIs，特别是你已经在 Core Animation 的舒适区的时候，这非常有助于你的提高。</p>
-
-<h1>其他的动画灵感</h1>
-
-<p>UIImageView 动画是一个完全不同的更高层次的动画 API 的实现方式，我会把它留给你来探索。表面上，它只不过是重新组装了一个传统的动画 API。你所要做的事情就是指定一个图片数组和一段时间，然后告诉 image view 开始动画。在抽象背后，其实是一个添加在 image view 的 layer 上的 contents 属性的离散的关键帧动画：</p>
-
-<pre><code>&lt;CAKeyframeAnimation:0x8e5b020; 
-    removedOnCompletion = 0; 
-    delegate = &lt;_UIImageViewExtendedStorage: 0x8e49230&gt;; 
-    duration = 2.5; 
-    repeatCount = 2.14748e+09; 
-    calculationMode = discrete; 
-    values = (
-        "&lt;CGImage 0x8d6ce80&gt;",
-        "&lt;CGImage 0x8d6d2d0&gt;",
-        "&lt;CGImage 0x8d5cd30&gt;"
-    ); 
-    keyPath = contents
-&gt;
-</code></pre>
-
-<p>动画 APIs 可以以很多不同形式出现，而对于你自己写的动画 API 来说，也是这样的。</p>
 
 <hr />
 <p class="post-footer">
