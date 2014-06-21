@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-06-20T10:34:39+08:00</updated>
+  <updated>2014-06-21T11:40:30+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -18,7 +18,22 @@
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/"/>
     <updated>2014-06-20T09:00:36+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong</id>
-    <content type="html"><![CDATA[<p>建筑领域流行这样一句话，“我们虽然在营造建筑，但建筑也会重新塑造我们”。正如所有开发者最终领悟到的，这句话同样适用于构建软件。</p>
+    <content type="html"><![CDATA[<script type="text/javascript">
+    var wumiiPermaLink = ""; //请用代码生成文章永久的链接
+    var wumiiTitle = ""; //请用代码生成文章标题
+    var wumiiTags = ""; //请用代码生成文章标签，以英文逗号分隔，如："标签1,标签2"
+    var wumiiCategories = []; //请用代码生成文章分类，分类名放在 JSONArray 中，如: ["分类1", "分类2"]
+    var wumiiSitePrefix = "http://itmonkeylife.github.io/Blog/";
+    var wumiiParams = "&num=5&mode=3&pf=JAVASCRIPT";
+</script>
+
+<script type="text/javascript" src="http://widget.wumii.cn/ext/relatedItemsWidget"></script>
+
+<p><a href="http://www.wumii.com/widget/relatedItems" style="border:0;">
+    <img src="http://static.wumii.cn/images/pixel.png" alt="无觅关联推荐，快速提升流量" style="border:0;padding:0;margin:0;" />
+</a></p>
+
+<p>建筑领域流行这样一句话，“我们虽然在营造建筑，但建筑也会重新塑造我们”。正如所有开发者最终领悟到的，这句话同样适用于构建软件。</p>
 
 <p>编写代码中至关重要的是，需要使每一部分容易被识别，赋有一个特定而明显的目的，并与其他部分在逻辑关系中完美契合。这就是我们所说的软件架构。好的架构不仅让一个产品成功投入使用，还可以让产品具有可维护性，并让人不断头脑清醒的对它进行维护！</p>
 
@@ -627,6 +642,8 @@ return hasEqualSections } ```
 <li><a href="http://objccn.io/issue-1-3/">测试 View Controllers</a></li>
 <li><a href="http://inessential.com/2014/03/16/smaller_please">Bunnies</a></li>
 </ul>
+
+<script type="text/javascript" id="wumiiRelatedItems"></script>
 
 <hr />
 
