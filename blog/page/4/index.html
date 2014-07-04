@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Apr 9th, 2014 iOS Comments iOS7.0:隐藏技巧和变通之道 当 iOS 7 刚发布的时候，全世界的苹果开发人员都立马尝试着去编译他们的 app，接着再花上数月的时间来修复任何出现的错误，甚至从头开始重建这个 app。这样的结果，使得人们根本无暇去探究 iOS 7 &hellip;">
+	<meta name="description" content="Apr 10th, 2014 iOS Comments TextView的专有库TextKit iOS 7 的发布给开发者的案头带来了很多新工具。其中一个就是 TextKit。TextKit 由许多新的 UIKit 类组成，顾名思义，这些类就是用来处理文本的。在这里，我们将介绍 TextKit &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -98,6 +98,549 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-04-10T08:54:06+08:00" data-updated="true" itemprop="datePublished">Apr 10<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/04/10/textviewde-zhuan-you-ku-textkit/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/10/textviewde-zhuan-you-ku-textkit/" itemprop="url">TextView的专有库TextKit</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>iOS 7 的发布给开发者的案头带来了很多新工具。其中一个就是 <em>TextKit</em>。TextKit 由许多新的 UIKit 类组成，顾名思义，这些类就是用来处理文本的。在这里，我们将介绍 TextKit 的来由、它的组成，以及通过几个例子解释开发者怎样将它派上大用场。</p>
+
+<p>但是首先我们得先阐明一个观点：TextKit 可能是近期对 UIKit <em>最重要</em>的补充了。iOS 7 的新界面用纯文本按钮替换了大量的图标和边框。总的来说，文本和文本布局在新 OS 系统的视觉效果中所占有的重要性大大提高了。iOS7 的重新设计完全是被文本驱动，这样说也许并不夸张——而文本全部是 TextKit 来处理的。</p>
+
+<p>告诉你这个变动到底有多大吧：iOS7 之前的所有版本，（几乎）所有的文本都是 WebKit 来处理的。对：WebKit，web 浏览器引擎。所有 <code>UILabel</code>、<code>UITextField</code>，以及 <code>UITextView</code> 都在后台以某种方式使用 web views 来进行文本布局和渲染。为了新的界面风格，它们全都被重新设计以使用 TextKit。</p>
+
+<h2 id="ios">iOS 上文本的简短历史</h2>
+
+<p>这些新类并不是用来替换开发者以前使用的类。对 SDK 来说，TextKit 提供的是全新的功能。iOS 7 之前，TextKit 提供的功能必须都手动完成。这是现有框架缺失的功能。</p>
+
+<p>长期以来，只有一个基本的文本布局和渲染框架：<em>CoreText</em>。同样也只有一个途径读取用户的键盘输入：<code>UITextInput</code> 协议。在 iOS6 中，为了简单地获取系统的文本选择，也只有一个选择：继承 <code>UITextView</code>。</p>
+
+<p>（这可能就是为什么我要公开自己十年开发文本编辑器的经验的原因了）在渲染文本和读取键盘输入之间存在着巨大（跟我读：巨大）的缺口。这个缺口可能也是导致很少有富文本或者语法高亮编辑器的原因了——毫无疑问，开发一个好用的文本编辑器得耗费几个月的时间。</p>
+
+<p>就这样——如下是 iOS 文本（不那么）简短历史的简短概要：</p>
+
+<p><strong>iOS 2</strong>：这是第一个公开的 SDK，包括一个简单的文本显示组件（<code>UILabel</code>），一个简单的文本输入组件（<code>UITextField</code>），以及一个简单的、可滚动、可编辑的并且支持更大量文本的组件：<code>UITextView</code>。这些组件都只支持纯文本，没有文本选择支持（仅支持插入点），除了设置字体和文本颜色外几乎没有其他可定制功能。</p>
+
+<p><strong>iOS 3</strong>：新特性有复制和粘贴，以及复制粘贴所需要的文本选择功能。数据探测器（Data Detector）为文本视图提供了一个高亮电话号码和链接的方法。然而，除了打开或关闭这些特性外，开发者基本上没有什么别的事情可以做。</p>
+
+<p><strong>iOS 3.2</strong>：iPad 的出现带来了 CoreText，也就是前面提到的低级文本布局和渲染引擎（从Mac OS X 10.5 移植过来的），以及 <code>UITextInput</code>，就是前面也提到的键盘存取协议。Apple 将 Pages 作为移动设备上文本编辑功能的样板工程[^1]。然而，由于我前面提到的框架缺口，只有很少的应用使用它们。</p>
+
+<p><strong>iOS 4</strong>：iOS 3.2 发布仅仅几个月后就发布了，文本方面没有一丁点新功能。<em>（个人经历：在 WWDC，我走近工程师们，告诉他们我想要一个完善的 iOS 文本布局系统。回答是：“哦…提交个请求。”不出所料…）</em></p>
+
+<p><strong>iOS 5</strong>：文本方面没啥变化。<em>（个人经历：在 WWDC，我和工程师们谈及 iOS 上文本系统。回答是：“我们没有看到太多这方面的请求…” 靠！）</em></p>
+
+<p><strong>iOS 6</strong>：有些动作了：属性文本编辑被加入了 <code>UITextView</code>。很不幸的是，它很难定制。默认的 UI 有粗体、斜体和下划线。用户可以设置字体大小和颜色。粗看起来相当不错，但还是没法控制布局或者提供一个便利的途径来定制文本属性。然而对于（文本编辑）开发者，有一个大的新功能：可以继承 <code>UITextView</code> 了，这样的话，除了以前版本提供的键盘输入外，开发者可以“免费”获得文本选择功能。而在这以前，开发者必须实现一个完全自定义的文本选择功能，这可能是很多非纯文本工具的开发半途而废的原因。<em>（个人经历：我，WWDC，工程师们。我想要一个 iOS 的文本系统。回答：“嗯。吖。是的。也许？看，它只是不执行…” 所以毕竟还是有希望，对吧？）</em></p>
+
+<p><strong>iOS 7</strong>：终于来了，TextKit。</p>
+
+<h2>功能</h2>
+
+<p>所以我们来了。iOS7 带着 TextKit 登陆了。咱们看看它可以做什么！深入之前，我还想提一下，严格来说，这些新功能中的大部分以前都<em>可以</em>实现。如果你有大量的资源和时间来用 CoreText 构建一个文本引擎，这些都是可以实现的。但是在以前，构建一个完善的富文本编辑器可能花费你<em>几个月</em>的时间，现在却非常简单。你只需要到在 Xcode 里打开一个界面文件，然后将 <code>UITextView</code> 拖到你的试图控制器，就可以获得所有以下这些功能：</p>
+
+<p><strong>字距调整（Kerning）</strong>：所有的字符都有一个矩形的外边框，这些边框必须彼此相邻来放置，这样的想法已经过时了。例如，现代文本布局会考虑到一个大写的“T”的“两翼”下面有一些空白，所以它会把后面的小写字母向左移让它们更靠近点。这样做的结果大大提高了文本的易读性，特别是在更长的文字中：</p>
+
+<p><img src="http://img.objccn.io/issue-5/kerning.png" alt="Kerning: the bounding box of the letter “a” (blue rect) clearly overlap the capital “T” when kerning is enabled." title="" /></p>
+
+<p><strong>连写</strong>：我认为这主要是个艺术功能，但当某些字符组合（如“f”后面是“l”）使用组合符号（所谓的字形(glyph)）绘制时，有些文本确实看起来更好（更美观）。</p>
+
+<p><img src="http://img.objccn.io/issue-5/ligature.png" alt="Ligatures: the “Futura” font family contains special symbols for character combinations like “fl”." title="" /></p>
+
+<p><strong>图像附件</strong>：现在可以向 Text View 中添加图像了。</p>
+
+<p><strong>断字</strong>：编辑文本时没那么重要，但如果要以好看易读的方式展现文本时，这就相当重要。断字意味着在行边界处分割单词，从而为整体文本创建一个更整齐的排版和外观。<em>个人经历：</em> iOS 7 之前，开发者必须直接使用 CoreText。像这样：首先以句子为基础检测文本语言，然后获取句子中每个单词可能的断字点，然后在每一个可能的断字点上插入定制的连字占位字符。准备好之后，运行 CoreText 的布局方法并手动将连字符插入到断行。如果你想得到好的效果，之后你得检查带有连字符的文本没有超出行边界，如果超出了，在运行一次行的布局方法，这一次不要使用上次使用的断字点。使用 TextKit 的话，就非常简单了，设置 <code>hyphenationFactor</code> 属性就可以启用断字。</p>
+
+<p><img src="http://img.objccn.io/issue-5/Screen%20Shot%202013-09-29%20at%2022.19.58.png" alt="The text in this view would have looked much more compartmentalized without hyphenation." title="" /></p>
+
+<p><strong>可定制性</strong>：对我来说，甚至比改进过的排版还多，这是个<em>全新</em>的功能。以前开发者必须在使用现有的功能和自己全部重头写之间做出选择。现在提供了一整套类，它们有代理协议，或者可以被覆盖从而改变<em>部分</em>行为。例如，不必重写整个文本组件，你现在就可以改变指定单词的断行行为。我认为这是个胜利。</p>
+
+<p><strong>更多的富文本属性</strong>：现在可以设置不同的下划线样式（双线、粗线、虚线、点线，或者它们的组合）。提高文本的基线非常容易，这可用来设置上标数字。开发者也不再需要自己为定制渲染的文本绘制背景颜色了（CoreText 不支持这些功能）。</p>
+
+<p><strong>序列化</strong>：过去没有内置的方法从磁盘读取带文本属性的字符串。或者再写回磁盘。现在有了。</p>
+
+<p><strong>文本样式</strong>：iOS 7 的界面引入了一个全局预定义的文本类型的新概念。这些文本类型分配了一个全局预定义的外观。理想情况下，这可以让整个系统的标题和连续文本具有一致的风格。通过设置应用，用户可以定义他们的阅读习惯（例如文本大小），那些使用文本样式的应用将自动拥有正确的文本大小和外观。</p>
+
+<p><strong>文本效果</strong>：最后也是最不重要的。iOS 7 有且仅有一个文本效果：凸版。使用此效果的文本看起来像是盖在纸上面一样。内阴影，等等。<em>个人观点：真的？靠…？在一个已经完全彻底不可饶恕地枪毙了所有无用的<a href="http://en.wikipedia.org/wiki/Skeuomorph">怀旧装饰（skeuomorphism）</a>的 iOS 系统上，谁会需要这个像文本盖在纸上的效果？</em></p>
+
+<h2>结构</h2>
+
+<p>可能概览一个系统最好的方法是画一幅图。这是 UIKit 文本系统——TextKit 的简图：</p>
+
+<p><img src="http://img.objccn.io/issue-5/TextKit.png" alt="The structure of all essential TextKit classes. Highlighted with a “New” badge are classes introduced in iOS 7." title="" /></p>
+
+<p>从上图可以看出来，要让一个文本引擎工作，需要几个参与者。我们将从外到里介绍它们：</p>
+
+<p><strong>字符串（String）</strong>：要绘制文本，那么必然在某个地方有个字符串来存储这段文本。在默认的结构中，<code>NSTextStorage</code> 保存并管理这个字符串，在这种情况中，它可以远离绘制。但并不一定非得这样。使用 TextKit 时，文本可以来自任何适合的来源。例如，对于一个代码编辑器，字符串可以是一棵包含所有显示的代码的结构信息的注释语法树（annotated syntax tree，缩写为 AST）。使用一个自定义的 <code>NSTextStorage</code> 就可以让文本在稍后动态地添加字体或颜色高亮等文本属性装饰。这是第一次，开发者可以直接为文本组件使用自己的模型。要想实现这个功能，我们需要一个特别设计的 <code>NSTextStorage</code>，即：</p>
+
+<p><code>NSTextStorage</code>：如果你把文本系统看做一个模型-视图-控制器（MVC）架构，这个类代表的是模型。<code>NSTextStorage</code> 是一个中枢，它管理所有的文本和属性信息。系统只提供了两个存取器方法存取它们，并另外提供了两个方法来分别修改文本和属性。后面我们将进一步了解这些方法。现在重要的是你得理解 <code>NSTextStorage</code> 是从它的父类 <code>NSAttributedString</code> 继承了这些方法。这就很清楚了，<code>NSTextStorage</code>——从文本系统看来——仅仅是一个带有属性的字符串，附带一些扩展。这两者唯一的重大不同点是 <code>NSTextStorage</code> 包含了一个方法，可以把所有对其内容进行的修改以通知的形式发送出来。我们等一下会介绍这部分内容。</p>
+
+<p><code>UITextView</code>：堆栈的另一头是实际的视图。在 TextKit 中，有两个目的：第一，它是文本系统用来绘制的视图。文本视图它自己并<em>不</em>会做任何绘制；它仅仅提供一个供其它类绘制的区域。作为视图层级机构中唯一的组件，第二个目的是处理所有的用户交互。具体来说，Text View 实现 <code>UITextInput</code> 的协议来处理键盘事件，它为用户提供了一种途径来设置一个插入点或选择文本。它并不对文本做任何实际上的改变，仅仅将这些改变请求转发给刚刚讨论的 Text Storage。</p>
+
+<p><code>NSTextContainer</code>：每个 Text View 定义了一个文本可以绘制的区域。为此，每个 Text View 都有一个 Text Container，它精确地描述了这个可用的区域。在简单的情况下，这是一个垂直的无限大的矩形区域。文本被填充到这个区域，并且 Text View 允许用户滚动它。然而，在更高级的情况下，这个区域可能是一个无限大的矩形。例如，当渲染一本书时，每一页都有最大的高度和宽度。 Text Container 会定义这个大小，并且不接受任何超出的文本。相同情况下，一幅图像可能占据了页面的一部分，文本应该沿着它的边缘重新排版。这也是由 Text Container 来处理的，我们会在后面的例子中看到这一点。</p>
+
+<p><code>NSLayoutManager</code>：Layout Manager 是中心组件，它把所有组件粘合在一起：</p>
+
+<ol>
+<li>这个管理器监听 Text Storage 中文本或属性改变的通知，一旦接收到通知就触发布局进程。  </li>
+<li>从 Text Storage 提供的文本开始，它将所有的字符翻译为字形（Glyph）[^2]。  </li>
+<li>一旦字形全部生成，这个管理器向它的 Text Containers 查询文本可用以绘制的区域。  </li>
+<li>然后这些区域被行逐步填充，而行又被字形逐步填充。一旦一行填充完毕，下一行开始填充。  </li>
+<li>对于每一行，布局管理器必须考虑断行行为（放不下的单词必须移到下一行）、连字符、内联的图像附件等等。  </li>
+<li>当布局完成，文本的当前显示状态被设为无效，然后 Layout Manager 将前面几步排版好的文本设给 Text View。</li>
+</ol>
+
+<p><strong>CoreText</strong>：没有直接包含在 TextKit 中，CoreText 是进行实际排版的库。对于布局管理器的每一步，CoreText 被这样或那样的方式调用。它提供了从字符到字形的翻译，用它们来填充行，以及建议断字点。</p>
+
+<h3 id="cocoa">Cocoa 文本系统</h3>
+
+<p>创建像 TextKit 这样庞大复杂的系统肯定不是件简单快速的事情，而且肯定需要丰富的经验和知识。在 iOS 的前面 6 个主版本中，一直没有提供一个“真正的”文本组件，这也说明了这一点。Apple 把它视为一个大的新特性，当然没啥问题。但是它真的是全新的吗？</p>
+
+<p>这里有个数字：在 <a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIKit_Framework/_index.html">UIKit 的 131 个公共类</a>中，只有 9 个的名字没有使用UI作为前缀。这 9 个类使用的是旧系统的的、旧世界的（跟我读：Mac OS）前缀 NS。而且这九个类里面，有七个是用来处理文本的。巧合？好吧…</p>
+
+<p>这是 Cocoa 文本系统的简图。不妨和上面 TextKit 的那幅图作一下对比。</p>
+
+<p><img src="http://img.objccn.io/issue-5/CocoaTextSystem.png" alt="The structure of all essential classes of the Cocoa Text System as present on Mac OS today." title="" /></p>
+
+<p>惊人地相似。很明显，最起码主要部分，两者是相同的。很明显——除了右边部分以及 <code>NSTextView</code> 和 <code>UITextView</code> ——主要的类全部相同。TextKit 是（起码部分是）从 Cocoa 文本系统移植到 iOS。<em>（我之前一直请求的那个，耶！）</em></p>
+
+<p>进一步比较还是能看出一些不同的。最值得注意的有：</p>
+
+<ul>
+<li><p>在 iOS 上没有 <code>NSTypesetter</code> 和 <code>NSGlyphGenerator</code> 这两个类。在 Mac OS 上有很多方法来定制排版，在 iOS 中被极大地简化了，去掉了一些抽象概念，并将这个过程合并到 <code>NSLayoutManager</code> 中来。保留下来的是少数的代理方法，以用来更改文本布局和断行行为。</p></li>
+<li><p>这些 Cocoa 的类移植到 iOS 系统后新增了几个非常便利的功能。在 Cocoa 中，必须手工地将确定的区域从 Text Container 分离出来（见上）。而 UIKit 类提供了一个简单的 <code>exclusionPaths</code> 属性就可以做到这一点。</p></li>
+<li><p>有些功能未能提供，比如，内嵌表格，以及对非图像的附件的支持。</p></li>
+</ul>
+
+<p>尽管有这些区别，总的来说系统还是一样的。<code>NSTextStorage</code> 在两个系统是是一模一样的，<code>NSLayoutManager</code> 和 <code>NSTextContainer</code> 也没有太大的不同。这些变动，在没有太多去除对一些特例的支持的情况下，看来（某些情况下大大地）使文本系统的使用变得更为容易。我认为这是件好事。</p>
+
+<p><em>事后回顾我从 Apple 工程师那里得到的关于将 Cocoa 文本系统移植到 iOS 的答案，我们可以得到一些背景信息。拖到现在并削减功能的原因很简单：性能、性能、性能。文本布局可能是极度昂贵的任务——内存方面、电量方面以及时间方面——特别是在移动设备上。Apple 必须采用更简单的解决方案，并等到处理能力能够至少部分支持一个完善的文本布局引擎。</em></p>
+
+<h2>示例</h2>
+
+<p>为了说明 TextKit 的能力，我创建了一个小的演示项目，你可以<a href="https://github.com/objcio/issue-5-textkit">在 GitHub 上找到它</a>。在这个演示程序中，我只完成了一些以前不容易完成的功能。我必须承认写这些代码只花了我礼拜天的一个上午的时间；如果以前要做同样的事情，我得花几天甚至几个星期。</p>
+
+<p>TextKit 包括了超过 100 个方法，一篇文章根本没办法尽数涉及。而事实上，大多数时候，你需要的仅仅是一个正确的方法，TextKit 的使用和定制性也仍有待探索。所以我决定做四个更小的演示程序，而非一个大的演示程序来展示所有功能。每个演示程序中，我试着演示针对不同的方面和不同的类进行定制。</p>
+
+<h3 id="1">演示程序1：配置</h3>
+
+<p>让我们从最简单的开始：配置文本系统。正如你在上面 TextKit 简图中看到的，<code>NSTextStorage</code>、<code>NSLayoutManager</code> 和 <code>NSTextContainer</code> 之间的箭头都是有两个头的。我试图描述它们的关系是 1 对 N 的关系。就是那样：一个 Text Storage 可以拥有多个 Layout Manager，一个 Layout Manager 也可以拥有多个 Text Container。这些多重性带来了很好的特性：</p>
+
+<ul>
+<li>将多个 Layout Manager 附加到同一个 Text Storage 上，可以产生<em>相同文本的多种视觉表现</em>，而且可以把它们放到一起来显示。每一个表现都有独立的位置和大小。如果相应的 Text View 可编辑，那么在某个 Text View 上做的所有修改都会马上反映到所有 Text View 上。</li>
+<li>将多个 Text Container 附加到同一个 Layout Manager 上，这样可以将<em>一个文本分布到多个视图</em>展现出来。很有用的一个例子，基于页面的布局：每个页面包含一个单独的 Text View。所有这些视图的 Text Container 都引用同一个 Layout Manager，这时这个 Layout Manager 就可以将文本分布到这些视图上来显示。</li>
+</ul>
+
+<p>在 Storyboard 或者 Interface 文件中实例化 <code>UITextView</code> 时，它会预配置一个文本系统：一个 Text Storage，引用一个 Layout Manager，而后者又引用一个 Text Container。同样地，一个文本系统栈也可以通过代码直接创建：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSTextStorage</span> <span class="o">*</span><span class="n">textStorage</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSTextStorage</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">NSLayoutManager</span> <span class="o">*</span><span class="n">layoutManager</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSLayoutManager</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">textStorage</span> <span class="nl">addLayoutManager:</span> <span class="n">layoutManager</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">NSTextContainer</span> <span class="o">*</span><span class="n">textContainer</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSTextContainer</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">layoutManager</span> <span class="nl">addTextContainer:</span> <span class="n">textContainer</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">UITextView</span> <span class="o">*</span><span class="n">textView</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UITextView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithFrame:</span><span class="n">someFrame</span>
+</span><span class="line">                                                                     <span class="nl">textContainer:</span><span class="n">textContainer</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这是最简单的方式。手工创建一个文本系统，唯一需要记住的事情是你的 View Controller 必须 retain 这个 Text Storage。在栈底的 Text View 只保留了对 Text Storage 和 Layout Manager 的弱引用。当 Text Storage 被释放时，Layout Manager 也被释放了，这样留给 Text View 的就只有一个断开的 Text Container 了。</p>
+
+<p>这个规则有一个例外。只有从一个 interface 文件或 storyboard 实例化一个 Text View 时，Text View 确实会<em>自动</em> retain Text Storage。框架使用了一些黑魔法以确保所有的对象都被 retain，而无需手动建立一个 retain 环。</p>
+
+<p>记住这些之后，创建一个更高级的设置也非常简单。假设在一个视图里面依旧有一个从 nib 实例化的 Text View，叫做 <code>originalTextView</code>。增加对相同文本的第二个文本视图只需要复制上面的代码，并重用 <code>originalTextView</code> 的 Text Storage：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSTextStorage</span> <span class="o">*</span><span class="n">sharedTextStorage</span> <span class="o">=</span> <span class="n">originalTextView</span><span class="p">.</span><span class="n">textStorage</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">NSLayoutManager</span> <span class="o">*</span><span class="n">otherLayoutManager</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSLayoutManager</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">sharedTextStorage</span> <span class="nl">addLayoutManager:</span> <span class="n">otherLayoutManager</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">NSTextContainer</span> <span class="o">*</span><span class="n">otherTextContainer</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSTextContainer</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">otherLayoutManager</span> <span class="nl">addTextContainer:</span> <span class="n">otherTextContainer</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">UITextView</span> <span class="o">*</span><span class="n">otherTextView</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UITextView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithFrame:</span><span class="n">someFrame</span>
+</span><span class="line">                                                <span class="nl">textContainer:</span><span class="n">otherTextContainer</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>将第二个 Text Container 附加到 Layout Manager 也差不多。比方说我们希望上面例子中的文本填充<em>两个</em> Text View，而非一个。简单：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSTextContainer</span> <span class="o">*</span><span class="n">thirdTextContainer</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSTextContainer</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">otherLayoutManager</span> <span class="nl">addTextContainer:</span> <span class="n">thirdTextContainer</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">UITextView</span> <span class="o">*</span><span class="n">thirdTextView</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UITextView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithFrame:</span><span class="n">someFrame</span>
+</span><span class="line">                                                <span class="nl">textContainer:</span><span class="n">thirdTextContainer</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>但有一点需要注意：由于在 otherTextView 中的 Text Container 可以无限地调整大小，<code>thirdTextView</code> 永远不会得到任何文本。因此，我们必须指定文本应该从一个视图回流到其它视图，而不应该调整大小或者滚动：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">otherTextView</span><span class="p">.</span><span class="n">scrollEnabled</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>不幸的是，看来将多个 Text Container 附加到一个 Layout Manager 会禁用编辑功能。如果必须保留编辑功能的话，那么一个 Text Container 只能附加到一个 Layout Manager 上。</p>
+
+<p>想要一个这个配置的可运行的例子的话，请在前面提到的 <a href="https://github.com/objcio/issue-5-textkit">TextKitDemo</a> 中查看 “Configuration” 标签页。</p>
+
+<h2 id="2">演示程序2：语法高亮</h2>
+
+<p>如果配置 Text View 不是那么令人激动，那么这里有更有趣的：语法高亮！</p>
+
+<p>看看 TextKit 组件的责任划分，就很清楚语法高亮应该由 Text Storage 实现。因为 <code>NSTextStorage</code> 是一个类簇[^3]，创建它的子类需要做不少工作。我的想法是建立一个复合对象：实现所有的方法，但只是将对它们的调用转发给一个实际的实例，将输入输出参数或者结果修改为希望的样子。</p>
+
+<p><code>NSTextStorage</code> 继承自 <code>NSMutableAttributedString</code>，并且必须实现以下四个方法——两个 getter 和两个 setter：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">string</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nf">attributesAtIndex:</span><span class="p">(</span><span class="n">NSUInteger</span><span class="p">)</span><span class="nv">location</span>
+</span><span class="line">                     <span class="nf">effectiveRange:</span><span class="p">(</span><span class="n">NSRangePointer</span><span class="p">)</span><span class="nv">range</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">replaceCharactersInRange:</span><span class="p">(</span><span class="n">NSRange</span><span class="p">)</span><span class="nv">range</span> <span class="nf">withString:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">str</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setAttributes:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">attrs</span> <span class="nf">range:</span><span class="p">(</span><span class="n">NSRange</span><span class="p">)</span><span class="nv">range</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>一个类簇的子类的复合对象的实现也相当简单。首先，找到一个满足所有要求的<em>最简单</em>的类。在我们的例子中，它是 <code>NSMutableAttributedString</code>，我们用它作为实现自定义存储的实现：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">TKDHighlightingTextStorage</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSMutableAttributedString</span> <span class="o">*</span><span class="n">_imp</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">_imp</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableAttributedString</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>有了这个对象，只需要一行代码就可以实现两个 getter 方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">string</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">_imp</span><span class="p">.</span><span class="n">string</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nf">attributesAtIndex:</span><span class="p">(</span><span class="n">NSUInteger</span><span class="p">)</span><span class="nv">location</span> <span class="nf">effectiveRange:</span><span class="p">(</span><span class="n">NSRangePointer</span><span class="p">)</span><span class="nv">range</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">_imp</span> <span class="nl">attributesAtIndex:</span><span class="n">location</span> <span class="nl">effectiveRange:</span><span class="n">range</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>实现两个 setter 方法也几乎同样简单。但也有一个小麻烦：Text Storage 需要通知它的 Layout Manager 变化发生了。因此 settter 方法必须也要调用 <code>-edited:range:changeInLegth:</code> 并传给它变化的描述。听起来更糟糕，实现变成：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">replaceCharactersInRange:</span><span class="p">(</span><span class="n">NSRange</span><span class="p">)</span><span class="nv">range</span> <span class="nf">withString:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">str</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">_imp</span> <span class="nl">replaceCharactersInRange:</span><span class="n">range</span> <span class="nl">withString:</span><span class="n">str</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">edited:</span><span class="n">NSTextStorageEditedCharacters</span> <span class="nl">range:</span><span class="n">range</span>
+</span><span class="line">                                      <span class="nl">changeInLength:</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="n">str</span><span class="p">.</span><span class="n">length</span> <span class="o">-</span> <span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="n">range</span><span class="p">.</span><span class="n">length</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setAttributes:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">attrs</span> <span class="nf">range:</span><span class="p">(</span><span class="n">NSRange</span><span class="p">)</span><span class="nv">range</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">_imp</span> <span class="nl">setAttributes:</span><span class="n">attrs</span> <span class="nl">range:</span><span class="n">range</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">edited:</span><span class="n">NSTextStorageEditedAttributes</span> <span class="nl">range:</span><span class="n">range</span> <span class="nl">changeInLength:</span><span class="mi">0</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>就这样，我们在文本系统栈里面有了一个 Text Storage 的全功能替换版本。在从 Interface 文件中载入时，可以像这样将它插入文本视图——但是记住从一个实例变量引用 Text Storage：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">_textStorage</span> <span class="o">=</span> <span class="p">[</span><span class="n">TKDHighlightingTextStorage</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">_textStorage</span> <span class="nl">addLayoutManager:</span> <span class="n">self</span><span class="p">.</span><span class="n">textView</span><span class="p">.</span><span class="n">layoutManager</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>到目前为止，一切都很好。我们设法插入了一个自定义的文本存储，接下来我们需要真正高亮文本的某些部分了。现在，一个简单的高亮应该就是够了：我们希望将所有 iWords 的颜色变成红色——也就是那些以小写“i”开头，后面跟着一个大写字母的单词。</p>
+
+<p>一个方便实现高亮的办法是覆盖 <code>-processEditing</code>。每次文本存储有修改时，这个方法都自动被调用。每次编辑后，<code>NSTextStorage</code> 会用这个方法来清理字符串。例如，有些字符无法用选定的字体显示时，Text Storage 使用一个可以显示它们的字体来进行替换。</p>
+
+<p>和其它一样，为 iWords 增加一个简单的高亮也相当简单。我们覆盖 <code>-processEditing</code>，调用父类的实现，并设置一个正则表达式来查找单词：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">processEditing</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">processEditing</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">static</span> <span class="n">NSRegularExpression</span> <span class="o">*</span><span class="n">iExpression</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">pattern</span> <span class="o">=</span> <span class="s">@&quot;i[\p{Alphabetic}&amp;amp;amp;&amp;amp;amp;\p{Uppercase}][\p{Alphabetic}]%2B&quot;</span><span class="p">;</span>
+</span><span class="line">    <span class="n">iExpression</span> <span class="o">=</span> <span class="n">iExpression</span> <span class="o">?:</span> <span class="p">[</span><span class="n">NSRegularExpression</span> <span class="nl">regularExpressionWithPattern:</span><span class="n">pattern</span>
+</span><span class="line">                                                                           <span class="nl">options:</span><span class="mi">0</span>
+</span><span class="line">                                                                             <span class="nl">error:</span><span class="nb">NULL</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>																			
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>然后，首先清除之前的所有高亮：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSRange</span> <span class="n">paragaphRange</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">string</span> <span class="nl">paragraphRangeForRange:</span> <span class="n">self</span><span class="p">.</span><span class="n">editedRange</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">self</span> <span class="nl">removeAttribute:</span><span class="n">NSForegroundColorAttributeName</span> <span class="nl">range:</span><span class="n">paragaphRange</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>其次遍历所有的样式匹配项并高亮它们：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">iExpression</span> <span class="nl">enumerateMatchesInString:</span><span class="n">self</span><span class="p">.</span><span class="n">string</span>
+</span><span class="line">                              <span class="nl">options:</span><span class="mi">0</span> <span class="nl">range:</span><span class="n">paragaphRange</span>
+</span><span class="line">                           <span class="nl">usingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">NSTextCheckingResult</span> <span class="o">*</span><span class="n">result</span><span class="p">,</span> <span class="n">NSMatchingFlags</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">addAttribute:</span><span class="n">NSForegroundColorAttributeName</span> <span class="nl">value:</span><span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span> <span class="nl">range:</span><span class="n">result</span><span class="p">.</span><span class="n">range</span><span class="p">];</span>
+</span><span class="line"><span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>就是这样。我们创建了一个支持语法高亮的动态 Text View。当用户键入时，高亮将被<em>实时</em>应用。而且这只需几行代码。酷吧？</p>
+
+<p><img src="http://img.objccn.io/issue-5/SyntaxHighlighting.png" alt="A screenshot from the TextKitDemo project showing the text view with iWords highlighted." title="" /></p>
+
+<p>请注意仅仅使用 <em>edited range</em> 是不够的。例如，当手动键入 iWords，只有一个单词的第三个字符被键入后，正则表达式才开始匹配。但那时 <code>editedRange</code> 仅包含第三个字符，因此所有的处理只会影响这一个字符。通过重新处理整个段落可以解决这个问题，这样既完成高亮功能，又不会太过影响性能。</p>
+
+<p>想要一个可以运行的 Demo 的话，请在前面提到的 <a href="https://github.com/objcio/issue-5-textkit">TextKitDemo</a> 中查看“Highlighting”标签页。</p>
+
+<h2 id="3">演示程序3：布局修改</h2>
+
+<p>如前所述，Layout Manager 是核心的布局主力。Mac OS 上 <code>NSTypesetter</code> 的高度可定制功能被并入 iOS 上的 <code>NSLayoutManager</code>。虽然 TextKit 不具备像 Cocoa 文本系统那样的完全可定制性，但它提供很多代理方法来允许做一些调整。如前所述，TextKit 与 CoreText 更紧密地集成在一起，主要是基于性能方面的考虑。但是两个文本系统的理念在一定程度上是不一样的：</p>
+
+<p><strong>Cocoa 文本系统</strong>：在 Mac OS上，性能不是问题，设计考量的全部是灵活性。可能是这样：“这个东西可以做这个事情。如果你想的话，你可以覆盖它。性能不是问题。你也可以提供完全由自己实现的字符到字形的转换，去做吧…”</p>
+
+<p><strong>TextKit</strong>：性能看来真是个问题。理念（起码现在）更多的是像这样：“我们用简单但是高性能的方法实现了这个功能。这是结果，但是我们给你一个机会去更改它的一些东西。但是你只能在不太损害性能的地方进行修改。”</p>
+
+<p>理念的东西就讲这么多，现在让我们来搞些实际的东西。例如，调整行高如何？听起来不可思议，但是在之前的 iOS 发布版上调整行高需要<a href="http://stackoverflow.com/questions/3760924/set-line-height-in-uitextview/3914228">使用黑科技或者私有 API</a>。幸运的是，现在（再一次）不用那么费脑子了。设置 Layout Manager 的代理并实现仅仅一个方法即可：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">CGFloat</span><span class="p">)</span>      <span class="nf">layoutManager:</span><span class="p">(</span><span class="n">NSLayoutManager</span> <span class="o">*</span><span class="p">)</span><span class="nv">layoutManager</span>
+</span><span class="line">  <span class="nf">lineSpacingAfterGlyphAtIndex:</span><span class="p">(</span><span class="n">NSUInteger</span><span class="p">)</span><span class="nv">glyphIndex</span>
+</span><span class="line">  <span class="nf">withProposedLineFragmentRect:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">rect</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">floorf</span><span class="p">(</span><span class="n">glyphIndex</span> <span class="o">/</span> <span class="mi">100</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在以上的代码中，我修改了行间距，让它与文本长度同时增长。这导致顶部的行比底部的行排列得更紧密。我承认这没什么实际的用处，但是它是可以做到的（而且肯定会有更实用的用例的）。</p>
+
+<p>好，来一个更现实的场景。假设你的文本中有链接，你不希望这些链接被断行分割。如果可能的话，一个 URL 应该始终显示为一个整体，一个单一的文本片段。没有什么比这更简单的了。</p>
+
+<p>首先，就像前面讨论过的那样，我们使用自定义的 Text Storage。但是，它寻找链接并将其标记，而不是检测 iWords，如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">static</span> <span class="n">NSDataDetector</span> <span class="o">*</span><span class="n">linkDetector</span><span class="p">;</span>
+</span><span class="line"><span class="n">linkDetector</span> <span class="o">=</span> <span class="n">linkDetector</span> <span class="o">?:</span> <span class="p">[[</span><span class="n">NSDataDetector</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithTypes:</span><span class="n">NSTextCheckingTypeLink</span> <span class="nl">error:</span><span class="nb">NULL</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">NSRange</span> <span class="n">paragaphRange</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">string</span> <span class="nl">paragraphRangeForRange:</span> <span class="n">NSMakeRange</span><span class="p">(</span><span class="n">range</span><span class="p">.</span><span class="n">location</span><span class="p">,</span> <span class="n">str</span><span class="p">.</span><span class="n">length</span><span class="p">)];</span>
+</span><span class="line"><span class="p">[</span><span class="n">self</span> <span class="nl">removeAttribute:</span><span class="n">NSLinkAttributeName</span> <span class="nl">range:</span><span class="n">paragaphRange</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="p">[</span><span class="n">linkDetector</span> <span class="nl">enumerateMatchesInString:</span><span class="n">self</span><span class="p">.</span><span class="n">string</span>
+</span><span class="line">                               <span class="nl">options:</span><span class="mi">0</span>
+</span><span class="line">                                 <span class="nl">range:</span><span class="n">paragaphRange</span>
+</span><span class="line">                            <span class="nl">usingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">NSTextCheckingResult</span> <span class="o">*</span><span class="n">result</span><span class="p">,</span> <span class="n">NSMatchingFlags</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">addAttribute:</span><span class="n">NSLinkAttributeName</span> <span class="nl">value:</span><span class="n">result</span><span class="p">.</span><span class="n">URL</span> <span class="nl">range:</span><span class="n">result</span><span class="p">.</span><span class="n">range</span><span class="p">];</span>
+</span><span class="line"><span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>有了这个，改变断行行为就只需要实现一个 Layout Manager 的代理方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">layoutManager:</span><span class="p">(</span><span class="n">NSLayoutManager</span> <span class="o">*</span><span class="p">)</span><span class="nv">layoutManager</span> <span class="nf">shouldBreakLineByWordBeforeCharacterAtIndex:</span><span class="p">(</span><span class="n">NSUInteger</span><span class="p">)</span><span class="nv">charIndex</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSRange</span> <span class="n">range</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSURL</span> <span class="o">*</span><span class="n">linkURL</span> <span class="o">=</span> <span class="p">[</span><span class="n">layoutManager</span><span class="p">.</span><span class="n">textStorage</span> <span class="nl">attribute:</span><span class="n">NSLinkAttributeName</span>
+</span><span class="line">                                                  <span class="nl">atIndex:</span><span class="n">charIndex</span>
+</span><span class="line">                                           <span class="nl">effectiveRange:</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">amp</span><span class="p">;</span><span class="n">range</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="o">!</span><span class="p">(</span><span class="n">linkURL</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">amp</span><span class="p">;</span> <span class="n">charIndex</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">gt</span><span class="p">;</span> <span class="n">range</span><span class="p">.</span><span class="n">location</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">amp</span><span class="p">;</span> <span class="n">charIndex</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>想要一个可运行的例子的话，请在前面提到的 <a href="https://github.com/objcio/issue-5-textkit">TextKitDemo</a> 中查看“Layout”标签页。以下是截屏：</p>
+
+<p><img src="http://img.objccn.io/issue-5/LineBreaking.png" alt="A screenshot from the TextKitDemo project showing altered line break behavior for link URLs." title="" /></p>
+
+<p>顺便说一句，上面截屏里面的绿色轮廓线是无法用 TextKit 实现的。在这个演示程序中，我用了个小技巧来在 Layout Manager 的子类中给文本画轮廓线。以特定的方法来扩展 TextKit 的绘制功能也不是件难事，你一定要看看！</p>
+
+<h3 id="4">演示程序4：文本交互</h3>
+
+<p>前面已经涉及到了 <code>NSTextStorage</code> 和 <code>NSLayoutManager</code>，最后一个演示程序将涉及 <code>NSTextContainer</code>。这个类并不复杂，而且它除了指定文本可不可以放置在某个地方外，什么都没做。</p>
+
+<p>不要将文本放置在某些区域，这是很常见的需求，例如，在杂志应用中。对于这种情况，iOS 上的 <code>NSTextContainer</code> 提供了一个 Mac 开发者梦寐以求的属性：<code>exclusionPaths</code>，它允许开发者设置一个 <code>NSBezierPath</code> 数组来指定不可填充文本的区域。要了解这到底是什么东西，看一眼下面的截屏：</p>
+
+<p><img src="http://img.objccn.io/issue-5/ReflowingTextAndClippy.png" alt="A screenshot from the TextKitDemo project showing text revolving around an excluded oval view" title="" /></p>
+
+<p>正如你所看到的，所有的文本都放置在蓝色椭圆外面。在 Text View 里面实现这个行为很简单，但是有个小麻烦：Bezier Path 的坐标必须使用容器的坐标系。以下是转换方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">updateExclusionPaths</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line"><span class="n">CGRect</span> <span class="n">ovalFrame</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">textView</span> <span class="nl">convertRect:</span><span class="n">self</span><span class="p">.</span><span class="n">circleView</span><span class="p">.</span><span class="n">bounds</span>
+</span><span class="line">                                                      <span class="nl">fromView:</span><span class="n">self</span><span class="p">.</span><span class="n">circleView</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">ovalFrame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">-=</span> <span class="n">self</span><span class="p">.</span><span class="n">textView</span><span class="p">.</span><span class="n">textContainerInset</span><span class="p">.</span><span class="n">left</span><span class="p">;</span>
+</span><span class="line">    <span class="n">ovalFrame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">-=</span> <span class="n">self</span><span class="p">.</span><span class="n">textView</span><span class="p">.</span><span class="n">textContainerInset</span><span class="p">.</span><span class="n">top</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">UIBezierPath</span> <span class="o">*</span><span class="n">ovalPath</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithOvalInRect:</span><span class="n">ovalFrame</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">textView</span><span class="p">.</span><span class="n">textContainer</span><span class="p">.</span><span class="n">exclusionPaths</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span><span class="n">ovalPath</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在这个例子中，我使用了一个用户可移动的视图，它可以被自由移动，而文本会实时地围绕着它重新排版。我们首先将它的 bounds（<code>self.circleView.bounds</code>）转换到 Text View 的坐标系统。</p>
+
+<p>因为没有 inset，文本会过于靠近视图边界，所以 <code>UITextView</code> 会在离边界还有几个点的距离的地方插入它的文本容器。因此，要得到以容器坐标表示的路径，必须从 origin 中减去这个插入点的坐标。</p>
+
+<p>在此之后，只需将 Bezier Path 设置给 Text Container 即可将对应的区域排除掉。其它的过程对你来说是透明的，TextKit 会自动处理。</p>
+
+<p>想要一个可运行的例子的话，请在前面提到的 <a href="https://github.com/objcio/issue-5-textkit">TextKitDemo</a> 中查看“Interaction”标签页。作为一个小噱头，它也包含了一个跟随当前文本选择的视图。因为，你也知道，没有一个小小的丑陋的烦人的回形针挡住你的话，那还是一个好的文本编辑器演示程序吗？</p>
+
+<p>[^1]:   Pages 确实——据 Apple 声称——绝对没有使用私有 API。<em>咳</em> 我的理论：它要么使用了一个 TextKit 的史前版本，要么复制了 UIKit 一半的私有源程序。或者两者的混合。</p>
+
+<p>[^2]:   <em>字形（Glyphs）</em>：如果说字符是一个字母的“语义”表达，字形则是它的可视化表达。取决于所使用的字体，字形要么是贝塞尔路径，或者位图图像，它定义了要绘制出来的形状。也请参考卓越的 Wikipedia 上关于字形的<a href="http://en.wikipedia.org/wiki/Glyph">这篇文章</a>。</p>
+
+<p>[^3]:   在一个类簇中，只有一个抽象的父类是公共的。分配一个实例实际上就是创建其中一个私有类的对象。因此，你总是为一个抽象类创建子类，并且需要实现所有的方法。也请参考 <a href="https://developer.apple.com/library/ios/documentation/general/conceptual/CocoaEncyclopedia/ClassClusters/ClassClusters.html">class cluster documentation</a>。</p>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -4767,565 +5310,6 @@ Gróa
 <p>但另一方面，并发实际上是一个非常棒的工具。它充分利用了现代多核 CPU 的强大计算能力。在开发中，关键的一点就是尽量让并发模型保持简单，这样可以限制所需要的锁的数量。</p>
 
 <p>我们建议采纳的安全模式是这样的：从主线程中提取出要使用到的数据，并利用一个操作队列在后台处理相关的数据，最后回到主队列中来发送你在后台队列中得到的结果。使用这种方式，你不需要自己做任何锁操作，这也就大大减少了犯错误的几率。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-04-08T18:23:21+08:00" data-updated="true" itemprop="datePublished">Apr 8<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/" itemprop="url">绘制像素到屏幕</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>一个像素是如何绘制到屏幕上去的？有很多种方式将一些东西映射到显示屏上，他们需要调用不同的框架、许多功能和方法的结合体。这里我们大概的看一下屏幕之后发生的事情。当你想要弄清楚什么时候、怎么去查明并解决问题时，我希望这篇文章能帮助你理解哪一个 API 可以更好的帮你解决问题。我们将聚焦于 iOS，然而我讨论的大多数问题也同样适用于 OS X。</p>
-
-<h2>图形堆栈</h2>
-
-<p>当像素映射到屏幕上的时候，后台发生了很多事情。但一旦他们显示到屏幕上，每一个像素均由三个颜色组件构成：红，绿，蓝。三个独立的颜色单元会根据给定的颜色显示到一个像素上。在 iPhone5 的<a href="https://zh.wikipedia.org/wiki/%E6%A9%AB%E5%90%91%E9%9B%BB%E5%A0%B4%E6%95%88%E6%87%89%E9%A1%AF%E7%A4%BA%E6%8A%80%E8%A1%93">液晶显示器</a>上有1,136×640=727,040个像素，因此有2,181,120个颜色单元。在15寸视网膜屏的 MacBook Pro 上，这一数字达到15.5百万以上。所有的图形堆栈一起工作以确保每次正确的显示。当你滚动整个屏幕的时候，数以百万计的颜色单元必须以每秒60次的速度刷新，这是一个很大的工作量。</p>
-
-<h2>软件组成</h2>
-
-<p>从简单的角度来看，软件堆栈看起来有点像这样：</p>
-
-<p><img src="http://img.objccn.io/issue-3/pixels-software-stack.png" alt="软件堆栈" title="" /></p>
-
-<p>Display 的上一层便是图形处理单元 GPU，GPU 是一个专门为图形高迸发计算而量身定做的处理单元。这也是为什么它能同时更新所有的像素，并呈现到显示器上。它迸发的本性让它能高效的将不同纹理合成起来。我们将有一小块内容来更详细的讨论图形合成。关键的是，GPU 是非常专业的，因此在某些工作上非常高效。比如，GPU 非常快，并且比 CPU 使用更少的电来完成工作。通常 CPU 都有一个普遍的目的，它可以做很多不同的事情，但是合成图像在 CPU 上却显得比较慢。</p>
-
-<p>GPU Driver 是直接和 GPU 交流的代码块。不同的GPU是不同的性能怪兽，但是驱动使他们在下一个层级上显示的更为统一，典型的驱动有 OpenGL/OpenGL ES.</p>
-
-<p>OpenGL(<a href="http://zh.wikipedia.org/wiki/OpenGL">Open Graphics Library</a>) 是一个提供了 2D 和 3D 图形渲染的 API。GPU 是一块非常特殊的硬件，OpenGL  和 GPU 密切的工作以提高GPU的能力，并实现硬件加速渲染。对大多数人来说，OpenGL 看起来非常底层，但是当它在1992年第一次发布的时候(20多年前的事了)是第一个和图形硬件(GPU)交流的标准化方式，这是一个重大的飞跃，程序员不再需要为每个GPU重写他们的应用了。</p>
-
-<p>OpenGL 之上扩展出很多东西。在 iOS 上，几乎所有的东西都是通过 Core Animation 绘制出来，然而在 OS X 上，绕过 Core Animation 直接使用 Core Graphics 绘制的情况并不少见。对于一些专门的应用，尤其是游戏，程序可能直接和 OpenGL/OpenGL ES 交流。事情变得使人更加困惑，因为 Core Animation 使用 Core Graphics 来做一些渲染。像 AVFoundation，Core Image 框架，和其他一些混合的入口。</p>
-
-<p>要记住一件事情，GPU 是一个非常强大的图形硬件，并且在显示像素方面起着核心作用。它连接到 CPU。从硬件上讲两者之间存在某种类型的<a href="https://zh.wikipedia.org/wiki/I/O%E6%80%BB%E7%BA%BF">总线</a>，并且有像 OpenGL，Core Animation 和 Core Graphics 这样的框架来在 GPU 和 CPU 之间精心安排数据的传输。为了将像素显示到屏幕上，一些处理将在 CPU 上进行。然后数据将会传送到 GPU，这也需要做一些相应的操作，最终像素显示到屏幕上。</p>
-
-<p>这个过程的每一部分都有各自的挑战，并且许多时候需要做出折中的选择。</p>
-
-<h2>硬件参与者</h2>
-
-<p><img src="http://img.objccn.io/issue-3/pixels%2C%20hardware.png" alt="挑战" title="" /></p>
-
-<p>正如上面这张简单的图片显示那些挑战：GPU 需要将每一个 frame 的纹理(位图)合成在一起(一秒60次)。每一个纹理会占用 VRAM(video RAM)，所以需要给 GPU 同时保持纹理的数量做一个限制。GPU 在合成方面非常高效，但是某些合成任务却比其他更复杂，并且 GPU在 16.7ms(1/60s)内能做的工作也是有限的。</p>
-
-<p>下一个挑战就是将数据传输到 GPU 上。为了让 GPU 访问数据，需要将数据从 RAM 移动到 VRAM 上。这就是提及到的上传数据到 GPU。这看起来貌似微不足道，但是一些大型的纹理却会非常耗时。</p>
-
-<p>最终，CPU 开始运行你的程序。你可能会让 CPU 从 bundle 加载一张 PNG 的图片并且解压它。这所有的事情都在 CPU 上进行。然后当你需要显示解压缩后的图片时，它需要以某种方式上传到 GPU。一些看似平凡的，比如显示文本，对 CPU 来说却是一件非常复杂的事情，这会促使 Core Text 和 Core Graphics 框架更紧密的集成来根据文本生成一个位图。一旦准备好，它将会被作为一个纹理上传到 GPU 并准备显示出来。当你滚动或者在屏幕上移动文本时，不管怎么样，同样的纹理能够被复用，CPU 只需简单的告诉 GPU 新的位置就行了,所以 GPU 就可以重用存在的纹理了。CPU 并不需要重新渲染文本，并且位图也不需要重新上传到 GPU。</p>
-
-<p>这张图涉及到一些错综复杂的方面，我们将会把这些方面提取出来并深一步了解。</p>
-
-<h2>合成</h2>
-
-<p>在图形世界中，合成是一个描述不同位图如何放到一起来创建你最终在屏幕上看到图像的过程。在许多方面显得显而易见，而让人忘了背后错综复杂的计算。</p>
-
-<p>让我们忽略一些难懂的事例并且假定屏幕上一切事物皆纹理。一个纹理就是一个包含 RGBA 值的长方形，比如，每一个像素里面都包含红、绿、蓝和透明度的值。在 Core Animation 世界中这就相当于一个 CALayer。</p>
-
-<p>在这个简化的设置中，每一个 layer 是一个纹理，所有的纹理都以某种方式堆叠在彼此的顶部。对于屏幕上的每一个像素，GPU 需要算出怎么混合这些纹理来得到像素 RGB 的值。这就是合成大概的意思。</p>
-
-<p>如果我们所拥有的是一个和屏幕大小一样并且和屏幕像素对齐的单一纹理，那么屏幕上每一个像素相当于纹理中的一个像素，纹理的最后一个像素也就是屏幕的最后一个像素。</p>
-
-<p>如果我们有第二个纹理放在第一个纹理之上，然后GPU将会把第二个纹理合成到第一个纹理中。有很多种不同的合成方法，但是如果我们假定两个纹理的像素对齐，并且使用正常的混合模式，我们便可以用下面这个公式来计算每一个像素：</p>
-
-<pre><code>R = S + D * ( 1 – Sa )
-</code></pre>
-
-<p>结果的颜色是源色彩(顶端纹理)+目标颜色(低一层的纹理)*(1-源颜色的透明度)。在这个公式中所有的颜色都假定已经预先乘以了他们的透明度。</p>
-
-<p>显然相当多的事情在这发生了。让我们进行第二个假定，两个纹理都完全不透明，比如 alpha=1.如果目标纹理(低一层的纹理)是蓝色(RGB=0,0,1)，并且源纹理(顶层的纹理)颜色是红色(RGB=1,0,0)，因为 Sa 为1，所以结果为：</p>
-
-<pre><code>R = S
-</code></pre>
-
-<p>结果是源颜色的红色。这正是我们所期待的(红色覆盖了蓝色)。</p>
-
-<p>如果源颜色层为50%的透明，比如 alpha=0.5，既然 alpha 组成部分需要预先乘进 RGB 的值中，那么 S 的 RGB 值为(0.5, 0, 0)，公式看起来便会像这样:</p>
-
-<pre><code>                       0.5   0               0.5
-R = S + D * (1 - Sa) = 0   + 0 * (1 - 0.5) = 0
-                       0     1               0.5
-</code></pre>
-
-<p>我们最终得到RGB值为(0.5, 0, 0.5),是一个紫色。这正是我们所期望将透明红色合成到蓝色背景上所得到的。</p>
-
-<p>记住我们刚刚只是将纹理中的一个像素合成到另一个纹理的像素上。当两个纹理覆盖在一起的时候，GPU需要为所有像素做这种操作。正如你所知道的一样，许多程序都有很多层，因此所有的纹理都需要合成到一起。尽管GPU是一块高度优化的硬件来做这种事情，但这还是会让它非常忙碌，</p>
-
-<h2 id="vs">不透明 VS 透明</h2>
-
-<p>当源纹理是完全不透明的时候，目标像素就等于源纹理。这可以省下 GPU 很大的工作量，这样只需简单的拷贝源纹理而不需要合成所有的像素值。但是没有方法能告诉 GPU 纹理上的像素是透明还是不透明的。只有当你作为一名开发者知道你放什么到 CALayer 上了。这也是为什么 CALayer 有一个叫做 opaque 的属性了。如果这个属性为 YES，GPU 将不会做任何合成，而是简单从这个层拷贝，不需要考虑它下方的任何东西(因为都被它遮挡住了)。这节省了 GPU 相当大的工作量。这也正是 Instruments 中 color blended layers 选项中所涉及的。(这在模拟器中的Debug菜单中也可用).它允许你看到哪一个 layers(纹理) 被标注为透明的，比如 GPU 正在为哪一个 layers 做合成。合成不透明的 layers 因为需要更少的数学计算而更廉价。</p>
-
-<p>所以如果你知道你的 layer 是不透明的，最好确定设置它的 opaque 为 YES。如果你加载一个没有 alpha 通道的图片，并且将它显示在 UIImageView 上，这将会自动发生。但是要记住如果一个图片没有 alpha 通道和一个图片每个地方的 alpha 都是100%，这将会产生很大的不同。在后一种情况下，Core Animation 需要假定是否存在像素的 alpha 值不为100%。在 Finder 中，你可以使用 Get Info 并且检查 More Info 部分。它将告诉你这张图片是否拥有 alpha 通道。</p>
-
-<h2 id="vs">像素对齐 VS 不重合在一起</h2>
-
-<p>到现在我们都在考虑像素完美重合在一起的 layers。当所有的像素是对齐的时候我们得到相对简单的计算公式。每当 GPU 需要计算出屏幕上一个像素是什么颜色的时候，它只需要考虑在这个像素之上的所有 layer 中对应的单个像素，并把这些像素合并到一起。或者，如果最顶层的纹理是不透明的(即图层树的最底层)，这时候 GPU 就可以简单的拷贝它的像素到屏幕上。</p>
-
-<p>当一个 layer 上所有的像素和屏幕上的像素完美的对应整齐，那这个 layer 就是像素对齐的。主要有两个原因可能会造成不对齐。第一个便是滚动；当一个纹理上下滚动的时候，纹理的像素便不会和屏幕的像素排列对齐。另一个原因便是当纹理的起点不在一个像素的边界上。</p>
-
-<p>在这两种情况下，GPU 需要再做额外的计算。它需要将源纹理上多个像素混合起来，生成一个用来合成的值。当所有的像素都是对齐的时候，GPU 只剩下很少的工作要做。</p>
-
-<p>Core Animation 工具和模拟器有一个叫做 color misaligned images 的选项，当这些在你的 CALayer 实例中发生的时候，这个功能便可向你展示。</p>
-
-<h2 id="masks">Masks</h2>
-
-<p>一个图层可以有一个和它相关联的 mask(蒙板)，mask 是一个拥有 alpha 值的位图，当像素要和它下面包含的像素合并之前都会把 mask 应用到图层的像素上去。当你要设置一个图层的圆角半径时，你可以有效的在图层上面设置一个 mask。但是也可以指定任意一个蒙板。比如，一个字母 A 形状的 mask。最终只有在 mask 中显示出来的(即图层中的部分)才会被渲染出来。</p>
-
-<h2 id="offscreenrendering">离屏渲染(Offscreen Rendering)</h2>
-
-<p>离屏渲染可以被 Core Animation 自动触发，或者被应用程序强制触发。屏幕外的渲染会合并/渲染图层树的一部分到一个新的缓冲区，然后该缓冲区被渲染到屏幕上。</p>
-
-<p>离屏渲染合成计算是非常昂贵的, 但有时你也许希望强制这种操作。一种好的方法就是缓存合成的纹理/图层。如果你的渲染树非常复杂(所有的纹理，以及如何组合在一起)，你可以强制离屏渲染缓存那些图层，然后可以用缓存作为合成的结果放到屏幕上。</p>
-
-<p>如果你的程序混合了很多图层，并且想要他们一起做动画，GPU 通常会为每一帧(1/60s)重复合成所有的图层。当使用离屏渲染时，GPU 第一次会混合所有图层到一个基于新的纹理的位图缓存上，然后使用这个纹理来绘制到屏幕上。现在，当这些图层一起移动的时候，GPU 便可以复用这个位图缓存，并且只需要做很少的工作。需要注意的是，只有当那些图层不改变时，这才可以用。如果那些图层改变了，GPU 需要重新创建位图缓存。你可以通过设置 shouldRasterize 为 YES 来触发这个行为。</p>
-
-<p>然而，这是一个权衡。第一，这可能会使事情变得更慢。创建额外的屏幕外缓冲区是 GPU 需要多做的一步操作，特殊情况下这个位图可能再也不需要被复用，这便是一个无用功了。然而，可以被复用的位图，GPU 也有可能将它卸载了。所以你需要计算 GPU 的利用率和帧的速率来判断这个位图是否有用。</p>
-
-<p>离屏渲染也可能产生副作用。如果你正在直接或者间接的将mask应用到一个图层上，Core Animation 为了应用这个 mask，会强制进行屏幕外渲染。这会对 GPU 产生重负。通常情况下 mask 只能被直接渲染到帧的缓冲区中(在屏幕内)。</p>
-
-<p>Instrument 的 Core Animation 工具有一个叫做 <em>Color Offscreen-Rendered Yellow</em> 的选项，它会将已经被渲染到屏幕外缓冲区的区域标注为黄色(这个选项在模拟器中也可以用)。同时记得检查 <em>Color Hits Green and Misses Red</em> 选项。绿色代表无论何时一个屏幕外缓冲区被复用，而红色代表当缓冲区被重新创建。</p>
-
-<p>一般情况下，你需要避免离屏渲染，因为这是很大的消耗。直接将图层合成到帧的缓冲区中(在屏幕上)比先创建屏幕外缓冲区，然后渲染到纹理中，最后将结果渲染到帧的缓冲区中要廉价很多。因为这其中涉及两次昂贵的环境转换(转换环境到屏幕外缓冲区，然后转换环境到帧缓冲区)。</p>
-
-<p>所以当你打开 <em>Color Offscreen-Rendered Yellow</em> 后看到黄色，这便是一个警告，但这不一定是不好的。如果 Core Animation 能够复用屏幕外渲染的结果，这便能够提升性能。</p>
-
-<p>同时还要注意，rasterized layer 的空间是有限的。苹果暗示大概有屏幕大小两倍的空间来存储 rasterized layer/屏幕外缓冲区。</p>
-
-<p>如果你使用 layer 的方式会通过屏幕外渲染，你最好摆脱这种方式。为 layer 使用蒙板或者设置圆角半径会造成屏幕外渲染，产生阴影也会如此。</p>
-
-<p>至于 mask，圆角半径(特殊的mask)和 clipsToBounds/masksToBounds，你可以简单的为一个已经拥有 mask 的 layer 创建内容，比如，已经应用了 mask 的 layer 使用一张图片。如果你想根据 layer 的内容为其应用一个长方形 mask，你可以使用 contentsRect 来代替蒙板。</p>
-
-<p>如果你最后设置了 shouldRasterize 为 YES，那也要记住设置 rasterizationScale 为 contentsScale。</p>
-
-<h2>更多的关于合成</h2>
-
-<p>像往常一样，维基百科上有更多关于<a href="https://en.wikipedia.org/wiki/Alpha_compositing">透明合成</a>的基础公式。当我们谈完像素后，我们将更深入一点的谈论红，绿，蓝和 alpha 是怎么在内存中表现的。</p>
-
-<h2 id="osx">OS X</h2>
-
-<p>如果你是在 OS X 上工作，你将会发现大多数 debugging 选项在一个叫做 <em>Quartz Debug</em> 的独立程序中，而不是在 Instruments 中。Quartz Debug 是 Graphics Tools 中的一部分，这可以在苹果的 <a href="https://developer.apple.com/downloads/">developer portal</a> 中下载到。</p>
-
-<h2 id="coreanimationopengles">Core Animation  OpenGL ES</h2>
-
-<p>正如名字所建议的那样，Core Animation 让你在屏幕上实现动画。我们将跳过动画部分，而集中在绘图上。需要注意的是，Core Animation 允许你做非常高效的渲染。这也是为什么当你使用 Core Animation 时可以实现每秒 60 帧的动画。</p>
-
-<p>Core Animation 的核心是 OpenGL ES 的一个抽象物，简而言之，它让你直接使用 OpenGL ES 的功能，却不需要处理 OpenGL ES 做的复杂的事情。当我们上面谈论合成的时候，我们把 layer 和 texture 当做等价的，但是他们不是同一物体，可又是如此的类似。</p>
-
-<p>Core Animation 的 layer 可以有子 layer，所以最终你得到的是一个图层树。Core Animation 所需要做的最繁重的任务便是判断出哪些图层需要被(重新)绘制，而 OpenGL ES 需要做的便是将图层合并、显示到屏幕上。</p>
-
-<p>举个例子，当你设置一个 layer 的内容为 CGImageRef 时，Core Animation 会创建一个 OpenGL 纹理，并确保在这个图层中的位图被上传到对应的纹理中。以及当你重写 <code>-drawInContext</code> 方法时，Core Animation 会请求分配一个纹理，同时确保 Core Graphics 会将你所做的(即你在<code>drawInContext</code>中绘制的东西)放入到纹理的位图数据中。一个图层的性质和 CALayer 的子类会影响到 OpenGL 的渲染结果，许多低等级的 OpenGL ES 行为被简单易懂地封装到 CALayer 概念中。</p>
-
-<p>Core Animation 通过 Core Graphics 的一端和 OpenGL ES 的另一端，精心策划基于 CPU 的位图绘制。因为 Core Animation 处在渲染过程中的重要位置上，所以你如何使用 Core Animation 将会对性能产生极大的影响。</p>
-
-<h2 id="cpuvsgpu">CPU限制 VS GPU限制</h2>
-
-<p>当你在屏幕上显示东西的时候，有许多组件参与了其中的工作。其中，CPU 和 GPU 在硬件中扮演了重要的角色。在他们命名中 P 和 U 分别代表了”处理”和”单元”，当需要在屏幕上进行绘制时，他们都需要做处理，同时他们都有资源限制(即 CPU 和 GPU 的硬件资源)。</p>
-
-<p>为了每秒达到 60 帧，你需要确定 CPU 和 GPU 不能过载。此外，即使你当前能达到 60fps(frame per second),你还是要尽可能多的绘制工作交给 GPU 做，而让 CPU 尽可能的来执行应用程序。通常，GPU 的渲染性能要比 CPU 高效很多，同时对系统的负载和消耗也更低一些。</p>
-
-<p>既然绘图性能是基于 CPU 和 GPU 的，那么你需要找出是哪一个限制你绘图性能的。如果你用尽了 GPU 所有的资源，也就是说，是 GPU 限制了你的性能，同样的，如果你用尽了 CPU，那就是 CPU 限制了你的性能。</p>
-
-<p>要告诉你，如果是 GPU 限制了你的性能，你可以使用 OpenGL ES Driver instrument。点击上面那个小的 i 按钮，配置一下，同时注意查看 Device Utilization %。现在，当你运行你的 app 时，你可以看到你 GPU 的负荷。如果这个值靠近 100%，那么你就需要把你工作的重心放在GPU方面了。</p>
-
-<h2 id="coregraphicsquartz2d">Core Graphics / Quartz 2D</h2>
-
-<p>通过 Core Graphics 这个框架，Quartz 2D 被更为广泛的知道。</p>
-
-<p>Quartz 2D 拥有比我们这里谈到更多的装饰。我们这里不会过多的讨论关于 PDF 的创建，渲染，解析，或者打印。只需要注意的是，PDF 的打印、创建和在屏幕上绘制位图的操作是差不多的。因为他们都是基于 Quartz 2D。</p>
-
-<p>让我们简单的了解一下 <a href="https://developer.apple.com/library/mac/documentation/GraphicsImaging/Conceptual/drawingwithquartz2d/Introduction/Introduction.html">Quartz 2D</a> 主要的概念。有关详细信息可以到苹果的官方文档中了解。</p>
-
-<p>放心，当Quartz 2D 涉及到 2D 绘制的时候，它是非常强大的。有基于路径的绘制，反锯齿渲染，透明图层，分辨率，并且设备独立，可以说出很多特色。这可能会让人产生畏惧，主要因为这是一个低级并且基于 C 的 API。</p>
-
-<p>主要的概念当对简单，UIKit 和 AppKit 都包含了 Quartz 2D 的一些简单 API，一旦你熟练了，一些简单 C 的 API 也是很容易理解的。最终你学会了一个能实现 Photoshop 和 Illustrator 大部分功能的绘图引擎。苹果把 iOS 程序里面的<a href="https://developer.apple.com/videos/wwdc/2011/?id=129">股票应用</a>作为讲解 Quartz 2D 在代码中实现动态渲染的一个例子。</p>
-
-<p>当你的程序进行位图绘制时，不管使用哪种方式，都是基于 Quartz 2D 的。也就是说，CPU 部分实现的绘制是通过 Quartz 2D 实现的。尽管 Quartz 可以做其它的事情，但是我们这里还是集中于位图绘制，在缓冲区(一块内存)绘制位图会包括 RGBA 数据。</p>
-
-<p>比方说，我们要画一个<a href="https://zh.wikipedia.org/wiki/%E5%85%AB%E8%BE%B9%E5%BD%A2">八角形</a>，我们通过 UIKit 能做到这一点</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">UIBezierPath</span> <span class="o">*</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="n">bezierPath</span><span class="p">];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">moveToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">3.29</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">18.05</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">18.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.47</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">37.21</span><span class="p">,</span> <span class="mf">18.05</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">34.31</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">20.88</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">20.88</span><span class="p">,</span> <span class="mf">42.18</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">16.72</span><span class="p">,</span> <span class="mf">42.18</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="n">closePath</span><span class="p">];</span>
-</span><span class="line"><span class="n">path</span><span class="p">.</span><span class="n">lineWidth</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line"><span class="p">[[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span> <span class="n">setStroke</span><span class="p">];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="n">stroke</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>相对应的 Core Graphics 代码：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGContextBeginPath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextMoveToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">3.29</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">18.05</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">18.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.47</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">37.21</span><span class="p">,</span> <span class="mf">18.05</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">34.31</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">20.88</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">20.88</span><span class="p">,</span> <span class="mf">42.18</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">16.72</span><span class="p">,</span> <span class="mf">42.18</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextClosePath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextSetLineWidth</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextSetStrokeColorWithColor</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextStrokePath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>需要问的问题是:这个绘制到哪儿去了？这正好引出所谓的 CGContext 登场。我们传过去的ctx参数正是在那个上下文中。而这个上下文定义了我们需要绘制的地方。如果我们实现了 CALayer 的 <code>-drawInContext:</code> 这时已经传过来一个上下文。绘制到这个上下文中的内容将会被绘制到图层的备份区(图层的缓冲区).但是我们也可以创建我们自己的上下文，叫做基于位图的上下文，比如 <code>CGBitmapContextCreate()</code>.这个方法返回一个我们可以传给 CGContext 方法来绘制的上下文。</p>
-
-<p>注意 UIKit 版本的代码为何不传入一个上下文参数到方法中？这是因为当使用 UIKit 或者 AppKit 时，上下文是唯一的。UIkit 维护着一个上下文堆栈，UIKit 方法总是绘制到最顶层的上下文中。你可以使用 <code>UIGraphicsGetCurrentContext()</code> 来得到最顶层的上下文。你可以使用 <code>UIGraphicsPushContext()</code> 和 <code>UIGraphicsPopContext()</code> 在 UIKit 的堆栈中推进或取出上下文。</p>
-
-<p>最为突出的是，UIKit 使用 <code>UIGraphicsBeginImageContextWithOptions()</code> 和 <code>UIGraphicsEndImageContext()</code> 方便的创建类似于 <code>CGBitmapContextCreate()</code> 的位图上下文。混合调用 UIKit 和 Core Graphics 非常简单：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">UIGraphicsBeginImageContextWithOptions</span><span class="p">(</span><span class="n">CGSizeMake</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="n">YES</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextRef</span> <span class="n">ctx</span> <span class="o">=</span> <span class="n">UIGraphicsGetCurrentContext</span><span class="p">();</span>
-</span><span class="line"><span class="n">CGContextBeginPath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextMoveToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">3.29</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">);</span>
-</span><span class="line"><span class="p">...</span>
-</span><span class="line"><span class="n">CGContextStrokePath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
-</span><span class="line"><span class="n">UIGraphicsEndImageContext</span><span class="p">();</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>或者另外一种方法:</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGContextRef</span> <span class="n">ctx</span> <span class="o">=</span> <span class="n">CGBitmapContextCreate</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">90</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">bitmapInfo</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextScaleCTM</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">);</span>
-</span><span class="line"><span class="n">UIGraphicsPushContext</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
-</span><span class="line"><span class="n">UIBezierPath</span> <span class="o">*</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="n">bezierPath</span><span class="p">];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">moveToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">16.72</span><span class="p">,</span> <span class="mf">7.22</span><span class="p">)];</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="nl">addLineToPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mf">3.29</span><span class="p">,</span> <span class="mf">20.83</span><span class="p">)];</span>
-</span><span class="line"><span class="p">...</span>
-</span><span class="line"><span class="p">[</span><span class="n">path</span> <span class="n">stroke</span><span class="p">];</span>
-</span><span class="line"><span class="n">UIGraphicsPopContext</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
-</span><span class="line"><span class="n">CGContextRelease</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>你可以使用 Core Graphics 创建大量的非常酷的东西。一个很好的理由就是，苹果的文档有很多例子。我们不能得到所有的细节，但是 Core Graphics 有一个非常接近 <a href="https://zh.wikipedia.org/wiki/Adobe_Illustrator">Adobe Illustrator</a> 和 <a href="https://zh.wikipedia.org/wiki/Adobe_Photoshop">Adobe Photoshop</a> 如何工作的绘图模型，并且大多数工具的理念翻译成 Core Graphics 了。终究，他是起源于 <a href="https://zh.wikipedia.org/wiki/NEXTSTEP">NeXTSTEP</a> 。(原来也是乔老爷的作品)。</p>
-
-<h2 id="cglayer">CGLayer</h2>
-
-<p>我们最初指出 CGLayer 可以用来提升重复绘制相同元素的速度。正如 <a href="http://iosptl.com/posts/cglayer-no-longer-recommended/">Dave Hayden指出</a>，这些<a href="http://iosptl.com/posts/cglayer-no-longer-recommended/">小道消息</a>不再可靠。</p>
-
-<h2>像素</h2>
-
-<p>屏幕上的像素是由红，绿，蓝三种颜色组件构成的。因此，位图数据有时也被叫做 RGB 数据。你可能会对数据如何组织在内存中感到好奇。而事实是，有很多种不同的方式在内存中展现RGB位图数据。</p>
-
-<p>稍后我们将会谈到压缩数据，这又是一个完全不同的概念。现在，我们先看一下RGB位图数据，我们可以从颜色组件:红，绿，蓝中得到一个值。而大多数情况下，我们有第四个组件:透明度。最终我们从每个像素中得到四个单独的值。</p>
-
-<h2>默认的像素布局</h2>
-
-<p>在 iOS 和 OS X 上最常见的格式就是大家所熟知的 32bits-per-pixel(bpp), 8bits-per-componet(bpc),透明度会首先被乘以到像素值上(就像上文中提到的那个公式一样),在内存中，像下面这样:</p>
-
-<pre><code>  A   R   G   B   A   R   G   B   A   R   G   B  
-| pixel 0       | pixel 1       | pixel 2   
-  0   1   2   3   4   5   6   7   8   9   10  11 ...
-</code></pre>
-
-<p>这个格式经常被叫做 ARGB。每个像素占用 4 字节(32bpp),每一个颜色组件是1字节(8bpc).每个像素有一个 alpha 值，这个值总是最先得到的(在RGB值之前)，最终红、绿、蓝的值都会被预先乘以 alpha 的值。预乘的意思就是 alpha 值被烘烤到红、绿、蓝的组件中。如果我们有一个橙色，他们各自的 8bpc 就像这样: 240,99,24.一个完全不透明的橙色像素拥有的 ARGB 值为: 255，240，99，24，它在内存中的布局就像上面图示那样。如果我们有一个相同颜色的像素，但是 alpha 值为 33%，那么他的像素值便是:84，80，33，8.</p>
-
-<p>另一个常见的格式便是 32bpp，8bpc，跳过第一个 alpha 值，看起来像下面这样：</p>
-
-<pre><code>  x   R   G   B   x   R   G   B   x   R   G   B  
-| pixel 0       | pixel 1       | pixel 2   
-  0   1   2   3   4   5   6   7   8   9   10  11 ...
-</code></pre>
-
-<p>这常被叫做 xRGB。像素并没有任何 alpha 值(他们都被假定为100%不透明)，但是内存布局是一样的。你应该想知道为什么这种格式很流行，当我们每一个像素中都有一个不用字节时，我们将会省下 25% 的空间。事实证明，这种格式更容易被现代的 CPU 和绘图算法消化，因为每一个独立的像素都对齐到 32-bit 的边界。现代的 CPU 不喜欢装载(读取)不对齐的数据，特别是当将这种数据和上面没有 alpha 值格式的数据混合时，算法需要做很多挪动和蒙板操作。</p>
-
-<p>当处理 RGB 数据时，Core Graphics 也需要支持把alpha 值放到最后(另外还要支持跳过)。有时候也分别称为 RGBA 和 RGBx，假定是 8bpc，并且预乘了 alpha 值。</p>
-
-<h2>深奥的布局</h2>
-
-<p>大多数时候，当处理位图数据时，我们也需要处理 Core Graphics/Quartz 2D。有一个非常详细的列表列出了他支持的混合组合。但是让我们首先看一下剩下的 RGB 格式：</p>
-
-<p>另一个选择是 16bpp，5bpc，不包含 alpha 值。这个格式相比之前一个仅占用 50% 的存储大小(每个像素2字节)，但将使你存储它的 RGB 数据到内存或磁盘中变得困难。既然这种格式中，每个颜色组件只有 5bits(原文中写的是每个像素是5bits，但根据上下文可知应该是每个组件)，这样图形(特别是平滑渐变的)会造成重叠在一起的假象。</p>
-
-<p>还有一个是 64bpp，16bpc，最终为 128bpp，32bpc，浮点数组件(有或没有 alpha 值)。它们分别使用 8 字节和 16 字节，并且允许更高的精度。当然，这会造成更多的内存使用和昂贵的计算。</p>
-
-<p>整件事件中，Core Graphics 也支持一些像灰度模式和 <a href="https://zh.wikipedia.org/wiki/%E5%8D%B0%E5%88%B7%E5%9B%9B%E5%88%86%E8%89%B2%E6%A8%A1%E5%BC%8F">CMYK</a> 格式，这些格式类似于仅有 alpha 值的格式(蒙板)。</p>
-
-<h2>二维数据</h2>
-
-<p>当颜色组件(红、绿、蓝、alpha)混杂在一起的时候，大多数框架(包括 Core Graphics )使用像素数据。正是这种情况下我们称之为二维数据，或者二维组件。这个意思是：每一个颜色组件都在它自己的内存区域，也就是说它是二维的。比如 RGB 数据，我们有三个独立的内存区域，一个大的区域包含了所有像素的红颜色的值，一个包含了所有绿颜色的值，一个包含了所有蓝颜色的值。</p>
-
-<p>在某些情况下，一些视频框架便会使用二维数据。</p>
-
-<h2 id="ycbcr">YCbCr</h2>
-
-<p>当我们处理视频数据时，<a href="https://zh.wikipedia.org/wiki/YCbCr">YCbCr</a> 是一种常见的格式。它也是包含了三种(Y,Cb和Cr)代表颜色数据的组件。但是简单的讲，它更类似于通过人眼看到的颜色。人眼对 Cb 和 Cr 这两种组件的色彩度不太能精确的辨认出来，但是能很准确的识别出 Y 的亮度。当数据使用 YCbCr 格式时，在同等的条件下，Cb 和 Cr 组件比 Y 组件压缩的更紧密。</p>
-
-<p>出于同样的原因，JPEG 图像有时会将像素数据从 RGB 转换到 YCbCr。JPEG 单独的压缩每一个二维颜色。当压缩基于 YCbCr 的平面时，Cb 和 Cr 能比 Y 压缩得更完全。</p>
-
-<h2>图片格式</h2>
-
-<p>当你在 iOS 或者 OS X 上处理图片时，他们大多数为 JPEG 和 PNG。让我们更进一步观察。</p>
-
-<h2 id="jpeg">JPEG</h2>
-
-<p>每个人都知道 JPEG。他是相机的产物。它代表这照片如何存储在电脑上。甚至你嘛嘛都听说过 JPEG。</p>
-
-<p>一个很好的理由，很多人都认为 JPEG 文件仅是另一种像素数据的格式，就像我们刚刚谈到的 RGB 像素布局那样。这样理解离真像真是差十万八千里了。</p>
-
-<p>将 JPEG 数据转换成像素数据是一个非常复杂的过程，你通过一个周末的计划都不能完成，甚至是一个非常漫长的周末(原文的意思好像就是为了表达这个过程非常复杂，不过老外的比喻总让人拎不清)。对于每一个二维颜色，JPEG 使用一种基于<a href="https://zh.wikipedia.org/wiki/%E7%A6%BB%E6%95%A3%E4%BD%99%E5%BC%A6%E5%8F%98%E6%8D%A2">离散余弦变换</a>(简称 DCT 变换)的算法，将空间信息转变到频域.这个信息然后被量子化，排好序，并且用一种<a href="https://zh.wikipedia.org/wiki/%E9%9C%8D%E5%A4%AB%E6%9B%BC%E7%BC%96%E7%A0%81">哈夫曼编码</a>的变种来压缩。很多时候，首先数据会被从 RGB 转换到二维 YCbCr，当解码 JPEG 的时候，这一切都将变得可逆。</p>
-
-<p>这也是为什么当你通过 JPEG 文件创建一个 UIImage 并且绘制到屏幕上时，将会有一个延时，因为 CPU 这时候忙于解压这个 JPEG。如果你需要为每一个 tableviewcell 解压 JPEG，那么你的滚动当然不会平滑(原来 tableviewcell 里面最要不要用 JPEG 的图片)。</p>
-
-<p>那究竟为什么我们还要用 JPEG 呢？答案就是 JPEG 可以非常非常好的压缩图片。一个通过 iPhone5 拍摄的，未经压缩的图片占用接近 24M。但是通过默认压缩设置，你的照片通常只会在 2-3M 左右。JPEG 压缩这么好是因为它是失真的，它去除了人眼很难察觉的信息，并且这样做可以超出像 gzip 这样压缩算法的限制。但这仅仅在图片上有效的，因为 JPEG 依赖于图片上有很多人类不能察觉出的数据。如果你从一个基本显示文本的网页上截取一张图，JPEG 将不会这么高效。压缩效率将会变得低下，你甚至能看出来图片已经压缩变形了。</p>
-
-<h2 id="png">PNG</h2>
-
-<p><a href="https://zh.wikipedia.org/wiki/PNG">PNG</a>读作”ping”。和 JPEG 相反，它的压缩对格式是无损的。当你将一张图片保存为 PNG，并且打开它(或解压)，所有的像素数据会和最初一模一样，因为这个限制，PNG 不能像 JPEG 一样压缩图片，但是对于像程序中的原图(如buttons，icons)，它工作的非常好。更重要的是，解码 PNG 数据比解码 JPEG 简单的多。</p>
-
-<p>在现实世界中，事情从来没有那么简单，目前存在了大量不同的 PNG 格式。可以通过维基百科查看详情。但是简言之，PNG 支持压缩带或不带 alpha 通道的颜色像素(RGB)，这也是为什么它在程序原图中表现良好的另一个原因。</p>
-
-<h2>挑选一个格式</h2>
-
-<p>当你在你的程序中使用图片时，你需要坚持这两种格式: JPEG 或者 PNG。读写这种格式文件的压缩和解压文件能表现出很高的性能，另外，还支持并行操作。同时 Apple 正在改进解压缩并可能出现在将来的新操作系统中，届时你将会得到持续的性能提升。如果尝试使用另一种格式，你需要注意到，这可能对你程序的性能会产生影响，同时可能会打开安全漏洞，经常，图像解压缩算法是黑客最喜欢的攻击目标。</p>
-
-<p>已经写了很多关于优化 PNGs，如果你想要了解更多，请到互联网上查询。非常重要的一点，注意 Xcode 优化 PNG 选项和优化其他引擎有很大的不同。</p>
-
-<p>当 Xcode 优化一个 PNG 文件的时候，它将 PNG 文件变成一个从技术上讲不再是<a href="https://developer.apple.com/library/ios/qa/qa1681/_index.html">有效的PNG文件</a>。但是 iOS 可以读取这种文件，并且这比解压缩正常的 PNG 文件更快。Xcode 改变他们，让 iOS 通过一种对正常 PNG 不起作用的算法来对他们解压缩。值得注意的重点是，这改变了像素的布局。正如我们所提到的一样，在像素之下有很多种方式来描绘 RGB 数据，如果这不是 iOS 绘制系统所需要的格式，它需要将每一个像素的数据替换，而不需要加速来做这件事。</p>
-
-<p>让我们再强调一遍，如果你可以，你需要为原图设置 resizable images。你的文件将变得更小，因此你只需要从文件系统装载更少的数据。</p>
-
-<h2 id="uikitpixels">UIKit 和 Pixels</h2>
-
-<p>每一个在 UIKit 中的 view 都有它自己的 CALayer。依次，这些图层都有一个叫像素位图的后备存储，有点像一个图像。这个后备存储正是被渲染到显示器上的。</p>
-
-<h2 id="withdrawrect">With –drawRect:</h2>
-
-<p>如果你的视图类实现了 <code>-drawRect:</code>，他们将像这样工作:</p>
-
-<p>当你调用 <code>-setNeedsDisplay</code>，UIKit 将会在这个视图的图层上调用 <code>-setNeedsDisplay</code>。这为图层设置了一个标识，标记为 dirty(直译是脏的意思，想不出用什么词比较贴切,污染？)，但还显示原来的内容。它实际上没做任何工作，所以在一个row 中可以多次调用 <code>-setNeedsDisplay</code>。</p>
-
-<p>下面，当渲染系统准备好，它会调用视图图层的-display方法.此时，图层会装配它的后备存储。然后建立一个 Core Graphics 上下文(CGContextRef)，将后备存储对应内存中的数据恢复出来，绘图会进入对应的内存区域，并使用 CGContextRef 绘制。</p>
-
-<p>当你使用 UIKit 的绘制方法，例如: <code>UIRectFill()</code> 或者 <code>-[UIBezierPath fill]</code> 代替你的 <code>-drawRect:</code> 方法，他们将会使用这个上下文。使用方法是，UIKit 将后备存储的 CGContextRef 推进他的 graphics context stack，也就是说，它会将那个上下文设置为当前的。因此 <code>UIGraphicsGetCurrent()</code> 将会返回那个对应的上下文。既然 UIKit 使用 <code>UIGraphicsGetCurrent()</code> 绘制方法，绘图将会进入到图层的后备存储。如果你想直接使用 Core Graphics 方法，你可以自己调用 <code>UIGraphicsGetCurrent()</code> 得到相同的上下文，并且将这个上下文传给 Core Graphics 方法。</p>
-
-<p>从现在开始，图层的后备存储将会被不断的渲染到屏幕上。直到下次再次调用视图的 <code>-setNeedsDisplay</code> ，将会依次将图层的后备存储更新到视图上。</p>
-
-<h2 id="drawrect">不使用 -drawRect:</h2>
-
-<p>当你用一个 UIImageView 时，事情略有不同，这个视图仍然有一个 CALayer，但是图层却没有申请一个后备存储。取而代之的是使用一个 CGImageRef 作为他的内容，并且渲染服务将会把图片的数据绘制到帧的缓冲区，比如，绘制到显示屏。</p>
-
-<p>在这种情况下，将不会继续重新绘制。我们只是简单的将位图数据以图片的形式传给了 UIImageView，然后 UIImageView 传给了 Core Animation，然后轮流传给渲染服务。</p>
-
-<h2 id="drawrectdrawrect">实现-drawRect: 还是不实现 -drawRect:</h2>
-
-<p>这听起来貌似有点低俗，但是最快的绘制就是你不要做任何绘制。</p>
-
-<p>大多数时间，你可以不要合成你在其他视图(图层)上定制的视图(图层)，这正是我们推荐的，因为 UIKit 的视图类是非常优化的 (就是让我们不要闲着没事做,自己去合并视图或图层) 。</p>
-
-<p>当你需要自定义绘图代码时，Apple 在<a href="https://developer.apple.com/videos/wwdc/2012/?id=506">WWDC 2012’s session 506</a>:Optimizing 2D Graphics and Animation Performance 中展示了一个很好的例子:”finger painting”。</p>
-
-<p>另一个地方需要自定义绘图的就是 iOS 的股票软件。股票是直接用 Core Graphics 在设备上绘制的，注意，这仅仅是你需要自定义绘图，你并不需要实现 <code>-drawRect:</code> 方法。有时，通过 <code>UIGraphicsBeginImageContextWithOptions()</code> 或者 <code>CGBitmapContextCeate()</code> 创建位图会显得更有意义，从位图上面抓取图像，并设置为 <code>CALayer</code> 的内容。下面我们将给出一个例子来测试，检验。</p>
-
-<h2>单一颜色</h2>
-
-<p>如果我们看这个例子：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// Don&#39;t do this</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">drawRect:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">rect</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span> <span class="n">setFill</span><span class="p">];</span>
-</span><span class="line">    <span class="n">UIRectFill</span><span class="p">([</span><span class="n">self</span> <span class="n">bounds</span><span class="p">]);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>现在我们知道这为什么不好:我们促使 Core Animation 来为我们创建一个后备存储，并让它使用单一颜色填充后备存储，然后上传给 GPU。</p>
-
-<p>我们跟本不需要实现 <code>-drawRect:</code>，并节省这些代码工作量，只需简单的设置这个视图图层的背景颜色。如果这个视图有一个 CAGradientLayer 作为图层，那么这个技术也同样适用于此（渐变图层）。</p>
-
-<h2>可变尺寸的图像</h2>
-
-<p>类似的，你可以使用可变尺寸的图像来降低绘图系统的压力。让我们假设你需要一个 300×500 点的按钮插图，这将是 600×100=60k 像素或者 60kx4=240kB 内存大小需要上传到 GPU，并且占用 VRAM。如果我们使用所谓的可变尺寸的图像，我们只需要一个 54×12 点的图像，这将占用低于 2.6k 的像素或者 10kB 的内存，这样就变得更快了。</p>
-
-<p>Core Animation 可以通过 CALayer 的 <a href="https://developer.apple.com/library/mac/documentation/graphicsimaging/reference/CALayer_class/Introduction/Introduction.html#//apple_ref/occ/instp/CALayer/contentsCenter"><code>contentsCenter</code></a> 属性来改变图像，大多数情况下，你可能更倾向于使用，<a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIImage_Class/Reference/Reference.html#//apple_ref/occ/instm/UIImage/resizableImageWithCapInsets:resizingMode:"><code>-[UIImage resizableImageWithCapInsets:resizingMode:]</code></a>。</p>
-
-<p>同时注意，在第一次渲染这个按钮之前，我们并不需要从文件系统读取一个 60k 像素的 PNG 并解码，解码一个小的 PNG 将会更快。通过这种方式，你的程序在每一步的调用中都将做更少的工作，并且你的视图将会加载的更快。</p>
-
-<h2>并发绘图</h2>
-
-<p>上一次 <a href="http://objccn.io/issue-2/">objc.io</a> 的话题是关于并发的讨论。正如你所知道的一样，UIKit 的线程模型是非常简单的：你仅可以从主队列(比如主线程)中调用 UIKit 类(比如视图),那么并发绘图又是什么呢？</p>
-
-<p>如果你必须实现 <code>-drawRect:</code>，并且你必须绘制大量的东西，这将占用时间。由于你希望动画变得更平滑，除了在主队列中，你还希望在其他队列中做一些工作。同时发生的绘图是复杂的，但是除了几个警告，同时发生的绘图还是比较容易实现的。</p>
-
-<p>我们除了在主队列中可以向 CALayer 的后备存储中绘制一些东西，其他方法都将不可行。可怕的事情将会发生。我们能做的就是向一个完全断开链接的位图上下文中进行绘制。</p>
-
-<p>正如我们上面所提到的一样，在 Core Graphics 下，所有 Core Graphics 绘制方法都需要一个上下文参数来指定绘制到那个上下文中。UIKit 有一个当前上下文的概念(也就是绘制到哪儿去)。这个当前的上下文就是 per-thread.</p>
-
-<p>为了同时绘制，我们需要做下面的操作。我们需要在另一个队列创建一个图像，一旦我们拥有了图像，我们可以切换回主队列，并且设置这个图像为 UIImageView 的图像。这个技术在 <a href="https://developer.apple.com/videos/wwdc/2012/?id=211">WWDC 2012 session 211</a> 中讨论过。(异步下载图片经常用到这个)</p>
-
-<p>增加一个你可以在其中绘制的新方法：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIImage</span> <span class="o">*</span><span class="p">)</span><span class="nf">renderInImageOfSize:</span><span class="p">(</span><span class="n">CGSize</span><span class="p">)</span><span class="nv">size</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">UIGraphicsBeginImageContextWithOptions</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">NO</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="c1">// do drawing here</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">UIImage</span> <span class="o">*</span><span class="n">result</span> <span class="o">=</span> <span class="n">UIGraphicsGetImageFromCurrentImageContext</span><span class="p">();</span>
-</span><span class="line">    <span class="n">UIGraphicsEndImageContext</span><span class="p">();</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这个方法通过 <code>UIGraphicsBeginImageContextWithOptions()</code> 方法，并根据给定的大小创建一个新的 CGContextRef 位图。这个方法也会将这个上下文设置为<em>当前UIKit</em>的上下文。现在你可以在这里做你想在 <code>-drawRect:</code> 中做的事了。然后我们可以通过 <code>UIGraphicsGetImageFromCurrentImageContext()</code>,将获得的这个上下文位图数据作为一个 UIImage，最终移除这个上下文。</p>
-
-<p>很重要的一点就是，你在这个方法中所做的所有绘图的代码都是线程安全的，也就是说，当你访问属性等等，他们需要线程安全。因为你是在另一个队列中调用这个方法的。如果这个方法在你的视图类中，那就需要注意一点了。另一个选择就是创建一个单独的渲染类，并设置所有需要的属性，然后通过触发来渲染图片。如果这样，你可以通过使用简单的 UIImageView 或者 UITableViewCell。</p>
-
-<p>要知道，所有 UIKit 的绘制 API 在使用另一个队列时，都是安全的。只需要确定是在同一个操作中调用他们的，这个操作需要以 <code>UIGraphicsBeginImageContextWithOptions()</code> 开始，以 <code>UIGraphicsEndIamgeContext()</code> 结束。</p>
-
-<p>你需要像下面这样触发渲染代码：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">UIImageView</span> <span class="o">*</span><span class="n">view</span><span class="p">;</span> <span class="c1">// assume we have this</span>
-</span><span class="line"><span class="n">NSOperationQueue</span> <span class="o">*</span><span class="n">renderQueue</span><span class="p">;</span> <span class="c1">// assume we have this</span>
-</span><span class="line"><span class="n">CGSize</span> <span class="n">size</span> <span class="o">=</span> <span class="n">view</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">;</span>
-</span><span class="line"><span class="p">[</span><span class="n">renderQueue</span> <span class="nl">addOperationWithBlock:</span><span class="o">^</span><span class="p">(){</span>
-</span><span class="line">        <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">renderer</span> <span class="nl">renderInImageOfSize:</span><span class="n">size</span><span class="p">];</span>
-</span><span class="line">        <span class="p">[[</span><span class="n">NSOperationQueue</span> <span class="n">mainQueue</span><span class="p">]</span> <span class="nl">addOperationWithBlock:</span><span class="o">^</span><span class="p">(){</span>
-</span><span class="line">            <span class="n">view</span><span class="p">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">;</span>
-</span><span class="line">        <span class="p">}];</span>
-</span><span class="line"><span class="p">}];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>要注意，我们是在主队列中调用 view.image = image.这是一个非常重要的细节。你不可以在任何其他队列中调用这个代码。</p>
-
-<p>像往常一样，同时绘制会伴随很多问题，你现在需要取消后台渲染。并且在渲染队列中设置合理的同时绘制的最大限度。</p>
-
-<p>为了支持这一切，最简单的就是在一个 NSOperation 子类内部实现 <code>-renderInImageOfSize:</code>。</p>
-
-<p>最终，需要指出，设置 UITableViewCell 内容为异步是非常困难的。单元格很有可能在完成异步渲染前已经被复用了。尽管单元格已经被其他地方复用，但你只需要设置内容就行了。</p>
-
-<h2 id="calayer">CALayer</h2>
-
-<p>到现在为止，你需要知道在 GPU 内，一个 CALayer 在某种方式上和一个纹理类似。图层有一个后备存储，这便是被用来绘制到屏幕上的位图。</p>
-
-<p>通常，当你使用 CALayer 时，你会设置它的内容为一个图片。这到底做了什么？这样做会告诉 Core Animation 使用图片的位图数据作为纹理。如果这个图片(JPEG或PNG)被压缩了，Core Animation 将会这个图片解压缩，然后上传像素数据到 GPU。</p>
-
-<p>尽管还有很多其他中图层，如果你是用一个简单的没有设置上下文的 CALayer，并为这个 CALayer 设置一个背景颜色，Core Animation 并不会上传任何数据到 GPU，但却能够不用任何像素数据而在 GPU 上完成所有的工作，类似的，对于渐变的图层，GPU 是能创建渐变的，而且不需要 CPU 做任何工作，并且不需要上传任何数据到 GPU。</p>
-
-<h2>自定义绘制的图层</h2>
-
-<p>如果一个 CALayer 的子类实现了 <code>-drawInContext:</code> 或者它的代理，类似于 <code>-drawLayer:inContest:</code>, Core Animation 将会为这个图层申请一个后备存储，用来保存那些方法绘制进来的位图。那些方法内的代码将会运行在 CPU 上，结果将会被上传到 GPU。</p>
-
-<h2>形状和文本图层</h2>
-
-<p>形状和文本图层还是有些不同的。开始时，Core Animation 为这些图层申请一个后备存储来保存那些需要为上下文生成的位图数据。然后 Core Animation 会讲这些图形或文本绘制到后备存储上。这在概念上非常类似于，当你实现 <code>-drawInContext:</code> 方法，然后在方法内绘制形状或文本，他们的性能也很接近。</p>
-
-<p>在某种程度上，当你需要改变形状或者文本图层时，这需要更新它的后备存储，Core Animation 将会重新渲染后备存储。例如，当动态改变形状图层的大小时，Core Animation 需要为动画中的每一帧重新绘制形状。</p>
-
-<h2>异步绘图</h2>
-
-<p>CALayer 有一个叫做 drawsAsynchronously 的属性，这似乎是一个解决所有问题的高招。注意，尽管这可能提升性能，但也可能让事情变慢。</p>
-
-<p>当你设置 drawsAsynchronously 为 YES 时，发生了什么？你的 <code>-drawRect:/-drawInContext:</code> 方法仍然会被在主线程上调用。但是所有调用 Core Graphics 的操作都不会被执行。取而代之的是，绘制命令被推迟，并且在后台线程中异步执行。</p>
-
-<p>这种方式就是先记录绘图命令，然后在后台线程中重现。为了这个过程的顺利进行，更多的工作需要被做，更多的内存需要被申请。但是主队列中的一些工作便被移出来了(大概意思就是让我们把一些能在后台实现的工作放到后台实现，让主线程更顺畅)。</p>
-
-<p>对于昂贵的绘图方法，这是最有可能提升性能的，但对于那些绘图方法来说，也不会节省太多资源。</p>
 
 <hr />
 <p class="post-footer">

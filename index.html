@@ -9,8 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Jul 2nd, 2014 iOS Comments iOS 8 体验推送 一直更新了iOS8，但是一直没有开始研究这个iOS8，今天因为项目用到了推送，于是体验了iOS8的推送，先讲讲这个推送。目前分为四个推送：用户推送，本地推送，远程推送，地理位置推送。 用户推送
-我们先开始讲这个用户推送, &hellip;">
+	<meta name="description" content="Jul 4th, 2014 iOS Comments 闭包，你了解多少？ 在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以， &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -99,6 +98,199 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-07-04T14:48:57+08:00" data-updated="true" itemprop="datePublished">Jul 4<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/" itemprop="url">闭包，你了解多少？</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例，不同的引用环境和相同的函数组合可以产生不同的实例。
+闭包的概念出现于60年代，最早实现闭包的程序语言是Scheme。之后，闭包被广泛使用于函数式编程语言如ML语言和LISP。很多命令式程序语言也开始支持闭包。
+在一些语言中，在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可能产生闭包。运行时，一旦外部的 函数被执行，一个闭包就形成了，闭包中包含了内部函数的代码，以及所需外部函数中的变量的引用。其中所引用的变量称作上值(upvalue)。
+闭包一词经常和匿名函数混淆。这可能是因为两者经常同时使用，但是它们是不同的概念。</p>
+
+<p>闭包和状态表达闭包可以用来在一个函数与一组“私有”变量之间创建关联关系。在给定函数被多次调用的过程中，这些私有变量能够保持其持久性。变量的作用域仅限于包含它们的函数，因此无法从其它程序代码部分进行访问。不过，变量的生存期是可以很长，在一次函数调用期间所创建所生成的值在下次函数调用时仍然存在。正因为这一特点，闭包可以用来完成信息隐藏，并进而应用于需要状态表达的某些编程范型中。
+不过，用这种方式来使用闭包时，闭包不再具有引用透明性，因此也不再是纯函数。即便如此，在某些“近似于函数式编程语言”的语言，例如Scheme中，闭包还是得到了广泛的使用。</p>
+
+<p>闭包和第一类函数</p>
+
+<p>典型的支持闭包的语言中，通常将函数当作第一类对象——在这些语言中，函数可以被当作参数传递、也可以作为函数返回值、绑定到变量名、就像字符串、整数等简单类型。例如以下Scheme代码：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="scheme"><span class="line"><span class="c1">; Return a list  of all books with at least THRESHOLD copies sold.</span>
+</span><span class="line"><span class="p">(</span><span class="k">define </span> <span class="p">(</span><span class="nf">best-selling-books</span>  <span class="nv">threshold</span><span class="p">)</span>
+</span><span class="line">   <span class="p">(</span><span class="nf">filter</span>
+</span><span class="line">    <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">book</span><span class="p">)</span> <span class="p">(</span><span class="nb">&gt;= </span><span class="p">(</span><span class="nf">book-sales</span> <span class="nv">book</span><span class="p">)</span>  <span class="nv">threshold</span><span class="p">))</span>
+</span><span class="line">    <span class="nv">book-list</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>在这个例子中，lambda表达式(lambda (book) (&gt;= (book-sales book) threshold))出现在函数best-selling-books中。当这个lambda表达式被执行时，Scheme创造了一个包含此表达式以及对threshold变量的引用的闭包，其中threshold变量在lambda表达式中是自由变量。
+这个闭包接着被传递到filter函数。这个函数的功能是重复调用这个闭包以判断哪些书需要增加到列表那些需要丢弃。因为闭包中引用了变量threshold，所以它在每次被filter调用时都可以使用这个变量，虽然filter可能定义在另一个文件中。</p>
+<p>下面是用ECMAScript (JavaScript)写的同一个例子：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// Return a  list of all books with at least &#39;threshold&#39; copies sold.</span>
+</span><span class="line"><span class="kd">function</span>  <span class="nx">bestSellingBooks</span><span class="p">(</span><span class="nx">threshold</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span> <span class="nx">bookList</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span>
+</span><span class="line">      <span class="kd">function</span>  <span class="p">(</span><span class="nx">book</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">book</span><span class="p">.</span><span class="nx">sales</span> <span class="o">&gt;=</span> <span class="nx">threshold</span><span class="p">;</span> <span class="p">}</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>这里，关键字function取代了lambda，Array.filter方法[5]取代了filter函数，但两段代码的功能是一样的。</p>
+
+<p>一个函数可以创建一个闭包并返回它，如下述javascript例子：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// Return a  function that approximates the derivative of f</span>
+</span><span class="line"><span class="c1">// using an interval  of dx, which should be appropriately small.</span>
+</span><span class="line"><span class="kd">function</span> <span class="nx">derivative</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span>  <span class="nx">dx</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span>  <span class="kd">function</span> <span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span><span class="nx">f</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">dx</span><span class="p">)</span> <span class="o">-</span> <span class="nx">f</span><span class="p">(</span><span class="nx">x</span><span class="p">))</span> <span class="o">/</span> <span class="nx">dx</span><span class="p">;</span>
+</span><span class="line">  <span class="p">};</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>因为在这个例子中闭包已经超出了创建它的函数的范围，所以变量f和dx将在函数derivative返回后继续存在。在没有闭包的语言中，变量的生命周期只限于创建它的环境。但在有闭包的语言中，只要有一个闭包引用了这个变量，它就会一直存在。清理不被任何函数引用的变量的工作通常由垃圾回收完成。</p>
+
+<p>闭包的用途</p>
+
+<ul>
+  <li>因为闭包只有在被调用时才执行操作，即“惰性求值”，所以它可以被用来定义控制结构。例如：在Smalltalk语言中，所有的控制结构，包括分歧条件(if/then/else)和循环(while和for)，都是通过闭包实现的。用户也可以使用闭包定义自己的控制结构。</li>
+  <li>多个函数可以使用一个相同的环境，这使得它们可以通过改变那个环境相互交流。比如在Scheme中：</li>
+</ul>
+
+<p />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="scheme"><span class="line"><span class="p">(</span><span class="k">define </span><span class="nv">foo</span> <span class="no">#f</span><span class="p">)</span>
+</span><span class="line"><span class="p">(</span><span class="k">define </span> <span class="nv">bar</span> <span class="no">#f</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">secret-message</span> <span class="s">&quot;none&quot;</span><span class="p">))</span>
+</span><span class="line">  <span class="p">(</span><span class="k">set! </span><span class="nv">foo</span>  <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">msg</span><span class="p">)</span> <span class="p">(</span><span class="k">set! </span><span class="nv">secret-message</span> <span class="nv">msg</span><span class="p">)))</span>
+</span><span class="line">  <span class="p">(</span><span class="k">set! </span><span class="nv">bar</span> <span class="p">(</span><span class="k">lambda </span><span class="p">()</span> <span class="nv">secret-message</span><span class="p">)))</span>
+</span><span class="line">
+</span><span class="line"><span class="p">(</span><span class="nb">display </span> <span class="p">(</span><span class="nf">bar</span><span class="p">))</span> <span class="c1">; prints &quot;none&quot;</span>
+</span><span class="line"><span class="p">(</span><span class="nf">newline</span><span class="p">)</span>
+</span><span class="line"><span class="p">(</span><span class="nf">foo</span> <span class="s">&quot;meet me by the docks at midnight&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="p">(</span><span class="nb">display </span><span class="p">(</span><span class="nf">bar</span><span class="p">))</span> <span class="c1">; prints &quot;meet me by the docks at midnight&quot;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<ul>
+  <li>闭包可以用来实现对象系统。</li>
+</ul>
+
+<p>闭包的实现
+典型实现方式是定义一个特殊的数据结构，保存了函数地址指针与闭包创建时的函数的词法环境表示（那些nonlocal变量的绑定）。使用函数调用栈的语言实现闭包比较困难，因而这也说明了为什么大多数实现闭包的语言是基于垃圾收集机制。
+闭包的实现与函数对象很相似。这种技术也叫做lambda lifting。</p>
+
+<p>各种语言中（类似）闭包的结构C语言的回调函数在C语言中，支持回调函数的库有时在注册时需要两个参数：一个函数指针，一个独立的void*指针用以保存用户数据。这样的做法允许回调函数恢复其调用时的状态。这样的惯用法在功能上类似于闭包，但语法上有所不同。gcc对C语言的扩展gcc编译器对C语言实现了一种闭包的程序特性。</p>
+<p>C语言扩展：BlocksC语言 (使用LLVM编译器或苹果修改版的GCC)支持块。闭包变量用__block标记。同时，这个扩展也可以应用到Objective-C与C++中。</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">typedef</span> <span class="nf">int</span> <span class="p">(</span><span class="o">^</span><span class="n">IntBlock</span><span class="p">)();</span>
+</span><span class="line">
+</span><span class="line"><span class="n">IntBlock</span> <span class="nf">downCounter</span><span class="p">(</span><span class="kt">int</span> <span class="n">start</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">	 <span class="n">__block</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">start</span><span class="p">;</span>
+</span><span class="line">	 <span class="k">return</span> <span class="n">Block_copy</span><span class="p">(</span> <span class="o">^</span><span class="kt">int</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">		 <span class="k">return</span> <span class="n">i</span><span class="o">--</span><span class="p">;</span>
+</span><span class="line">	 <span class="p">});</span>
+</span><span class="line"> <span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="n">IntBlock</span> <span class="n">f</span> <span class="o">=</span> <span class="n">downCounter</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+</span><span class="line"><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">());</span>
+</span><span class="line"><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">());</span>
+</span><span class="line"><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">());</span>
+</span><span class="line"><span class="n">Block_release</span><span class="p">(</span><span class="n">f</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>C++函数对象C++早期标准允许通过重载operator()来定义函数对象。这种对象的行为在某种程度上与函数式编程语言中的函数类似。它们可以在运行时动态创建，保存状态，但是不能如闭包一般隐式获取局部变量。
+C++11标准已经支持了闭包，这是一种特殊的函数对象，由特殊的语言结构——lambda表达式自动构建。C++闭包中保存了全部nonlocal变量的拷贝或引用。如果是对外界环境中的对象的引用，且闭包执行时该外界环境的变量已经不存在（如在调用栈上已经unwinding），那么可导致undefined behavior，因为C++并不扩展这些被引用的外界环境的变量的生命期。</p>
+<p>示例代码如下</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="c++"><span class="line"><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">string</span> <span class="n">myname</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">	<span class="k">typedef</span> <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">names</span><span class="p">;</span>
+</span><span class="line">	<span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+</span><span class="line">	<span class="n">names</span> <span class="n">n</span><span class="p">;</span>
+</span><span class="line">	<span class="c1">// ...</span>
+</span><span class="line">	<span class="n">names</span><span class="o">::</span><span class="n">iterator</span> <span class="n">i</span> <span class="o">=</span>
+</span><span class="line">	 <span class="n">find_if</span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">n</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span> <span class="n">string</span><span class="o">&amp;</span> <span class="n">s</span><span class="p">){</span><span class="k">return</span> <span class="n">s</span> <span class="o">!=</span> <span class="n">myname</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">;});</span>
+</span><span class="line">	<span class="c1">// &#39;i&#39; is now either &#39;n.end()&#39; or points to the first string in &#39;n&#39;</span>
+</span><span class="line">	<span class="c1">// &#39;i&#39; 现在是&#39;n.end()&#39;或指向&#39;n&#39;中第一个</span>
+</span><span class="line">	<span class="c1">// 不等于&#39;myname&#39;且长度大于&#39;y&#39;的字符串</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -3344,248 +3536,6 @@
 <p>我们的格式器还可以做更多自定义的事情。例如，在没查找到一个你需要的颜色名字时，我们可以返回给你最相近的颜色名字。有时，你可能需要我们的格式器有一个 Boolean 属性来控制该功能。或许我们的属性化字符串的格式化不是你想要的，并且应该支持更多自定义操作。</p>
 
 <p>就此，我们完成了一个非常可靠的格式器。所有的代码（伴有 OS X 示例）都放在了 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github</a> 上， 并且你也可以在 <a href="http://cocoapods.org/">CocoaPods</a> 上看到。如果你应用需要此功能，可以将 &#8220;KPAColorFormatter&#8221; 放在你的 Podfile 中，开始使用它吧。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-05-14T21:31:58+08:00" data-updated="true" itemprop="datePublished">May 14<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/" itemprop="url">消息传递机制</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>每个应用或多或少都由一些需要相互传递消息的对象结合起来以完成任务。在这篇文章里，我们将介绍所有可用的消息传递机制，并通过例子来介绍怎样在苹果的框架里使用。我们还会选择一些最佳范例来介绍什么时候该用什么机制。</p>
-
-<p>虽然这一期的主题是关于 Foundation 框架的，但是我们会超出 Foundation 的消息传递机制 (KVO 和 通知) 来讲一讲 delegation，block 和 target-action 几种机制。</p>
-
-<p>当然，有些情况下该使用什么机制没有唯一的答案，所以应该按照自己的喜好去试试。另外大多数情况下该使用什么机制应该是很清楚的。</p>
-
-<p>本文中，我们会常常提及“接收者”和“发送者”。它们在消息传递中的意思可以通过以下的例子解释：一个 table view 是发送者，它的 delegate 就是接收者。Core Data managed object context 是它所发出的 notification 的发送者，获取 notification 的就是接收者。一个滑块 (slider) 是 action 消息的发送者，而实现这个 action （方法）的是它的接收者。任何修改一个支持 KVO 的对象的对象是发送者，这个 KVO 对象的观察者就是接收者。明白精髓了吗？</p>
-
-<h2>几种消息传递机制</h2>
-
-<p>首先我们来看看每种机制的具体特点。在这个基础上，下一节我们会画一个流程图来帮我们在具体情况下正确选择应该使用的机制。最后，我们会介绍一些苹果框架里的例子并且解释为什么在那些用例中会选择这样的机制。</p>
-
-<h3 id="kvo">KVO</h3>
-
-<p>KVO 是提供对象属性被改变时的通知的机制。KVO 的实现在 Foundation 中，很多基于 Foundation 的框架都依赖它。想要了解更多有关 KVO 的最佳实践，请阅读本期 Daniel 写的 <a href="http://objccn.io/issue-7-3">KVO 和 KVC 文章</a>。</p>
-
-<p>如果只对某个对象的值的改变感兴趣的话，就可以使用 KVO 消息传递。不过有一些前提：第一，接收者（接收对象改变的通知的对象）需要知道发送者 （值会改变的对象）；第二，接收者需要知道发送者的生命周期，因为它需要在发送者被销毁前注销观察者身份。如果这两个要去符合的话，这个消息传递机制可以一对多（多个观察者可以注册观察同一个对象的变化）</p>
-
-<p>If you plan to use KVO on Core Data objects, you have to know that things work a bit differently here. This has to do with Core Data&#8217;s faulting mechanism. Once a managed object turns into a fault, it will fire the observers on its properties although their values haven&#8217;t changed.</p>
-
-<p>如果要在 Core Data 上使用 KVO 的话，方法会有些许差别。这和 Core Data 的 faulting 机制有关。一旦一个 managed object 被 faulting 处理的话，即使它的属性没有被改变，它还是会触发相应的观察者。</p>
-
-<blockquote>
-  <span class="secondary radius label">编者注</span> 把属性值先取入缓存中，在对象需要的时候再进行一次访问，这在 Core Data 中是默认行为，这种技术称为 Faulting。这么做可以避免降低内存开销，但是如果你确定将访问结果对象的具体属性值时，可以禁用 Faults 以提高获取性能。关于这个技术更多的情况，请移步<a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreData/Articles/cdFaultingUniquing.html">官方文档</a>
-</blockquote>
-
-<h3>通知</h3>
-
-<p>要在代码中的两个不相关的模块中传递消息时，通知机制是非常好的工具。通知机制广播消息，当消息内容丰富而且无需指望接收者一定要关注的话这一招特别有用。</p>
-
-<p>通知可以用来发送任意消息，甚至可以包含一个 <code>userInfo</code> 字典。你也可以继承 <code>NSNotification</code> 写一个自己的通知类来自定义行为。通知的独特之处在于，发送者和接收者不需要相互知道对方，所以通知可以被用来在不同的相隔很远的模块之间传递消息。这就意味着这种消息传递是单向的，我们不能回复一个通知。</p>
-
-<h3 id="delegation">委托 (Delegation)</h3>
-
-<p>Delegation 在苹果的框架中广泛存在。它让我们能自定义对象的行为，并收到一些触发的事件。要使用 delegation 模式的话，发送者需要知道接收者，但是反过来没有要求。因为发送者只需要知道接收者符合一定的协议，所以它们两者结合的很松。</p>
-
-<p>因为 delegate 协议可以定义任何的方法，我们可以照着自己的需求来传递消息。可以用方法参数来传递消息内容，delegate 可以通过返回值的形式来给发送者作出回应。如果只要在相对接近的两个模块间传递消息，delgation 是很灵活很直接的消息传递机制。</p>
-
-<p>过度使用 delegation 也会带来风险。如果两个对象结合得很紧密，任何其中一个对象都不能单独运转，那么就不需要用 delegate 协议了。这些情况下，对象已经知道各自的类型，可以直接交流。两个比较新的例子是 <code>UICollectionViewLayout</code> 和 <code>NSURLSessionConfiguration</code>。</p>
-
-<p><a name="blocks"> </a>  </p>
-
-<h3 id="block">Block</h3>
-
-<p>Block 是最近才加入 Objective-C 的，首次出现在 OS X 10.6 和 iOS 4 平台上。Block 通常可以完全替代 delegation 消息传递机制的角色。不过这两种机制都有它们自己的独特需求和优势。</p>
-
-<p>一个不使用 block 的理由通常是 block 会存在导致 retain 环 (<a href="https://developer.apple.com/library/mac/documentation/cocoa/conceptual/memorymgmt/Articles/mmPractical.html#//apple_ref/doc/uid/TP40004447-1000810">retain cycles</a>) 的风险。如果发送者需要 retain block 但又不能确保引用在什么时候被赋值为 <code>nil</code>， 那么所有在 block 内对 <code>self</code> 的引用就会发生潜在的 retain 环。</p>
-
-<p>假设我们要实现一个用 block 回调而不是 delegate 机制的 table view 里的选择方法，如下所示：</p>
-
-<pre><code>self.myTableView.selectionHandler = ^void(NSIndexPath *selectedIndexPath) {
-    // 处理选择
-};
-</code></pre>
-
-<p>这儿的问题是，<code>self</code> 会 retain table view，table view 为了让 block 之后可以使用而又需要 retain 这个 block。然而 table view 不能把这个引用设为 nil，因为它不知道什么时候不需要这个 block 了。如果我们不能保证打破 retain 环并且我们需要 retain 发送者，那么 block 就不是一个的好选择。</p>
-
-<p><code>NSOperation</code> 是使用 block 的一个好范例。因为它在一定的地方打破了 retain 环，解决了上述的问题。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">self</span><span class="p">.</span><span class="n">queue</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSOperationQueue</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="n">MyOperation</span> <span class="o">*</span><span class="n">operation</span> <span class="o">=</span> <span class="p">[[</span><span class="n">MyOperation</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="n">operation</span><span class="p">.</span><span class="n">completionBlock</span> <span class="o">=</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">finishedOperation</span><span class="p">];</span>
-</span><span class="line"><span class="p">};</span>
-</span><span class="line"><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">queue</span> <span class="nl">addOperation:</span><span class="n">operation</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>一眼看来好像上面的代码有一个 retain 环：<code>self</code> retain 了 queue，queue retain 了 operation， operation retain 了 completionBlock， 而 completionBlock retain 了 <code>self</code>。然而，把 operation 加入 queue 中会使 operation 在某个时间被执行，然后被从 queue 中移除。（如果没被执行，问题就大了。）一旦 queue 把 operation 移除，retain 环就被打破了。</p>
-
-<p>另一个例子是：我们在写一个视频编码器的类，在类里面我们会调用一个 <code>encodeWithCompletionHandler:</code> 的方法。为了不出问题，我们需要保证编码器对象在某个时间点会释放对 block 的引用。其代码如下所示：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">Encoder</span> <span class="p">()</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="n">completionHandler</span><span class="p">)();</span>
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">Encoder</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">encodeWithCompletionHandler:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)())</span><span class="nv">handler</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">completionHandler</span> <span class="o">=</span> <span class="n">handler</span><span class="p">;</span>
-</span><span class="line">    <span class="c1">// 进行异步处理...</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">// 这个方法会在完成后被调用一次</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">finishedEncoding</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">completionHandler</span><span class="p">();</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">completionHandler</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span> <span class="c1">// &amp;lt;- 不要忘了这个!</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>一旦任务完成，completion block 调用过了以后，我们就应该把它设为 <code>nil</code>。</p>
-
-<p>如果一个被调用的方法需要发送一个一次性的消息作为回复，那么使用 block 是很好的选择， 因为这样做我们可以打破潜在的 retain 环。另外，如果将处理的消息和对消息的调用放在一起可以增强可读性的话，我们也很难拒绝使用 block 来进行处理。在用例之中，使用 block 来做完成的回调，错误的回调，或者类似的事情，是很常见的情况。</p>
-
-<h3 id="targetaction">Target-Action</h3>
-
-<p>Target-Action 是回应 UI 事件时典型的消息传递方式。iOS 上的 <code>UIControl</code> 和 Mac 上的 <code>NSControl</code>/<code>NSCell</code> 都支持这个机制。Target-Action 在消息的发送者和接收者之间建立了一个松散的关系。消息的接收者不知道发送者，甚至消息的发送者也不知道消息的接收者会是什么。如果 target 是 <code>nil</code>，action 会在<a href="https://developer.apple.com/library/ios/documentation/general/conceptual/Devpedia-CocoaApp/Responder.html">响应链 (responder chain)</a> 中被传递下去，直到找到一个响应它的对象。在 iOS 中，每个控件甚至可以和多个 target-action 关联。</p>
-
-<p>基于 target-action 传递机制的一个局限是，发送的消息不能携带自定义的信息。在 Mac 平台上 action 方法的第一个参数永远接收者。iOS 中，可以选择性的把发送者和触发 action 的事件作为参数。除此之外就没有别的控制 action 消息内容的方法了。</p>
-
-<h2>做出正确的选择</h2>
-
-<p>基于上述对不同消息传递机制的特点，我们画了一个流程图来帮助我们在不同情境下做出不同的选择。一句忠告：流程图的建议不代表最终答案。有些时候别的选择依然能达到应有的效果。只不过大多数情况下这张图能引导你做出正确的决定。</p>
-
-<p><img src="http://img.objccn.io/issue-7/communication-patterns-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="688" /></p>
-
-<p>图中有些细节值得深究：</p>
-
-<p>有个框中说到： <em>发送者支持 KVO</em>。这不仅仅是说发送者会在值改变的时候发送 KVO 通知，而且说明观察者需要知道发送者的生命周期。如果发送者被存在一个 weak 属性中，那么发送者有可能会自己变成 nil，那时观察者会导致内存泄露。</p>
-
-<p>一个在最后一行的框里说，<em>消息直接响应方法调用</em>。也就是说方法调用的接收者需要给调用者一个消息作为方法调用的直接反馈。这也就是说处理消息的代码和调用方法的代码必须在同一个地方。</p>
-
-<p>最后在右下角的地方，一个选择分支这样说：<em>发送者能确保释放对 block 的引用吗？</em>这涉及到了我们<a href="#block">之前</a>讨论 block 的 API 存在潜在的 retain 环的问题。如果发送者不能保证在某个时间点会释放对 block 的引用，那么你会惹上 retain 环的麻烦。</p>
-
-<h2 id="framework">Framework 示例</h2>
-
-<p>本节我们通过一些苹果框架里的例子来验证流程图的选择是否有道理，同时解释为什么苹果会选择用这些机制。</p>
-
-<h3 id="kvo">KVO</h3>
-
-<p><code>NSOperationQueue</code> 用了 KVO 观察队列中的 operation 状态属性的改变情况 (<code>isFinished</code>，<code>isExecuting</code>，<code>isCancelled</code>)。当状态改变的时候，队列会收到 KVO 通知。为什么 operation 队列要用 KVO 呢？</p>
-
-<p>消息的接收者（operation 队列）知道消息的发送者（operation），并 retain 它并控制后者的生命周期。另外，在这种情况下只需要单向的消息传递机制。当然如果考虑到 oepration 队列只关心那些改变 operation 的值的改变情况的话，就还不足以说服大家使用 KVO 了。但我们可以这么理解：被传递的消息可以被当成值的改变来处理。因为 state 属性在 operation 队列以外也是有用的，所以这里适合用 KVO。</p>
-
-<p><img src="http://img.objccn.io/issue-7/kvo-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="678" /></p>
-
-<p>当然 KVO 不是唯一的选择。我们也可以将 operation 队列作为 operation 的 delegate 来使用，operation 会调用类似 <code>operationDidFinish:</code> 或者 <code>operationDidBeginExecuting:</code> 等方法把它的 state 传递给 queue。这样就不太方便了，因为 operation 要保存 state 属性，以便于调用这些 delegate 方法。另外，由于 queue 不能主动获取 state 信息，所以 queue 也必须保存所有 operation 的 state。</p>
-
-<h3 id="notifications">Notifications</h3>
-
-<p>Core Data 使用 notification 传递事件（例如一个 managed object context 中的改变————<code>NSManagedObjectContextObjectsDidChangeNotification</code>）</p>
-
-<p>发生改变时触发的 notification 是由 managed object contexts 发出的，所以我们不能假定消息的接收者知道消息的发送者。因为消息的源头不是一个 UI 事件，很多接收者可能在关注着此消息，并且消息传递是单向的，所以 notification 是唯一可行的选择。</p>
-
-<p><img src="http://img.objccn.io/issue-7/notification-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="687" /></p>
-
-<h3 id="delegation">Delegation</h3>
-
-<p>Table view 的 delegate 有多重功能，它可以从管理 accessory view，直到追踪在屏幕上显示的 cell。例如我们可以看看 <code>tableView:didSelectRowAtIndexPath:</code> 方法。为什么用 delegate 实现而不是 target-action 机制？</p>
-
-<p>正如我们在上述流程图中看到的，用 target-action 时，不能传递自定义的数据。而选中 table view 的某个 cell 时，collection view 不仅需要告诉我们一个 cell 被选中了，也要通过 index path 告诉我们哪个 cell 被选中了。如果我们照着这个思路，流程图会引导我们使用 delegation 机制。</p>
-
-<p><img src="http://img.objccn.io/issue-7/delegation-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="687" /></p>
-
-<p>如果不在消息传递中包含选中 cell 的 index path，而是让选中项改变时我们像 table view 主动询问并获取选中 cell 的相关信息，会怎样呢？这会非常不方便，因为我们必须记住当前选中项的数据，这样才能在多选择中知道哪些 cell 是被新选中的。</p>
-
-<p>同理，我们可以想象通过观察 table view 选中项的 index path 属性，当该值发生改变的时候，获得一个选中项改变的通知。不过我们会遇到上述相似问题：不做记录的话我们就不能分辨哪一个 cell 被选择或取消选择了。</p>
-
-<h3 id="block">Block</h3>
-
-<p>我们用 <code>-[NSURLSession dataTaskWithURL:completionHandler:]</code> 来作为一个 block API 的介绍。那么从 URL 加载部分返回给调用者是怎么传递消息的呢？首先，作为 API 的调用者，我们知道消息的发送者，但是我们并没有 retain 它。另外，这是个单向的消息传递————它直接调用 <code>dataTaskWithURL:</code> 的方法。如果我们对照流程图，会发现这属于 block 消息传递机制。</p>
-
-<p><img src="http://img.objccn.io/issue-7/block-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="688" /></p>
-
-<p>有其他的选项吗？当然，苹果自己的 <code>NSURLConnection</code> 就是最好的例子。<code>NSURLConnection</code>在 block 问世之前就存在了，所以它并没有用 block 来实现消息传递，而是使用 delegation 来完成。当 block 出现以后，苹果就在 OS X 10.7 和 iOS 5 平台上的 <code>NSURLConnection</code> 中加了 <code>sendAsynchronousRequest:queue:completionHandler:</code>，所以我们不再在简单的任务中使用 delegate 了。</p>
-
-<p>因为 <code>NSURLSession</code> 是个最近在 OS X 10.9 和 iOS 7 才出现的 API，所以它们使用 block 来实现消息传递机制（<code>NSURLSession</code> 有一个 delegate，但是是用于其他目的）。</p>
-
-<h3 id="targetaction">Target-Action</h3>
-
-<p>一个明显的 target-action 用例是按钮。按钮在不被按下的时候不需要发送任何的信息。为了这个目的，target-action 是 UI 中消息传递的最佳选择。</p>
-
-<p><img src="http://img.objccn.io/issue-7/target-action-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="678" /></p>
-
-<p>如果 target 是明确指定的，那么 action 消息会发送给指定的对象。如果 target 是 <code>nil</code>， action 消息会一直在响应链中被传递下去，直到找到一个能处理它的对象。在这种情况下，我们有一个完全解耦的消息传递机制：发送者不需要知道接收者，反之亦然。</p>
-
-<p>Target-action 机制非常适合响应 UI 的事件。没有其他的消息传递机制能够提供相同的功能。虽然 notification 在发送者和接收者的松散关系上最接近它，但是 target-action 可以用于响应链——只有一个对象获得 action 并响应，action 在响应链中传递，直到能遇到响应这个 action 的对象。</p>
-
-<h2>总结</h2>
-
-<p>一开始接触这么多的消息传递机制的时候，我们可能有些无所适从，觉得所有的机制都可以被选用。不过一旦我们仔细分析每个机制的时候，它们各自都有特殊的要求和能力。</p>
-
-<p>文中的选择流程图是帮助你清楚认识这些机制的好的开始，当然它不是所有问题的答案。如果你觉得这和你自己选择机制的方式相似或是有任何缺漏，欢迎来信指正。</p>
 
 <hr />
 <p class="post-footer">
