@@ -135,7 +135,7 @@
 <p>Xcode 所提供的 Core Data 标准模版中，所设立的是运行在主线程中的一个存储调度 (persistent store coordinator)和一个托管对象上下文 (managed object context) 的方式。在很多情况下，这种模式可以运行良好。创建新的对象和修改已存在的对象开销都非常小，也都能在主线程中没有困难滴完成。然后，如果你想要做大量的处理，那么把它放到一个后台上下文来做会比较好。一个典型的应用场景是将大量数据导入到 Core Data 中。</p>
 
 <p>我们的方式非常简单，并且可以被很好地描述：</p>
-
+<!-- more -->
 <ol>
 <li>我们为导入工作单独创建一个操作  </li>
 <li>我们创建一个 managed object context ，它和主 managed object context 使用同样的 persistent store coordinator  </li>

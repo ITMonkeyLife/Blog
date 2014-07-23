@@ -137,6 +137,7 @@
 </pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">myObj</span> <span class="nl">performSelectorInBackground:</span><span class="k">@selector</span><span class="p">(</span><span class="n">doSomething</span><span class="p">)</span> <span class="nl">withObject:</span><span class="nb">nil</span><span class="p">];</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 <h3>3.POSIX Thread</h3>
+<!-- more -->
 <p>由于Mac和iOS都是基于Darwin系统，Darwin系统的XUN内核，是基于Mach和BSD的，继承了BSD的POSIX接口，所以可以直接使用POSIX线程的相关接口来使用线程。</p>
 <p>创建线程的接口为 <code>pthread_create</code>，当然在创建之前可以通过相关函数设置好线程的属性。以下为POSIX线程使用简单的例子。</p>
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>

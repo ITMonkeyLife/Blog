@@ -151,7 +151,7 @@
 <p>退回到远古时代（其实也就是几年前），人们会使用 <code>pthread_once</code> ，因为 <code>dispatch_once_t</code> 更容易使用并且不易出错，所以你永远都不会再用到 <code>pthread_once</code> 了。</p>
 
 <h2>延后执行</h2>
-
+<!-- more -->
 <p>另一个常见的小伙伴就是 <code>dispatch_after</code> 了。它使工作延后执行。它是很强大的，但是要注意：你很容易就陷入到一堆麻烦中。一般用法是这样的：</p>
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>

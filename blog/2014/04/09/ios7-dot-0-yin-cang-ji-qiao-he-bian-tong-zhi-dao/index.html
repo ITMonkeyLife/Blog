@@ -144,7 +144,7 @@
 </span><span class="line">    <span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(...);</span>
 </span><span class="line"><span class="p">}];</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
-
+<!-- more -->
 <p>但是，绝大多数情况下这样也能工作得很好，只要你不直接跟 CALayer 打交道。</p>
 
 <p>iOS 7 中，我有很多代码路径（主要是 <code>UITableViewCells</code>）需要额外保护以防止意外的动画，例如，如果一个弹窗（popover）的大小调整了，与此同时其中的表视图将因为高度的变化而加载新的 cell。我通常的做法是将整个 <code>layoutSubviews</code> 的代码包扎到一个动画块中：</p>

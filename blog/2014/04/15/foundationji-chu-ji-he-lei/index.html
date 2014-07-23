@@ -145,7 +145,7 @@
 <code>NSArray</code> 实现了 <code>objectAtIndexedSubscript:</code>，因为我们可以使用类 C 的语法 <code>array[0]</code> 来代替原来的 <code>[array objectAtIndex:0]</code>。</p>
 
 <h3>性能特征</h3>
-
+<!-- more -->
 <p>关于 <code>NSArray</code> 的内容比你想象的要多的多。基于存储对象的多少，它使用各种内部的变体。最有趣的部分是苹果对于个别的对象访问并不保证 O(1) 的访问时间 — 正如你在 <a href="http://www.opensource.apple.com/source/CF/CF-855.11/CFArray.h">CFArray.h CoreFoundation 头文件</a>中的关于算法复杂度的注解中可以读到的:</p>
 
 <blockquote>

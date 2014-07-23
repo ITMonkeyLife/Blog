@@ -130,7 +130,7 @@
 <p><a href="http://zh.wikipedia.org/wiki/线程">线程</a>（thread）是组成进程的子单元，操作系统的调度器可以对线程进行单独的调度。实际上，所有的并发编程 API 都是构建于线程之上的 —— 包括 GCD 和操作队列（operation queues）。</p>
 
 <p>多线程可以在单核 CPU 上同时（或者至少看作同时）运行。操作系统将小的时间片分配给每一个线程，这样就能够让用户感觉到有多个任务在同时进行。如果 CPU 是多核的，那么线程就可以真正的以并发方式被执行，从而减少了完成某项操作所需要的总时间。</p>
-
+<!-- more -->
 <p>你可以通过 Instrument 中的 <a href="http://developer.apple.com/library/mac/#documentation/DeveloperTools/Conceptual/InstrumentsUserGuide/AnalysingCPUUsageinYourOSXApp/AnalysingCPUUsageinYourOSXApp.html">CPU strategy view</a> 来观察你的代码或者你所使用的框架的代码被执行时，它们在多核 CPU 中的被调度的情况。</p>
 
 <p>需要重点关注的是，你无法控制你的代码在什么地方以及什么时候被调度，以及无法控制执行多长时间后将被暂停，以便轮换执行别的任务。这种线程调度是非常强大的一种技术，但是也非常复杂，我们稍后研究。</p>

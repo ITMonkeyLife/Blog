@@ -168,7 +168,7 @@
 </span><span class="line">
 </span><span class="line"><span class="p">[</span><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
-
+<!-- more -->
 <p>请注意我们要动画的键路径，也就是 <code>position.x</code>，实际上包含一个存储在 <code>position</code> 属性中的 <code>CGPoint</code> 结构体成员。这是 Core Animation 一个非常方便的特性。请务必查看<a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreAnimation_guide/Key-ValueCodingExtensions/Key-ValueCodingExtensions.html">支持的键路径的完整列表</a>。</p>
 
 <p>然而，当我们运行该代码时，我们意识到火箭在完成动画后马上回到了初始位置。这是因为在默认情况下，动画不会在超出其持续时间后还修改 presentation layer。实际上，在结束时它甚至会被彻底移除。</p>

@@ -136,7 +136,7 @@
 <p>layer 将像文档中所写的的那样去寻找动作，整个过程分为五个步骤。第一步中的在 view 和 layer 中交互的部分是最有意思的：</p>
 
 <p>layer 通过向它的 delegate 发送 <code>actionForLayer:forKey:</code> 消息来询问提供一个对应属性变化的 action。delegate 可以通过返回以下三者之一来进行响应：</p>
-
+<!-- more -->
 <ol>
 <li>它可以返回一个动作对象，这种情况下 layer 将使用这个动作。  </li>
 <li>它可以返回一个 <code>nil</code>， 这样 layer 就会到其他地方继续寻找。  </li>
