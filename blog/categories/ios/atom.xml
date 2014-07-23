@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-07-23T17:37:32+08:00</updated>
+  <updated>2014-07-23T17:42:22+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -18,7 +18,8 @@
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/07/23/iosde-cha-jian/"/>
     <updated>2014-07-23T15:38:46+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2014/07/23/iosde-cha-jian</id>
-    <content type="html"><![CDATA[<p>插件是给你已经发布的 App 增加功能的一个好办法，Mac 上的 App 支持插件已经有很长的历史了，比如 Adobe Photoshop，在 1991 年的 version 2.0 就开始支持了。</p>
+    <content type="html"><![CDATA[<div class="entry-content">
+<p>插件是给你已经发布的 App 增加功能的一个好办法，Mac 上的 App 支持插件已经有很长的历史了，比如 Adobe Photoshop，在 1991 年的 version 2.0 就开始支持了。</p>
 
 <p>在以前的 OS X 系统中，给你的 App 在运行时动态载入可执行代码比较困难。现在，在 <code>NSBundle</code> 的帮助和你的一些前瞻性思维的帮助下下，它从未如此简单。 </p>
 
@@ -49,46 +50,45 @@
 <p>打开 Controller.m，你可以看见 <code>-(void)loadPlugins</code> 方法 (它在 <code>applicationDidFinishLaunching:</code> 中被调用)。</p>
 
 <p><code>loadPlugins</code> 方法在你的界面菜单右侧加入了一个新的 <code>NSMenuItem</code>，来为你调用你的插件提供一个入口（通常你会在 MainMenu.xib 做这件事情并且链接 outlets，但是我们这次偷下懒）。然后获得你的插件目录（在 ~/Library/Application Support/Text Edit/Plug-Ins/ ）下，并且扫描这个目录。</p>
-<p>```objc
+```objc
  NSString *pluginsFolder = [self pluginsFolder];
- NSFileManager *fm = [NSFileManager defaultManager];</p>
+ NSFileManager *fm = [NSFileManager defaultManager];
 
-<p>NSError *outErr;
- for (NSString *item in [fm contentsOfDirectoryAtPath:pluginsFolder error:&amp;outErr]) {</p>
+ NSError *outErr;
+ for (NSString *item in [fm contentsOfDirectoryAtPath:pluginsFolder error:&amp;outErr]) {
 
-<pre><code> if (![item hasSuffix:@".bundle"]) {
-     continue;
+     if (![item hasSuffix:@".bundle"]) {
+         continue;
+     }
+
+     NSString *bundlePath = [pluginsFolder stringByAppendingPathComponent:item];
+
+     NSBundle *b = [NSBundle bundleWithPath:bundlePath];
+
+     if (!b) {
+         NSLog(@"Could not make a bundle from %@", bundlePath);
+         continue;
+     }
+
+     id <texteditplugin> plugin = [[b principalClass] new];
+
+     NSMenuItem *item = [pluginsMenu addItemWithTitle:[plugin menuItemTitle] action:@selector(pluginMenuItemCalledAction:) keyEquivalent:@""];
+
+     [item setRepresentedObject:plugin];
+
  }
-
- NSString *bundlePath = [pluginsFolder stringByAppendingPathComponent:item];
-
- NSBundle *b = [NSBundle bundleWithPath:bundlePath];
-
- if (!b) {
-     NSLog(@"Could not make a bundle from %@", bundlePath);
-     continue;
- }
-
- id &lt;TextEditPlugin&gt; plugin = [[b principalClass] new];
-
- NSMenuItem *item = [pluginsMenu addItemWithTitle:[plugin menuItemTitle] action:@selector(pluginMenuItemCalledAction:) keyEquivalent:@""];
-
- [item setRepresentedObject:plugin];
-</code></pre>
-
-<p>}
-```</p>
+```
 
 <p>到目前，看起来是非常简单的。扫描插件目录，确保得到的是一个 .bundle 文件（你当然不希望载入 .DS_Store 文件），然后用 <code>NSBundle</code> 载入你找到的 bundle 并且实例化里面的类。</p>
 
 <p>你会注意到一个 TextEditPlugin 的 protocol 的引用。在 TextEditMisc.h 能找它的定义:</p>
 
-<p><code>objc
- @protocol TextEditPlugin &lt;NSObject&gt;
+```objc
+ @protocol TextEditPlugin <nsobject>
  - (NSString*)menuItemTitle;
  - (void)actionCalledWithTextView:(NSTextView*)textView inDocument:(id)document;
  @end
-</code></p>
+```
 
 <p>这说明你实例化的类需要响应这两个方法。你可以验证这个类是否响应这两个方法（这是一个好主意），但是简单起见，我们现在就不这样做了。</p>
 
@@ -100,12 +100,12 @@
 
 <p>举一个例子，实现 <code>pluginMenuItemCalledAction</code> 的最好的地方是在 <code>Document</code> 的 window controller 类中。打开 DocumentWindowController.m，然后定位到到 <code>pluginMenuItemCalledAction</code></p>
 
-<p><code>objc
+```objc
 - (void)pluginMenuItemCalledAction:(id)sender {
-    id &lt;TextEditPlugin&gt;plugin = [sender representedObject];
+    id <texteditplugin>plugin = [sender representedObject];
     [plugin actionCalledWithTextView:[self firstTextView] inDocument:[self document]];
 }
-</code></p>
+```
 
 <p>代码本身很清晰，搜集插件实例，调用 <code>actionCalledWithTextView:inDocument:</code> 方法（被定义在 protocol 里面的），运行你插件里面的代码。</p>
 
@@ -117,23 +117,24 @@
 
 <p>接着，打开 TEMarkYellow.m，你将会看见定义在协议里面的方法。一个返回你插件的名字，就是在 menu 里面显示的那个，更有意思的是另外一个方法 (<code>actionCalledWithTextView:inDocument:</code>)，它把所有选中的文字变成黄色的背景。</p>
 
-<p>```objc
+```objc
 - (void)actionCalledWithTextView:(NSTextView*)textView inDocument:(id)document {
-    if ([textView selectedRange].length) {</p>
+    if ([textView selectedRange].length) {
 
-<pre><code>    NSMutableAttributedString *ats = [[[textView textStorage] attributedSubstringFromRange:[textView selectedRange]] mutableCopy];
+        NSMutableAttributedString *ats = [[[textView textStorage] attributedSubstringFromRange:[textView selectedRange]] mutableCopy];
 
-    [ats addAttribute:NSBackgroundColorAttributeName value:[NSColor yellowColor] range:NSMakeRange(0, [ats length])];
+        [ats addAttribute:NSBackgroundColorAttributeName value:[NSColor yellowColor] range:NSMakeRange(0, [ats length])];
 
-    //  先测试text view是否能改变文字内容，这样可以自动做正确的撤销操作。
+        //  先测试text view是否能改变文字内容，这样可以自动做正确的撤销操作。
 
-    By asking the text view if you can change the text first, it will automatically do the right thing to enable undoing of attribute changes
-    if ([textView shouldChangeTextInRange:[textView selectedRange] replacementString:[ats string]]) {
-        [[textView textStorage] replaceCharactersInRange:[textView selectedRange] withAttributedString:ats];
-        [textView didChangeText];
+        By asking the text view if you can change the text first, it will automatically do the right thing to enable undoing of attribute changes
+        if ([textView shouldChangeTextInRange:[textView selectedRange] replacementString:[ats string]]) {
+            [[textView textStorage] replaceCharactersInRange:[textView selectedRange] withAttributedString:ats];
+            [textView didChangeText];
+        }
     }
-} } ```
-</code></pre>
+}
+```
 
 <p>运行 TextEdit （它会创建Plug-Ins目录），然后构建 MarkYellow 工程。把 MarkYellow.bundle 丢到你的 ~/Library/Application Support/Text Edit/Plug-Ins/ 目录下面，重启你的 TextEdit 应用。</p>
 
@@ -170,25 +171,26 @@
 
 <p>然而，设置到菜单项的 selector 仍然还是 <code>pluginMenuItemCalledAction:</code>，可以在 DocumentWindowController.m 里面看看这个方法到底干了什么:</p>
 
-<p>```objc
-- (void)pluginMenuItemCalledAction:(id)sender {</p>
+```objc
+- (void)pluginMenuItemCalledAction:(id)sender {
 
-<pre><code>PluginTarget *p = [sender representedObject];
+    PluginTarget *p = [sender representedObject];
 
-NSMethodSignature *ms = [[p target] methodSignatureForSelector:[p action]];
-NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:ms];
+    NSMethodSignature *ms = [[p target] methodSignatureForSelector:[p action]];
+    NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:ms];
 
-NSTextView *tv = [self firstTextView];
-id document = [self document];
-id userObject = [p userObject];
+    NSTextView *tv = [self firstTextView];
+    id document = [self document];
+    id userObject = [p userObject];
 
-[invocation setTarget:[p target]];
-[invocation setSelector:[p action]];
-[invocation setArgument:&amp;tv atIndex:2];
-[invocation setArgument:&amp;document atIndex:3];
-[invocation setArgument:&amp;userObject atIndex:4];
-[invocation invoke]; } ```
-</code></pre>
+    [invocation setTarget:[p target]];
+    [invocation setSelector:[p action]];
+    [invocation setArgument:&amp;tv atIndex:2];
+    [invocation setArgument:&amp;document atIndex:3];
+    [invocation setArgument:&amp;userObject atIndex:4];
+    [invocation invoke];
+}
+```
 
 <p>因为你要处理更多信息，所以这个版本相比之前的实现有一点复杂，创建一个 <code>NSInvocation</code>，设置它的参数，然后从插件的实例里面调用它。</p>
 
@@ -213,6 +215,7 @@ id userObject = [p userObject];
 
 <hr />
 
+</texteditplugin></nsobject></texteditplugin></div>
 ]]></content>
   </entry>
   
@@ -552,7 +555,7 @@ void foo(string myname) {
 
 <p>在这篇文章中，我们介绍了一种称之为 <a href="http://mutualmobile.github.io/blog/2013/12/04/viper-introduction/">VIPER</a> 的 iOS 应用架构的方式。VIPER 已经在很多大型的项目上成功实践，但是出于本文的目的我们将通过一个待办事项清单 (to-do app) 来介绍 VIPER 。你可以在 <a href="https://github.com/objcio/issue-13-viper">GitHub</a> 上关注这个项目。</p>
 
-<p><video style="display:block;max-width:316px;height:auto;border:0;" poster="{{site.images_path}}/issue-13/2014-06-07-viper-screenshot.png" controls="1"> <br />
+<p><video style="display:block;max-width:316px;height:auto;border:0;" poster="/issue-13/2014-06-07-viper-screenshot.png" controls="1"> <br />
   <source src="http://img.objccn.io//issue-13/2014-06-07-viper-preview.mp4" />
 </video></p>
 

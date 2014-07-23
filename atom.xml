@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-07-23T17:36:30+08:00</updated>
+  <updated>2014-07-23T17:42:22+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -1148,7 +1148,8 @@ span&gt;<span class="line">                <span class="k">return</span> <span c
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/07/23/iosde-cha-jian/"/>
     <updated>2014-07-23T15:38:46+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2014/07/23/iosde-cha-jian</id>
-    <content type="html"><![CDATA[<p>插件是给你已经发布的 App 增加功能的一个好办法，Mac 上的 App 支持插件已经有很长的历史了，比如 Adobe Photoshop，在 1991 年的 version 2.0 就开始支持了。</p>
+    <content type="html"><![CDATA[<div class="entry-content">
+<p>插件是给你已经发布的 App 增加功能的一个好办法，Mac 上的 App 支持插件已经有很长的历史了，比如 Adobe Photoshop，在 1991 年的 version 2.0 就开始支持了。</p>
 
 <p>在以前的 OS X 系统中，给你的 App 在运行时动态载入可执行代码比较困难。现在，在 <code>NSBundle</code> 的帮助和你的一些前瞻性思维的帮助下下，它从未如此简单。 </p>
 
@@ -1406,6 +1407,7 @@ span&gt;<span class="line">                <span class="k">return</span> <span c
 <p>我把探索的过程留给读者，但是你在处理插件的时候应该一直有安全性的观念。当然，把一个插件放在沙盒里面或者另外一个进程里面会缺少一些乐趣，并且增加一些工作量，所以这对于你的 App 或许没那么重要。</p>
 
 <hr />
+</div>
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 ]]></content>
