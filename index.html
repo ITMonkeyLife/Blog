@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Jul 4th, 2014 iOS Comments 闭包，你了解多少？ 在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以， &hellip;">
+	<meta name="description" content="Jul 23rd, 2014 iOS Comments 苹果的插件 插件是给你已经发布的 App 增加功能的一个好办法，Mac 上的 App 支持插件已经有很长的历史了，比如 Adobe Photoshop，在 1991 年的 version 2.0 就开始支持了。 在以前的 OS X 系统中， &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -111,6 +111,302 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-07-23T15:38:46+08:00" data-updated="true" itemprop="datePublished">Jul 23<span>rd</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/07/23/iosde-cha-jian/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/07/23/iosde-cha-jian/" itemprop="url">苹果的插件</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>插件是给你已经发布的 App 增加功能的一个好办法，Mac 上的 App 支持插件已经有很长的历史了，比如 Adobe Photoshop，在 1991 年的 version 2.0 就开始支持了。</p>
+
+<p>在以前的 OS X 系统中，给你的 App 在运行时动态载入可执行代码比较困难。现在，在 <code>NSBundle</code> 的帮助和你的一些前瞻性思维的帮助下下，它从未如此简单。 </p>
+
+<h2 id="bundlesinterfaces">包 (Bundles) 和接口 (Interfaces)</h2>
+
+<p>如果你打开 Xcode 5 并且创建一个新项目，你会看见 OS X 选项卡下有一个 &#8220;Application Plug-in&#8221; 的分类和 &#8220;System Plug-in&#8221; 的分类，从 Screen Savers 到 Image Units，在 Xcode 里面一共有 12 中不同的模板可以编写 App 的插件。如果你点击 &#8220;Framework &amp; Library&#8221; 的选项卡，你将可以看见一个 Bundle 条目。我会在今天探索一个非常简单的的项目，那就是在一个修改过的 TextEdit 里面加入加载 bundle 的功能。</p>
+
+<blockquote>
+  <p>注意：Apple 称这些为 plug-ins ，而通常大家更喜欢用 plugins 称呼。为了一致性，在开发和 UI 相关的东西的时候，我想用和平台一致的 plug-in 称呼会更好。虽然在应用的 UI 里你会看到 &#8220;plug-ins&#8221;，但是在这篇文章和代码里面，我会用 plugin。（同时我偶尔会混用 bundle 和 plugin 这两个词。）(译者注：在本译文中会把 plugin 统一翻译成插件，伟大的中文)</p>
+</blockquote>
+
+<p>什么是 bundle ？如果你创建一个 Xcode 的 bundle 模版项目，你会发现它内容并不多。当构建它的时候你会得到一个很像构建 App 时产生的目录 —— 一个 Contents 目录，里面包含了 Info.plist 和 Resource 目录。如果你在你的项目下加入了新的类，你可以看见包含一个可执行文件的 MacOS 目录。Bundle 工程里缺少的一个东西是 main() 函数。它是被宿主 App 调用执行的。</p>
+
+<h2 id="texteditplugin">为 TextEdit 加入 Plugin 支持</h2>
+
+<p>我会介绍两种插件的方式，第一个用最少的工作来为你的 app 加入插件支持，希望让你知道实现这个有多简单。</p>
+
+<p>第二个技术有点复杂，它展现来一个为你的 app 加入插件的合理的方式，这可以使你不会在未来陷入到被锁死在某一种实现的窘境中。</p>
+
+<p>本文章的项目文件仍然会放在 <a href="https://github.com/objcio/issue-14-plugins">GitHub</a> 供大家参考。</p>
+
+<h3 id="texteditbundle">在 TextEdit 中扫描 Bundle</h3>
+
+<p>请打开 &#8220;01 TextEdit&#8221; 目录下面的 TextEdit.xcodeproj 工程，同时浏览它里面包含的代码。</p>
+
+<p>这个改写过的 TextEdit 里面有三个简单的组成部分：扫描 bundle，加载 bundle，并且添加了调用 bundle 的 UI。</p>
+
+<p>打开 Controller.m，你可以看见 <code>-(void)loadPlugins</code> 方法 (它在 <code>applicationDidFinishLaunching:</code> 中被调用)。</p>
+
+<p><code>loadPlugins</code> 方法在你的界面菜单右侧加入了一个新的 <code>NSMenuItem</code>，来为你调用你的插件提供一个入口（通常你会在 MainMenu.xib 做这件事情并且链接 outlets，但是我们这次偷下懒）。然后获得你的插件目录（在 ~/Library/Application Support/Text Edit/Plug-Ins/ ）下，并且扫描这个目录。</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"> <span class="n">NSString</span> <span class="o">*</span><span class="n">pluginsFolder</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">pluginsFolder</span><span class="p">];</span>
+</span><span class="line"> <span class="n">NSFileManager</span> <span class="o">*</span><span class="n">fm</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSFileManager</span> <span class="n">defaultManager</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"> <span class="n">NSError</span> <span class="o">*</span><span class="n">outErr</span><span class="p">;</span>
+</span><span class="line"> <span class="k">for</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">item</span> <span class="k">in</span> <span class="p">[</span><span class="n">fm</span> <span class="nl">contentsOfDirectoryAtPath:</span><span class="n">pluginsFolder</span> <span class="nl">error:</span><span class="o">&amp;</span><span class="n">outErr</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">
+</span><span class="line">     <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">[</span><span class="n">item</span> <span class="nl">hasSuffix:</span><span class="s">@&quot;.bundle&quot;</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">         <span class="k">continue</span><span class="p">;</span>
+</span><span class="line">     <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">     <span class="n">NSString</span> <span class="o">*</span><span class="n">bundlePath</span> <span class="o">=</span> <span class="p">[</span><span class="n">pluginsFolder</span> <span class="nl">stringByAppendingPathComponent:</span><span class="n">item</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">     <span class="n">NSBundle</span> <span class="o">*</span><span class="n">b</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSBundle</span> <span class="nl">bundleWithPath:</span><span class="n">bundlePath</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">     <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">         <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Could not make a bundle from %@&quot;</span><span class="p">,</span> <span class="n">bundlePath</span><span class="p">);</span>
+</span><span class="line">         <span class="k">continue</span><span class="p">;</span>
+</span><span class="line">     <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">     <span class="kt">id</span> <span class="o">&lt;</span><span class="n">TextEditPlugin</span><span class="o">&gt;</span> <span class="n">plugin</span> <span class="o">=</span> <span class="p">[[</span><span class="n">b</span> <span class="n">principalClass</span><span class="p">]</span> <span class="n">new</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">     <span class="n">NSMenuItem</span> <span class="o">*</span><span class="n">item</span> <span class="o">=</span> <span class="p">[</span><span class="n">pluginsMenu</span> <span class="nl">addItemWithTitle:</span><span class="p">[</span><span class="n">plugin</span> <span class="n">menuItemTitle</span><span class="p">]</span> <span class="nl">action:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">pluginMenuItemCalledAction:</span><span class="p">)</span> <span class="nl">keyEquivalent:</span><span class="s">@&quot;&quot;</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">     <span class="p">[</span><span class="n">item</span> <span class="nl">setRepresentedObject:</span><span class="n">plugin</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>到目前，看起来是非常简单的。扫描插件目录，确保得到的是一个 .bundle 文件（你当然不希望载入 .DS_Store 文件），然后用 <code>NSBundle</code> 载入你找到的 bundle 并且实例化里面的类。</p>
+
+<p>你会注意到一个 TextEditPlugin 的 protocol 的引用。在 TextEditMisc.h 能找它的定义:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"> <span class="k">@protocol</span> <span class="nc">TextEditPlugin</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line"> <span class="o">-</span> <span class="p">(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)</span><span class="n">menuItemTitle</span><span class="p">;</span>
+</span><span class="line"> <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">actionCalledWithTextView:</span><span class="p">(</span><span class="n">NSTextView</span><span class="o">*</span><span class="p">)</span><span class="n">textView</span> <span class="nl">inDocument:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">document</span><span class="p">;</span>
+</span><span class="line"> <span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这说明你实例化的类需要响应这两个方法。你可以验证这个类是否响应这两个方法（这是一个好主意），但是简单起见，我们现在就不这样做了。</p>
+
+<p>OK，你在 bundle 里面调用的 <code>principalClass</code> 方法是什么呢？当你创建一个 Bundle 的时候，你可以在里面创建一个或者多个类，同时你需要让 TextEdit 知道哪一个类需要被实例化。为了帮助宿主 App 调用，你可以在 Info.plist 文件加入一个 <code>NSPrincipalClass</code> 的键，同时设置它的值为实现插件方法的类的名字。你可以用 <code>[NSBundle principalClass]</code> 方便地从 <code>NSPrincipalClass</code> 的值里面寻找并创建这个类。</p>
+
+<p>继续：在 Plug-Ins 菜单加入一个新的按钮，设置 action 为 <code>pluginMenuItemCalledAction:</code>，并且设置它表示你已经实例化的对象。</p>
+
+<p>注意你没有在 menu item 里面设置一个target。如果一个menu item的目标是nil，那么它会寻找响应链，来寻找第一个实现  <code>pluginMenuItemCalledAction:</code> 方法的对象。如果它找不到，那么这个菜单选项将会不能用。</p>
+
+<p>举一个例子，实现 <code>pluginMenuItemCalledAction</code> 的最好的地方是在 <code>Document</code> 的 window controller 类中。打开 DocumentWindowController.m，然后定位到到 <code>pluginMenuItemCalledAction</code></p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">pluginMenuItemCalledAction:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">id</span> <span class="o">&lt;</span><span class="n">TextEditPlugin</span><span class="o">&gt;</span><span class="n">plugin</span> <span class="o">=</span> <span class="p">[</span><span class="n">sender</span> <span class="n">representedObject</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">plugin</span> <span class="nl">actionCalledWithTextView:</span><span class="p">[</span><span class="n">self</span> <span class="n">firstTextView</span><span class="p">]</span> <span class="nl">inDocument:</span><span class="p">[</span><span class="n">self</span> <span class="n">document</span><span class="p">]];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>代码本身很清晰，搜集插件实例，调用 <code>actionCalledWithTextView:inDocument:</code> 方法（被定义在 protocol 里面的），运行你插件里面的代码。</p>
+
+<h3>插件一瞥</h3>
+
+<p>打开 &#8220;01 MarkYellow&#8221; 工程看一下。这是一个 Xcode (通过OS X ▸ Framework &amp; Library ▸ Bundle template 建立) 的标准工程，里面只添加了一个类：TEMarkYellow。</p>
+
+<p>如果你打开 MarkYellow-Info.plist，你可以看到 <code>NSPrincipalClass</code> 的值设置成了上面提到的 <code>TEMarkYellow</code>。</p>
+
+<p>接着，打开 TEMarkYellow.m，你将会看见定义在协议里面的方法。一个返回你插件的名字，就是在 menu 里面显示的那个，更有意思的是另外一个方法 (<code>actionCalledWithTextView:inDocument:</code>)，它把所有选中的文字变成黄色的背景。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">actionCalledWithTextView:</span><span class="p">(</span><span class="n">NSTextView</span><span class="o">*</span><span class="p">)</span><span class="nv">textView</span> <span class="nf">inDocument:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">document</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">textView</span> <span class="n">selectedRange</span><span class="p">].</span><span class="n">length</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">NSMutableAttributedString</span> <span class="o">*</span><span class="n">ats</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">textView</span> <span class="n">textStorage</span><span class="p">]</span> <span class="nl">attributedSubstringFromRange:</span><span class="p">[</span><span class="n">textView</span> <span class="n">selectedRange</span><span class="p">]]</span> <span class="n">mutableCopy</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">        <span class="p">[</span><span class="n">ats</span> <span class="nl">addAttribute:</span><span class="n">NSBackgroundColorAttributeName</span> <span class="nl">value:</span><span class="p">[</span><span class="n">NSColor</span> <span class="n">yellowColor</span><span class="p">]</span> <span class="nl">range:</span><span class="n">NSMakeRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">ats</span> <span class="n">length</span><span class="p">])];</span>
+</span><span class="line">
+</span><span class="line">        <span class="c1">//  先测试text view是否能改变文字内容，这样可以自动做正确的撤销操作。</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">By</span> <span class="n">asking</span> <span class="n">the</span> <span class="n">text</span> <span class="n">view</span> <span class="k">if</span> <span class="n">you</span> <span class="n">can</span> <span class="n">change</span> <span class="n">the</span> <span class="n">text</span> <span class="n">first</span><span class="p">,</span> <span class="n">it</span> <span class="n">will</span> <span class="n">automatically</span> <span class="k">do</span> <span class="n">the</span> <span class="n">right</span> <span class="n">thing</span> <span class="n">to</span> <span class="n">enable</span> <span class="n">undoing</span> <span class="n">of</span> <span class="n">attribute</span> <span class="n">changes</span>
+</span><span class="line">        <span class="k">if</span> <span class="p">([</span><span class="n">textView</span> <span class="nl">shouldChangeTextInRange:</span><span class="p">[</span><span class="n">textView</span> <span class="n">selectedRange</span><span class="p">]</span> <span class="nl">replacementString:</span><span class="p">[</span><span class="n">ats</span> <span class="n">string</span><span class="p">]])</span> <span class="p">{</span>
+</span><span class="line">            <span class="p">[[</span><span class="n">textView</span> <span class="n">textStorage</span><span class="p">]</span> <span class="nl">replaceCharactersInRange:</span><span class="p">[</span><span class="n">textView</span> <span class="n">selectedRange</span><span class="p">]</span> <span class="nl">withAttributedString:</span><span class="n">ats</span><span class="p">];</span>
+</span><span class="line">            <span class="p">[</span><span class="n">textView</span> <span class="n">didChangeText</span><span class="p">];</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>运行 TextEdit （它会创建Plug-Ins目录），然后构建 MarkYellow 工程。把 MarkYellow.bundle 丢到你的 ~/Library/Application Support/Text Edit/Plug-Ins/ 目录下面，重启你的 TextEdit 应用。</p>
+
+<p>一切看起来都很好，扫描，加载，插入一个菜单，然后，当你使用菜单项的时候，传递到参数到插件里面。试一试，点击 Plug-Ins ▸ Mark Selected Text Yellow，选择的文字的背景颜色就变成黄色的了。</p>
+
+<p>这真是令人惊叹，但是其实它很脆弱，也不够先进。</p>
+
+<p>所以关掉这两个项目，扔进废纸篓，然后尝试忘掉它们吧。</p>
+
+<h2>好的，但是如何改进呢</h2>
+
+<p>上述的途径有什么问题？</p>
+
+<ul>
+<li><p>Bundle 中只有一个方法被调用。对于插件的作者来说太不方便了。有没有更简单的方法为 bundle 加入更多功能和菜单按钮呢？</p></li>
+<li><p>这不是一个有前瞻性的做法，在插件里面硬编码特定的方法名字固定了一些操作，让我们重新来写这个工程，让插件能做的事情更多吧。</p></li>
+</ul>
+
+<p>这一次，我们先从 bundle 开始探究。打开 02 MarkYellow 里面的 xcodeproj 工程，定位到 TEMarkYellow.m， 你马上可以看见这里有更多代码，同时它也做了更多事情。</p>
+
+<p>这里实现了一个接收一个 interface 作为参数的 <code>pluginDidLoad:</code> 方法，而不是返回插件名字的方法。你可以用它来告诉 TextEdit 你的方法名字和调用它们的时候使用的 selector ，以及一个帮助存储一些特别的文本操作的状态的 user object。</p>
+
+<p>这个插件从单一行为变成了实现了三个操作：一个把你的文本变成黄色，一个把你的文字变成蓝色，一个把你选中的文本作为 AppleScript 运行。我们充分发挥了 <code>userObject</code> 这个参数的优点，所以只需要实现两个方法。</p>
+
+<p>这个方法比第一种有扩展性。然而，它也增加了 app 端的复杂度。</p>
+
+<h2 id="textedit">为TextEdit加入更多功能</h2>
+
+<p>打开 02 TextEdit 看看 Controler.m , 它没有做太多事情。但是它在 <code>applicationDidFinishLaunching:</code> 设置了一个新的类，叫 PluginManager，打开 PluginManager.m 并且导航到 <code>－loadPlugins</code> 里面。</p>
+
+<p>这个和刚才的 <code>-loadPlugins</code> 几乎一样，只不过代替了原来使用 for 循环加入菜单项，现在只对从 bundle 中取到的 <code>principalClass</code> 进行初始化，然后调用了 <code>pluginDidLoad:</code>，以此来驱动影响 TextEdit 的执行。</p>
+
+<p>看一下 <code>-addPluginsMenuWithTitle:…</code>，我们在这里创建了菜单项。并且这里不再设置菜单项的 <code>representedObject</code> 为插件实例本身，而是实例化一个 helper 类 (PluginTarget)，同时关联了对 text aciton 和 friends 的引用，然后设置它为菜单项的 representedObject 以备使用。</p>
+
+<p>然而，设置到菜单项的 selector 仍然还是 <code>pluginMenuItemCalledAction:</code>，可以在 DocumentWindowController.m 里面看看这个方法到底干了什么:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">pluginMenuItemCalledAction:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span> <span class="p">{</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">PluginTarget</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">sender</span> <span class="n">representedObject</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSMethodSignature</span> <span class="o">*</span><span class="n">ms</span> <span class="o">=</span> <span class="p">[[</span><span class="n">p</span> <span class="n">target</span><span class="p">]</span> <span class="nl">methodSignatureForSelector:</span><span class="p">[</span><span class="n">p</span> <span class="n">action</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">NSInvocation</span> <span class="o">*</span><span class="n">invocation</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSInvocation</span> <span class="nl">invocationWithMethodSignature:</span><span class="n">ms</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSTextView</span> <span class="o">*</span><span class="n">tv</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">firstTextView</span><span class="p">];</span>
+</span><span class="line">    <span class="kt">id</span> <span class="n">document</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">document</span><span class="p">];</span>
+</span><span class="line">    <span class="kt">id</span> <span class="n">userObject</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="n">userObject</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">invocation</span> <span class="nl">setTarget:</span><span class="p">[</span><span class="n">p</span> <span class="n">target</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">invocation</span> <span class="nl">setSelector:</span><span class="p">[</span><span class="n">p</span> <span class="n">action</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">invocation</span> <span class="nl">setArgument:</span><span class="o">&amp;</span><span class="n">tv</span> <span class="nl">atIndex:</span><span class="mi">2</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">invocation</span> <span class="nl">setArgument:</span><span class="o">&amp;</span><span class="n">document</span> <span class="nl">atIndex:</span><span class="mi">3</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">invocation</span> <span class="nl">setArgument:</span><span class="o">&amp;</span><span class="n">userObject</span> <span class="nl">atIndex:</span><span class="mi">4</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">invocation</span> <span class="n">invoke</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>因为你要处理更多信息，所以这个版本相比之前的实现有一点复杂，创建一个 <code>NSInvocation</code>，设置它的参数，然后从插件的实例里面调用它。</p>
+
+<p>宿主 (app) 端需要更多工作，但是对于插件的作者来说写插件更加灵活了。</p>
+
+<h2>下一步干什么</h2>
+
+<p>基于这个接口，你可以写一个插件，加载其他的自定义的插件。假设你想要加入让你的用户用 Javascript 写插件的功能，那么在 <code>pluginDidLoad</code> 调用之后，扫描指定目录下面的 js 文件，在 <code>addPluginsMenuWithTitle:…</code> 中为每一个 js 文件增加对应的条目，然后，当插件被调用的时候，可以用 JavaScriptCore 来执行对应的脚本 。你也可以用 Python，Ruby，Lua 来做这些事情（我之前做过这些事情）。</p>
+
+<h2>最后，关于安全</h2>
+
+<p>“插件让安全的人抽搐” — 匿名</p>
+
+<p>一个显而易见但是容易被忽略的事情是安全。当你在你的进程里面加载一个可执行的 bundle 
+的时候，你相当于在说：“这里有一把我房间的钥匙，确保走的时候关上灯灯，不要把牛奶喝光，无论你干什么都请把火盆放在外面。” 你需要相信插件的作者不会犯错，但是有可能事与愿违。</p>
+
+<p>可能会发生什么糟糕的情况呢？一个实现的不好的的插件可以占用所有可用的内存，让 CPU 占用始终保持 100%，crash 一大堆东西。或许有的家伙写了一个看起来很好的插件，但是一个月以后，它的代码把你的联系人数据库偷偷发给第三方……我还能举出很多例子，我相信你懂的&#8230;</p>
+
+<p>如何解决这个问题？你可以在单独的地址空间运行你的插件（解决 crash 问题，同时可能可以解决内存和 cpu 问题），同时强制插件到沙盒里面运行。（如果你正确地确认插件的权限，那么你的联系人数据库就不会被读取了）。我一时就能想到很多方法，但是最好的解决方法是使用苹果的 XPC。</p>
+
+<p>我把探索的过程留给读者，但是你在处理插件的时候应该一直有安全性的观念。当然，把一个插件放在沙盒里面或者另外一个进程里面会缺少一些乐趣，并且增加一些工作量，所以这对于你的 App 或许没那么重要。</p>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -3249,306 +3545,6 @@ C++11标准已经支持了闭包，这是一种特殊的函数对象，由特殊
 <li><a href="https://github.com/facebook/pop">pop</a></li>
 <li><a href="https://github.com/robb/RBBAnimation">RBBAnimation</a></li>
 </ul>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-05-16T14:09:57+08:00" data-updated="true" itemprop="datePublished">May 16<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/" itemprop="url">自定义Formatters</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>我们希望有一种快速的一次性的解决方案，可以把数据格式化为一种易读的格式。Foundation 框架中的就有 <code>NSFormatter</code> 可以很好地胜任这个工作。另外，在 Mac 上，Appkit 已经内建了 <code>NSFormatter</code> 的支持。</p>
-
-<h2>内建格式器</h2>
-
-<p>Foundation 框架中的 <code>NSFormatter</code> 是一个抽象类，它有两个已经实现的子类：<code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code>。现在我们先跳过这些，来实现我们自己的子类。</p>
-
-<p>如果你想了解更多的相关知识，我推荐阅读 <a href="http://nshipster.com/nsformatter/">NSHipster</a>。</p>
-
-<h2>介绍</h2>
-
-<p><code>NSFormatter</code> 除了抛出错误，其它什么事也不做。我还不知道有人想要用这个，当然如果它对你有用，就去用它吧。</p>
-
-<p>因为我们不喜欢错误，我们在此实现一个 <code>NSFormatter</code> 的子类，它可以把 <code>UIColor</code> 实例转换成可读的名字。例如，以下代码可以返回字符串“Blue”:</p>
-
-<pre><code>KPAColorFormatter *colorFormatter = [[KPAColorFormatter alloc] init];
-[colorFormatter stringForObjectValue:[UIColor blueColor]] // Blue
-</code></pre>
-
-<p><code>NSFormatter</code> 的子类化有两个方法需要实现：<code>stringForObjectValue:</code> 与 <code>getObjectValue:ForString:errorDescription:</code>。我们先开始介绍第一个方法，因为这个方法更常用。第二个方法，就我所知，经常用于 OS X 上，并且通常不是很有用，我们将稍后介绍。</p>
-
-<h2>初始化</h2>
-
-<p>首先，我们需要做些初始化的工作。由于没有事先定义好的字典可以把颜色映射至名字，这些工作将由我们来完成。为了简化，这些工作将在初始化方法中完成：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span> <span class="nl">initWithColors:</span><span class="err">@</span><span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Red&quot;</span><span class="p">,</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Blue&quot;</span><span class="p">,</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">greenColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Green&quot;</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这里的 colors 是一个以 <code>UIColor</code> 实例为键，英语名为值的字典。大家可以自行地去实现 <code>initWithColors:</code> 方法。当然你也可以自行实现，或者直接前往 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github repo</a> 获得答案。</p>
-
-<h2>格式化对象值</h2>
-
-<p>由于我们这里只可以格式化 <code>UIColor</code> 实例对象，于是在方法 <code>stringForObjectValue:</code> 中的第一件事就是判断传入的参数类型是否是 <code>UIColor</code> 类。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">[</span><span class="n">value</span> <span class="nl">isKindOfClass:</span><span class="p">[</span><span class="n">UIColor</span> <span class="n">class</span><span class="p">]])</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="c1">// To be continued...</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>在判断参数合法后，我们可以实现真正的逻辑了。我们的格式器中包含一个 <code>UIColor</code> 对象为键，颜色名为值的字典。因此，我们只需要以 <code>UIColor</code> 对象为键找到对应的值：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="c1">// Previously on KPAColorFormatter</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">colors</span> <span class="nl">objectForKey:</span><span class="n">value</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>以上代码是一个尽可能简单的实现。一个更高级（有用）的格式器应该是在我们的颜色字典中没有找到匹配的颜色时，返回一个最接近的颜色。大家可以自行实现，或是你不想花费太多功夫，可以前往 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github repo</a>。</p>
-
-<h2>反向格式化</h2>
-
-<p>我们的格式器也应该支持反向格式化，即把字符串转成实例对象。这是通过 <code>getObjectValue:forString:errorDescription:</code> 方法实现。在 OS X 上，在使用 <code>NSCell</code> 时会经常用到这个方法。</p>
-
-<p><code>NSCell</code> 有一个 <code>objectValue</code> 属性。默认情况下，<code>NSCell</code> 会用 <code>objectValue</code> 的描述，但是它也可以选择用一个格式器。在用 <code>NSTextFieldCell</code> 时，用户可以输入值，作为程序员，我们可能期望 <code>objedctValue</code> 可以根据根据输入的字符串转成一个 <code>UIColor</code> 实例。例如，用户如果输入“Blue”，我们需要返回一个 <code>[UIColor blueColor]</code> 实例的引用。</p>
-
-<p>实现反向格式化分为两部分：一部分为当格式器可以成功地把字符串转成 <code>UIColor</code> 实例，另一部分当其不能成功转换。第一部分代码如下：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">getObjectValue:</span><span class="p">(</span><span class="n">out</span> <span class="n">__autoreleasing</span> <span class="kt">id</span> <span class="o">*</span><span class="p">)</span><span class="nv">obj</span>
-</span><span class="line">             <span class="nf">forString:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">string</span>
-</span><span class="line">      <span class="nf">errorDescription:</span><span class="p">(</span><span class="n">out</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">__autoreleasing</span> <span class="o">*</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">__block</span> <span class="n">UIColor</span> <span class="o">*</span><span class="n">matchingColor</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">colors</span> <span class="nl">enumerateKeysAndObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">UIColor</span> <span class="o">*</span><span class="n">color</span><span class="p">,</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">if</span><span class="p">([</span><span class="n">name</span> <span class="nl">isEqualToString:</span><span class="n">string</span><span class="p">])</span> <span class="p">{</span>
-</span><span class="line">            <span class="n">matchingColor</span> <span class="o">=</span> <span class="n">color</span><span class="p">;</span>
-</span><span class="line">            <span class="o">*</span><span class="n">stop</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">        <span class="p">}</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">matchingColor</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="o">*</span><span class="n">obj</span> <span class="o">=</span> <span class="n">matchingColor</span><span class="p">;</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span> <span class="c1">// Snip</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这里可以做一些优化，但是我们先不去做这些。以上方法会遍历我们颜色字典里的每一个对象 ，当一个颜色名字找到时，则会返回其对应关联的 <code>UIColor</code> 实例对象的引用，同时返回 YES 告知调用者我们已经成功地把字符串转成了一个 <code>UIColor</code> 实例对象。</p>
-
-<p>现在处理第二部分：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">matchingColor</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="c1">// snap</span>
-</span><span class="line"><span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="o">*</span><span class="n">error</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;No known color for name: %@&quot;</span><span class="p">,</span> <span class="n">string</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">return</span> <span class="n">NO</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这里，我们如果不能找到一个匹配的颜色，我们会检测调用者是否需要错误信息，如果需要，则把错误通过引用返回。这里检查错误很重要。如果你不这样做，程序就会 crash。同时，我们也会返回 NO，告知调用者这次转换失败。</p>
-
-<h2>本地化</h2>
-
-<p>到现在，我们已经建立了一个完全功能的 <code>NSFormatter</code> 的子类，当然这只是对于生活在美国的英语使用者而言有用。</p>
-
-<p>但相比全世界 71.3 亿人，那才 3.19 亿。或者说，你还有 96% 的潜在用户。当然你可以说：这些潜在用户绝大部分都不是 iPhone 或 Mac 使用者，这么做有什么意思呢？这么想你就太扫兴了。</p>
-
-<p><code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code> 都有一个 locale 属性，它是 <code>NSLocale</code> 实例对象。我们现在来扩展格式器以支持本地化，让它可以根据 local 属性来返回对应翻译的名字。</p>
-
-<h3>翻译</h3>
-
-<p>首先，我们需要翻译颜色名字字符串。有关 genstring 与 *.lprojs 超出了本文的范围。有<a href="http://www.getlocalization.com/library/get-localization-mac/">很多文章</a>讨论这点。好了，不需要其它工作了，快要结束了。</p>
-
-<h3>本地化的格式化</h3>
-
-<p>接下来是本地化功能的实现。在获取翻译的字符串后，我们需要更新 <code>stringForObejectValue:</code> 方法。以前已经使用过 <code>NSLocalizedString</code> 的人可能已经早早的把每一个字符串都用 <code>NSLocalizedString</code> 替换了。但是我们不会这么做。</p>
-
-<p>我们现在处理的是一个动态的 local，而 <code>NSLocalizedString</code> 只会查找当前默认的语言的翻译。在99%的情况下，这种默认的行为是你所想要的，但是我们会用格式化器的 locale 属性来动态查询语言。</p>
-
-<p>以下是 <code>stringForObjectValue:</code> 的新的实现：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="c1">// Previously on... don&#39;t you hate these? I just watched that 20 seconds ago!</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">languageCode</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locale</span> <span class="nl">objectForKey:</span><span class="n">NSLocaleLanguageCode</span><span class="p">];</span>
-</span><span class="line">    <span class="n">NSURL</span> <span class="o">*</span><span class="n">bundleURL</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSBundle</span> <span class="nl">bundleForClass:</span><span class="n">self</span><span class="p">.</span><span class="n">class</span><span class="p">]</span> <span class="nl">URLForResource:</span><span class="n">languageCode</span>
-</span><span class="line">                                                              <span class="nl">withExtension:</span><span class="s">@&quot;lproj&quot;</span><span class="p">];</span>
-</span><span class="line">    <span class="n">NSBundle</span> <span class="o">*</span><span class="n">languageBundle</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSBundle</span> <span class="nl">bundleWithURL:</span><span class="n">bundleURL</span><span class="p">];</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">languageBundle</span> <span class="nl">localizedStringForKey:</span><span class="n">name</span> <span class="nl">value:</span><span class="n">name</span> <span class="nl">table:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>上面的代码还有可以重构改进的地方，但因为把代码都放在同一个地方可以方便阅读，所以请大家多多包涵了。</p>
-
-<p>首先，我们通过 locale 属性查找相应的语言，之后通过 NSBundle 找到对应的语言代码。最后，我们会让 bundle 对英语名称进行翻译。如果找不到对应的翻译，则会返回 name: 方法的参数（即英语名称）。如上即是 <code>NSLocalizedString</code> 的具体实现。</p>
-
-<h3>本地化的反向格式化</h3>
-
-<p>同样，我们也可以把颜色名称转成 <code>UIColor</code> 实例对象，当然，我认为这样做是不值得的。我们当前的实现适用于99%的情况。另外1%的情况是在 Mac 的 <code>NSCell</code> 上使用，而且你允许用户输入一个你试图解析的颜色的名字，这所需要做的要比简单的 子类化 NSFormatter 复杂很多。或许，你不应该允许你的用户通过文本输入颜色值。<a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSColorPanel_Class/">NSColorPanel</a> 在这里是一个更好的解决方案。</p>
-
-<h2>属性化字符串</h2>
-
-<p>到目前为止，我们的格式器都按我们预期的工作。接下来让我们做一个完全没用的功能，只是示范一下我们可以这么做，你懂的。</p>
-
-<p>格式器同时支持属性化字符串。要不要支持它取决于你特定的应用与其用户界面。因此，你最好把这个功能做成可配置。</p>
-
-<p>以下代码就是将文本颜色设置为当前正在格式化的颜色：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSAttributedString</span> <span class="o">*</span><span class="p">)</span><span class="nf">attributedStringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span>
-</span><span class="line">                                 <span class="nf">withDefaultAttributes:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">defaultAttributes</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">string</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">stringForObjectValue:</span><span class="n">value</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span>  <span class="p">(</span><span class="o">!</span><span class="n">string</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">NSMutableDictionary</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableDictionary</span> <span class="nl">dictionaryWithDictionary:</span><span class="n">defaultAttributes</span><span class="p">];</span>
-</span><span class="line">    <span class="n">attributes</span><span class="p">[</span><span class="n">NSForegroundColorAttributeName</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">NSAttributedString</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithString:</span><span class="n">string</span> <span class="nl">attributes:</span><span class="n">attributes</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>首先，我们如之前一样处理字符串，然后检查格式化是否成功。然后我们把默认的属性值与前面设置的颜色属性结合后，最终返回属性化字符串。很容易，是吗？</p>
-
-<h2>便捷</h2>
-
-<p>因为初始化内建的格式器<a href="https://twitter.com/ID_AA_Carmack/status/28939697453">太慢了</a>，所以通常需要对外给你的格式器提供一个便利的类方法。这个格式器应该用默认值与当前的本地化环境。以下是格式器的实现：</p>
-
-<pre><code>+ (NSString *)localizedStringFromColor:(UIColor *)color;
-{
-    static dispatch_once_t onceToken;
-    dispatch_once(&amp;onceToken, ^{
-        KPAColorFormatterReusableInstance = [[KPAColorFormatter alloc] init];
-    });
-
-    return [KPAColorFormatterReusableInstance stringForObjectValue:color];
-}
-</code></pre>
-
-<p>除非你的格式器像 <code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code> 一样做一些疯狂的事情 ，你可能不需要因为性能问题这么做。但是这样做也可以让使用格式器简单许多。</p>
-
-<h2>总结</h2>
-
-<p>我们的颜色格式器现在可以把一个 <code>UIColor</code> 实例格式成一个可读的名字或是反过来也行。当然还有放多有关 <code>NSFormatter</code> 的事情没有涉及。特别是在 Mac 上，因为它跟 <code>NSCell</code> 相关，你可以用更多高级的特性。例如当用户在编辑的时，你可以对字符串做一些检测。</p>
-
-<p>我们的格式器还可以做更多自定义的事情。例如，在没查找到一个你需要的颜色名字时，我们可以返回给你最相近的颜色名字。有时，你可能需要我们的格式器有一个 Boolean 属性来控制该功能。或许我们的属性化字符串的格式化不是你想要的，并且应该支持更多自定义操作。</p>
-
-<p>就此，我们完成了一个非常可靠的格式器。所有的代码（伴有 OS X 示例）都放在了 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github</a> 上， 并且你也可以在 <a href="http://cocoapods.org/">CocoaPods</a> 上看到。如果你应用需要此功能，可以将 &#8220;KPAColorFormatter&#8221; 放在你的 Podfile 中，开始使用它吧。</p>
 
 <hr />
 <p class="post-footer">
