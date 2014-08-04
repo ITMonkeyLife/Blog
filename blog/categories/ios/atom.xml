@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-07-23T17:55:53+08:00</updated>
+  <updated>2014-08-04T10:16:58+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,301 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[从UIKit到APPKit]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/08/04/cong-uikitdao-appkit/"/>
+    <updated>2014-08-04T10:03:56+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/08/04/cong-uikitdao-appkit</id>
+    <content type="html"><![CDATA[<p>Mac 不仅是一个强大的生产平台，也十分值得你<em>为其</em>开发一些东西。去年我们开始构建我们的第一款 <a href="http://decksetapp.com">Mac 应用</a>，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验，希望能启发你们去开发自己的第一个 Mac 应用。</p>
+
+<p>在这篇文章中，我们假定 OS X Yosemite 为我们默认使用的系统。今年，为了融合 iOS 和 OS X，苹果站在开发者的角度对 OS X 做出了巨大的改进。不过，我们会指出哪些特性仅适用于 Yosemite，而哪些特性也适用于之前的系统版本。</p>
+
+<h2>相似点</h2>
+
+<p>尽管 iOS 和 OS X 是两个独立的系统，它们却有很多共性。先就开发环境而言，它们使用同样的开发语言，同样的IDE。所以你会对这一切都感到非常熟悉。</p>
+
+<p>更重要的是，OS X 和你已经熟悉的 iOS 共用许多框架，像 Foundation，Core Data 和 Core Animation。今年，Apple 进一步整合两个平台，并给 Mac 带来了一些之前仅能在 iOS 上面使用的框架，其中一个例子就是 Multipeer Connectivity。在更底层的地方，你立刻可以看到你熟悉的 API：Core Graphics，Core Text，libdispatch 等等。</p>
+
+<p>真正开始有区别的是 UI 框架 — AppKit 早在 NeXT 时代就已面世并不断进化，而 UIKit 就像是简约版及现代版的 AppKit。出现这种情况的原因，是当 Apple 推出 iPhone 时可以从头开始，并吸取 AppKit 的经验：把已证实过可行的概念和部件拿过来用，并改进不够精良的设计。</p>
+
+<p>如果你对这个转换是怎么发生的感兴趣，请观看前 Apple iOS 应用总监 <a href="https://twitter.com/nitinganatra">Nitin Ganatra</a> 播客上的精彩剧集：<a href="http://www.imore.com/debug-39-nitin-ganatra-episode-i-system-7-carbon">System 7 to Carbon</a>，<a href="http://www.imore.com/debug-40-nitin-ganatra-episode-ii-os-x-ios">OS X to iOS</a>，以及 <a href="http://www.imore.com/debug-41-nitin-ganatra-episode-iii-iphone-ipad">iPhone to iPad</a>。</p>
+
+<p>考虑到这一点，也就不奇怪为什么 UIKit 和 AppKit 仍旧共享许多概念了。UI 是基于 window 和 view 构建起来的，消息像 iOS 一样通过响应者链传递。此外，<code>UIView</code> 是 <code>NSView</code>，<code>UIControl</code> 是 <code>NSControl</code>，<code>UIImage</code> 是 <code>NSImage</code>，<code>UIViewController</code> 是 <code>NSViewController</code>，<code>UITextView</code> 是 <code>NSTextView</code>...这样的例子不胜枚举。</p>
+
+<p>看起来就像你仅需把 <code>UI</code> 前缀替换为 <code>NS</code> 前缀，你就可以用同样的方法使用这些类。但事实是在很多情况下这并不奏效。它们在实现上并没有在概念上那么相似。你在 iOS 上的经验至多能帮你大致了解构建用户界面的基础，以及使用很多设计模式，比如代理，都是类似的。但是细节是魔鬼 — 你真的应该通过阅读文档来学习如果使用这些类。</p>
+
+<p>下一节，我们来看看那些常见的陷阱。</p>
+
+<h2>不同点</h2>
+
+<h3 id="windowwindowcontroller">Window 和 Window Controller</h3>
+<!-- more -->
+<p>虽然在 iOS 上你几乎从来不用与 window 交互（因为它们占据了整个屏幕），window 在 Mac 上却是一个关键组件。从历史上看， Mac 应用包含多个 window，每个 window 有其自己的角色，非常类似于 iOS 上面的 view controller。因此, AppKit 有 <code>NSWindowController</code>，它接管很多在 iOS 上你会在 view controller 里面处理的任务。view controller 被添加到 AppKit 的时间并不长，而且直到现在，它们默认不接受 action，并且缺失很多生命周期的方法、view controller 容器，以及很多你在 UIKit 中熟悉的特性。</p>
+
+<p>但 AppKit 框架已经改变，因为 Mac 应用越来越依赖于一个单一的 window。就 OS X 10.10 Yosemite 而言，<code>NSViewController</code> 在许多方面与 <code>UIViewController</code> 类似。它也默认是响应者链中的一环。但要记住，如果你的 Mac 应用需要兼容 OS X 10.9 或更早版本的系统，Mac 上的 window controller 更类似于 iOS 上你熟悉的 view controller。正如 <a href="https://www.mikeash.com/pyblog/friday-qa-2013-04-05-windows-and-window-controllers.html">Mike Ash 所言</a>，在 Mac 上实例化窗口的一个好的模式是：每个窗口类型对应一个 nib 文件和一个 window controller。</p>
+
+<p>此外，<code>NSWindow</code> 并不像 <code>UIWindow</code> 一样是一个 view 的子类。相反，每个 window 用 <code>contentView</code> 属性持有一个指向其顶层 view 的引用。</p>
+
+<h3>响应者链</h3>
+
+<p>如果你在为 OS X 10.9 或者更低版本的系统开发，请注意在默认情况下 view controller 并不是响应者链的一环。相反，事件会沿着视图树向上传递然后直接到达 window 和 window controller。在这种情况下，如果你想在 view controller 处理事件，你需要<a href="http://www.cocoawithlove.com/2008/07/better-integration-for-nsviewcontroller.html">手动</a>把它添加到响应者链中。</p>
+
+<p>除了在响应者链方面的不同，AppKit 在 action 的命名方法上还有一个严格的惯例，一个 action 方法看起来总是类似这样子的：</p>
+
+<p><code>objc
+- (void)performAction:(id)sender;
+</code></p>
+
+<p>以上方法在 iOS 上面所允许的没有参数，或者有一个 sender 和一个 event 参数，而这些变体在 OS X 上面是无法使用的。此外，控件（译者注：指 NSControl 及其子类）在 AppKit 中通常对应一个 target 和一个 action，而不像在 iOS 上可以通过 <code>addTarget:action:forControlEvents:</code> 方法为一个控件关联多个 target-action 对。</p>
+
+<h3 id="view">View</h3>
+
+<p>因为历史遗留问题，Mac 的视图系统和 iOS 的视图系统有很大区别。iOS 上的 view 一开始就由 Core Animation layer 驱动。但是 AppKit 比 Core Animation 早出来了很久，当 Apple 设计 AppKit 时，我们现在熟知的 GPU 还没有出现。因此，那时视图系统相关的任务主要靠 CPU 处理。</p>
+
+<p>当你要开始进行 Mac 相关的开发时，我们强烈推荐你查看 Apple 的 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaViewsGuide/Introduction/Introduction.html#//apple_ref/doc/uid/TP40002978">Introduction to View Programming Guide for Cocoa</a>。此外，你还应该看一下这两个精彩的 WWDC session：<a href="https://developer.apple.com/videos/wwdc/2012/#217">Layer-Backed Views: AppKit + Core Animation</a> 和 <a href="https://developer.apple.com/videos/wwdc/2013/#215">Optimizing Drawing and Scrolling</a>。</p>
+
+<h4 id="layerbackedview">Layer-Backed View</h4>
+
+<p>默认情况下，AppKit 的 view 不是由 Core Animation layer 驱动的；AppKit 整合 layer-backing 是 iOS 反哺的结果。一些在 AppKit 需要做的决定你在 UIKit 从来不需要关心。AppKit 区分 layer-backed view 和 layer-hosting view，可以在每个视图树的根节点启用或者禁用 layer backing。</p>
+
+<p>把窗口的 contentView 的 <code>wantsLayer</code> 属性设置为 <code>YES</code> 是启用 layer backing 最简单的方法。这会导致 window 的视图树中所有的 view 都启用 layer backing，这样就没必要反复设置每个 view 的 wantsLayer 属性了。这个操作可以用代码或者在 Interface Builder 的 View Effects Inspector 面板完成。</p>
+
+<p>和 iOS 相比而言，在 Mac 上你应该把 backing layer 看做是一个实现细节。这意味着你不应该和这些 layer 直接交互，因为 AppKit 才是这些 layer 的拥有者。举个例子，在 iOS 上你可以随意编写这样的代码：</p>
+
+<p><code>objc
+self.layer.backgroundColor = [UIColor redColor].CGColor;
+</code>objc</p>
+
+<p>但是在 AppKit，你不应该直接修改这些 layer。如果想用这种方式和 layer 交互，你还有一步工作要做。重写 <code>NSView</code> 的 <code>wantsUpdateLayer</code> 方法并返回 <code>YES</code>，这能让你可以改变 layer 的属性。如果你这样做，AppKit 将不会再调用 view 的 <code>drawRect:</code> 方法。取而代之，你应该在 <code>updateLayer</code> 里修改 Layer，这个方法会在 view 的更新周期中被调用。</p>
+
+<p>举个例子，你可以用这方法去实现一个非常简单的有纯色背景的 view（没错，<code>NSView</code> 没有 <code>backgroundColor</code> 属性）：</p>
+
+<p>```objc
+@interface ColoredView: NSView</p>
+
+<p>@property (nonatomic) NSColor *backgroundColor;</p>
+
+<p>@end</p>
+
+<p>@implementation ColoredView</p>
+
+<ul>
+  <li>
+    <p>(BOOL)wantsUpdateLayer
+{
+  return YES;
+}</p>
+  </li>
+  <li>
+    <p>(void)updateLayer
+{
+  self.layer.backgroundColor = self.backgroundColor.CGColor;
+}</p>
+  </li>
+  <li>
+    <p>(void)setBackgroundColor:(NSColor *)backgroundColor
+{
+  _backgroundColor = backgroundColor;
+  [self setNeedsDisplay:YES];
+}</p>
+  </li>
+</ul>
+
+<p>@end
+```</p>
+
+<p>这个例子的前提是这个 view 的父 view 已经为其视图树启用了 layer backing。另一种可行的实现则只需要重写 <code>drawRect:</code> 方法并在其中绘制背景颜色。</p>
+
+<h5 id="layer">合并 Layer</h5>
+
+<p>选择使用众多 layer-backed view 会带来巨大的内存消耗（每一个 layer 有其自己的 backing store，还有可能和其他 view 的 backing store 重叠）而且会带来潜在的合成这些 layer 的消耗。从 OS X 10.9 开始，你可以通过设置 <code>canDrawSubviewsIntoLayer</code> 属性来让 AppKit 合并一个视图树中所有 layer 的内容到一个共有的 layer。如果你不需要单独对一个 view 中的子 view 做动画，这将是一个很好的选择。</p>
+
+<p>所有隐式 layer-backed 的子 view（比如，你没有显式地对这些子 view 设置 <code>wantsLayer = YES</code>）现在将会被绘制到同一个 layer 中。不过，<code>wantsLayer</code> 设置为 <code>YES</code> 的子 view 仍然持有它们自己的 backing layer， 而且不管 <code>wantsUpdateLayer</code> 返回什么，它们的 <code>drawRect:</code> 方法仍然会被调用。</p>
+
+<h5 id="layer">Layer 重绘策略</h5>
+
+<p>另外一个需要注意的地方：layer-backed view 会默认设置重绘策略为 <code>NSViewLayerContentsRedrawDuringViewResize</code>。在行为上，这个非 layer-backed view 是类似的，不过如果动画的每一帧都引入一个绘制步骤的话可能会对动画的性能造成不利影响。</p>
+
+<p>为了避免这个问题，你可以把 <code>layerContentsRedrawPolicy</code> 属性设置为 <code>NSViewLayerContentsRedrawOnSetNeedsDisplay</code> 。这样子的话，便由你来决定 layer 的内容何时需要重绘。帧的改变将不再自动触发重绘；现在你要负责调用 <code>-setNeedsDisplay:</code> 来触发重绘操作。</p>
+
+<p>一旦你这样更改了重绘策略，你也许会想了解下 view 中和 layer 的 <code>contentGravity</code> 属性等价的 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSView_Class/Reference/NSView.html#//apple_ref/occ/instm/NSView/layerContentsPlacement"><code>layerContentsPlacement</code></a> 属性。这个属性允许你指定在调整大小的时候当前的 layer 内容该怎么映射到 layer 上。</p>
+
+<h4 id="layerhostingview">Layer-Hosting View</h4>
+
+<p><code>NSView</code> 的 layer 故事并没有完结。你可以用另一种完全不一样的方式来使用 Core Animation layer — 称为 layer-hosting view。简单来说，你可以对一个 layer-hosting view 的 layer 及其子 layer 做任何操作，代价是你再也不能给该 view 添加任何子 view。layer-hosting view 是视图树中的叶子节点。</p>
+
+<p>要创建一个 layer-hosting view，你首先要为 view 的 <code>layer</code> 属性分配一个 layer 对象，然后把 <code>wantsLayer</code> 设置为 <code>YES</code>。注意，这些步骤的顺序是非常关键的：</p>
+
+<p><code>objc
+- (instancetype)initWithFrame:(NSRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.layer = [[CALayer alloc] init];
+        self.wantsLayer = YES;
+    }
+}
+</code></p>
+
+<p>在你设置了你自定义的 layer <em>之后</em>才设置 <code>wantsLayer</code> 是非常重要的。</p>
+
+<h4 id="view">其他与 View 相关的陷阱</h4>
+
+<p>默认情况下，Mac 上视图的坐标系统原点位于左下角，而不是像 iOS 的左上角。刚开始这可能会让人混乱，不过你可以通过重写 <code>isFlipped</code> 并返回 <code>YES</code> 来恢复到你熟悉的左上角。</p>
+
+<p>由于 AppKit 中的 view 没有背景颜色属性可以让你直接设置为 <code>[NSColor clearColor]</code> 来让其变得透明，许多 <code>NSView</code> 的子类比如 <code>NSTextView</code> 和 <code>NSScrollView</code> 开放了一个 <code>drawsBackground</code> 属性，如果你想让这一类 view 透明，你必须设置该属性为 <code>NO</code>。</p>
+
+<p>为了能接收光标进出一个 view 或者在 view 里面移动的事件，你需要创建一个追踪区域。你可以在 <code>NSView</code> 中指定的 <code>updateTrackingAreas</code> 方法中来做这件事情。一个通用的写法看起来是这样子的：</p>
+
+<p><code>objc
+- (void)updateTrackingAreas
+{
+    [self removeTrackingArea:self.trackingArea];
+    self.trackingArea = [[NSTrackingArea alloc] initWithRect:CGRectZero 
+                                                     options:NSTrackingMouseEnteredAndExited|NSTrackingInVisibleRect|NSTrackingActiveInActiveApp
+                                                       owner:self 
+                                                    userInfo:nil];
+    [self addTrackingArea:self.trackingArea];
+}
+</code></p>
+
+<p>AppKit 的控件之前是由 <code>NSCell</code> 的子类驱动的。不要混淆这些 cell 和 UIKit 里 table view 的 cell 及 collection view 的 cell。AppKit 最初区分 view 和 cell 是为了节省资源 - view 可以把所有的绘制工作代理给更轻量级的可以被所有同类型的 view 重用的 cell 对象。</p>
+
+<p>Apple 正在一步步地抛弃这样的实现方法了，但是你还是会时不时碰到这样的问题。举个例子，如果你想创建一个自定义的按钮，你首先要继承 <code>NSButton</code> <em>和</em> <code>NSButtonCell</code>，然后在这个 cell 子类里面进行你自定义的绘制，然后通过重写 <code>+[NSControl cellClass]</code> 方法告诉自定义按钮使用你的 cell 子类。</p>
+
+<p>最后，如果你想知道在你自己的 <code>drawRect:</code> 方法里怎么获取当前的 Core Graphics 上下文，答案是 <code>NSGraphicsContext</code> 的 <code>graphicsPort</code> 属性。详细内容请查看 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaDrawingGuide/">Cocoa Drawing Guide</a>。</p>
+
+<h3>动画</h3>
+
+<p>归结于上面提到的视图系统的差异，动画在 Mac 上的运作方式也十分不同。想要一个好的概述，请观看 WWDC session：<a href="https://developer.apple.com/videos/wwdc/2013/#213">Best Practices for Cocoa Animation</a></p>
+
+<p>如果你的 view 不是由 layer 驱动的，那你的动画自然是完全由 CPU 处理，这意味着动画的每一步都必须相应地绘制到 window-backing store 上。因为现今我们主要是对 layer-backed view 做动画以获得流畅的动画效果，所以我们在这儿就专注于这种情况。</p>
+
+<p>正如上面说的，在 AppKit 中你不应该修改 layer-backed view 中的 layer (看 <a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreAnimation_guide/CreatingBasicAnimations/CreatingBasicAnimations.html#//apple_ref/doc/uid/TP40004514-CH3-SW18">Core Animation Programming Guide</a> 这篇文档底部 “Rules for Modifying Layers in OS X” 那一节）。这些 layer 由 AppKit 管理，而且和 iOS 相反，view 的几何属性并不仅仅是对应的 layer 的几何属性的映射，但 AppKit 却会把 view 内部的几何属性同步到 layer。</p>
+
+<p>你可以用几种不同的方法对一个 view 进行动画。第一种，你可以使用 <a href="file:///Users/florian/Library/Developer/Shared/Documentation/DocSets/com.apple.adc.documentation.AppleOSX10.9.CoreReference.docset/Contents/Resources/Documents/documentation/Cocoa/Reference/NSAnimatablePropertyContainer_protocol/Introduction/Introduction.html#//apple_ref/occ/intfm/NSAnimatablePropertyContainer/animator">animator proxy</a>：</p>
+
+<p><code>objc
+view.animator.alphaValue = .5;
+</code></p>
+
+<p>在幕后，这句代码会启用 layer 的隐式动画，设置其透明度，然后再次禁用 layer 的隐式动画。</p>
+
+<p>你还可以把这句代码封装到一个 <a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/NSAnimationContext_class/Introduction/Introduction.html">animation context</a> 中，这样你就能得到它的结束回调：</p>
+
+<p><code>objc
+[NSAnimationContext runAnimationGroup:^(NSAnimationContext *context){
+    view.animator.alphaValue = .5;
+} completionHandler:^{
+    // ...
+}]; 
+</code></p>
+
+<p>如果想改变持续时间和缓动类型，我们必须对其动画上下文进行设置：</p>
+
+<p><code>objc
+[NSAnimationContext runAnimationGroup:^(NSAnimationContext *context){
+    context.duration = 1;
+    context.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn];
+    view.animator.alphaValue = .5;
+} completionHandler:^{
+    // ...
+}]; 
+</code></p>
+
+<p>如果你不需要结束回调，你可以用这种简化形式：</p>
+
+<p><code>objc
+[NSAnimationContext currentContext].duration = 1;
+view.animator.alphaValue = .5;    
+</code></p>
+
+<p>最后，你可以启用隐式动画，这样你就不必每次都明确地使用 animator proxy 了：</p>
+
+<p><code>objc
+[NSAnimationContext currentContext].allowsImplicitAnimations = YES;
+view.alphaValue = .5;
+</code></p>
+
+<p>要更全面地控制动画，你可以使用 <code>CAAnimation</code> 实例。和 iOS 相反，你不能直接把它们加到 layer 上（因为 layer 不应该由你来修改），不过你可以使用 <a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/NSAnimatablePropertyContainer_protocol/Introduction/Introduction.html"><code>NSAnimatablePropertyContainer</code></a> 协议中定义的 API，<code>NSView</code> 和 <code>NSWindow</code> 已经实现了该协议。举个例子：</p>
+
+<p><code>objc
+CAKeyframeAnimation *animation = [CAKeyframeAnimation animation];
+animation.values = @[@1, @.9, @.8, @.7, @.6];
+view.animations = @{@"alphaValue": animation};
+view.animator.alphaValue = .5;
+</code></p>
+
+<p>对于<code>帧</code>动画来说，把 view 的 <code>layerContentsRedrawPolicy</code> 设置为 <code>NSViewLayerContentsRedrawOnSetNeedsDisplay</code> 是非常重要的，不然的话 view 的内容在每一帧都会被重绘。</p>
+
+<p>很遗憾，<code>NSView</code> 没有开放 Core Animation layer 所有可以进行动画的属性，<code>transform</code> 是其中最重要的例子。看看 <a href="https://twitter.com/willing">Jonathan Willings</a> 的<a href="http://jwilling.com/osx-animations">这篇文章</a>，它描述了你可以如何解决这些限制。不过注意，文章中的解决方案是不受官方支持的。</p>
+
+<p>上面提到的所有东西都适用于 <em>layer-backed</em> view。对于 <em>layer-hosting</em> view 来说，你可以直接对 view 的 layer 或者子 layer 使用 <code>CAAnimations</code>，因为你拥有它们的控制权。</p>
+
+<h3 id="collectionview">Collection View</h3>
+
+<p>尽管 AppKit 有 <code>NSCollectionView</code> 类，它的功能却比 UIKit 里对应的类滞后很多。鉴于 <code>UICollectionView</code> 是 iOS 上一个如此多功能的控件（当然，这取决于你的 UI 观念），AppKit 里对应的控件一点都不像它这件事相当难以忍受。所以当你要规划你的用户界面的时候，要考虑构建一个网格布局有可能会非常麻烦，相反，在 iOS 上这很容易实现。</p>
+
+<h3>图像</h3>
+
+<p>来自 iOS 的你对 <code>UIImage</code> 肯定非常熟悉，正巧，AppKit 也有一个对应的 <code>NSImage</code> 类。不过很快你就会意识到这两个类简直是天差地别。从很多方面来说，<code>NSImage</code> 都比 <code>UIImage</code> 强大很多，但这是建立在复杂性增加的代价上的。Apple 的 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaDrawingGuide/Images/Images.html#//apple_ref/doc/uid/TP40003290-CH208-BCIBBFGJ">Cocoa Drawing Guide</a> 很好地介绍了如何使用 AppKit 中的图像。</p>
+
+<p>概念上最重要的不同是 <code>NSImage</code> 由一个或者多个图像表示（image representation，译者注：这里的图像表示为名词，可以参考<a href="http://baike.baidu.com/view/4301255.htm">百度百科</a>，本节下同）驱动，这些图像表示在 AppKit 表现为一些 <code>NSImageRep</code> 的子类，像 <code>NSBitmapImageRep</code>，<code>NSPDFImageRep</code> 和 <code>NSEPSImageRep</code>。举个例子，一个 <code>NSImage</code> 对象为了打印同样的内容可以持有缩略图，全尺寸和 PDF 三个图像表示。当你绘制图像时，图像表示会匹配当前的图形上下文，而绘图尺寸会根据颜色空间，维度，分辨率以及绘图深度得出。</p>
+
+<p>此外，Mac 上的图像除了尺寸还有分辨率的概念。图像表示的分辨率由三个属性构成：<code>size</code>，<code>pixelsWide</code> 以及 <code>pixelsHigh</code>。size 属性决定了图像表示被渲染时的尺寸，而 pixelsWide 和 pixelsHigh 指定了源于图像数据的原始尺寸。这三个属性共同决定了图像表示的分辨率。像素尺寸可以和<strong>图像表示</strong>的尺寸不一样，正如<strong>图像表示</strong>的尺寸可以和它所属的图片的尺寸不一样。</p>
+
+<p>另外一个和 <code>UIImage</code> 不一样的地方是当它被绘制到屏幕上时 <code>NSImage</code> 会缓存绘制结果（可以通过 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSImage_Class/Reference/Reference.html#//apple_ref/occ/instm/NSImage/cacheMode"><code>cacheMode</code></a> 属性配置）。当你改变底层的图像表示，你必须对图像调用 <code>recache</code> 才能使其生效。</p>
+
+<p>不过在 Mac 上面处理图像并不总是比 iOS 复杂。<code>NSImage</code> 提供了一个很简单的方法去绘制一个新图像，而在 iOS 上，你需要创建一个位图上下文，然后用位图上下文创建 <code>CGImage</code>，最终用该 CGImage 初始化一个 <code>UIImage</code> 实例。用 <code>NSImage</code> 你仅需：</p>
+
+<p><code>objc
+[NSImage imageWithSize:(NSSize)size 
+            flipped:(BOOL)drawingHandlerShouldBeCalledWithFlippedContext 
+     drawingHandler:^BOOL (NSRect dstRect) 
+{
+    // your drawing commands here...
+}];
+</code></p>
+
+<h3>颜色</h3>
+
+<p>Mac 支持完全的 color-calibrated 工作流，所有跟颜色相关的任何东西都有可能变得更复杂。颜色管理是一个复杂的主题，我们也不精通这方面的东西。所以，我们希望你看看 Apple 关于这方面的指南： <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/DrawColor/DrawColor.html#//apple_ref/doc/uid/10000082-SW1">Introduction to Color Programming Topics for Cocoa</a> 和 <a href="https://developer.apple.com/library/mac/documentation/GraphicsImaging/Conceptual/csintro/csintro_intro/csintro_intro.html#//apple_ref/doc/uid/TP30001148">Introduction to Color Management</a>。</p>
+
+<p>你经常需要在你的应用里使用一个你的设计师给你指定的颜色。要取得正确的颜色，设计模板使用的颜色空间和你以编程方式指定的颜色空间保持一致是非常重要的。系统标准的颜色选择器有一个下拉菜单，你可以在这里选择你想要的颜色空间。我们建议使用 device-independent sRGB 颜色空间，然后在代码里面用 <code>+[NSColor colorWithSRGBRed:green:blue:alpha:]</code> 类方法来创建颜色。</p>
+
+<p><img src="http://img.objccn.io/issue-14/color-picker.png" alt="" /></p>
+
+<h3>文字系统</h3>
+
+<p>有了 <a href="http://objccn.io/issue-5-1/">TextKit</a>，iOS 7 终于有了和 Mac 上早就有了的 <a href="https://developer.apple.com/library/mac/documentation/TextFonts/Conceptual/CocoaTextArchitecture/TextSystemArchitecture/ArchitectureOverview.html">Cocoa Text System</a> 等效的东西。但 Apple 并不仅仅是把文字系统从 Mac 上转移到 iOS；相反，Apple 对其做了些显著的改变。</p>
+
+<p>举个例子，AppKit 开放 <code>NSTypesetter</code> 和 <code>NSGlyphGenerator</code>，你可以通过继承这两者来自定义它们的一些特性。iOS 并不开放这些类，但是你可以通过 <code>NSLayoutManagerDelegate</code> 协议达到定制的目的。</p>
+
+<p>总体来说，两个平台的文字系统还是非常相似的，所有你在 iOS 上能做的在 Mac 上都可以做（甚至更多），但对于一些东西，你必须从不同的地方寻找合适的方法实现。</p>
+
+<h3>沙盒</h3>
+
+<p>符合沙盒机制的 Mac 应用才能通过 Mac App Store 销售。鉴于沙盒从一开始就是 iOS 的基本规范（所以你会对它非常熟悉），你可能会好奇我们为什么要在这里提起它。然而，我们已经习惯了沙盒机制还没出现之前的 Mac 开发环境，所以有时候会忽视一些你想要实现的功能会和沙盒的限制出现冲突。</p>
+
+<p>Mac 的文件系统是一直对用户开放的，所以如果用户明确表示，沙盒应用可以访问自身应用外的文件。同样的机制同时引进了 iOS 8。不过，和通过这种方式放宽对 iOS 的限制相反，它却加强了对 Mac 的限制。这让它容易被忽视和遗忘。</p>
+
+<p>对此我们也十分惭愧，所以希望能阻止你犯同样的错误。当我们开始开发 <a href="http://decksetapp.com">Deckset</a> — 一款把简单 Markdown 文件转换为演示幻灯片的应用 — 时，我们从来没想过我们会碰到什么关于沙盒的问题。毕竟，我们只需要读 Markdown 文件的权限。</p>
+
+<p>我们忘记了我们还要显示 Markdown 文件中引用的图片。尽管你在 Markdown 文件中输入了图片文件的路径，但沙盒系统并不认为这是用户的意图。最后，我们通过一个像通知中心一样的 UI 来提示用户授权我们访问 Markdown 文件中的所有图片‘解决’了该问题。</p>
+
+<p>及早看一下 Apple 的 <a href="https://developer.apple.com/app-sandboxing/">sandboxing guides</a> 以防以后在相关的问题上犯错误。</p>
+
+<h2>独有特性</h2>
+
+<p>有很多事情你只能在 Mac 上做，这主要是因为它不同的交互模型和它更为宽松的安全策略。在本期话题中，我们有一些文章深入探讨了其中的一些内容：<a href="http://objccn.io/issue-14-4/">进程间通讯</a>，<a href="http://objccn.io/issue-14-1/">使 Mac 应用脚本化</a>, <a href="http://objccn.io/issue-14-2/">在沙盒中脚本化其他应用</a>, <a href="http://objccn.io/issue-14-3/">为你的应用构建插件</a>。</p>
+
+<p>当然，这只是 Mac 独有特性中很小的一部分，但这给了你一个很好的视角看待 iOS 8 从头开始打造其可扩展性和 app 间通讯。最后，还有很多东西等待你去探索：Drag and Drop，Printing，Bindings，OpenCL 等等，这里仅仅是举几个例子。</p>
+
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[苹果的插件]]></title>
@@ -1163,158 +1458,6 @@ return hasEqualSections } ```
 </ul>
 
 <script type="text/javascript" id="wumiiRelatedItems"></script>
-
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[OC的子类]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/06/18/ocde-zi-lei/"/>
-    <updated>2014-06-18T09:23:01+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/06/18/ocde-zi-lei</id>
-    <content type="html"><![CDATA[<p>这篇文章跟我以往的文章有点不一样。它主要是一些思想与模式的汇集，而不是一篇指南。下面我所写的模式几乎全都来之不易，都是我犯了错之后才学到的。我并不认为自己是子类方面的权威，但我确实想把我学到的一些东西分享出来。别把本文当做权威指南，它只是一些例子的汇集。</p>
-
-<p>在被问到 OOP（面向对象编程）的时候，Alan Kay（OOP 的发明人）写到：它跟类无关，但跟消息有关。<a href="http://c2.com/cgi/wiki?AlanKayOnMessaging">^1</a>然而，很多人的关注点仍然还在类层次上。在本文中，我们会看几个我们可能会把注意力放在创建复杂的类结构上的例子，并给出更有用的替代方案。根据经验，这样会让代码更简单，更易维护。关于这个话题，在 <a href="http://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882">Clean Code</a>（中文版：<a href="http://www.amazon.cn/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E9%A9%AC%E4%B8%81/dp/B0031M9GHC/ref=pd_bxgy_b_img_y">代码整洁之道</a>）和 <a href="http://www.amazon.com/Code-Complete-Practical-Handbook-Construction/dp/0735619670">Code Complete</a>（中文版：<a href="http://www.amazon.cn/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8-%E5%8F%B2%E8%92%82%E5%A4%AB%E2%80%A2%E8%BF%88%E5%85%8B%E5%BA%B7%E5%A5%88%E5%B0%94/dp/B0061XKRXA/ref=pd_bxgy_b_img_z">代码大全</a>）中已经有大量讨论。推荐你阅读这两本书。</p>
-
-<h2>何时用子类</h2>
-
-<p>首先，我们讨论几种使用子类比较合适的场景。如果你要写一个自定义布局的 <code>UITableViewCell</code> ，那就创建一个子类。这同样适用于几乎每个视图。一旦你开始布局，把这块代码放入子类就更合理一些，不光代码得到了更好的封装，你也能得到一个可在工程之间重用的组件。</p>
-<!-- more -->
-<p>假设你的代码是针对多平台多版本的，并且你需要针对每个平台每个版本写一些代码。这时候更合理的做法可能是创建一个 <code>OBJDevice</code> 类，让一些子类如 <code>OBJIPhoneDevice</code> 和 <code>OBJIPadDevice</code> ，甚至更深层的子类如 <code>OBJIPhone5Device</code> 来继承，并让这些子类重写特定的方法。例如，你的 OBJDevice 类可能包含了函数 <code>applyRoundedCornersToView:withRadius</code> ，它有一个默认的实现，但是也能被特定的子类重写。</p>
-
-<p>另一个子类化可能很有用的场景是模型对象（model object）。绝大多数情况下，我的模型对象继承自一个实现了 <code>isEqual:</code> 、 <code>hash</code> 、 <code>copyWithZone:</code> 和 <code>description</code> 等方法的类。这些方法只被实现一次，并且迭代循环遍历所有属性，所以极不容易出错。（如果你也想找一个这样的基类，可以考虑使用 <a href="https://github.com/mantle/mantle">Mantle</a> ，它就是这么做的，并且做得更多。）</p>
-
-<h2>何时不使用子类</h2>
-
-<p>在以往工作过的很多工程中，我见到过很多继承层次很深的子类。当我也这么干的时候，总会感到内疚。除非继承的层次非常浅，否则你会很快发现它的局限性。<a href="http://c2.com/cgi/wiki?LimitsOfHierarchies">^2</a></p>
-
-<p>幸运的是，如果你发现自己正在使用深层次的继承，还有很多替代方案可选。在下面的章节中，我们会逐个进行更详细地描述。如果你的子类只是使用相同的接口，协议会是个非常好的替代方案。如果你知道某个对象需要大量的修改，你可能会使用代理来动态改变和配置它。当你想给已有对象增加一些简单功能时，类别可能是个选择。当你有一堆重写了相同方法的子类时，你可以使用配置对象（configuration object）来代替。最后，当你想重用某些功能时，组合多个对象而不是扩展它们可能会更好。</p>
-
-<h2>替代方案</h2>
-
-<h3 id="protocols">替代方案：协议（Protocols）</h3>
-
-<p>很多时候，使用子类的原因是你想保证某个对象可以响应某些消息。假设在 app 里你有一个播放器对象，它可以播放视频。现在你想添加对 YouTube 的支持，使用相同的接口，但是具体实现不同。你可以使像这样用子类来实现：</p>
-
-<p>```
-@class Player : NSObject</p>
-
-<ul>
-  <li>(void)play;</li>
-  <li>(void)pause;</li>
-</ul>
-
-<p>@end</p>
-
-<p>@class YouTubePlayer : Player</p>
-
-<p>@end
-```</p>
-
-<p>事实上可能这两个类并没有太多共用的代码，它们只不过具有相同的接口。如果这样的话，使用协议可能会是更好的方案。可以这样用协议来写你的代码：</p>
-
-<p>```objc
-@protocol VideoPlayer <nsobject /></p>
-
-<ul>
-  <li>(void)play;</li>
-  <li>(void)pause;</li>
-</ul>
-
-<p>@end</p>
-
-<p>@class Player : NSObject <videoplayer /></p>
-
-<p>@end</p>
-
-<p>@class YouTubePlayer : NSObject <videoplayer /></p>
-
-<p>@end
-```</p>
-
-<p>这样，<code>YouTubePlayer</code> 类就不必知道 <code>Player</code> 类的内部实现了。</p>
-
-<h3 id="delegation">替代方案：代理（Delegation）</h3>
-
-<p>再一次假设你有一个像上面例子中的 <code>Player</code> 类。现在，你想在开始播放的时候在某个地方执行一个自定义的函数。这么做相对容易一些：创建一个自定义的子类，重写 <code>play</code> 方法，调用 <code>[super play ]</code>，然后开始做你自定义的工作。这么做是一种方法。另外一种方法是，改动你的 <code>Player</code> 对象，然后给它设置一个代理。如下：</p>
-
-<p>```objc
-@class Player;</p>
-
-<p>@protocol PlayerDelegate</p>
-
-<ul>
-  <li>(void)playerDidStartPlaying:(Player *)player;</li>
-</ul>
-
-<p>@end</p>
-
-<p>@class Player : NSObject</p>
-
-<p>@property (nonatomic,weak) id<playerdelegate> delegate;</playerdelegate></p>
-
-<ul>
-  <li>(void)play;</li>
-  <li>(void)pause;</li>
-</ul>
-
-<p>@end
-```</p>
-
-<p>现在，在播放器的 <code>play</code> 方法里，就可以给代理发送 <code>playerDidStartPlaying:</code> 消息了。这个 <code>Player</code> 类的任何使用者都可以仅仅实现这个代理协议，而不用继承该该类， <code>Player</code> 类也能够保持通用性。这是个强大有效的技术，苹果在自己的框架里大量地使用它。你想想像 <code>UITextField</code> 这样的类，还有 <code>NSLayoutManager</code>。有时候你还会想把几个不同的方法打包分组到几个单独的协议里，比如 <code>UITableView</code> —— 它不仅有一个代理（delegate），还有一个数据源（dataSource）。</p>
-
-<h3 id="categories">替代方案：类别（Categories）</h3>
-
-<p>有时候，你可能会想给一个对象增加一点点额外的功能。比如你想给 <code>NSArray</code> 增加一个方法 <code>arrayByRemovingFirstObject</code>。不用子类，你可以把这个函数放到一个类别里。像这样：</p>
-
-<p>```objc
-@interface NSArray (OBJExtras)</p>
-
-<ul>
-  <li>(void)obj_arrayByRemovingFirstObject;</li>
-</ul>
-
-<p>@end
-```</p>
-
-<p>在用类别扩展一个不是你自己的类的时候，在方法前添加前缀是个比较好的习惯做法。如果不这么做，有可能别人也用类别对此类添加了相同名字的函数。那时候程序的行为可能跟你想要的并不一样，未预期的事情可能会发生。</p>
-
-<p>使用类别还有另外一个风险，那就是，到最后你可能会使用一大堆的类别，连你自己都会失去对代码全局的认识。假如那样的话，创建自定义的类可能更简单一些。</p>
-
-<h3 id="configurationobjects">替代方案：配置对象（Configuration Objects）</h3>
-
-<p>在我经常会犯的错误中（现在很快就能发现了），其中有一条是：使用一个含有几个抽象方法的类并让很多子类来重写某个方法。例如，在一个幻灯片应用里，你有一个主题类 <code>Theme</code> ，它有几个属性，比如 <code>backgroundColor</code> 和 <code>font</code> ，还有一些在一张幻灯片上如何布局的逻辑函数。</p>
-
-<p>然后，对每种主题，你都创建一个 <code>Theme</code> 的子类，重写某个函数（例如 <code>setup</code> ）并配置其属性。直接使用父类对此做不了什么事。在这种情况下，你可以使用配置对象来让代码更简单些。你可以把共有的逻辑（比如幻灯片布局）放在 <code>Theme</code> 类中，把属性的配置放到较简单的对象中，这些对象中只含有这些属性。</p>
-
-<p>例如，类 <code>ThemeConfiguration</code> 具有 <code>backgroundColor</code> 和 <code>font</code> 属性，而类 <code>Theme</code> 在其初始化函数中获取一个配置类 <code>ThemeConfiguration</code> 的值。</p>
-
-<h3>替代方案：组合</h3>
-
-<p>组合是代替子类化的最强大有效的方案。如果你想重用已有代码而不想共享同样的接口，组合就是你的首选武器。例如，假设你要设计一个缓存类：</p>
-
-<p>```objc
-@interface OBJCache : NSObject</p>
-
-<ul>
-  <li>(void)cacheValue:(id)value forKey:(NSString *)key;</li>
-  <li>(void)removeCachedValueForKey:(NSString *)key;</li>
-</ul>
-
-<p>@end
-```</p>
-
-<p>简单点的做法是直接继承 <code>NSDictionary</code>，通过调用字典的函数来实现上面的两个方法。</p>
-
-<p><code>objc
-@interface OBJCache : NSDictionary
-</code></p>
-
-<p>但是这么做有几个弊端。它本来是应该被详细实现的，但只是通过字典来实现。现在，在任何需要一个 <code>NSDictionary</code> 参数的时候，你可以直接提供一个 <code>OBJCache</code> 值。但如果你想把它转为其它完全不同的东西（例如你自己的库），你就可能需要重构很多代码了。</p>
-
-<p>更好的方式是，将这个字典存在一个私有属性（或者实例变量）中，对外仅仅暴露这两个 <code>cache</code> 方法。现在，当你有了更深入想法的时候，你可以在灵活地修改其实现，而该类的使用者们不用进行重构。</p>
 
 <hr />
 

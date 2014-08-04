@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="May 18th, 2014 Comments iOS动画解释 我们写的应用程序往往都不是静态的，因为它们需要适应用户的需求以及为执行各种任务而改变状态。 在这些状态之间转换时，清晰的揭示正在发生什么是非常重要的。而不是在页面之间跳跃，动画帮助我们解释用户从哪里来，要到哪里去。 键盘在 view &hellip;">
+	<meta name="description" content="May 23rd, 2014 iOS Comments 交互式动画 在2007年，乔布斯在第一次介绍 iPhone 的时候，iPhone 的触摸屏交互简直就像是一种魔法。最好的例子就是在他第一次滑动 TableView 的展示上。你可以感受到当时观众的反应是多么惊讶， &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -111,6 +111,87 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-05-23T10:11:17+08:00" data-updated="true" itemprop="datePublished">May 23<span>rd</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/" itemprop="url">交互式动画</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>在2007年，乔布斯在第一次介绍 iPhone 的时候，iPhone 的触摸屏交互简直就像是一种魔法。最好的例子就是在他<a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">第一次滑动 TableView 的展示上</a>。你可以感受到当时观众的反应是多么惊讶，但是对于现在的我们来说早已习以为常。在展示的后面一部分，他特别指出当他给别人看了这个滑动例子，别人说的一句话: <a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">“当这个界面滑动的时候我就已经被征服了”</a>.</p>
+
+<p>是什么样的滑动能让人有‘哇哦’的效果呢？</p>
+
+<p>滑动是最完美地展示了通过触摸屏直接操作的例子。滚动视图遵从于你的手指，当你的手指离开屏幕的时，视图会自然地继续滑动直到该停止的时候停止。它用自然的方式减速，甚至在快到界限的时候也能表现出细腻的弹力效果。滑动在任何时候都保持相应，并且看上去非常真实。</p>
+
+<h2>动画的状态</h2>
+
+<p>在 iOS 中的大部分动画仍然没有按照最初 iPhone 指定的滑动标准实现。这里有很多动画一旦它们运行就不能交互（比如说解锁动画，主界面中打开文件夹和关闭文件夹的动画，和导航栏切换的动画，还有很多）。</p>
+
+<p>然而现在有一些应用给我一种始终在控制动画的体验，我们可以直接操作那些我在用的动画。当我们将这些应用和其他的应用相比较之后，我们就能感觉到明显的区别。这些应用中最优秀的有最初的 Twitter iPad app， 和现在的 Facebook Paper。但目前，使用直接操作为主并且可以中断动画的应用仍然很少。这就给我们做出更好的应用提供了机会，让我们的应用有更不同的，更高质量的体验。</p>
+
+<h2>真实交互式动画的挑战</h2>
+
+<p>当我们用 UIView 或者 CAAnimation 来实现交互式动画时会有两个大问题: 这些动画会将你在屏幕上的内容和 layer 上的实际的特定属性分离开来，并且他们直接操作这些特定属性。</p>
+
+<h3 id="modelpresentation">模型 (Model) 和显示 (Presentation) 的分离</h3>
+
+<p>Core Animation 是通过分离 layer 的模型属性和你在屏幕上看到的界面 (显示层) 的方式来设计的，这就导致我们很难去创建一个可以在任何时候能交互的动画，因为在动画时，模型和界面已经不能匹配了。这时，我们不得不通过手动的方式来同步这两个的状态，来达到改变动画的效果：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">presentationLayer</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
+</span><span class="line"><span class="p">[</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">removeAnimationForKey:</span><span class="s">@&quot;animation&quot;</span><span class="p">];</span>
+</span><span class="line"><span class="c1">// 添加新动画</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3 id="vs">直接控制 vs 间接控制</h3>
+
+<p><code>CAAnimation</code> 动画的更大的问题是它们是直接在 layer 上对属性进行操作的。这意味着什么呢？比如我们想指定一个 layer 从坐标为 (100, 100) 的位置运动到 (300, 300) 的位置，但是在它运动到中间的时候，我们想它停下来并且让它回到它原来的位置，事情就变得非常复杂了。如果你只是简单地删除当前的动画然后再添加一个新的，那么这个 layer 的速率就会不连续。</p>
+
+<p><img src="http://img.objccn.io/issue-12/abrupt.png" width="600" /></p>
+
+<p>然而，我们想要的是一个漂亮的，流畅地减速和加速的动画。</p>
+
+<p><img src="http://img.objccn.io/issue-12/smooth.png" width="600" /></p>
+
+<p>只有通过<em>间接</em>操作动画才能达到上面的效果，比如通过模拟力在界面上的表现。新的动画需要用 layer 的当前<em>速度矢量</em>作为参数传入来达到流畅的效果。</p>
+
+<p>看一下 UIView 中关于弹簧动画的 API </p>
+<p>animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:</p>
+<p>，你会注意到速率是个 CGFloat。所以当我们给一个移动 view 的动画在其运动的方向上加一个初始的速率时，你没法告知动画这个 view 现在的运动状态，比如我们不知道要添加的动画的方向是不是和原来的 view 的速度方向垂直。为了使其成为可能，这个速度需要用向量来表示。</p>
+
+<h2>解决方案</h2>
+
+		
+		<a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -783,67 +864,6 @@
 
 		
 		<a href="/Blog/blog/2014/05/08/li-jie-framezai-bu-ju-de-zuo-yong/" class="more-link">Read on &rarr;</a>
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-05-08T00:10:43+08:00" data-updated="true" itemprop="datePublished">May 8<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/" itemprop="url">CocoaPods安装和使用教程</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<h2>目录</h2>
-
-<ul>
-<li><a href="#cocoapods">CocoaPods是什么？</a></li>
-<li><a href="#install">如何下载和安装CocoaPods？</a></li>
-<li><a href="#usage">如何使用CocoaPods？</a>
-
-    <ul>
-        <li><a href="#usage1">场景1：利用CocoaPods，在项目中导入AFNetworking类库</a></li>
-        <li><a href="#usage2">场景2：如何正确编译运行一个包含CocoPods类库的项目</a></li>
-    </ul>
-</li>
-</ul>
-
-<h2 id="cocoapods">CocoaPods是什么？</h2>
-
-<p>当你开发iOS应用时，会经常使用到很多第三方开源类库，比如JSONKit，AFNetWorking等等。可能某个类库又用到其他类库，所以要使用它，必须得另外下载其他类库，而其他类库又用到其他类库，“子子孙孙无穷尽也”，这也许是比较特殊的情况。总之小编的意思就是，手动一个个去下载所需类库十分麻烦。另外一种常见情况是，你项目中用到的类库有更新，你必须得重新下载新版本，重新加入到项目中，十分麻烦。如果能有什么工具能解决这些恼人的问题，那将“善莫大焉”。所以，你需要 CocoaPods。</p>
-
-<p>CocoaPods应该是iOS最常用最有名的类库管理工具了，上述两个烦人的问题，通过cocoaPods，只需要一行命令就可以完全解决，当然前提是你必须正确设置它。重要的是，绝大部分有名的开源类库，都支持CocoaPods。所以，作为iOS程序员的我们，掌握CocoaPods的使用是必不可少的基本技能了。</p>
-
-<h2 id="install">如何下载和安装CocoaPods？</h2>
-
-<p>在安装CocoaPods之前，首先要在本地安装好Ruby环境。至于如何在Mac中安装好Ruby环境，请google一下，本文不再涉及。</p>
-
-<p>假如你在本地已经安装好Ruby环境，那么下载和安装CocoaPods将十分简单，只需要一行命令。在Terminator（也就是终端）中输入以下命令（注意，本文所有命令都是在终端中输入并运行的。什么，你不知道什么是终端？那请小编吃饭，小编告诉你）：</p>
-
-		
-		<a href="/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/" class="more-link">Read on &rarr;</a>
 	</div>
 
 </article>

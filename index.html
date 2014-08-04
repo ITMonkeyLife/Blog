@@ -129,6 +129,65 @@
   
 
 
+<time datetime="2014-08-04T10:03:56+08:00" data-updated="true" itemprop="datePublished">Aug 4<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/" itemprop="url">从UIKit到APPKit</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>Mac 不仅是一个强大的生产平台，也十分值得你<em>为其</em>开发一些东西。去年我们开始构建我们的第一款 <a href="http://decksetapp.com">Mac 应用</a>，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验，希望能启发你们去开发自己的第一个 Mac 应用。</p>
+
+<p>在这篇文章中，我们假定 OS X Yosemite 为我们默认使用的系统。今年，为了融合 iOS 和 OS X，苹果站在开发者的角度对 OS X 做出了巨大的改进。不过，我们会指出哪些特性仅适用于 Yosemite，而哪些特性也适用于之前的系统版本。</p>
+
+<h2>相似点</h2>
+
+<p>尽管 iOS 和 OS X 是两个独立的系统，它们却有很多共性。先就开发环境而言，它们使用同样的开发语言，同样的IDE。所以你会对这一切都感到非常熟悉。</p>
+
+<p>更重要的是，OS X 和你已经熟悉的 iOS 共用许多框架，像 Foundation，Core Data 和 Core Animation。今年，Apple 进一步整合两个平台，并给 Mac 带来了一些之前仅能在 iOS 上面使用的框架，其中一个例子就是 Multipeer Connectivity。在更底层的地方，你立刻可以看到你熟悉的 API：Core Graphics，Core Text，libdispatch 等等。</p>
+
+<p>真正开始有区别的是 UI 框架 — AppKit 早在 NeXT 时代就已面世并不断进化，而 UIKit 就像是简约版及现代版的 AppKit。出现这种情况的原因，是当 Apple 推出 iPhone 时可以从头开始，并吸取 AppKit 的经验：把已证实过可行的概念和部件拿过来用，并改进不够精良的设计。</p>
+
+<p>如果你对这个转换是怎么发生的感兴趣，请观看前 Apple iOS 应用总监 <a href="https://twitter.com/nitinganatra">Nitin Ganatra</a> 播客上的精彩剧集：<a href="http://www.imore.com/debug-39-nitin-ganatra-episode-i-system-7-carbon">System 7 to Carbon</a>，<a href="http://www.imore.com/debug-40-nitin-ganatra-episode-ii-os-x-ios">OS X to iOS</a>，以及 <a href="http://www.imore.com/debug-41-nitin-ganatra-episode-iii-iphone-ipad">iPhone to iPad</a>。</p>
+
+<p>考虑到这一点，也就不奇怪为什么 UIKit 和 AppKit 仍旧共享许多概念了。UI 是基于 window 和 view 构建起来的，消息像 iOS 一样通过响应者链传递。此外，<code>UIView</code> 是 <code>NSView</code>，<code>UIControl</code> 是 <code>NSControl</code>，<code>UIImage</code> 是 <code>NSImage</code>，<code>UIViewController</code> 是 <code>NSViewController</code>，<code>UITextView</code> 是 <code>NSTextView</code>&#8230;这样的例子不胜枚举。</p>
+
+<p>看起来就像你仅需把 <code>UI</code> 前缀替换为 <code>NS</code> 前缀，你就可以用同样的方法使用这些类。但事实是在很多情况下这并不奏效。它们在实现上并没有在概念上那么相似。你在 iOS 上的经验至多能帮你大致了解构建用户界面的基础，以及使用很多设计模式，比如代理，都是类似的。但是细节是魔鬼 — 你真的应该通过阅读文档来学习如果使用这些类。</p>
+
+<p>下一节，我们来看看那些常见的陷阱。</p>
+
+<h2>不同点</h2>
+
+<h3 id="windowwindowcontroller">Window 和 Window Controller</h3>
+
+		
+		<a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
 <time datetime="2014-07-23T17:35:44+08:00" data-updated="true" itemprop="datePublished">Jul 23<span>rd</span>, 2014</time></div>
 		<div class="tags">
 
@@ -632,87 +691,6 @@
 
 		
 		<a href="/Blog/blog/2014/06/17/rsasuan-fa-de-dan-sheng/" class="more-link">Read on &rarr;</a>
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-05-23T10:11:17+08:00" data-updated="true" itemprop="datePublished">May 23<span>rd</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/" itemprop="url">交互式动画</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>在2007年，乔布斯在第一次介绍 iPhone 的时候，iPhone 的触摸屏交互简直就像是一种魔法。最好的例子就是在他<a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">第一次滑动 TableView 的展示上</a>。你可以感受到当时观众的反应是多么惊讶，但是对于现在的我们来说早已习以为常。在展示的后面一部分，他特别指出当他给别人看了这个滑动例子，别人说的一句话: <a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">“当这个界面滑动的时候我就已经被征服了”</a>.</p>
-
-<p>是什么样的滑动能让人有‘哇哦’的效果呢？</p>
-
-<p>滑动是最完美地展示了通过触摸屏直接操作的例子。滚动视图遵从于你的手指，当你的手指离开屏幕的时，视图会自然地继续滑动直到该停止的时候停止。它用自然的方式减速，甚至在快到界限的时候也能表现出细腻的弹力效果。滑动在任何时候都保持相应，并且看上去非常真实。</p>
-
-<h2>动画的状态</h2>
-
-<p>在 iOS 中的大部分动画仍然没有按照最初 iPhone 指定的滑动标准实现。这里有很多动画一旦它们运行就不能交互（比如说解锁动画，主界面中打开文件夹和关闭文件夹的动画，和导航栏切换的动画，还有很多）。</p>
-
-<p>然而现在有一些应用给我一种始终在控制动画的体验，我们可以直接操作那些我在用的动画。当我们将这些应用和其他的应用相比较之后，我们就能感觉到明显的区别。这些应用中最优秀的有最初的 Twitter iPad app， 和现在的 Facebook Paper。但目前，使用直接操作为主并且可以中断动画的应用仍然很少。这就给我们做出更好的应用提供了机会，让我们的应用有更不同的，更高质量的体验。</p>
-
-<h2>真实交互式动画的挑战</h2>
-
-<p>当我们用 UIView 或者 CAAnimation 来实现交互式动画时会有两个大问题: 这些动画会将你在屏幕上的内容和 layer 上的实际的特定属性分离开来，并且他们直接操作这些特定属性。</p>
-
-<h3 id="modelpresentation">模型 (Model) 和显示 (Presentation) 的分离</h3>
-
-<p>Core Animation 是通过分离 layer 的模型属性和你在屏幕上看到的界面 (显示层) 的方式来设计的，这就导致我们很难去创建一个可以在任何时候能交互的动画，因为在动画时，模型和界面已经不能匹配了。这时，我们不得不通过手动的方式来同步这两个的状态，来达到改变动画的效果：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">presentationLayer</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
-</span><span class="line"><span class="p">[</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">removeAnimationForKey:</span><span class="s">@&quot;animation&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="c1">// 添加新动画</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3 id="vs">直接控制 vs 间接控制</h3>
-
-<p><code>CAAnimation</code> 动画的更大的问题是它们是直接在 layer 上对属性进行操作的。这意味着什么呢？比如我们想指定一个 layer 从坐标为 (100, 100) 的位置运动到 (300, 300) 的位置，但是在它运动到中间的时候，我们想它停下来并且让它回到它原来的位置，事情就变得非常复杂了。如果你只是简单地删除当前的动画然后再添加一个新的，那么这个 layer 的速率就会不连续。</p>
-
-<p><img src="http://img.objccn.io/issue-12/abrupt.png" width="600" /></p>
-
-<p>然而，我们想要的是一个漂亮的，流畅地减速和加速的动画。</p>
-
-<p><img src="http://img.objccn.io/issue-12/smooth.png" width="600" /></p>
-
-<p>只有通过<em>间接</em>操作动画才能达到上面的效果，比如通过模拟力在界面上的表现。新的动画需要用 layer 的当前<em>速度矢量</em>作为参数传入来达到流畅的效果。</p>
-
-<p>看一下 UIView 中关于弹簧动画的 API </p>
-<p>animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:</p>
-<p>，你会注意到速率是个 CGFloat。所以当我们给一个移动 view 的动画在其运动的方向上加一个初始的速率时，你没法告知动画这个 view 现在的运动状态，比如我们不知道要添加的动画的方向是不是和原来的 view 的速度方向垂直。为了使其成为可能，这个速度需要用向量来表示。</p>
-
-<h2>解决方案</h2>
-
-		
-		<a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/" class="more-link">Read on &rarr;</a>
 	</div>
 
 </article>
