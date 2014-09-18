@@ -9,7 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="May 11th, 2014 iOS Comments Layer中动画概述 默认情况下，CALayer 及其子类的绝大部分标准属性都可以执行动画，无论是添加一个 CAAnimation 到 Layer（显式动画），亦或是为属性指定一个动作然后修改它（隐式动画）。 &hellip;">
+	<meta name="description" content="May 13th, 2014 iOS Comments 自定义ViewController动画 在话题 #5 中，Chris Eidhof 向我们介绍了 iOS7 引入的新特性自定义 View Controller 转场. 他给出了一个 结论： 我们在本文只探讨了在 navigation &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -111,6 +111,69 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-05-13T15:45:26+08:00" data-updated="true" itemprop="datePublished">May 13<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/" itemprop="url">自定义ViewController动画</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>在<a href="http://objccn.io/issue-5/">话题 #5</a> 中，<a href="http://twitter.com/chriseidhof">Chris Eidhof</a> 向我们介绍了 iOS7 引入的新特性自定义 <a href="http://objccn.io/issue-5-3">View Controller 转场</a>. 他给出了一个 <a href="http://objccn.io/issue-5-3/#conclusion">结论</a>：</p>
+
+<blockquote>
+  <p>我们在本文只探讨了在 navigation controller 中的两个 view controller 之间的转场动画，但是这些做法在 tab bar controller 或者<strong>任何你自己定义的 view controller 容器</strong>中<strong>也是通用的</strong>… </p>
+</blockquote>
+
+<p>尽管从技术角度来讲，使用 iOS 7 的 API，你可以对自定义容器中的 view controllers 做自定义转场，但是这不是能直接使用的，实现这种效果非常不容易。</p>
+
+<p>请注意我正在讨论的自定义视图控制器容器 (custom container view controllers) 都是 <code>UIViewController</code> 的直接子类，而不是 <code>UITabBarController</code> 或者 <code>UINavigationController</code> 的子类。</p>
+
+<p>对于你自定义的继承于 <code>UIViewController</code> 的容器子类，并没有现成可用的 API 允许一个任意的<em>动画控制器 (animation controller)</em> 将一个子视图控制器自动转场到另外一个，不管是可交互式的转场还是不可交互式的转场。 我甚至都觉着苹果根本就不想支持这种方式。苹果支持下面的这几种转场方式:</p>
+
+<ul>
+<li>Navigation controller 推入和推出页面</li>
+<li>Tab bar controller 选择的改变</li>
+<li>Modal 页面的展示和消失</li>
+</ul>
+
+<p>在本文中，我将向你展示如何自定义视图控制器容器，并且使其支持第三方的动画控制器。</p>
+
+<p>如果你需要复习一下 iOS 5 引入的视图控制器容器，请阅读<a href="http://objccn.io/issue-1/">话题＃1</a> 中 <a href="https://twitter.com/rickigregersen">Ricky Gregersen</a> 写的文章 “<a href="http://objccn.io/issue-1-4/">View Controller 容器</a>”。</p>
+
+<h2>预热准备</h2>
+
+<p>看到这里，你可能对上文我们说到的一些问题犯嘀咕，让我来告诉你答案吧:</p>
+
+<p><em>为什么我们不直接继承 <code>UINavigationController</code> 或 <code>UITabBarController</code>，并且使用它们提供的功能的？</em></p>
+
+		
+		<a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -808,63 +871,6 @@ Link Layer -- e.g. IEEE 802.2
 
 		
 		<a href="/Blog/blog/2014/04/15/foundationji-chu-ji-he-lei/" class="more-link">Read on &rarr;</a>
-	</div>
-
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-04-15T08:45:11+08:00" data-updated="true" itemprop="datePublished">Apr 15<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/shi-ge/'>诗歌</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/04/15/wo-bu-hui-xie-shi/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/04/15/wo-bu-hui-xie-shi/" itemprop="url">我不会写诗</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>
-好想在此写诗一回，<br />
-但我始终不敢下笔，<br />
-或许是诗不若景美，<br />
-或许是诗不及影魅，<br />
-抑或是我的诗，<br />
-比此刻风景甚悲，<br />
-忘记了天空的深邃，<br />
-忘记了风的轻微，<br />
-愿一只纸鸳的甜蜜，<br />
-放飞漫天的心醉。<br />
-好想在此放声歌唱，<br />
-歌唱那满地的青黄，<br />
-那白衣的姑娘，<br />
-那微微的碎影，<br />
-折射出太阳的方向，<br />
-也许那甜蜜的不是淡淡阳光，<br />
-而是那挂着笑容的脸庞，<br />
-和那美好的希望。</p>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
 	</div>
 
 </article>

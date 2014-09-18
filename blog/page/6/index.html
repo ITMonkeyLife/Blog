@@ -9,16 +9,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Mar 21st, 2014 iOS Comments iOS设备信息收集 收集iOS设备的信息，包含设备系统版本，设备型号，手机型号，屏幕分辨率，当地所在时区，CPU 型号，系统语言，网络环境，应用名称以及应用版本，还有判断设备是否，应用是否被破解
-需要的头文件
-1
-2
-3
-4
-5
-6
-7
-8 &hellip;">
+	<meta name="description" content="Mar 24th, 2014 iOS Comments 你真的懂GCD吗? GCD是什么，你知道吗？你知道了GCD，你确定你会使用吗？ 这一篇文章是站在初学者角度去分析GCD，原因是这个很多iOS开发者根本就没用过，即使用过，不知道其中的原理。讲解之前认识一下什么是线程，为什么要介绍线程。 &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -120,6 +111,68 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-24T15:54:02+08:00" data-updated="true" itemprop="datePublished">Mar 24<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+		
+			<span class="comments"><a href="/Blog/blog/2014/03/24/%E4%BD%A0%E7%9C%9F%E7%9A%84%E6%87%82GCD%E5%90%97%3F/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/03/24/%E4%BD%A0%E7%9C%9F%E7%9A%84%E6%87%82GCD%E5%90%97%3F/" itemprop="url">你真的懂GCD吗?</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>GCD是什么，你知道吗？你知道了GCD，你确定你会使用吗？</p>
+<p> 这一篇文章是站在初学者角度去分析GCD，原因是这个很多iOS开发者根本就没用过，即使用过，不知道其中的原理。讲解之前认识一下什么是线程，为什么要介绍线程。是因为GCD是Grand Central Dispatch的缩写，是一系列的BSD层面的接口，在Mac 10.6 和iOS4.0以后才引入的，且现在NSOperation和NSOperationQueue的多线程的实现就是基于GCD的。目前这个特性也被移植到 FreeBSD上了，可以查看libdispatch这个开源项目。</p>
+<blockquote>
+	iPhone中的线程应用并不是无节制的，官方给出的资料显示iPhone  OS下的主线程的堆栈大小是1M，第二个线程开始都是512KB。并且该值不能通过编译器开关或线程API函数来更改。只有主线程有直接修改UI的能力。
+</blockquote>
+<h2>
+	一、线程的概述
+</h2>
+<p><br /></p>
+<p>有些程序是一条直线，起点到终点；有些程序是一个圆，不断循环，直到将它切断。直线的如简单的Hello World，运行打印完,它的生命周期便结束了，像昙花一现那样；圆如操作系统，一直运行直到你关机。 </p>
+<p>一个运行着的程序就是一个进程或者叫做一个任务，一个进程至少包含一个线程，线程就是程序的执行流。Mac和iOS中的程序启动，创建好一个进程的同时， 一个线程便开始运行，这个线程叫主线程。主线程在程序中的地位和其他线程不同，它是其他线程最终的父线程，且所有界面的显示操作即AppKit或 UIKit的操作必须在主线程进行。 </p>
+<p>系统中的每一个进程都有自己独立的虚拟内存空间，而同一个进程中的多个线程则共用进程的内存空间。每创建一个新的线程，都需要一些内存(如每个线程有自己的Stack空间)和消耗一定的CPU时间。另外当多个线程对同一个资源出现争夺的时候需要注意线程安全问题。</p>
+<h2>二、创建线程</h2>
+<p>创建一个新的线程就是给进程增加了一个执行流，执行流总得有要执行的代码吧，所以新建一个线程需要提供一个函数或者方法作为线程的入口。</p>
+<h3>1.使用NSThread</h3>
+<p>NSThread提供了创建线程的途径，还可以提供了检测当前线程是否是主线程的方法。 使用NSThread创建一个新的线程有两种方式：</p>
+<ul>
+<li>1.创建一个NSThread的对象，调用其start方法。对于这种方式的NSThread对象的创建，可以使用一个目标对象的方法初始化一个NSThread对象，或者创建一个继承NSThread类的子类，实现其main方法，然后在直接创建这个子类的对象。</li>
+<li>2.使用 detachNewThreadSelector:toTarget:withObject:这个类方法创建一个线程，这个比较直接了，直接使用目标对象的方法作为线程启动入口。</li>
+</ul>
+<h3>2.使用NSObject</h3>
+<p>其实NSObject直接就加入了多线程的支持，允许对象的某个方法在后台运行。如:</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">myObj</span> <span class="nl">performSelectorInBackground:</span><span class="k">@selector</span><span class="p">(</span><span class="n">doSomething</span><span class="p">)</span> <span class="nl">withObject:</span><span class="nb">nil</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<h3>3.POSIX Thread</h3>
+
+		
+		<a href="/Blog/blog/2014/03/24/%E4%BD%A0%E7%9C%9F%E7%9A%84%E6%87%82GCD%E5%90%97%3F/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
