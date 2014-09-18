@@ -139,7 +139,7 @@ let result = myFilter(image)
 
 <pre><code>typealias Filter = CIImage -&gt; CIImage
 </code></pre>
-
+<!-- more-->
 <p>这里我们用 <code>typealias</code> 关键字，为 <code>CIImage -&gt; CIImage</code>类型定义了我们自己的名字，这个类型是一个函数，它的参数是一个 <code>CIImage</code> ，返回值也是 <code>CIImage</code> 。这是我们后面开发需要的基础类型。</p>
 
 <p>如果你不太熟悉函数式编程，你可能对于把一个函数类型命名为 <code>Filter</code> 感觉有点奇怪，通常来说，我们会用这样的命名来定义一个类。如果我们很想以某种方式来表现这个类型的函数式的特性，我们可以把它命名成 <code>FilterFunction</code> 或者一些其他的类似的名字。但是，我们有意识的选择了 <code>Filter</code> 这个名字，因为在函数式编程的核心哲学里，函数就是值，函数和结构体、整数、多元组、或者类，并没有任何区别。一开始我也不是很适应，不过一段时间之后发现，这样做确实很有意义。</p>
