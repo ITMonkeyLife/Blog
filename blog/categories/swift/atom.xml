@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Swift | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/swift/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2014-09-18T14:01:19+08:00</updated>
+  <updated>2014-09-18T14:59:21+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -35,7 +35,7 @@
 <p>开始学习函数式编程或许有些痛苦。第一，你必须放手一些老的模式。而因为我们很多人常年用面对对象的方式去思考，做到这一点是很困难的。在函数式编程当中你想的是不变的数据结构以及那些转换它们的函数。在面对对象编程当中你考虑的是互相发送信息的对象。如果你没有马上理解函数式编程，这是一个好的信号。你的大脑很可能已经完全适应了用面对对象的方法来解决问题。</p>
 
 <h2>例子</h2>
-
+<!-- more-->
 <p>我最喜欢的 Swift 功能之一是对 optionals 的使用。Optionals 让我们能够应对有可能存在也有可能不存在的值。在 Objective-C 里我们必须在文档中清晰地说明 nil 是否是允许的。Optionals 让我们将这份责任交给了类型系统。如果你有一个可选值，你就知道它可以是 nil。如果它不是可选值，你知道它不可能是 nil。</p>
 
 <p>举个例子，看看下面一小段 Objective-C 代码</p>
