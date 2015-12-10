@@ -363,86 +363,6 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/07/23/swiftchu-bu-liao-jie/">
-		
-			Swift初步了解</a>
-	</h2>
-	<div class="entry-content">
-		<div class="entry-content"><h2>关于</h2>
-
-<p>这篇文章简要介绍了苹果于<a href="https://developer.apple.com/wwdc/">WWDC 2014</a>发布的编程语言——Swift。</p>
-
-<p>原文作者：</p>
-
-<ul>
-<li><a href="http://zh.lucida.me/">Lucida Blog</a></li>
-<li><a href="http://www.weibo.com/pegong/">新浪微博</a></li>
-<li><a href="http://www.douban.com/people/figure9/">豆瓣</a></li>
-</ul>
-
-
-<p>转载前请保留出处链接，谢谢。</p>
-
-<h2>前言</h2>
-
-<p>在这里我认为有必要提一下<a href="http://worrydream.com/">Bret Victor</a>的<a href="http://vimeo.com/36579366">Inventing on Principle</a>，Swift编程环境的大部分概念都源自于<a href="http://worrydream.com/">Bret</a>这个演讲。</p>
-
-<p>接下来进入正题。</p>
-
-<h2>Swift是什么？</h2>
-
-<p>Swift是苹果于WWDC 2014发布的编程语言，这里引用<strong><a href="https://itunes.apple.com/gb/book/swift-programming-language/id881256329?mt=11">The Swift Programming Language</a></strong>的原话：</p>
-
-<blockquote><p>Swift is a new programming language for iOS and OS X apps that builds on the best of C and Objective-C, without the constraints of C compatibility.</p>
-
-<p>Swift adopts safe programming patterns and adds modern features to make programming easier, more flexible and more fun.</p>
-
-<p>Swift&rsquo;s clean slate, backed by the mature and much-loved Cocoa and Cocoa Touch frameworks, is an opportunity to imagine how software development works.</p>
-
-<p>Swift is the first industrial-quality systems programming language that is as expressive and enjoyable as a scripting language.</p></blockquote>
-
-<p>简单的说：</p>
-
-<ol>
-<li>Swift用来写iOS和OS X程序。（估计也不会支持其它屌丝系统）</li>
-<li>Swift吸取了C和Objective-C的优点，且更加强大易用。</li>
-<li>Swift可以使用现有的Cocoa和Cocoa Touch框架。</li>
-<li>Swift兼具编译语言的高性能（Performance）和脚本语言的交互性（Interactive）。</li>
-</ol>
-
-
-<h2>Swift语言概览</h2>
-
-
-		
-		<a href="/Blog/blog/2014/07/23/swiftchu-bu-liao-jie/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/07/23/swiftchu-bu-liao-jie/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
 		<a href="/Blog/blog/2014/07/23/iosde-cha-jian/">
 		
 			苹果的插件</a>
@@ -690,6 +610,48 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/06/18/ocde-zi-lei/">
+		
+			OC的子类</a>
+	</h2>
+	<div class="entry-content">
+		<p>这篇文章跟我以往的文章有点不一样。它主要是一些思想与模式的汇集，而不是一篇指南。下面我所写的模式几乎全都来之不易，都是我犯了错之后才学到的。我并不认为自己是子类方面的权威，但我确实想把我学到的一些东西分享出来。别把本文当做权威指南，它只是一些例子的汇集。</p>
+
+<p>在被问到 OOP（面向对象编程）的时候，Alan Kay（OOP 的发明人）写到：它跟类无关，但跟消息有关。<a href="http://c2.com/cgi/wiki?AlanKayOnMessaging">^1</a>然而，很多人的关注点仍然还在类层次上。在本文中，我们会看几个我们可能会把注意力放在创建复杂的类结构上的例子，并给出更有用的替代方案。根据经验，这样会让代码更简单，更易维护。关于这个话题，在 <a href="http://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882">Clean Code</a>（中文版：<a href="http://www.amazon.cn/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E9%A9%AC%E4%B8%81/dp/B0031M9GHC/ref=pd_bxgy_b_img_y">代码整洁之道</a>）和 <a href="http://www.amazon.com/Code-Complete-Practical-Handbook-Construction/dp/0735619670">Code Complete</a>（中文版：<a href="http://www.amazon.cn/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8-%E5%8F%B2%E8%92%82%E5%A4%AB%E2%80%A2%E8%BF%88%E5%85%8B%E5%BA%B7%E5%A5%88%E5%B0%94/dp/B0061XKRXA/ref=pd_bxgy_b_img_z">代码大全</a>）中已经有大量讨论。推荐你阅读这两本书。</p>
+
+<h2>何时用子类</h2>
+
+<p>首先，我们讨论几种使用子类比较合适的场景。如果你要写一个自定义布局的 <code>UITableViewCell</code> ，那就创建一个子类。这同样适用于几乎每个视图。一旦你开始布局，把这块代码放入子类就更合理一些，不光代码得到了更好的封装，你也能得到一个可在工程之间重用的组件。</p>
+
+		
+		<a href="/Blog/blog/2014/06/18/ocde-zi-lei/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/06/18/ocde-zi-lei/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
