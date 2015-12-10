@@ -1,115 +1,90 @@
 
-<!DOCTYPE html>
-<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
-<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
-<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<!DOCTYPE HTML>
+<html>
 <head>
-  <meta charset="utf-8">
-  <title>IT Monkey Life</title>
-  <meta name="author" content="Rick">
+	<meta charset="utf-8">
+	<title>IT Monkey Life</title>
+	<meta name="author" content="Rick">
 
-  
-  <meta name="description" content="在每个应用里我们都大量使用字符串。下面我们将快速看看一些常见的操作字符串的方法，过一遍常见操作的最佳实践。 字符串的比较、搜索和排序 排序和比较字符串比第一眼看上去要复杂得多。不只是因为字符串可以包含代理对（surrogate pairs ）(详见 Ole 写的这篇关于 Unicode 的文章 &hellip;">
-  
+	
+	<meta name="description" content="在每个应用里我们都大量使用字符串。下面我们将快速看看一些常见的操作字符串的方法，过一遍常见操作的最佳实践。 字符串的比较、搜索和排序 排序和比较字符串比第一眼看上去要复杂得多。不只是因为字符串可以包含代理对（surrogate pairs ）(详见 Ole 写的这篇关于 Unicode 的文章 &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <!-- http://t.co/dKP3o1e -->
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  
-  <link rel="canonical" href="http://ITMonkeyLife.github.io/Blog/blog/page/5">
-  <link href="/Blog/favicon.png" rel="icon">
-  <link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
-  <script src="/Blog/javascripts/modernizr-2.0.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
-  <script src="/Blog/javascripts/octopress.js" type="text/javascript"></script>
-  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
-<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-
-  
-  <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-52658428-1']);
-    _gaq.push(['_trackPageview']);
-
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-  </script>
-
-
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/Blog/favicon.png" rel="shortcut icon">
+	<link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
 </head>
 
-<body   >
-  <header role="banner"><hgroup>
-  <h1><a href="/Blog/">IT Monkey Life</a></h1>
-  
-    <h2>Coding World</h2>
-  
-</hgroup>
+
+<body>
+	<header id="header" class="inner"><h1><a href="/Blog/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+	</form>
+</nav>
 
 </header>
-  <nav role="navigation"><ul class="subscription" data-subscription="rss">
-  <li><a href="/Blog/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
-  
-</ul>
-  
-<form action="http://google.com/search" method="get">
-  <fieldset role="search">
-    <input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog" />
-    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
-  </fieldset>
-</form>
-  
-<ul class="main-navigation">
-  <li><a href="/Blog/">Blog</a></li>
-  <li><a href="/Blog/blog/archives">Archives</a></li>
-</ul>
-
-</nav>
-  <div id="main">
-    <div id="content">
-      <div class="blog-index">
-  
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/">iOS之玩转字符串</a></h1>
-    
-    
-      <p class="meta">
-        
+	
+		
+	
+	<div id="content" class="inner">
 
 
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-04-09T16:40:06+08:00" pubdate data-updated="true">Apr 9<span>th</span>, 2014</time>
-        
-           | <a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/#disqus_thread"
-             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>在每个应用里我们都大量使用字符串。下面我们将快速看看一些常见的操作字符串的方法，过一遍常见操作的最佳实践。</p>
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/">
+		
+			iOS之玩转字符串</a>
+	</h2>
+	<div class="entry-content">
+		<p>在每个应用里我们都大量使用字符串。下面我们将快速看看一些常见的操作字符串的方法，过一遍常见操作的最佳实践。</p>
 
 <h2>字符串的比较、搜索和排序</h2>
 
@@ -163,49 +138,42 @@
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 </pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringByFoldingWithOptions:</span><span class="p">(</span><span class="n">NSStringCompareOptions</span><span class="p">)</span><span class="nv">options</span> <span class="nf">locale:</span><span class="p">(</span><span class="n">NSLocale</span> <span class="o">*</span><span class="p">)</span><span class="nv">locale</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/">Read on &rarr;</a>
-    </footer>
-  
+	<div class="tags">
 
 
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/">整洁的TableView代码</a></h1>
-    
-    
-      <p class="meta">
-        
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
-
-
-
-
-  
-
-
-<time datetime="2014-04-09T16:33:17+08:00" pubdate data-updated="true">Apr 9<span>th</span>, 2014</time>
-        
-           | <a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/#disqus_thread"
-             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Table view 是 iOS 应用程序中非常通用的组件。许多代码和 table view 都有直接或间接的关系，随便举几个例子，比如提供数据、更新 table view，控制它的行为以及响应选择事件。在这篇文章中，我们将会展示保持 table view 相关代码的整洁和良好组织的技术。</p>
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/">
+		
+			整洁的TableView代码</a>
+	</h2>
+	<div class="entry-content">
+		<p>Table view 是 iOS 应用程序中非常通用的组件。许多代码和 table view 都有直接或间接的关系，随便举几个例子，比如提供数据、更新 table view，控制它的行为以及响应选择事件。在这篇文章中，我们将会展示保持 table view 相关代码的整洁和良好组织的技术。</p>
 
 <h2 id="uitableviewcontrollervsuiviewcontroller">UITableViewController vs. UIViewController</h2>
 
@@ -258,49 +226,42 @@
 </span><span class="line">    <span class="p">[</span><span class="n">details</span> <span class="nl">didMoveToParentViewController:</span><span class="n">self</span><span class="p">];</span>
 </span><span class="line"><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/">Read on &rarr;</a>
-    </footer>
-  
+	<div class="tags">
 
 
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/">并发程序开发测试</a></h1>
-    
-    
-      <p class="meta">
-        
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
-
-
-
-
-  
-
-
-<time datetime="2014-04-09T16:15:22+08:00" pubdate data-updated="true">Apr 9<span>th</span>, 2014</time>
-        
-           | <a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/#disqus_thread"
-             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>在开发高质量应用程序的过程中，测试是一个很重要的工具。在过去，当并发并不是应用程序架构中重要组成部分的时候，测试就相对简单。随着这几年的发展，使用并发设计模式已愈发重要了，想要测试好并发应用程序，已成了一个不小的挑战。</p>
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/">
+		
+			并发程序开发测试</a>
+	</h2>
+	<div class="entry-content">
+		<p>在开发高质量应用程序的过程中，测试是一个很重要的工具。在过去，当并发并不是应用程序架构中重要组成部分的时候，测试就相对简单。随着这几年的发展，使用并发设计模式已愈发重要了，想要测试好并发应用程序，已成了一个不小的挑战。</p>
 
 <p>测试并发代码最主要的困难在于程序或信息流不是反映在调用堆栈上。函数并不会立即返回结果给调用者，而是通过回调函数，Block，通知或者一些类似的机制，这些使得测试变得更加困难。</p>
 
@@ -329,49 +290,42 @@
 </span><span class="line">    <span class="n">STAssertEquals</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="nb">nil</span><span class="p">);</span>
 </span><span class="line"><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/">Read on &rarr;</a>
-    </footer>
-  
+	<div class="tags">
 
 
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/">线程安全</a></h1>
-    
-    
-      <p class="meta">
-        
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
-
-
-
-
-  
-
-
-<time datetime="2014-04-09T16:08:45+08:00" pubdate data-updated="true">Apr 9<span>th</span>, 2014</time>
-        
-           | <a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/#disqus_thread"
-             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/xian-cheng-an-quan/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>这篇文章将专注于实用技巧，设计模式，以及对于写出线程安全类和使用 GCD 来说所特别需要注意的一些<a href="http://zh.wikipedia.org/wiki/反面模式">反面模式</a>。</p>
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/">
+		
+			线程安全</a>
+	</h2>
+	<div class="entry-content">
+		<p>这篇文章将专注于实用技巧，设计模式，以及对于写出线程安全类和使用 GCD 来说所特别需要注意的一些<a href="http://zh.wikipedia.org/wiki/反面模式">反面模式</a>。</p>
 
 <h2>线程安全</h2>
 
@@ -404,49 +358,42 @@
 <p>因为调用者被其他线程持有是非常常见的（不管是由于 operation 还是 block 所导致的），这也是很容易犯错并且难以被修正的问题。在 <a href="https://github.com/AFNetworking/AFNetworking/issues/56">AFNetworking 中也一直长久存在这样的 bug</a>，但是由于其自身的隐蔽性而鲜为人知，也很难重现其所造成的崩溃。在异步的 block 或者操作中一致使用 <code>__weak</code>，并且不去直接访问局部变量会对避开这类问题有所帮助。</p>
 
 <h4 id="collection">Collection 类</h4>
+
+		
+		<a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/Blog/blog/2014/04/09/xian-cheng-an-quan/">Read on &rarr;</a>
-    </footer>
-  
+	<div class="tags">
 
 
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/">底层并发API</a></h1>
-    
-    
-      <p class="meta">
-        
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
-
-
-
-
-  
-
-
-<time datetime="2014-04-09T15:56:29+08:00" pubdate data-updated="true">Apr 9<span>th</span>, 2014</time>
-        
-           | <a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/#disqus_thread"
-             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/di-ceng-bing-fa-api/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>这篇文章里，我们将会讨论一些 iOS 和 OS X 都可以使用的底层 API。除了 <code>dispatch_once</code> ，我们一般不鼓励使用其中的任何一种技术。</p>
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/">
+		
+			底层并发API</a>
+	</h2>
+	<div class="entry-content">
+		<p>这篇文章里，我们将会讨论一些 iOS 和 OS X 都可以使用的底层 API。除了 <code>dispatch_once</code> ，我们一般不鼓励使用其中的任何一种技术。</p>
 
 <p>但是我们想要揭示出表面之下深层次的一些可利用的方面。这些底层的 API 提供了大量的灵活性，随之而来的是大量的复杂度和更多的责任。在我们的文章<a href="http:/objccn.io/issue-2-2/">常见的后台实践</a>中提到的高层的 API 和模式能够让你专注于手头的任务并且免于大量的问题。通常来说，高层的 API 会提供更好的性能，除非你能承受起使用底层 API 带来的纠结于调试代码的时间和努力。</p>
 
@@ -486,49 +433,42 @@
 <p>退回到远古时代（其实也就是几年前），人们会使用 <code>pthread_once</code> ，因为 <code>dispatch_once_t</code> 更容易使用并且不易出错，所以你永远都不会再用到 <code>pthread_once</code> 了。</p>
 
 <h2>延后执行</h2>
+
+		
+		<a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/">Read on &rarr;</a>
-    </footer>
-  
+	<div class="tags">
 
 
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/">常见iOS后台技术</a></h1>
-    
-    
-      <p class="meta">
-        
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
-
-
-
-
-  
-
-
-<time datetime="2014-04-09T15:43:15+08:00" pubdate data-updated="true">Apr 9<span>th</span>, 2014</time>
-        
-           | <a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/#disqus_thread"
-             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>本文主要探讨一些常用后台任务的最佳实践。我们将会看看如何并发地使用 Core Data ，如何并行绘制 UI ，如何做异步网络请求等。最后我们将研究如何异步处理大型文件，以保持较低的内存占用。  因为在异步编程中非常容易犯错误，所以，本文中的例子都将使用很简单的方式。因为使用简单的结构可以帮助我们看透代码，抓住问题本质。如果你最后把代码写成了复杂的嵌套回调的话，那么你很可能应该重新考虑自己当初的设计选择了。</p>
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/">
+		
+			常见iOS后台技术</a>
+	</h2>
+	<div class="entry-content">
+		<p>本文主要探讨一些常用后台任务的最佳实践。我们将会看看如何并发地使用 Core Data ，如何并行绘制 UI ，如何做异步网络请求等。最后我们将研究如何异步处理大型文件，以保持较低的内存占用。  因为在异步编程中非常容易犯错误，所以，本文中的例子都将使用很简单的方式。因为使用简单的结构可以帮助我们看透代码，抓住问题本质。如果你最后把代码写成了复杂的嵌套回调的话，那么你很可能应该重新考虑自己当初的设计选择了。</p>
 
 <h2 id="operationqueuesgcd">操作队列 (Operation Queues) 还是 GCD ?</h2>
 
@@ -552,49 +492,42 @@
 <p>Xcode 所提供的 Core Data 标准模版中，所设立的是运行在主线程中的一个存储调度 (persistent store coordinator)和一个托管对象上下文 (managed object context) 的方式。在很多情况下，这种模式可以运行良好。创建新的对象和修改已存在的对象开销都非常小，也都能在主线程中没有困难滴完成。然后，如果你想要做大量的处理，那么把它放到一个后台上下文来做会比较好。一个典型的应用场景是将大量数据导入到 Core Data 中。</p>
 
 <p>我们的方式非常简单，并且可以被很好地描述：</p>
+
+		
+		<a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/">Read on &rarr;</a>
-    </footer>
-  
+	<div class="tags">
 
 
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/">并发编程：API以及挑战</a></h1>
-    
-    
-      <p class="meta">
-        
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
-
-
-
-
-  
-
-
-<time datetime="2014-04-09T15:29:37+08:00" pubdate data-updated="true">Apr 9<span>th</span>, 2014</time>
-        
-           | <a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/#disqus_thread"
-             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><a href="http://en.wikipedia.org/wiki/Concurrency_%28computer_science%29">并发</a>所描述的概念就是同时运行多个任务。这些任务可能是以在单核 CPU 上<a href="http://en.wikipedia.org/wiki/Preemption_%28computing%29">分时（时间共享）</a>的形式同时运行，也可能是在多核 CPU 上以真正的并行方式来运行。</p>
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/">
+		
+			并发编程：API以及挑战</a>
+	</h2>
+	<div class="entry-content">
+		<p><a href="http://en.wikipedia.org/wiki/Concurrency_%28computer_science%29">并发</a>所描述的概念就是同时运行多个任务。这些任务可能是以在单核 CPU 上<a href="http://en.wikipedia.org/wiki/Preemption_%28computing%29">分时（时间共享）</a>的形式同时运行，也可能是在多核 CPU 上以真正的并行方式来运行。</p>
 
 <p>OS X 和 iOS 提供了几种不同的 API 来支持并发编程。每一个 API 都具有不同的功能和使用限制，这使它们适合不同的任务。同时，这些 API 处在不同的抽象层级上。我们有可能用其进行非常深入底层的操作，但是这也意味着背负起将任务进行良好处理的巨大责任。</p>
 
@@ -613,49 +546,42 @@
 <p><a href="http://zh.wikipedia.org/wiki/线程">线程</a>（thread）是组成进程的子单元，操作系统的调度器可以对线程进行单独的调度。实际上，所有的并发编程 API 都是构建于线程之上的 —— 包括 GCD 和操作队列（operation queues）。</p>
 
 <p>多线程可以在单核 CPU 上同时（或者至少看作同时）运行。操作系统将小的时间片分配给每一个线程，这样就能够让用户感觉到有多个任务在同时进行。如果 CPU 是多核的，那么线程就可以真正的以并发方式被执行，从而减少了完成某项操作所需要的总时间。</p>
+
+		
+		<a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/">Read on &rarr;</a>
-    </footer>
-  
+	<div class="tags">
 
 
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/">绘制像素到屏幕</a></h1>
-    
-    
-      <p class="meta">
-        
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
-
-
-
-
-  
-
-
-<time datetime="2014-04-08T18:23:21+08:00" pubdate data-updated="true">Apr 8<span>th</span>, 2014</time>
-        
-           | <a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/#disqus_thread"
-             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>一个像素是如何绘制到屏幕上去的？有很多种方式将一些东西映射到显示屏上，他们需要调用不同的框架、许多功能和方法的结合体。这里我们大概的看一下屏幕之后发生的事情。当你想要弄清楚什么时候、怎么去查明并解决问题时，我希望这篇文章能帮助你理解哪一个 API 可以更好的帮你解决问题。我们将聚焦于 iOS，然而我讨论的大多数问题也同样适用于 OS X。</p>
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/">
+		
+			绘制像素到屏幕</a>
+	</h2>
+	<div class="entry-content">
+		<p>一个像素是如何绘制到屏幕上去的？有很多种方式将一些东西映射到显示屏上，他们需要调用不同的框架、许多功能和方法的结合体。这里我们大概的看一下屏幕之后发生的事情。当你想要弄清楚什么时候、怎么去查明并解决问题时，我希望这篇文章能帮助你理解哪一个 API 可以更好的帮你解决问题。我们将聚焦于 iOS，然而我讨论的大多数问题也同样适用于 OS X。</p>
 
 <h2>图形堆栈</h2>
 
@@ -680,49 +606,42 @@
 <p>这个过程的每一部分都有各自的挑战，并且许多时候需要做出折中的选择。</p>
 
 <h2>硬件参与者</h2>
+
+		
+		<a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/">Read on &rarr;</a>
-    </footer>
-  
+	<div class="tags">
 
 
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/">iCould 和 Core Data</a></h1>
-    
-    
-      <p class="meta">
-        
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
-
-
-
-
-  
-
-
-<time datetime="2014-04-08T09:46:25+08:00" pubdate data-updated="true">Apr 8<span>th</span>, 2014</time>
-        
-           | <a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/#disqus_thread"
-             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><div><p>当乔布斯第一次在苹果全球开发大会上介绍 <a href="http://en.wikipedia.org/wiki/ICloud">iCloud</a> 的时候，他将无缝同步的功能描述的太过完美，以至于让人怀疑其是否真的能实现。但当你在 <a href="http://adcdownload.apple.com//videos/wwdc_2011__hd/session_303__whats_new_in_core_data_on_ios.m4v">iOS 5</a> 和 <a href="http://adcdownload.apple.com//videos/wwdc_2012__hd/session_227__using_icloud_with_core_data.mov">iOS 6</a> 系统中尝试使用 iCloud <a href="http://www.objc.io/issue-4/core-data-overview.html">Core Data</a> 同步的时候你会对其真实情况了如指掌。</p>
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/">
+		
+			iCould 和 Core Data</a>
+	</h2>
+	<div class="entry-content">
+		<div><p>当乔布斯第一次在苹果全球开发大会上介绍 <a href="http://en.wikipedia.org/wiki/ICloud">iCloud</a> 的时候，他将无缝同步的功能描述的太过完美，以至于让人怀疑其是否真的能实现。但当你在 <a href="http://adcdownload.apple.com//videos/wwdc_2011__hd/session_303__whats_new_in_core_data_on_ios.m4v">iOS 5</a> 和 <a href="http://adcdownload.apple.com//videos/wwdc_2012__hd/session_227__using_icloud_with_core_data.mov">iOS 6</a> 系统中尝试使用 iCloud <a href="http://www.objc.io/issue-4/core-data-overview.html">Core Data</a> 同步的时候你会对其真实情况了如指掌。</p>
 <p><a href="https://developer.apple.com/library/mac/documentation/General/Conceptual/MOSXAppProgrammingGuide/CoreAppDesign/CoreAppDesign.html#//apple_ref/doc/uid/TP40010543-CH3-SW3">库风格应用</a>(译者注:&#8221;盒子类型&#8221;，比如 iPhoto )的同步中的问题导致<a href="http://www.macworld.com/article/1167742/developers_dish_on_iclouds_challenges.html">很多</a><a href="http://blog.caffeine.lu/problems-with-core-data-icloud-storage.html">开发者</a><a href="http://www.jumsoft.com/2013/01/response-to-sync-issues/">放弃</a>支持 iCloud，而选择一些其他的方案比如 <a href="http://simperium.com">Simperium</a>，<a href="https://github.com/nothirst/TICoreDataSync">TICoreDataSync</a> 和 <a href="http://www.wasabisync.com">WasabiSync</a>。</p>
 
 <p>2013年初，在苹果公司不透明及充满 bug 的 iCloud Core Data 同步实现中挣扎多年后，开发者终于公开批判了这项服务的重大缺陷并将这个话题推上了<a href="http://arstechnica.com/apple/2013/03/frustrated-with-icloud-apples-developer-community-speaks-up-en-masse/">风口浪尖</a>。 最终被 Ellis Hamburger 在一篇<a href="http://www.theverge.com/2013/3/26/4148628/why-doesnt-icloud-just-work">尖锐文章</a>提出。</p>
@@ -743,49 +662,42 @@
 <div>
 <p>在你设置iCloud的持久化存储的时候，调用</p><code>addPersistentStoreWithType:configuration:URL:options:error:</code><p>或者</p> <code>migratePersistentStore:toURL:options:withType:error:</code>的时候注意需要设置一些选项:
 </div>
+
+		
+		<a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
 </div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/">Read on &rarr;</a>
-    </footer>
-  
+	<div class="tags">
 
 
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/Blog/blog/2014/04/02/%5B%3F%5D-ge-shao-nian/">一个少年</a></h1>
-    
-    
-      <p class="meta">
-        
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
-
-
-
-
-  
-
-
-<time datetime="2014-04-02T10:34:35+08:00" pubdate data-updated="true">Apr 2<span>nd</span>, 2014</time>
-        
-           | <a href="/Blog/blog/2014/04/02/%5B%3F%5D-ge-shao-nian/#disqus_thread"
-             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/04/02/%5B%3F%5D-ge-shao-nian/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1ef12djbjbkj20s00j342z.jpg" alt="" /></p>
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/02/%5B%3F%5D-ge-shao-nian/">
+		
+			一个少年</a>
+	</h2>
+	<div class="entry-content">
+		<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1ef12djbjbkj20s00j342z.jpg" alt="" /></p>
 <p>我要是没有生在这个世界就好了 受伤的心灵如此诉说</p>
 <p>要是这么想的话就中了那个混蛋的当了 不要认输呀少年</p>
 <p>「让内心休息一下」这种事 看来是不会被允许的呢</p>
@@ -805,77 +717,57 @@
 <p>成为在这个世界上 比谁都能 自由恋爱的少年吧</p>
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
 </div>
-  
-  
+	<div class="tags">
 
 
-    </article>
-  
-  <div class="pagination">
-    
-      <a class="prev" href="/Blog/blog/page/6/">&larr; Older</a>
-    
-    <a href="/Blog/blog/archives">Blog Archives</a>
-    
-    <a class="next" href="/Blog/blog/page/4/">Newer &rarr;</a>
-    
-  </div>
+	<a class='category' href='/Blog/blog/categories/shi-ge/'>诗歌</a>
+
+
 </div>
-<aside class="sidebar">
-  
-    Included file &#8216;asides/category_list.html&#8217; not found in _includes directory<section>
-  <h1>Recent Posts</h1>
-  <ul id="recent_posts">
-    
-      <li class="post">
-        <a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/">这些年我的不足</a>
-      </li>
-    
-      <li class="post">
-        <a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/">Swift的强大之处</a>
-      </li>
-    
-      <li class="post">
-        <a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/">Swift的函数式API</a>
-      </li>
-    
-      <li class="post">
-        <a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/">iOS绘图详细解析</a>
-      </li>
-    
-      <li class="post">
-        <a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/">从UIKit到APPKit</a>
-      </li>
-    
-  </ul>
-</section>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/02/%5B%3F%5D-ge-shao-nian/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
+<nav id="pagenavi">
+    
+        
+            <a href="/Blog/posts//blog/page/4/" class="prev">Prev</a>
+        
+    
+    
+        <a href="/Blog/posts//blog/page/6/" class="next">Next</a>
+    
+    <div class="center"><a href="/Blog/blog/archives">Blog Archives</a></div>
+</nav>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2015
 
-
-<section class="googleplus googleplus-hidden">
-  <h1>
-    <a href="https://plus.google.com/ljp8817@gmail.com?rel=author">
-      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
-      Google+
-    </a>
-  </h1>
-</section>
-
-
-Included file &#8216;custom/asides/weibo.html&#8217; not found in _includes directoryIncluded file &#8216;custom/asides/earth.html&#8217; not found in _includes directory
-  
-</aside>
-
-    </div>
-  </div>
-  <footer role="contentinfo"><p>
-  Copyright &copy; 2015 - Rick -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
-</p>
+    Rick
 
 </footer>
-  
+	<script src="/Blog/javascripts/slash.js"></script>
+<script src="/Blog/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
 
 <script type="text/javascript">
       var disqus_shortname = 'ITMonkeyLife';
@@ -885,26 +777,24 @@ Included file &#8216;custom/asides/weibo.html&#8217; not found in _includes dire
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      dsq.src = '//go.disqus.com/' + disqus_script;
       (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
     }());
 </script>
 
 
 
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
 
-
-  <script type="text/javascript">
-    (function() {
-      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
-      script.src = 'https://apis.google.com/js/plusone.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
-    })();
-  </script>
-
-
-
-
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
 
 
