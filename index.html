@@ -1,123 +1,93 @@
 
-<!DOCTYPE HTML>
-
-<html>
-
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
-	<meta charset="utf-8">
-	<title>IT Monkey Life</title>
-	<meta name="author" content="Rick">
+  <meta charset="utf-8">
+  <title>IT Monkey Life</title>
+  <meta name="author" content="Rick">
 
-	
-	<meta name="description" content="关于 这篇文章简要介绍了苹果于WWDC 2014发布的编程语言——Swift。 原文作者： Lucida Blog
-新浪微博
-豆瓣 转载前请保留出处链接，谢谢。 前言 在这里我认为有必要提一下Bret Victor的Inventing on Principle， &hellip;">
-	
+  
+  <meta name="description" content="如果把人生比作跑步的话，我们都在用自己的节奏和姿势在完成比赛。这些跑步的技巧可能是小时候从老师，朋友，家人那得来的。随着时间的流逝，我们习惯了这种跑步的技能，看见那些跑得快的，会羡慕；跑得慢的，会不屑；跑得别扭的，会当作笑料。但是自己跑得怎么样，却很少关心。为什么要跑这条道？为什么这么慢？ &hellip;">
+  
 
   <!-- http://t.co/dKP3o1e -->
   <meta name="HandheldFriendly" content="True">
   <meta name="MobileOptimized" content="320">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
-	
-	<link rel="canonical" href="http://ITMonkeyLife.github.io/Blog/">
-	<link href="/Blog/favicon.png" rel="shortcut icon">
-	<link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-	<link href="/Blog/stylesheets/font-awesome.min.css" media="screen, projection" rel="stylesheet" type="text/css">
-	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-	<link href='http://fonts.googleapis.com/css?family=Nunito:400,300,700' rel='stylesheet' type='text/css'>
-	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-	
   
-	<script type="text/javascript">
-		var _gaq = _gaq || [];
-		_gaq.push(['_setAccount', 'UA-52658428-1']);
-		_gaq.push(['_setDomainName','github.io']);
-		_gaq.push(['_trackPageview']);
+  <link rel="canonical" href="http://ITMonkeyLife.github.io/Blog">
+  <link href="/Blog/favicon.png" rel="icon">
+  <link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+  <script src="/Blog/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/Blog/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 
-		(function() {
-			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-		})();
-	</script>
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-52658428-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
 
 
 </head>
 
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/Blog/">IT Monkey Life</a></h1>
+  
+    <h2>Coding World</h2>
+  
+</hgroup>
 
-<body>
-	<div class="container">
-		<div class="left-col">
-			<div class="intrude-less">
-			<header id="header" class="inner"><div class="profilepic">
-	
-	<script src="/Blog/javascripts/md5.js"></script>
-	<script type="text/javascript">
-		$(function(){
-			$('.profilepic').append("<img src='http://www.gravatar.com/avatar/" + MD5("382542165@qq.com") + "?s=160' alt='Profile Picture' style='width: 160px;' />");
-		});
-	</script>
-	
-</div>
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/Blog/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/Blog/">Blog</a></li>
+  <li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
 
-<nav id="main-nav">
-<section class="aboutme">
-  <p class = "subtitle">
-    心无所恃，随遇而安
-  </p>
-</section>
-
-<ul class="main">
-    <li><a href="/Blog/">我的Blog</a></li>
-    <li><a href="/Blog/about/">关于我</a></li>
-    <li><a href="/Blog/blog/archives">全部文章</a></li>
-</ul></nav>
-<nav id="sub-nav">
-	<div class="social">
-    	
-			<a class="sina" href="http://weibo.com/1651400041" title="Sina">Sina</a>
-		
-		
-			<a class="email" href="mailto:382542165@qq.com" title="Email">Email</a>
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-			<a class="douban" href="https://www.douban.com/people/47445127" title="Douban">Douban</a>
-		
-		
-		
-    	
-    	
-			<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
-		
-	</div>
 </nav>
-</header>				
-			</div>
-		</div>	
-		<div class="mid-col">
-			
-				
-			
-			<div class="mid-col-container">
-				<div id="content" class="inner">
-<div itemscope itemtype="http://schema.org/Blog">
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/">这些年我的不足</a></h1>
+    
+    
+      <p class="meta">
+        
 
 
 
@@ -129,34 +99,40 @@
   
 
 
-<time datetime="2015-01-14T17:54:14+08:00" data-updated="true" itemprop="datePublished">Jan 14<span>th</span>, 2015</time></div>
-		<div class="tags">
+<time datetime="2015-01-14T17:54:14+08:00" pubdate data-updated="true">Jan 14<span>th</span>, 2015</time>
+        
+           | <a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/#disqus_thread"
+             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/">Comments</a>
+        
+      </p>
+    
+  </header>
 
 
-	<a class='category' href='/Blog/blog/categories/gan-wu/'>感悟</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/" itemprop="url">这些年我的不足</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>如果把人生比作跑步的话，我们都在用自己的节奏和姿势在完成比赛。这些跑步的技巧可能是小时候从老师，朋友，家人那得来的。随着时间的流逝，我们习惯了这种跑步的技能，看见那些跑得快的，会羡慕；跑得慢的，会不屑；跑得别扭的，会当作笑料。但是自己跑得怎么样，却很少关心。为什么要跑这条道？为什么这么慢？为什么这么累？</p>
+  <div class="entry-content"><p>如果把人生比作跑步的话，我们都在用自己的节奏和姿势在完成比赛。这些跑步的技巧可能是小时候从老师，朋友，家人那得来的。随着时间的流逝，我们习惯了这种跑步的技能，看见那些跑得快的，会羡慕；跑得慢的，会不屑；跑得别扭的，会当作笑料。但是自己跑得怎么样，却很少关心。为什么要跑这条道？为什么这么慢？为什么这么累？</p>
 <p>我们很难做到客观，尤其是面对自己的时候，那些缺点、曾经犯的错会自动进入盲区，躲避意识的雷达。尽管如此，我还是找到了数量可观的不足，才发现，原来这么些年，我一直在以这么别扭、丑陋的姿势在跑步。</p>
 <h3>不够专注</h3>
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/">Read on &rarr;</a>
+    </footer>
+  
 
-		
-		<a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/" class="more-link">Read on &rarr;</a>
-	</div>
 
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/">Swift的强大之处</a></h1>
+    
+    
+      <p class="meta">
+        
 
 
 
@@ -168,21 +144,17 @@
   
 
 
-<time datetime="2014-09-18T13:38:34+08:00" data-updated="true" itemprop="datePublished">Sep 18<span>th</span>, 2014</time></div>
-		<div class="tags">
+<time datetime="2014-09-18T13:38:34+08:00" pubdate data-updated="true">Sep 18<span>th</span>, 2014</time>
+        
+           | <a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/#disqus_thread"
+             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/">Comments</a>
+        
+      </p>
+    
+  </header>
 
 
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/" itemprop="url">Swift的强大之处</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>在写任何东西之前我需要承认我是带有偏见的：我爱 Swift。我认为这是从我开始接触 Cocoa 生态系统以来这个平台上发生的最好的事情。我想通过分享我在 Swift，Objective-C 和 Haskell 上的经验让大家知道我为何这样认为。写这篇文章并不是为了介绍一些最好的实践 (写这些的时候 Swift 还太年轻，还没最好实践被总结出来)，而是举几个关于 Swift 强大之处的例子。</p>
+  <div class="entry-content"><p>在写任何东西之前我需要承认我是带有偏见的：我爱 Swift。我认为这是从我开始接触 Cocoa 生态系统以来这个平台上发生的最好的事情。我想通过分享我在 Swift，Objective-C 和 Haskell 上的经验让大家知道我为何这样认为。写这篇文章并不是为了介绍一些最好的实践 (写这些的时候 Swift 还太年轻，还没最好实践被总结出来)，而是举几个关于 Swift 强大之处的例子。</p>
 
 <p>给大家一些我的个人背景：在成为全职 iOS/Mac 工程师之前我花了几年的时间做 Haskell (包括一些其他函数式编程语言) 开发。我仍然认为 Haskell 是我所有使用过的语言中最棒的之一。然而我转战到了 Objective-C，是因为我相信 iOS 是最令人激动的平台。刚开始接触 Objective-C 的时候我有些许沮丧，但我慢慢地学会了欣赏它。</p>
 
@@ -199,17 +171,27 @@
 <p>开始学习函数式编程或许有些痛苦。第一，你必须放手一些老的模式。而因为我们很多人常年用面对对象的方式去思考，做到这一点是很困难的。在函数式编程当中你想的是不变的数据结构以及那些转换它们的函数。在面对对象编程当中你考虑的是互相发送信息的对象。如果你没有马上理解函数式编程，这是一个好的信号。你的大脑很可能已经完全适应了用面对对象的方法来解决问题。</p>
 
 <h2>例子</h2>
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/">Read on &rarr;</a>
+    </footer>
+  
 
-		
-		<a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/" class="more-link">Read on &rarr;</a>
-	</div>
 
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/">Swift的函数式API</a></h1>
+    
+    
+      <p class="meta">
+        
 
 
 
@@ -221,21 +203,17 @@
   
 
 
-<time datetime="2014-09-18T10:19:05+08:00" data-updated="true" itemprop="datePublished">Sep 18<span>th</span>, 2014</time></div>
-		<div class="tags">
+<time datetime="2014-09-18T10:19:05+08:00" pubdate data-updated="true">Sep 18<span>th</span>, 2014</time>
+        
+           | <a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/#disqus_thread"
+             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/">Comments</a>
+        
+      </p>
+    
+  </header>
 
 
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/" itemprop="url">Swift的函数式API</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>在过去的时间里，人们对于设计 API 总结了很多通用的模式和最佳实践方案。一般情况下，我们总是可以从苹果的 Foundation、Cocoa、Cocoa Touch 和很多其他框架中总结出一些开发中的范例。毫无疑问，对于“特定情境下的 API 应该如何设计”这个问题，不同的人总是有着不同的意见，对于这个问题有很大的讨论空间。不过对于很多 Objective-C 的开发者来说，对于那些常用的模式早已习以为常。</p>
+  <div class="entry-content"><p>在过去的时间里，人们对于设计 API 总结了很多通用的模式和最佳实践方案。一般情况下，我们总是可以从苹果的 Foundation、Cocoa、Cocoa Touch 和很多其他框架中总结出一些开发中的范例。毫无疑问，对于“特定情境下的 API 应该如何设计”这个问题，不同的人总是有着不同的意见，对于这个问题有很大的讨论空间。不过对于很多 Objective-C 的开发者来说，对于那些常用的模式早已习以为常。</p>
 
 <p>随着 Swift 的出现，设计 API 引起了更多的问题。绝大多数情况下，我们只能继续做着手头的工作，然后把现有的方法翻译成 Swift 版本。不过，这对于 Swift 来说并不公平，因为和 Objective-C 相比，Swift 添加了很多新的特性。引用 Swift 创始人 <a href="https://twitter.com/clattner_llvm">Chris Lattner</a> 的一段话：</p>
 
@@ -266,17 +244,27 @@
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 </pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">typealias</span> <span class="n">Filter</span> <span class="o">=</span> <span class="n">CIImage</span> <span class="o">-&gt;</span> <span class="n">CIImage</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/">Read on &rarr;</a>
+    </footer>
+  
 
-		
-		<a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/" class="more-link">Read on &rarr;</a>
-	</div>
 
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/">iOS绘图详细解析</a></h1>
+    
+    
+      <p class="meta">
+        
 
 
 
@@ -288,21 +276,17 @@
   
 
 
-<time datetime="2014-08-04T15:05:26+08:00" data-updated="true" itemprop="datePublished">Aug 4<span>th</span>, 2014</time></div>
-		<div class="tags">
+<time datetime="2014-08-04T15:05:26+08:00" pubdate data-updated="true">Aug 4<span>th</span>, 2014</time>
+        
+           | <a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/#disqus_thread"
+             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/">Comments</a>
+        
+      </p>
+    
+  </header>
 
 
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/" itemprop="url">iOS绘图详细解析</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<div id="cnblogs_post_body"><p><span style="font-family: 'comic sans ms', sans-serif;">　　本文是《<a href="http://www.amazon.com/Programming-iOS-Fundamentals-iPhone-Development/dp/1449319343/ref=sr_1_3?ie=UTF8&amp;qid=1357784362&amp;sr=8-3&amp;keywords=ios" target="_blank">Programming iOS5</a>》中Drawing一章的翻译，考虑到主题完整性，翻译版本中加入了一些书中未涉及到的内容。希望本文能够对你有所帮助。</span></p>
+  <div class="entry-content"><div id="cnblogs_post_body"><p><span style="font-family: 'comic sans ms', sans-serif;">　　本文是《<a href="http://www.amazon.com/Programming-iOS-Fundamentals-iPhone-Development/dp/1449319343/ref=sr_1_3?ie=UTF8&amp;qid=1357784362&amp;sr=8-3&amp;keywords=ios" target="_blank">Programming iOS5</a>》中Drawing一章的翻译，考虑到主题完整性，翻译版本中加入了一些书中未涉及到的内容。希望本文能够对你有所帮助。</span></p>
 <p><span style="font-family: 'comic sans ms', sans-serif;">
 <p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; Core Graphics Framework是一套基于C的API框架，使用了Quartz作为绘图引擎。它提供了低级别、轻量级、高保真度的2D渲染。该框架可以用于基于路径的绘图、变换、颜色管理、脱屏渲染，模板、渐变、遮蔽、图像数据管理、图像的创建、遮罩以及PDF文档的创建、显示和分析。为了从感官上对这些概念做一个入门的认识，你可以运行一下官方的<a href="http://developer.apple.com/library/ios/samplecode/QuartzDemo/Introduction/Intro.html#//apple_ref/doc/uid/DTS40007531">example code</a>。<span><br />
 </span></span></p>
@@ -337,17 +321,27 @@
 </span><span class="line">	<span class="p">[</span><span class="n">p</span> <span class="n">fill</span><span class="p">];</span>
 </span><span class="line"><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/">Read on &rarr;</a>
+    </footer>
+  
 
-		
-		<a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/" class="more-link">Read on &rarr;</a>
-	</div>
 
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/">从UIKit到APPKit</a></h1>
+    
+    
+      <p class="meta">
+        
 
 
 
@@ -359,21 +353,17 @@
   
 
 
-<time datetime="2014-08-04T10:03:56+08:00" data-updated="true" itemprop="datePublished">Aug 4<span>th</span>, 2014</time></div>
-		<div class="tags">
+<time datetime="2014-08-04T10:03:56+08:00" pubdate data-updated="true">Aug 4<span>th</span>, 2014</time>
+        
+           | <a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/#disqus_thread"
+             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/08/04/cong-uikitdao-appkit/">Comments</a>
+        
+      </p>
+    
+  </header>
 
 
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/" itemprop="url">从UIKit到APPKit</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>Mac 不仅是一个强大的生产平台，也十分值得你<em>为其</em>开发一些东西。去年我们开始构建我们的第一款 <a href="http://decksetapp.com">Mac 应用</a>，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验，希望能启发你们去开发自己的第一个 Mac 应用。</p>
+  <div class="entry-content"><p>Mac 不仅是一个强大的生产平台，也十分值得你<em>为其</em>开发一些东西。去年我们开始构建我们的第一款 <a href="http://decksetapp.com">Mac 应用</a>，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验，希望能启发你们去开发自己的第一个 Mac 应用。</p>
 
 <p>在这篇文章中，我们假定 OS X Yosemite 为我们默认使用的系统。今年，为了融合 iOS 和 OS X，苹果站在开发者的角度对 OS X 做出了巨大的改进。不过，我们会指出哪些特性仅适用于 Yosemite，而哪些特性也适用于之前的系统版本。</p>
 
@@ -396,17 +386,27 @@
 <h2>不同点</h2>
 
 <h3 id="windowwindowcontroller">Window 和 Window Controller</h3>
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/">Read on &rarr;</a>
+    </footer>
+  
 
-		
-		<a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/" class="more-link">Read on &rarr;</a>
-	</div>
 
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/07/23/swiftchu-bu-liao-jie/">Swift初步了解</a></h1>
+    
+    
+      <p class="meta">
+        
 
 
 
@@ -418,21 +418,17 @@
   
 
 
-<time datetime="2014-07-23T17:35:44+08:00" data-updated="true" itemprop="datePublished">Jul 23<span>rd</span>, 2014</time></div>
-		<div class="tags">
+<time datetime="2014-07-23T17:35:44+08:00" pubdate data-updated="true">Jul 23<span>rd</span>, 2014</time>
+        
+           | <a href="/Blog/blog/2014/07/23/swiftchu-bu-liao-jie/#disqus_thread"
+             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/07/23/swiftchu-bu-liao-jie/">Comments</a>
+        
+      </p>
+    
+  </header>
 
 
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/07/23/swiftchu-bu-liao-jie/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/07/23/swiftchu-bu-liao-jie/" itemprop="url">Swift初步了解</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<div class="entry-content"><h2>关于</h2>
+  <div class="entry-content"><div class="entry-content"><h2>关于</h2>
 
 <p>这篇文章简要介绍了苹果于<a href="https://developer.apple.com/wwdc/">WWDC 2014</a>发布的编程语言——Swift。</p>
 
@@ -477,17 +473,27 @@
 
 <h2>Swift语言概览</h2>
 
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/Blog/blog/2014/07/23/swiftchu-bu-liao-jie/">Read on &rarr;</a>
+    </footer>
+  
 
-		
-		<a href="/Blog/blog/2014/07/23/swiftchu-bu-liao-jie/" class="more-link">Read on &rarr;</a>
-	</div>
 
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/07/23/iosde-cha-jian/">苹果的插件</a></h1>
+    
+    
+      <p class="meta">
+        
 
 
 
@@ -499,21 +505,17 @@
   
 
 
-<time datetime="2014-07-23T15:38:46+08:00" data-updated="true" itemprop="datePublished">Jul 23<span>rd</span>, 2014</time></div>
-		<div class="tags">
+<time datetime="2014-07-23T15:38:46+08:00" pubdate data-updated="true">Jul 23<span>rd</span>, 2014</time>
+        
+           | <a href="/Blog/blog/2014/07/23/iosde-cha-jian/#disqus_thread"
+             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/07/23/iosde-cha-jian/">Comments</a>
+        
+      </p>
+    
+  </header>
 
 
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/07/23/iosde-cha-jian/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/07/23/iosde-cha-jian/" itemprop="url">苹果的插件</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<div class="entry-content">
+  <div class="entry-content"><div class="entry-content">
 <p>插件是给你已经发布的 App 增加功能的一个好办法，Mac 上的 App 支持插件已经有很长的历史了，比如 Adobe Photoshop，在 1991 年的 version 2.0 就开始支持了。</p>
 
 <p>在以前的 OS X 系统中，给你的 App 在运行时动态载入可执行代码比较困难。现在，在 <code>NSBundle</code> 的帮助和你的一些前瞻性思维的帮助下下，它从未如此简单。 </p>
@@ -527,17 +529,27 @@
 </blockquote>
 
 <p>什么是 bundle ？如果你创建一个 Xcode 的 bundle 模版项目，你会发现它内容并不多。当构建它的时候你会得到一个很像构建 App 时产生的目录 —— 一个 Contents 目录，里面包含了 Info.plist 和 Resource 目录。如果你在你的项目下加入了新的类，你可以看见包含一个可执行文件的 MacOS 目录。Bundle 工程里缺少的一个东西是 main() 函数。它是被宿主 App 调用执行的。</p>
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/Blog/blog/2014/07/23/iosde-cha-jian/">Read on &rarr;</a>
+    </footer>
+  
 
-		
-		<a href="/Blog/blog/2014/07/23/iosde-cha-jian/" class="more-link">Read on &rarr;</a>
-	</div>
 
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/">闭包，你了解多少？</a></h1>
+    
+    
+      <p class="meta">
+        
 
 
 
@@ -549,21 +561,17 @@
   
 
 
-<time datetime="2014-07-04T14:48:57+08:00" data-updated="true" itemprop="datePublished">Jul 4<span>th</span>, 2014</time></div>
-		<div class="tags">
+<time datetime="2014-07-04T14:48:57+08:00" pubdate data-updated="true">Jul 4<span>th</span>, 2014</time>
+        
+           | <a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/#disqus_thread"
+             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/">Comments</a>
+        
+      </p>
+    
+  </header>
 
 
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/" itemprop="url">闭包，你了解多少？</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p>在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例，不同的引用环境和相同的函数组合可以产生不同的实例。
+  <div class="entry-content"><p>在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例，不同的引用环境和相同的函数组合可以产生不同的实例。
 闭包的概念出现于60年代，最早实现闭包的程序语言是Scheme。之后，闭包被广泛使用于函数式编程语言如ML语言和LISP。很多命令式程序语言也开始支持闭包。
 在一些语言中，在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可能产生闭包。运行时，一旦外部的 函数被执行，一个闭包就形成了，闭包中包含了内部函数的代码，以及所需外部函数中的变量的引用。其中所引用的变量称作上值(upvalue)。
 闭包一词经常和匿名函数混淆。这可能是因为两者经常同时使用，但是它们是不同的概念。</p>
@@ -587,17 +595,27 @@
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 <p>在这个例子中，lambda表达式(lambda (book) (&gt;= (book-sales book) threshold))出现在函数best-selling-books中。当这个lambda表达式被执行时，Scheme创造了一个包含此表达式以及对threshold变量的引用的闭包，其中threshold变量在lambda表达式中是自由变量。
 这个闭包接着被传递到filter函数。这个函数的功能是重复调用这个闭包以判断哪些书需要增加到列表那些需要丢弃。因为闭包中引用了变量threshold，所以它在每次被filter调用时都可以使用这个变量，虽然filter可能定义在另一个文件中。
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/">Read on &rarr;</a>
+    </footer>
+  
 
-		
-		<a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/" class="more-link">Read on &rarr;</a>
-	</div>
 
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/">iOS 8 体验推送</a></h1>
+    
+    
+      <p class="meta">
+        
 
 
 
@@ -609,21 +627,17 @@
   
 
 
-<time datetime="2014-07-02T11:55:11+08:00" data-updated="true" itemprop="datePublished">Jul 2<span>nd</span>, 2014</time></div>
-		<div class="tags">
+<time datetime="2014-07-02T11:55:11+08:00" pubdate data-updated="true">Jul 2<span>nd</span>, 2014</time>
+        
+           | <a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/#disqus_thread"
+             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/">Comments</a>
+        
+      </p>
+    
+  </header>
 
 
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/" itemprop="url">iOS 8 体验推送</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<p> 一直更新了iOS8，但是一直没有开始研究这个iOS8，今天因为项目用到了推送，于是体验了iOS8的推送，先讲讲这个推送。目前分为四个推送：用户推送，本地推送，远程推送，地理位置推送。
+  <div class="entry-content"><p> 一直更新了iOS8，但是一直没有开始研究这个iOS8，今天因为项目用到了推送，于是体验了iOS8的推送，先讲讲这个推送。目前分为四个推送：用户推送，本地推送，远程推送，地理位置推送。
 </p>
 <p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1ehyeq298goj21kw0sadmt.jpg" alt="推送界面" /></p>
 
@@ -682,17 +696,27 @@
 <p><img src="http://ww1.sinaimg.cn/large/626e5d69gw1ehyeyi825mj21aa12ggoc.jpg" alt="直接在推送消息进行回复" /></p>
 <p>这个真心碉堡了</p>
 <p>我们如何能进行这些行为，首先我们需注册这些行为。</p>
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/">Read on &rarr;</a>
+    </footer>
+  
 
-		
-		<a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/" class="more-link">Read on &rarr;</a>
-	</div>
 
-</article>
-
-
-    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-	<div class="meta">
-		<div class="date">
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/">使用VIPER构建iOS应用</a></h1>
+    
+    
+      <p class="meta">
+        
 
 
 
@@ -704,21 +728,17 @@
   
 
 
-<time datetime="2014-06-20T09:00:36+08:00" data-updated="true" itemprop="datePublished">Jun 20<span>th</span>, 2014</time></div>
-		<div class="tags">
+<time datetime="2014-06-20T09:00:36+08:00" pubdate data-updated="true">Jun 20<span>th</span>, 2014</time>
+        
+           | <a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/#disqus_thread"
+             data-disqus-identifier="http://ITMonkeyLife.github.io/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/">Comments</a>
+        
+      </p>
+    
+  </header>
 
 
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-		
-			<span class="comments"><a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/#disqus_thread">Comments</a></span>
-		
-	</div>
-	<h1 class="title" itemprop="name"><a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/" itemprop="url">使用VIPER构建iOS应用</a></h1>
-	<div class="entry-content" itemprop="articleBody">
-		<script type="text/javascript">
+  <div class="entry-content"><script type="text/javascript">
     var wumiiPermaLink = ""; //请用代码生成文章永久的链接
     var wumiiTitle = ""; //请用代码生成文章标题
     var wumiiTags = ""; //请用代码生成文章标签，以英文逗号分隔，如："标签1,标签2"
@@ -736,29 +756,110 @@
 <p>建筑领域流行这样一句话，“我们虽然在营造建筑，但建筑也会重新塑造我们”。正如所有开发者最终领悟到的，这句话同样适用于构建软件。</p>
 
 <p>编写代码中至关重要的是，需要使每一部分容易被识别，赋有一个特定而明显的目的，并与其他部分在逻辑关系中完美契合。这就是我们所说的软件架构。好的架构不仅让一个产品成功投入使用，还可以让产品具有可维护性，并让人不断头脑清醒的对它进行维护！</p>
-
-		
-		<a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/" class="more-link">Read on &rarr;</a>
-	</div>
-
-</article>
-
 </div>
-<nav id="pagenavi">
-    
-    
-        <a href="/Blog/blog/page/2/" class="next">Next</a>
-    
-    <div class="center"><a href="/Blog/blog/archives">Blog Archives</a></div>
-</nav></div>
-			</div>
-			<footer id="footer" class="inner">Copyright &copy; 2015
-
-    Rick
+  
+  
+    <footer>
+      <a rel="full-article" href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/">Read on &rarr;</a>
+    </footer>
+  
 
 
-Design credit: <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a></footer>
-		</div>
-	</div>
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/Blog/blog/page/2/">&larr; Older</a>
+    
+    <a href="/Blog/blog/archives">Blog Archives</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    Included file &#8216;asides/category_list.html&#8217; not found in _includes directory<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/">这些年我的不足</a>
+      </li>
+    
+      <li class="post">
+        <a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/">Swift的强大之处</a>
+      </li>
+    
+      <li class="post">
+        <a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/">Swift的函数式API</a>
+      </li>
+    
+      <li class="post">
+        <a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/">iOS绘图详细解析</a>
+      </li>
+    
+      <li class="post">
+        <a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/">从UIKit到APPKit</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/ljp8817@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+Included file &#8216;custom/asides/weibo.html&#8217; not found in _includes directoryIncluded file &#8216;custom/asides/earth.html&#8217; not found in _includes directory
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - Rick -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+
+
+
+
 </body>
 </html>
