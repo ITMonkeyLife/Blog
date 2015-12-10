@@ -363,55 +363,6 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/07/23/iosde-cha-jian/">
-		
-			苹果的插件</a>
-	</h2>
-	<div class="entry-content">
-		<div class="entry-content">
-<p>插件是给你已经发布的 App 增加功能的一个好办法，Mac 上的 App 支持插件已经有很长的历史了，比如 Adobe Photoshop，在 1991 年的 version 2.0 就开始支持了。</p>
-
-<p>在以前的 OS X 系统中，给你的 App 在运行时动态载入可执行代码比较困难。现在，在 <code>NSBundle</code> 的帮助和你的一些前瞻性思维的帮助下下，它从未如此简单。 </p>
-
-<h2 id="bundlesinterfaces">包 (Bundles) 和接口 (Interfaces)</h2>
-
-<p>如果你打开 Xcode 5 并且创建一个新项目，你会看见 OS X 选项卡下有一个 &#8220;Application Plug-in&#8221; 的分类和 &#8220;System Plug-in&#8221; 的分类，从 Screen Savers 到 Image Units，在 Xcode 里面一共有 12 中不同的模板可以编写 App 的插件。如果你点击 &#8220;Framework &amp; Library&#8221; 的选项卡，你将可以看见一个 Bundle 条目。我会在今天探索一个非常简单的的项目，那就是在一个修改过的 TextEdit 里面加入加载 bundle 的功能。</p>
-
-<blockquote>
-  <p>注意：Apple 称这些为 plug-ins ，而通常大家更喜欢用 plugins 称呼。为了一致性，在开发和 UI 相关的东西的时候，我想用和平台一致的 plug-in 称呼会更好。虽然在应用的 UI 里你会看到 &#8220;plug-ins&#8221;，但是在这篇文章和代码里面，我会用 plugin。（同时我偶尔会混用 bundle 和 plugin 这两个词。）(译者注：在本译文中会把 plugin 统一翻译成插件，伟大的中文)</p>
-</blockquote>
-
-<p>什么是 bundle ？如果你创建一个 Xcode 的 bundle 模版项目，你会发现它内容并不多。当构建它的时候你会得到一个很像构建 App 时产生的目录 —— 一个 Contents 目录，里面包含了 Info.plist 和 Resource 目录。如果你在你的项目下加入了新的类，你可以看见包含一个可执行文件的 MacOS 目录。Bundle 工程里缺少的一个东西是 main() 函数。它是被宿主 App 调用执行的。</p>
-
-		
-		<a href="/Blog/blog/2014/07/23/iosde-cha-jian/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/07/23/iosde-cha-jian/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
 		<a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/">
 		
 			闭包，你了解多少？</a>
@@ -652,6 +603,54 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/06/18/ocde-zi-lei/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/06/17/mvvmjie-shao/">
+		
+			MVVM介绍</a>
+	</h2>
+	<div class="entry-content">
+		<p>有时我感觉就像我不知道在做什么。虽然我知道自己的设计模式——就像任何好的编程人员那样 —— 但我太接近我在做的产品以至于不能客观地衡量我的架构决策的有效性。当队伍中来了另外一位开发者时，我意识到我们陷入困境了。</p>
+
+<p>从没听过 MVC ？有人称之为 Massive View Controller（重量级视图控制器），这就是我们那时候的感觉。我不打算介绍令人汗颜的细节，但说实在的，如果我不得不再次重来一次，我绝对会做出不同的决策。</p>
+
+<p>我会修改一个关键架构，并将其带入我从那时起就在开发的各种应用，即使用一种叫做 Model-View-ViewModel 的架构替换 Model-View-Controller。</p>
+
+<p>所以，MVVM 到底是什么？与其专注于说明 MVVM 的来历，不如让我们看一个典型的 iOS 是如何构建的，并从那里了解 MVVM：</p>
+
+<p><img src="http://img.objccn.io/issue-13/mvvm1.png" alt="Typical Model-View-Controller setup" /></p>
+
+<p>我们看到的是一个典型的 MVC 设置。Model 呈现数据，View 呈现用户界面，而 View Controller 调节它两者之间的交互。Cool！</p>
+
+<p>稍微考虑一下，虽然 View 和 View Controller 是技术上不同的组件，但它们几乎总是手牵手在一起，成对的。你什么时候看到一个 View 能够与不同 View Controller 配对？或者反过来？所以，为什么不正规化它们的连接呢？</p>
+
+		
+		<a href="/Blog/blog/2014/06/17/mvvmjie-shao/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/06/17/mvvmjie-shao/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
