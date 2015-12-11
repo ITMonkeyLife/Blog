@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-10T18:32:12+08:00</updated>
+  <updated>2015-12-11T23:02:41+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,402 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Swift 2.2 源码解读 Swift 的 ABI]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/"/>
+    <updated>2015-12-11T10:10:22+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du</id>
+    <content type="html"><![CDATA[<p>
+随着Swift的开源，苹果开发者迎来了新的开端。其实这个是我一直想要表达的，随着对Swift这个语言的深入了解，越发感觉到Swift的魅力。Swift是系统编程语言，现在C语言之所以能统治底层开发的最重要原因是C规范统一的ABI，使其能做到与汇编程序无缝衔接。而Swift的ABI兼容C（并不包括name mangling部分）。基于强大的llvm生成具体平台代码。不仅仅作为Objective-C的翻译。
+</p>
+<p>
+通过开发Swift，了解到Swift文件的中间编译结果（介于Swift代码合llvm ir）是SIL。SIL我下一章着重介绍。这张暂时把焦点放在Swift的ABI。那么什么是ABI，你一定很陌生吧，那么对于API呢，你是不是明白了什么？
+</p>
+<p>
+ABI的全称是Application Binary Interface。翻译过来就是应用二进制接口，描述了应用程序和操作系统或其他应用程序之间的低级接口。
+</p>
+<p>
+ABI涵盖了各个细节：
+<!-- more-->
+<ul>
+<li>数据类型的大小、设计和对齐;</li>
+<li>调用约定（控制着函数的参数如何传送以及如何接受返回值），例如，是所有的参数都通过栈传递，还是部分参数通过寄存器传递；哪个寄存器用于哪个函数参数；通过栈传递的第一个函数参数是最先push到栈上还是最后</li>
+<li>系统调用的编码和一个应用如何向操作系统进行系统调用</li>
+<li>以及在一个完整的操作系统ABI中，目标文件的二进制格式、程序库等等。</li>
+</ul>
+一个完整的ABI，像Intel二进制兼容标准（iBCS），允许支持它的操作系统上的程序不经修改在其他支持此ABI的操作系统上运行。
+</p>
+<p>
+ABI不同于应用程序接口（API），API定义了源代码和库之间的接口，因此同样的代码可以在支持这个API的任何系统中编译，然而ABI允许编译好的目标代码在使用兼容ABI的系统中无需改动就能运行。 在Unix风格的操作系统中，存在很多运行在同一硬件平台上互相相关但是不兼容的操作系统（尤其是Intel 80386兼容系统）。有一些努力尝试标准化ABI，以减少销售商将程序移植到其他系统时所需的工作。然而，直到现在还没有很成功的例子，虽然Linux标准化工作组正在为Linux做这方面的努力。
+</p>
+<p>
+我在上面说了，ABI的各个细节。在这我需要强调一点：在Swift类，如果没有明确标识对象基类则一律继承SwiftObject Objective-C类。这个是Swift的硬性规定。
+</p>
+<h2>类型设计</h2>
+<h4>脆弱的结构体和元组设计</h4>
+<p>
+结构和元组目前共享相同的设计算法，编译器实现“通用”设计算法。该算法如下：
+<ul>
+  <li>从0开始，以1对齐增长</li>
+  <li>遍历字段,在元素的元组,或顺序结构var声明。每个字段:<ul>
+      <li>通过舍入更新字节来对齐字段，字段增长的值至少大于或等于字节，整除的一致性</li>
+      <li>&lt;字段的当前值的大小赋给偏移量/li&gt;
+      <li>更新字节通过添加字段的字节大小</li>
+      <li>更新对齐最大字节，和更新对齐的字段</li>
+      
+  </li>
+  <li>最终的大小和对齐的大小和对齐集合。类型是最后的，步长大小来对齐。</li>
+</ul>
+
+注意这不同于C或LLVM是正常的设计规则,大小和步幅是不同的,而C设计要求,嵌入式结构的大小是填充其对齐,迅速设计允许外部结构布置内部结构的尾巴填充字段,允许对齐。与C不同,大小结构和元组也允许,没有存储在包含总量。快速编译器发出LLVM包装结构类型与手动填充必要的控制二进制设计。一些例子:
+<!-- <br>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="c1">// LLVM &lt;{ i64, i8 }&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">S</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">var</span> <span class="nl">x:</span> <span class="n">Int</span>
+</span><span class='line'>  <span class="n">var</span> <span class="nl">y:</span> <span class="n">UInt8</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// LLVM &lt;{ i8, [7 x i8], &lt;{ i64, i8 }&gt;, i8 }&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">S2</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">var</span> <span class="nl">x:</span> <span class="n">UInt8</span>
+</span><span class='line'>  <span class="n">var</span> <span class="nl">s:</span> <span class="n">S</span>
+</span><span class='line'>  <span class="n">var</span> <span class="nl">y:</span> <span class="n">UInt8</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// LLVM &lt;{}&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">Empty</span> <span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// LLVM &lt;{ i64, i64 }&gt;</span>
+</span><span class='line'><span class="k">struct</span> <span class="n">ContainsEmpty</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">var</span> <span class="nl">x:</span> <span class="n">Int</span>
+</span><span class='line'>  <span class="n">var</span> <span class="nl">y:</span> <span class="n">Empty</span>
+</span><span class='line'>  <span class="n">var</span> <span class="nl">z:</span> <span class="n">Int</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+</p>
+
+<h4 id="">类设计</h4>
+<p>
+Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的一部分：
+<ul>
+<li>32位平台从未标记指针。ObjC指针类型是nil或一个对象指针。</li>
+<li>在x86-64,一个标记指针设置指针的最低位或最高位的指针。因此,这两位都是0当且仅当该值不是一个标记指针。</li>
+<li>ARM64,标记指针总是设置最高位的指针。</li>
+<li>32位平台不会执行任何isa掩饰<code>object_getClass</code>总是相当于<code>*(Class*)object</code></li>
+<li>64位平台上执行isa掩饰只有在运行时才导出的符号<code>uintptr_t objc_debug_isa_class_mask;</code>。如果导出这个符号，<code>object_getClass</code>在一个非标记指针总是相当于<code>(Class)(objc_debug_isa_class_mask & *(uintptr_t*)object)</code></li>
+<li>超类的类对象总是isa字段后立即存储。它的值是nil或一个指向父类的类对象;它从来没有其他设置。</li>
+</ul>
+
+下面是Swift ABI的一部分：
+<ul>
+<li>Swift指针不会是标记指针。</li>
+</ul>
+</p>
+
+<h2 id="">脆弱的Enum设计</h2>
+<p>
+在设计enum类型、ABI试图避免需要额外存储来存储枚举的标签。ABI选择的五个策略基于enum的设计:
+</p>
+<h4 id="">空枚举</h4>
+<p>enum在没有case的情况下,枚举是一个空的类型。
+<br>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">Empty</span> <span class="p">{}</span> <span class="c1">// =&gt; empty type</span>
+</span></code></pre></td></tr></table></div></figure>
+</p>
+<h4 id="">单一类型枚举</h4>
+<p>只有一个情况下的枚举，没有必要筛选,和枚举类型相同的设计的情况下的数据类型,可以是空的,如果没有数据类型。
+<br>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">EmptyCase</span> <span class="p">{</span> <span class="k">case</span> <span class="n">X</span> <span class="p">}</span>             <span class="c1">// =&gt; empty type</span>
+</span><span class='line'><span class="k">enum</span> <span class="n">DataCase</span> <span class="p">{</span> <span class="k">case</span> <span class="n">Y</span><span class="p">(</span><span class="n">Int</span><span class="p">,</span> <span class="n">Double</span><span class="p">)</span> <span class="p">}</span> <span class="c1">// =&gt; LLVM &lt;{ i64, double }&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+</p>
+<h4 id="">类C枚举</h4>
+<p>如果没有一个case有数据类型(一个典型的“c”enum),那么enum是最小整数标记包含的比特数的所有情况。遵循LLVM的数据设计规则整数类型在目标平台上。被分配的case标签的值依次排列声明顺序。
+<br>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">EnumLike2</span> <span class="p">{</span> <span class="c1">// =&gt; LLVM i1</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">A</span>         <span class="c1">// =&gt; i1 0</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">B</span>         <span class="c1">// =&gt; i1 1</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">enum</span> <span class="n">EnumLike8</span> <span class="p">{</span> <span class="c1">// =&gt; LLVM i3</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">A</span>         <span class="c1">// =&gt; i3 0</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">B</span>         <span class="c1">// =&gt; i3 1</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">C</span>         <span class="c1">// =&gt; i3 2</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">D</span>         <span class="c1">// etc.</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">E</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">F</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">G</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">H</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+<br>
+辨别值之后，一个用于最后的case成为额外例子的枚举类型。
+</p>
+
+<h4>单一的对应枚举</h4>
+<p>
+如果枚举数据类型和一个或多个单情况没有数据的情况下(一个“单一的对应枚举”),然后与数据类型使用的数据类型来表示的二进制表示,必要时添加了零位标记。如果数据类型的二进制表示额外的条件,也就是说,有些模式类型的大小和对齐,但没有形成有效的值的类型,它们是用来表示没有数据的情况下,case的提升数值匹配的顺序没有数据情况下按声明顺序。如果类型有空闲位(见多个对应枚举),它们被用来形成额外的条件。然后枚举值表示为一个整数的存储大小的数据类型。额外的条件使用的负载类型不是枚举类型成为额外的条件enum类型本身。
+<br>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">CharOrSectionMarker</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="n">i32</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Paragraph</span>            <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0000</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Char</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>  <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Char</span> <span class="n">to</span> <span class="n">i32</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Chapter</span>              <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0001</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">CharOrSectionMarker</span><span class="p">.</span><span class="n">Char</span><span class="p">(</span><span class="sc">&#39;\x00&#39;</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0000</span><span class="n">_0000</span>
+</span><span class='line'><span class="n">CharOrSectionMarker</span><span class="p">.</span><span class="n">Char</span><span class="p">(</span><span class="err">&#39;\</span><span class="n">u10FFFF</span><span class="err">&#39;</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0010</span><span class="n">_FFFF</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">enum</span> <span class="n">CharOrSectionMarkerOrFootnoteMarker</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="n">i32</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">CharOrSectionMarker</span><span class="p">(</span><span class="n">CharOrSectionMarker</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="o">%</span><span class="n">CharOrSectionMarker</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Asterisk</span>                                 <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0002</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Dagger</span>                                   <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0003</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">DoubleDagger</span>                             <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0004</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+<br>
+如果数据类型没有额外的条件,或者没有足够的额外的条件表示没有数据的情况下,然后添加一个标记位enum的表示。没有数据的标记位设置情况下,然后分配数据区域中的值的枚举声明的顺序。
+<br>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">IntOrInfinity</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">NegInfinity</span>    <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>    <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="p">}</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Int</span><span class="p">(</span><span class="n">Int</span><span class="p">)</span>       <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="o">%</span><span class="n">Int</span><span class="p">,</span> <span class="mi">0</span> <span class="p">}</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">PosInfinity</span>    <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>    <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">IntOrInfinity</span><span class="p">.</span><span class="n">Int</span><span class="p">(</span>    <span class="mi">0</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>     <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">}</span>
+</span><span class='line'><span class="n">IntOrInfinity</span><span class="p">.</span><span class="n">Int</span><span class="p">(</span><span class="mi">20721</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="mi">20721</span><span class="p">,</span> <span class="mi">0</span> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+</p>
+<h4 id="">多个对应枚举</h4>
+<p>
+如果一个枚举数据类型有多个情况,然后一个标签来区分数据类型是必要的。ABI首先会尝试找到共同闲置比特,即二进制数据类型的表示fixed-zero或忽略的有效值的所有数据类型。标签将被分散到这些闲置比特尽可能多。目前只备用的原始的整数类型,如高位被认为是<code>i21</code>类型。枚举数据表示为一个整数的存储大小的最大数据类型。
+<br>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">TerminalChar</span> <span class="p">{</span>             <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="n">i32</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Plain</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="n">i32</span>     <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Plain</span>     <span class="n">to</span> <span class="n">i32</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Bold</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>      <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">or</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Bold</span>      <span class="n">to</span> <span class="n">i32</span><span class="p">),</span> <span class="mh">0x0020</span><span class="n">_0000</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Underline</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">or</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Underline</span> <span class="n">to</span> <span class="n">i32</span><span class="p">),</span> <span class="mh">0x0040</span><span class="n">_0000</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Blink</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">or</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Blink</span>     <span class="n">to</span> <span class="n">i32</span><span class="p">),</span> <span class="mh">0x0060</span><span class="n">_0000</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Empty</span>                    <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0080</span><span class="n">_0000</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Cursor</span>                   <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0080</span><span class="n">_0001</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+<br>
+如果没有足够的空闲位包含标签,然后添加额外的比特表示包含标签。标签的值分配给数据情况下按声明顺序。如果有任何数据的情况下,他们被收集在一个共同的标签,并指定数据区域中的值的枚举声明的顺序。
+<br>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="n">class</span> <span class="n">Bignum</span> <span class="p">{}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">enum</span> <span class="n">IntDoubleOrBignum</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Int</span><span class="p">(</span><span class="n">Int</span><span class="p">)</span>           <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>           <span class="o">%</span><span class="n">Int</span><span class="p">,</span>            <span class="mi">0</span> <span class="p">}</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Double</span><span class="p">(</span><span class="n">Double</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="p">(</span><span class="n">bitcast</span>  <span class="o">%</span><span class="n">Double</span> <span class="n">to</span> <span class="n">i64</span><span class="p">),</span> <span class="mi">1</span> <span class="p">}</span>
+</span><span class='line'>  <span class="k">case</span> <span class="n">Bignum</span><span class="p">(</span><span class="n">Bignum</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="p">(</span><span class="n">ptrtoint</span> <span class="o">%</span><span class="n">Bignum</span> <span class="n">to</span> <span class="n">i64</span><span class="p">),</span> <span class="mi">2</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+</p>
+<h2 id="">存在容器的设计</h2>
+<p>值的协议类型,协议组成类型,或“any”类型(<code>protocol<></code>)提出使用存在容器(所谓的因为这些类型是类型理论中的“生存类型”)。</p>
+<h4 id="">存在的不透明容器</h4>
+<p>如果没有类限制协议或协议组成类型,存在的容器必须适应值为任意大小和对齐。它使用一个固定大小的缓冲区,这是三个指针大小和pointer-aligned。这个直接包含的值,如果它的大小和对齐都小于或等于固定大小的缓冲区,或包含一个指针指向一个分配属于存在的容器。所包含的值的类型是由其类型标识元数据记录,为所有需要的协议和映射表的一致性。设计好像声明在C结构体如下:
+<br>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">struct</span> <span class="n">OpaqueExistentialContainer</span> <span class="p">{</span>
+</span><span class='line'>  <span class="kt">void</span> <span class="o">*</span><span class="n">fixedSizeBuffer</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">Metadata</span> <span class="o">*</span><span class="n">type</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">WitnessTable</span> <span class="o">*</span><span class="n">witnessTables</span><span class="p">[</span><span class="n">NUM_WITNESS_TABLES</span><span class="p">];</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+</p>
+<h4 id="">存在的类的容器</h4>
+<p>
+如果一个或多个协议的协议或协议组成类型有一个类约束,然后只能存储在已经存在的容器,并使用一个更有效的表示。类实例总是一个指针的大小,所以不需要分配一个固定大小的缓冲区,和类实例总是有自己的引用类型的元数据,因此不需要单独的元数据记录。声明中的设计就好像下面C结构体:
+<br>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">struct</span> <span class="n">ClassExistentialContainer</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">HeapObject</span> <span class="o">*</span><span class="n">value</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">WitnessTable</span> <span class="o">*</span><span class="n">witnessTables</span><span class="p">[</span><span class="n">NUM_WITNESS_TABLES</span><span class="p">];</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+<br>
+注意,如果不需要映射表,如“任何类”类型的<code>protocol<class></code>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id <Protocol></code>类型在Objective-C中。
+</p>
+
+<h2 id="">元数据类型</h2>
+<p>快速运行时保持元数据记录为每一类型在程序中使用,包括每一个实例化泛型类型的。可以使用这些元数据记录(TODO:映射)调试器工具发现的信息类型。对于非泛型名义类型,这些元数据是由编译器生成的静态记录。对泛型类型的实例,和内在类型如元组、功能、协议等等组成,元数据记录懒洋洋地根据需要运行时创建的。每个类型都有一个独特的元数据记录,两种元数据指针值相等,如果他们的类型相同。<br>
+在下面的设计描述中,抵消了相对于元数据指针作为指针数组的索引。在32位平台上,抵消1意味着一个偏移量的4个字节,在64位平台上,这意味着8个字节的偏移量。<br>
+</p>
+<h4 id="">通用元数据设计</h4>
+<p>
+所有元数据记录共享一个共同的数据头,下面字段:
+<ul>
+<li>映射价值表指针引用的vtable函数实现值的语义类型,提供了基本的操作,如分配,复制,销毁的类型。映射表也记录的值大小、对齐、步长等基本属性的类型。映射价值表指针偏移-1元数据的指针,即指针字节所在位置立即在指针的引用地址偏移。</li>
+<li>类型字段是一个pointer-sized整数描述元数据描述。这个字段的偏移量为0的元数据的指针。</li>
+</ul>
+</p>
+<h4 id="">结构体元数据</h4>
+<p>
+除了常见的元数据字段设计、结构元数据记录包含以下字段:<br>
+<ul>
+<li>名义类型描述符引用偏移量1。</li>
+<li>引用父元数据记录存储在偏移2。是一个封闭的名义类型的成员的结构,这是一个封闭类型的元数据的引用。对于高层结构体,这是null。（父指针总是空）</li>
+<li>矢量偏移量从3开始。每个字段的结构体,在var声明顺序,字段的偏移字节从一开始的结构是存储为pointer-sized整数倍。</li>
+<li>如果结构是通用的,那么通用参数向量始于抵消3 + n,其中n是结构中的字段的数量</li>
+</ul>
+</p>
+<h4 id="">枚举元数据</h4>
+<p>除了常见的元数据字段设计,enum记录元数据包含以下字段:<br>
+<ul>
+<li>名义类型描述符引用偏移量1。</li>
+<li>引用父元数据记录存储在偏移2。是一个封闭的名义类型的成员的结构,这是一个封闭类型的元数据的引用。对于高层结构体,这是null。（父指针总是空）</li>
+<li>如果enum是通用的,那么通用参数向量始于偏移地址3。</li>
+</ul>
+</p>
+<h4 id="">元组元数据</h4>
+<p>
+除了常见的元数据字段设计、元组元数据记录包含以下字段:<br>
+<ul>
+<li>名义类型描述符引用偏移量1。</li>
+<li>标签字符串指针连续以null结尾的标签名称的列表在元组偏移2。每个标签的名字是作为一个以null结尾,UTF-8编码的字符串序列。如果元组没有标签,这是一个空指针。(目前标签字符串指针总是空,独特的标签不考虑元组元数据)</li>
+<li>向量的元素开始的偏移地址3,由一个向量type-offset对。第n个元素的元数据类型是指针的偏移地址3+2*n。字节的偏移量从一开始的第n个元素的元组开始的偏移量是3+2*n+1。</li>
+</ul>
+</p>
+<h4 id="">函数元数据</h4>
+<p>除了常见的元数据字段设计,函数元数据记录包含以下字段:<br>
+<ul>
+<li>参数的数量函数存储在偏移量为1的地址。</li>
+<li>结果的引用类型元数据记录存储在偏移量为2。如果函数有多个返回,这引用一个元组元数据记录</li>
+<li>参数向量始于偏移地址3,由指针指向的函数的参数元数据记录。</li>
+</ul>
+<br>
+如果函数需要任何in/out参数,每个参数的元数据记录指针将另外附加,一些被设置如果in/out最低位。由于指针对准,最低位持有这个标签总是空。
+如果函数没有in/out参数,将只有一个指针在下列情形的向量:
+<ul>
+<li>0参数:一个元组元数据记录为空元组</li>
+<li>1参数:第一个也是唯一一个参数的元数据记录</li>
+<li>> 1的参数:tuple包含参数的元数据记录</li>
+</ul>
+</p>
+<h4 id="">协议元数据</h4>
+除了常见的元数据字段设计,协议元数据记录包含以下字段:<br>
+<ul>
+<li>设计标志词是储存在偏移为1。这个词的部分描述存在容器设计用于表示值的类型。这个词设计如下:<ul>
+<li>映射表存储在最低位31位。协议类型的值包含这个数字映射表指针的设计。</li>
+<li>类约束条件是储存在31位。这个位设置如果不类容器类型,这意味着结构、枚举、或类值中可以存储类型。如果没有设置,那么只能存储在类值类型,并使用一个更高效的设计类型。</li>
+</ul>
+注意字段pointer-sized,尽管只有最低的32位目前在所有平台上。这些值可以来自协议描述符记录,但预计算会更便利。
+</li>
+<li>协议的协议组成的数量是储存在偏移2。“任何”<code>protocol<> </code>或<code>protocol<class> </code>。对于单一协议 <code>P</code>。协议构成类型<code>protocol<P, Q, ...></code>,这是协议的数量</li>
+<li>协议描述符向量始于偏移地址3。这是内联的协议描述符的指针数组中的每个协议组成,或单一协议为协议类型描述符。“任何”类型,没有协议描述符向量。</li>
+</ul>
+</p>
+<h4 id="">变型的元数据</h4>
+<p>
+除了常见的元数据字段布局、变型的元数据记录包含以下字段:
+<ul>
+<li>引用的实例类型的元数据记录变型代表是储存在偏移为1的地址。</li>
+</ul>
+</p>
+
+<h4 id="">类元数据</h4>
+<p>
+类元数据设计和Objective-C互操作;所有类元数据记录也有效的Objective-C类对象。类元数据指针的值被用作类变型,所以派生类的元数据记录也作为一个有效的为其父类的所有类变型价值。
+</p>
+
+
+
+
+ &#8211;>
+
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</li></ul></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[这些年我的不足]]></title>
@@ -7778,205 +8174,6 @@ animator = (animator ?: [[PrivateAnimatedTransition alloc] init]);
 
 <p>通过使用这些属性，我们不仅仅避免了重复造轮子，同时还确保了我们的自定义动画能与标准动画的时机和控制函数协同工作，以此就能非常容易地与其它动画属性同步。</p>
 
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[理解Frame在布局的作用]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/08/li-jie-framezai-bu-ju-de-zuo-yong/"/>
-    <updated>2014-05-08T23:38:00+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/08/li-jie-framezai-bu-ju-de-zuo-yong</id>
-    <content type="html"><![CDATA[<p>Frame是布局的核心。每个开发者都使用frame定位和改变<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">UIView</code>和<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">CALayer</code>的大小。在本文中我将把焦点集中在<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">CALayer</code>上，因为它是<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">UIView</code>的底层实现，<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">view.frame</code>简单的返回了<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">view.layer.frame</code>。此外，我不会讨论<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">setFrame:</code>方法。虽然看起来范围十分有限，但实际上有许多有趣的事情在平凡又古老的<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">frame</code>getter方法中发生。</p>
-<h3>Frame依赖于什么</h3>
-<p>众所周知，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>是一个派生属性，实际上它基于一些其他的属性。实际上在计算frame值的时候会参考4个(!)属性:<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">transform</code>，和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>。</p>
-<p>我们从<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>开始。bounds很棘手，它混合了层的内部和外部。<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.size</code>定义了层本身的面积，声明了它所存在的区域。设置<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">masksToBounds</code>为<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">YES</code>会把所有子层超出bounds范围的部分裁掉。另一方面，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">origin</code>属性并不影响层本身的布局；然而它会影响它内部的子层的布局方式。<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>定义了层内部坐标系的原点。</p>
-<p>这里有一个例子展示了<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>如何工作。例如我们定义<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>为<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGPointMake (20.0f, 30.0f)</code></p>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350011152-0.png" title="bounds.origin" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350011152-0.png" title="bounds.origin" alt="bounds.origin" /></a>bounds.origin</p>
-<p>如何定义本地坐标系？只要把层的左上角放到<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>上就行了。</p>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350015c5-1.png" title="bounds.origin" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350015c5-1.png" title="bounds.origin" alt="bounds.origin" /></a>bounds.origin</p>
-<p><code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>是一个稍微有点不同的讨厌鬼。首先，它的值标准化为0.0-1.0的范围内。获得以&rdquo;点&rdquo;为单位的值需要用<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.size</code>乘以标准化的值。更重要的是，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>定义了应用变换的坐标系的原点。</p>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350012607-2.png" title="anchorPoint" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350012607-2.png" title="anchorPoint" alt="anchorPoint" /></a>anchorPoint</p>
-<p>变换具有相同<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>但有不同<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>的层(蓝色)会有很大区别(灰色)。</p>
-<p><code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>是最简单的一个概念。它定义了经过<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.size</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">transform</code>的混合后，添加到层中的最终位置。</p>
-<h3>精度的快速讨论</h3>
-<p>在写这篇博客的时候，我留意到有时我的计算结果和CoreAnimation返回的计算结果相比有所出入。有可能是我计算错误或者有精度问题。我理所当然的首先检查了精度问题。幸运的是我的直觉是正确的。<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGFloat</code>在32位架构上是一个<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">float</code>的类型定义(在64位架构上是<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>)，而似乎CoreAnimation并没有理会<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGFloat</code>的实际类型而在内部直接使用了<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>。</p>
-<p>要证实这个猜测并不困难。使用<a href="http://www.hopperapp.com/">Hooper</a>工具检查<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CALayer</code>的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>getter方法的执行内容，我发现了一个叫做<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">mat4_apply_to_rect</code>的函数。然后我在这里设置了一个符号断点，实际上也就是在<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CA::Mat4Impl::mat4_apply_to_rect(double const*, double*)</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CA::Mat4Impl::mat4_apply_to_rect(float const*, float*)</code>上分别设置了一个断点，以确定哪一个函数被执行。当在设备上运行代码的时候，断点停在了参数是<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>的函数中，即使使用的是32位ARM架构的iPhone。</p>
-<p>在一些极端情况下，使用<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">float</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>的差异是显而易见的。然而因为我们的目标是对CoreAnimation进行逆向工程并得到完全相同的结果，所以我们也使用<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>。我们定义一些和CoreGraphics中相同的非常简单的结构体。</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">MCSDoublePoint</span> <span class="p">{</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span> <span class="n">MCSDoublePoint</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">MCSDoubleSize</span> <span class="p">{</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span> <span class="n">MCSDoubleSize</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">MCSDoubleRect</span> <span class="p">{</span>
-</span><span class="line">	<span class="n">MCSDoublePoint</span> <span class="n">origin</span><span class="p">;</span>   <span class="n">MCSDoubleSize</span> <span class="n">size</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span> <span class="n">MCSDoubleRect</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<!-- more -->
-<p>值得注意的是在64位iOS设备上，我们精心构建的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">struct</code>会变得多余，因为在该架构上，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGPoint</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGSize</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGRect</code>本来就是用<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">doubles</code>的。</p>
-<h3>变换</h3>
-<p>在深入分析frame之前，我们先了解一下变换。虽然<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CALayer</code>使用的是一个完整的4&times;4的矩阵模拟<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CATransform3D</code>，但它对计算<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>的目的真的没有影响。所以，我们把焦点集中在<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGAffineTransform</code>上，它可以用每个人都喜欢的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CATransform3DGetAffineTransform</code>方法从<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CATransform3D</code>中简单获得。</p>
-<p>让我们从点开始，使用仿射变换来变换点是入门级的袋鼠:</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">MCSDoublePoint</span> <span class="nf">MCSDoublePointApplyTransform</span><span class="p">(</span><span class="n">MCSDoublePoint</span> <span class="n">point</span><span class="p">,</span> <span class="n">CGAffineTransform</span> <span class="n">t</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">	 <span class="n">MCSDoublePoint</span> <span class="n">p</span><span class="p">;</span>
-</span><span class="line">	 <span class="n">p</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">t</span><span class="p">.</span><span class="n">a</span> <span class="o">*</span> <span class="n">point</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">t</span><span class="p">.</span><span class="n">c</span> <span class="o">*</span> <span class="n">point</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">t</span><span class="p">.</span><span class="n">tx</span><span class="p">;</span>
-</span><span class="line">	 <span class="n">p</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">t</span><span class="p">.</span><span class="n">b</span> <span class="o">*</span> <span class="n">point</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">t</span><span class="p">.</span><span class="n">d</span> <span class="o">*</span> <span class="n">point</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">t</span><span class="p">.</span><span class="n">ty</span><span class="p">;</span>
-</span><span class="line">	 <span class="k">return</span> <span class="n">p</span><span class="p">;</span>
-</span><span class="line"> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>上面的代码实现基于<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGPointApplyAffineTransform</code>，从根本上来讲是一个3x3的变换矩阵乘一个三维向量。</p>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350016295-3.gif" title="equation" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350016295-3.gif" title="equation" alt="equation" /></a>equation</p>
-<p>这个矩阵被<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGAffineTransform</code>的值填充，被乘的向量由点的x坐标，y坐标和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">1.0</code>组成，让结果向量从矩阵中也得到转换过的元素。</p>
-<p>通过点变换，我们很容易变换矩形。通过变换矩形的顶点并用直线连接它们创建一个平行四边形(通常可以是任意四边形)。 但这并不是<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGRectApplyAffineTransform</code>的如何工作的。这个函数接收一个<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGRect</code>参数并返回一个<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGRect</code>。正如头文件<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGAffineTransform.h</code>中的注释声明的:</p>
-<blockquote style="margin: 10px 0px 0px; padding: 15px 20px; background-color: rgb(252, 252, 252); border-left-width: 5px; border-left-style: solid; border-left-color: rgb(204, 204, 204); color: rgb(102, 102, 102); font-family: 'Open Sans', HelveticaNeue-Light, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 28px; text-align: justify; ">
-<p>通常来说因为仿射变换并不保护矩形，这个函数返回一个最小的包括经过变换的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">rect</code>的四个顶点的矩形。</p>
-</blockquote>
-<p>读过这个以后，使用double再现<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGRectApplyAffineTransform</code>变得相对直接:</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">MCSDoubleRect</span> <span class="nf">MCSDoubleRectApplyTransform</span><span class="p">(</span><span class="n">MCSDoubleRect</span> <span class="n">rect</span><span class="p">,</span> <span class="n">CGAffineTransform</span> <span class="n">transform</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">xMin</span> <span class="o">=</span> <span class="n">rect</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">xMax</span> <span class="o">=</span> <span class="n">rect</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">rect</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">;</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">yMin</span> <span class="o">=</span> <span class="n">rect</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">yMax</span> <span class="o">=</span> <span class="n">rect</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">rect</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">;</span>
-</span><span class="line">	<span class="n">MCSDoublePoint</span> <span class="n">points</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class="line">		<span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">MCSDoublePointApplyTransform</span><span class="p">((</span><span class="n">MCSDoublePoint</span><span class="p">){</span><span class="n">xMin</span><span class="p">,</span> <span class="n">yMin</span><span class="p">},</span> <span class="n">transform</span><span class="p">),</span>
-</span><span class="line">		<span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">MCSDoublePointApplyTransform</span><span class="p">((</span><span class="n">MCSDoublePoint</span><span class="p">){</span><span class="n">xMin</span><span class="p">,</span> <span class="n">yMax</span><span class="p">},</span> <span class="n">transform</span><span class="p">),</span>
-</span><span class="line">		<span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">MCSDoublePointApplyTransform</span><span class="p">((</span><span class="n">MCSDoublePoint</span><span class="p">){</span><span class="n">xMax</span><span class="p">,</span> <span class="n">yMin</span><span class="p">},</span> <span class="n">transform</span><span class="p">),</span>
-</span><span class="line">		<span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">MCSDoublePointApplyTransform</span><span class="p">((</span><span class="n">MCSDoublePoint</span><span class="p">){</span><span class="n">xMax</span><span class="p">,</span> <span class="n">yMax</span><span class="p">},</span> <span class="n">transform</span><span class="p">),</span>
-</span><span class="line">	<span class="p">};</span>
-</span><span class="line">	
-</span><span class="line">	<span class="kt">double</span> <span class="n">newXMin</span> <span class="o">=</span>  <span class="n">INFINITY</span><span class="p">;</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">newXMax</span> <span class="o">=</span> <span class="o">-</span><span class="n">INFINITY</span><span class="p">;</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">newYMin</span> <span class="o">=</span>  <span class="n">INFINITY</span><span class="p">;</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">newYMax</span> <span class="o">=</span> <span class="o">-</span><span class="n">INFINITY</span><span class="p">;</span>
-</span><span class="line">	
-</span><span class="line">	<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="mi">4</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">		<span class="n">newXMax</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span><span class="n">newXMax</span><span class="p">,</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">x</span><span class="p">);</span>
-</span><span class="line">		<span class="n">newYMax</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span><span class="n">newYMax</span><span class="p">,</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">y</span><span class="p">);</span>
-</span><span class="line">		<span class="n">newXMin</span> <span class="o">=</span> <span class="n">MIN</span><span class="p">(</span><span class="n">newXMin</span><span class="p">,</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">x</span><span class="p">);</span>
-</span><span class="line">		<span class="n">newYMin</span> <span class="o">=</span> <span class="n">MIN</span><span class="p">(</span><span class="n">newYMin</span><span class="p">,</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">y</span><span class="p">);</span>
-</span><span class="line">	<span class="p">}</span>
-</span><span class="line">		
-</span><span class="line">	<span class="n">MCSDoubleRect</span> <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">newXMin</span><span class="p">,</span> <span class="n">newYMin</span><span class="p">,</span> <span class="n">newXMax</span> <span class="o">-</span> <span class="n">newXMin</span><span class="p">,</span> <span class="n">newYMax</span> <span class="o">-</span> <span class="n">newYMin</span><span class="p">};</span>
-</span><span class="line">	<span class="k">return</span> <span class="n">result</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>我们计算了四个顶点的坐标，变换它们并且得到<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">x</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">y</code>的极值。</p>
-<h3>计算Frame</h3>
-<p>我们通过努力了解了每一个影响frame的因素，现在，获得frame将会变得很有趣:</p>
-<ul>
-    <li>定义一个面积为<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.size</code>的矩形</li>
-</ul>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350011153-4.png" title="" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350011153-4.png" alt="" /></a></p>
-<ul>
-    <li>计算该矩形内的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>位置</li>
-</ul>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350012601-5.png" title="" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350012601-5.png" alt="" /></a></p>
-<div style="float: left;margin-top:0px;margin-right:0px">
-<script type="text/javascript"><!--
-google_ad_client = "ca-pub-9317413389774415";
-/* 2012年底部广告336x280, */
-google_ad_slot = "9618407928";
-google_ad_width = 336;
-google_ad_height = 280;
-//-->
-</script>
-<script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
-</script>
-</div>
-<ul>
-    <li>将矩形放入坐标系内，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>作为坐标系的原点</li>
-</ul>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/23500150Z-6.png" title="" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/23500150Z-6.png" alt="" /></a></p>
-<ul>
-    <li>应用任何你实施的变换，保持一个&rdquo;包含了经过转换的顶点的最小矩形&rdquo;</li>
-</ul>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/235001O52-7.png" title="" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/235001O52-7.png" alt="" /></a></p>
-<ul>
-    <li>根据<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>移动<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code></li>
-</ul>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/23500123X-8.png" title="" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/23500123X-8.png" alt="" /></a></p>
-<ul>
-    <li>灰色的就是结果矩形</li>
-</ul>
-<p>实现这些操作的代码如下:</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nf">frameWithBounds:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">bounds</span> <span class="nf">anchorPoint:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">anchorPoint</span> <span class="nf">transform:</span><span class="p">(</span><span class="n">CATransform3D</span><span class="p">)</span><span class="nv">transform</span> <span class="nf">position:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">position</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">	 <span class="n">MCSDoubleRect</span> <span class="n">rect</span><span class="p">;</span>
-</span><span class="line">	 <span class="n">rect</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">;</span>
-</span><span class="line">	 <span class="n">rect</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">;</span>
-</span><span class="line">	 <span class="n">rect</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="o">-</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">anchorPoint</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
-</span><span class="line">	 <span class="n">rect</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="o">-</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">*</span> <span class="n">anchorPoint</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
-</span><span class="line">	 <span class="n">rect</span> <span class="o">=</span> <span class="n">MCSDoubleRectApplyTransform</span><span class="p">(</span><span class="n">rect</span><span class="p">,</span> <span class="n">CATransform3DGetAffineTransform</span><span class="p">(</span><span class="n">transform</span><span class="p">));</span>
-</span><span class="line">	 <span class="n">rect</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">position</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
-</span><span class="line">	 <span class="n">rect</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">position</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
-</span><span class="line">	 <span class="k">return</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="n">rect</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">rect</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">,</span> <span class="n">rect</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span> <span class="n">rect</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>虽然代码不多，但利用了我们讨论过的所有概念。</p>
-<h3>这些如何映射到<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">UIView</code></h3>
-<p>关于<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>getter方法，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">center</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">UIView</code>并没有做什么工作；它只是简单的各自调用它底层的CALayer的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>方法。</p>
-<p>注意<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">center</code>到<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>的映射 &mdash; 改变底层<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">layer</code>的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>会使<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">center</code>不能正确的对应到层的&rdquo;中心&rdquo;或者层的边界矩形的&rdquo;中点&rdquo;。</p>
 <hr />
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>

@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="如果把人生比作跑步的话，我们都在用自己的节奏和姿势在完成比赛。这些跑步的技巧可能是小时候从老师，朋友，家人那得来的。随着时间的流逝，我们习惯了这种跑步的技能，看见那些跑得快的，会羡慕；跑得慢的，会不屑；跑得别扭的，会当作笑料。但是自己跑得怎么样，却很少关心。为什么要跑这条道？为什么这么慢？ &hellip;">
+	<meta name="description" content="随着Swift的开源，苹果开发者迎来了新的开端。其实这个是我一直想要表达的，随着对Swift这个语言的深入了解，越发感觉到Swift的魅力。Swift是系统编程语言，现在C语言之所以能统治底层开发的最重要原因是C规范统一的ABI，使其能做到与汇编程序无缝衔接。而Swift的ABI兼容C（ &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +74,52 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/">
+		
+			Swift 2.2 源码解读 Swift 的 ABI</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+随着Swift的开源，苹果开发者迎来了新的开端。其实这个是我一直想要表达的，随着对Swift这个语言的深入了解，越发感觉到Swift的魅力。Swift是系统编程语言，现在C语言之所以能统治底层开发的最重要原因是C规范统一的ABI，使其能做到与汇编程序无缝衔接。而Swift的ABI兼容C（并不包括name mangling部分）。基于强大的llvm生成具体平台代码。不仅仅作为Objective-C的翻译。
+</p>
+<p>
+通过开发Swift，了解到Swift文件的中间编译结果（介于Swift代码合llvm ir）是SIL。SIL我下一章着重介绍。这张暂时把焦点放在Swift的ABI。那么什么是ABI，你一定很陌生吧，那么对于API呢，你是不是明白了什么？
+</p>
+<p>
+ABI的全称是Application Binary Interface。翻译过来就是应用二进制接口，描述了应用程序和操作系统或其他应用程序之间的低级接口。
+</p>
+<p>
+ABI涵盖了各个细节：
+
+		
+		<a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -603,54 +649,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/06/18/ocde-zi-lei/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/06/17/mvvmjie-shao/">
-		
-			MVVM介绍</a>
-	</h2>
-	<div class="entry-content">
-		<p>有时我感觉就像我不知道在做什么。虽然我知道自己的设计模式——就像任何好的编程人员那样 —— 但我太接近我在做的产品以至于不能客观地衡量我的架构决策的有效性。当队伍中来了另外一位开发者时，我意识到我们陷入困境了。</p>
-
-<p>从没听过 MVC ？有人称之为 Massive View Controller（重量级视图控制器），这就是我们那时候的感觉。我不打算介绍令人汗颜的细节，但说实在的，如果我不得不再次重来一次，我绝对会做出不同的决策。</p>
-
-<p>我会修改一个关键架构，并将其带入我从那时起就在开发的各种应用，即使用一种叫做 Model-View-ViewModel 的架构替换 Model-View-Controller。</p>
-
-<p>所以，MVVM 到底是什么？与其专注于说明 MVVM 的来历，不如让我们看一个典型的 iOS 是如何构建的，并从那里了解 MVVM：</p>
-
-<p><img src="http://img.objccn.io/issue-13/mvvm1.png" alt="Typical Model-View-Controller setup" /></p>
-
-<p>我们看到的是一个典型的 MVC 设置。Model 呈现数据，View 呈现用户界面，而 View Controller 调节它两者之间的交互。Cool！</p>
-
-<p>稍微考虑一下，虽然 View 和 View Controller 是技术上不同的组件，但它们几乎总是手牵手在一起，成对的。你什么时候看到一个 View 能够与不同 View Controller 配对？或者反过来？所以，为什么不正规化它们的连接呢？</p>
-
-		
-		<a href="/Blog/blog/2014/06/17/mvvmjie-shao/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/06/17/mvvmjie-shao/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

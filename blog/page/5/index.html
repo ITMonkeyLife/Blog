@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="这篇文章里，我们将会讨论一些 iOS 和 OS X 都可以使用的底层 API。除了 dispatch_once ，我们一般不鼓励使用其中的任何一种技术。 但是我们想要揭示出表面之下深层次的一些可利用的方面。这些底层的 API 提供了大量的灵活性，随之而来的是大量的复杂度和更多的责任。 &hellip;">
+	<meta name="description" content="这篇文章将专注于实用技巧，设计模式，以及对于写出线程安全类和使用 GCD 来说所特别需要注意的一些反面模式。 线程安全 Apple 的框架 首先让我们来看看 Apple 的框架。一般来说除非特别声明，大多数的类默认都不是线程安全的。对于其中的一些类来说，这是很合理的， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +74,74 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/">
+		
+			线程安全</a>
+	</h2>
+	<div class="entry-content">
+		<p>这篇文章将专注于实用技巧，设计模式，以及对于写出线程安全类和使用 GCD 来说所特别需要注意的一些<a href="http://zh.wikipedia.org/wiki/反面模式">反面模式</a>。</p>
+
+<h2>线程安全</h2>
+
+<h3 id="apple">Apple 的框架</h3>
+
+<p>首先让我们来看看 Apple 的框架。一般来说除非特别声明，大多数的类默认都不是线程安全的。对于其中的一些类来说，这是很合理的，但是对于另外一些来说就很有趣了。</p>
+
+<p>就算是在经验丰富的 iOS/Mac 开发者，也难免会犯从后台线程去访问 UIKit/AppKit 这种错误。比如因为图片的内容本身就是从后台的网络请求中获取的话，顺手就在后台线程中设置了 <code>image</code> 之类的属性，这样的错误其实是屡见不鲜的。Apple 的代码都经过了性能的优化，所以即使你从别的线程设置了属性的时候，也不会产生什么警告。</p>
+
+<p>在设置图片这个例子中，症结其实是你的改变通常要过一会儿才能生效。但是如果有两个线程在同时对图片进行了设定，那么很可能因为当前的图片被释放两次，而导致应用崩溃。这种行为是和时机有关系的，所以很可能在开发阶段没有崩溃，但是你的用户使用时却不断 crash。</p>
+
+<p>现在没有<strong>官方</strong>的用来寻找类似错误的工具，但我们确实有一些技巧来避免这个问题。<a href="https://gist.github.com/steipete/5664345">UIKit Main Thread Guard</a> 是一段用来监视每一次对 <code>setNeedsLayout</code> 和 <code>setNeedsDisplay</code> 的调用代码，并检查它们是否是在主线程被调用的。因为这两个方法在 UIKit 的 setter （包括 image 属性）中广泛使用，所以它可以捕获到很多线程相关的错误。虽然这个小技巧并不包含任何私有 API， 但我们还是不建议将它是用在发布产品中，不过在开发过程中使用的话还是相当赞的。</p>
+
+<p>Apple没有把 UIKit 设计为线程安全的类是有意为之的，将其打造为线程安全的话会使很多操作变慢。而事实上 UIKit 是和主线程绑定的，这一特点使得编写并发程序以及使用 UIKit 十分容易的，你唯一需要确保的就是对于 UIKit 的调用总是在主线程中来进行。</p>
+
+<h4 id="uikit">为什么 UIKit 不是线程安全的？</h4>
+
+<p>对于一个像 UIKit 这样的大型框架，确保它的线程安全将会带来巨大的工作量和成本。将 non-atomic 的属性变为 atomic 的属性只不过是需要做的变化里的微不足道的一小部分。通常来说，你需要同时改变若干个属性，才能看到它所带来的结果。为了解决这个问题，苹果可能不得不提供像 Core Data 中的 <code>performBlock:</code> 和 <code>performBlockAndWait:</code> 那样类似的方法来同步变更。另外你想想看，绝大多数对 UIKit 类的调用其实都是以<strong>配置</strong>为目的的，这使得将 UIKit 改为线程安全这件事情更显得毫无意义了。</p>
+
+<p>然而即使是那些与配置共享的内部状态之类事情无关的调用，其实也不是线程安全的。如果你做过 iOS 3.2 或之前的黑暗年代的 app 开发的话，你肯定有过一边在后台准备图像时一边使用 NSString 的 <code>drawInRect:withFont:</code> 时的随机崩溃的经历。值得庆幸的事，在 iOS 4 中 <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniOS/Articles/iPhoneOS4.html">苹果将大部分绘图的方法和诸如 <code>UIColor</code> 和 <code>UIFont</code> 这样的类改写为了后台线程可用</a>。</p>
+
+<p>但不幸的是 Apple 在线程安全方面的文档是极度匮乏的。他们推荐只访问主线程，并且甚至是绘图方法他们都没有明确地表示保证线程安全。因此在阅读文档的同时，去读读 <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniOS/Articles/iPhoneOS4.html">iOS 版本更新说明</a>会是一个很好的选择。</p>
+
+<p>对于大多数情况来说，UIKit 类确实只应该用在应用的主线程中。这对于那些继承自 UIResponder 的类以及那些操作你的应用的用户界面的类来说，不管如何都是很正确的。</p>
+
+<h4 id="deallocation">内存回收 (deallocation) 问题</h4>
+
+<p>另一个在后台使用 UIKit 对象的的危险之处在于“内存回收问题”。Apple 在技术笔记 <a href="ttp://developer.apple.com/library/ios/#technotes/tn2109/_index.html">TN2109</a> 中概述了这个问题，并提供了多种解决方案。这个问题其实是要求 UI 对象应该在主线程中被回收，因为在它们的 <code>dealloc</code> 方法被调用回收的时候，可能会去改变 view 的结构关系，而如我们所知，这种操作应该放在主线程来进行。</p>
+
+<p>因为调用者被其他线程持有是非常常见的（不管是由于 operation 还是 block 所导致的），这也是很容易犯错并且难以被修正的问题。在 <a href="https://github.com/AFNetworking/AFNetworking/issues/56">AFNetworking 中也一直长久存在这样的 bug</a>，但是由于其自身的隐蔽性而鲜为人知，也很难重现其所造成的崩溃。在异步的 block 或者操作中一致使用 <code>__weak</code>，并且不去直接访问局部变量会对避开这类问题有所帮助。</p>
+
+<h4 id="collection">Collection 类</h4>
+
+		
+		<a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -674,65 +742,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/03/17/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8/">
-		
-			Markdown 入门新手指南</a>
-	</h2>
-	<div class="entry-content">
-		<div class="show-content">
-          <p>作为一款「写作软件」在诞生之初就支持了 Markdown，Markdown 是一种「电子邮件」风格的「标记语言」，我强烈推荐所有写作者学习和掌握该语言。</p>
-<p>在此，总结 Markdown 的优点如下：</p>
-<ul>
-<li>纯文本，所以兼容性极强，可以用所有文本编辑器打开。</li>
-<li>让你专注于文字而不是排版。</li>
-<li>格式转换方便，Markdown 的文本你可以轻松转换为 html、电子书等。</li>
-<li>Markdown 的标记语法有极好的可读性。</li>
-</ul>
-<p>当然，既然如此推崇 Markdown ，也必定会教会你使用 Markdown ，这也是本文的目的所在。不过，虽然 <a href="http://wowubuntu.com/markdown/">Markdown 的语法</a>已经足够简单，但是现有的 Markdown 语法说明更多的是写给 web 从业者看的，对于很多写作者来说，学习起来效率很低，现在，特地为写作者量身定做本指南，从写作者的实际需求出发，介绍写作者真正实用的常用格式，深入浅出、图文并茂地让您迅速掌握 Markdown 语法。</p>
-<p>为了使您更好地学习，我们建议您登录，将您的编辑器切换至 Markdown 编辑器，新建一篇空白笔记，然后点击右上角的预览模式，此时，您的界面应当如下图所示，左侧为编辑区域，右侧为预览区域，您在左侧输入 Markdown 语法的文本，右侧会立即帮您呈现最终结果，好了，让我们开始学习吧~</p>
-<p><em> Markdown：</em><br /><img src="http://ww2.sinaimg.cn/large/687afc7fjw1dzs642j2qoj.jpg" alt="" /></p>
-<h2>标题</h2>
-<p>这是最为常用的格式，在平时常用的的文本编辑器中大多是这样实现的：输入文本、选中文本、设置标题格式。</p>
-<p>而在 Markdown 中，你只需要在文本前面加上 <code>#</code> 即可，同理、你还可以增加二级标题、三级标题、四级标题、五级标题和六级标题，总共六级，只需要增加  <code>#</code> 即可，标题字号相应降低。例如：</p>
-<pre><code># 一级标题
-## 二级标题
-### 三级标题
-#### 四级标题
-##### 五级标题
-###### 六级标题</code></pre>
-<p><em>注：<code>#</code> 和「一级标题」之间建议保留一个字符的空格，这是最标准的 Markdown 写法。</em></p>
-<p><em>你可以你的编辑器中尝试输入这六级标题，可以参考下方的截图：</em><br /><img src="http://ww4.sinaimg.cn/large/687afc7fjw1dzs5crii94j.jpg" alt="一级标题至六级标题" />  </p>
-<h2>列表</h2>
-
-		
-		<a href="/Blog/blog/2014/03/17/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/markdown/'>Markdown</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/03/17/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
