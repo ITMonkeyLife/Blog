@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Swift | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/swift/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-10T18:32:12+08:00</updated>
+  <updated>2015-12-11T18:16:26+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,323 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Swift 2.2 源码解读 Swift 的 ABI]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/"/>
+    <updated>2015-12-11T10:10:22+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du</id>
+    <content type="html"><![CDATA[<p>
+随着Swift的开源，苹果开发者迎来了新的开端。其实这个是我一直想要表达的，随着对Swift这个语言的深入了解，越发感觉到Swift的魅力。Swift是系统编程语言，现在C语言之所以能统治底层开发的最重要原因是C规范统一的ABI，使其能做到与汇编程序无缝衔接。而Swift的ABI兼容C（并不包括name mangling部分）。基于强大的llvm生成具体平台代码。不仅仅作为Objective-C的翻译。
+</p>
+<p>
+通过开发Swift，了解到Swift文件的中间编译结果（介于Swift代码合llvm ir）是SIL。SIL我下一章着重介绍。这张暂时把焦点放在Swift的ABI。那么什么是ABI，你一定很陌生吧，那么对于API呢，你是不是明白了什么？
+</p>
+<p>
+ABI的全称是Application Binary Interface。翻译过来就是应用二进制接口，描述了应用程序和操作系统或其他应用程序之间的低级接口。
+</p>
+<p>
+ABI涵盖了各个细节：
+<!-- more-->
+<ul>
+<li>数据类型的大小、设计和对齐;</li>
+<li>调用约定（控制着函数的参数如何传送以及如何接受返回值），例如，是所有的参数都通过栈传递，还是部分参数通过寄存器传递；哪个寄存器用于哪个函数参数；通过栈传递的第一个函数参数是最先push到栈上还是最后</li>
+<li>系统调用的编码和一个应用如何向操作系统进行系统调用</li>
+<li>以及在一个完整的操作系统ABI中，目标文件的二进制格式、程序库等等。</li>
+</ul>
+一个完整的ABI，像Intel二进制兼容标准（iBCS），允许支持它的操作系统上的程序不经修改在其他支持此ABI的操作系统上运行。
+</p>
+<p>
+ABI不同于应用程序接口（API），API定义了源代码和库之间的接口，因此同样的代码可以在支持这个API的任何系统中编译，然而ABI允许编译好的目标代码在使用兼容ABI的系统中无需改动就能运行。 在Unix风格的操作系统中，存在很多运行在同一硬件平台上互相相关但是不兼容的操作系统（尤其是Intel 80386兼容系统）。有一些努力尝试标准化ABI，以减少销售商将程序移植到其他系统时所需的工作。然而，直到现在还没有很成功的例子，虽然Linux标准化工作组正在为Linux做这方面的努力。
+</p>
+<p>
+我在上面说了，ABI的各个细节。在这我需要强调一点：在Swift类，如果没有明确标识对象基类则一律继承SwiftObject Objective-C类。这个是Swift的硬性规定。
+</p>
+<h2>类型设计</h2>
+<h4>脆弱的结构体和元组设计</h4>
+<p>
+结构和元组目前共享相同的设计算法，编译器实现“通用”设计算法。该算法如下：
+<ul>
+  <li>从0开始，以1对齐增长</li>
+  <li>遍历字段,在元素的元组,或顺序结构var声明。每个字段:<ul>
+      <li>通过舍入更新字节来对齐字段，字段增长的值至少大于或等于字节，整除的一致性</li>
+      <li>&lt;字段的当前值的大小赋给偏移量/li&gt;
+      <li>更新字节通过添加字段的字节大小</li>
+      <li>更新对齐最大字节，和更新对齐的字段</li>
+      
+  </li>
+  <li>最终的大小和对齐的大小和对齐集合。类型是最后的，步长大小来对齐。</li>
+</ul>
+
+注意这不同于C或LLVM是正常的设计规则,大小和步幅是不同的,而C设计要求,嵌入式结构的大小是填充其对齐,迅速设计允许外部结构布置内部结构的尾巴填充字段,允许对齐。与C不同,大小结构和元组也允许,没有存储在包含总量。快速编译器发出LLVM包装结构类型与手动填充必要的控制二进制设计。一些例子:
+<!-- <br>
+``` swift
+// LLVM <{ i64, i8 }>
+struct S {
+  var x: Int
+  var y: UInt8
+}
+
+// LLVM <{ i8, [7 x i8], <{ i64, i8 }>, i8 }>
+struct S2 {
+  var x: UInt8
+  var s: S
+  var y: UInt8
+}
+
+// LLVM <{}>
+struct Empty {}
+
+// LLVM <{ i64, i64 }>
+struct ContainsEmpty {
+  var x: Int
+  var y: Empty
+  var z: Int
+}
+```
+</p>
+
+<h4 id="">类设计</h4>
+<p>
+Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的一部分：
+<ul>
+<li>32位平台从未标记指针。ObjC指针类型是nil或一个对象指针。</li>
+<li>在x86-64,一个标记指针设置指针的最低位或最高位的指针。因此,这两位都是0当且仅当该值不是一个标记指针。</li>
+<li>ARM64,标记指针总是设置最高位的指针。</li>
+<li>32位平台不会执行任何isa掩饰<code>object_getClass</code>总是相当于<code>*(Class*)object</code></li>
+<li>64位平台上执行isa掩饰只有在运行时才导出的符号<code>uintptr_t objc_debug_isa_class_mask;</code>。如果导出这个符号，<code>object_getClass</code>在一个非标记指针总是相当于<code>(Class)(objc_debug_isa_class_mask & *(uintptr_t*)object)</code></li>
+<li>超类的类对象总是isa字段后立即存储。它的值是nil或一个指向父类的类对象;它从来没有其他设置。</li>
+</ul>
+
+下面是Swift ABI的一部分：
+<ul>
+<li>Swift指针不会是标记指针。</li>
+</ul>
+</p>
+
+<h2 id="">脆弱的Enum设计</h2>
+<p>
+在设计enum类型、ABI试图避免需要额外存储来存储枚举的标签。ABI选择的五个策略基于enum的设计:
+</p>
+<h4 id="">空枚举</h4>
+<p>enum在没有case的情况下,枚举是一个空的类型。
+<br>
+```swift
+enum Empty {} // => empty type
+```
+</p>
+<h4 id="">单一类型枚举</h4>
+<p>只有一个情况下的枚举，没有必要筛选,和枚举类型相同的设计的情况下的数据类型,可以是空的,如果没有数据类型。
+<br>
+```swift
+enum EmptyCase { case X }             // => empty type
+enum DataCase { case Y(Int, Double) } // => LLVM <{ i64, double }>
+```
+</p>
+<h4 id="">类C枚举</h4>
+<p>如果没有一个case有数据类型(一个典型的“c”enum),那么enum是最小整数标记包含的比特数的所有情况。遵循LLVM的数据设计规则整数类型在目标平台上。被分配的case标签的值依次排列声明顺序。
+<br>
+```swift
+enum EnumLike2 { // => LLVM i1
+  case A         // => i1 0
+  case B         // => i1 1
+}
+
+enum EnumLike8 { // => LLVM i3
+  case A         // => i3 0
+  case B         // => i3 1
+  case C         // => i3 2
+  case D         // etc.
+  case E
+  case F
+  case G
+  case H
+}
+```
+<br>
+辨别值之后，一个用于最后的case成为额外例子的枚举类型。
+</p>
+
+<h4>单一的对应枚举</h4>
+<p>
+如果枚举数据类型和一个或多个单情况没有数据的情况下(一个“单一的对应枚举”),然后与数据类型使用的数据类型来表示的二进制表示,必要时添加了零位标记。如果数据类型的二进制表示额外的条件,也就是说,有些模式类型的大小和对齐,但没有形成有效的值的类型,它们是用来表示没有数据的情况下,case的提升数值匹配的顺序没有数据情况下按声明顺序。如果类型有空闲位(见多个对应枚举),它们被用来形成额外的条件。然后枚举值表示为一个整数的存储大小的数据类型。额外的条件使用的负载类型不是枚举类型成为额外的条件enum类型本身。
+<br>
+```swift
+enum CharOrSectionMarker { => LLVM i32
+  case Paragraph            => i32 0x0020_0000
+  case Char(UnicodeScalar)  => i32 (zext i21 %Char to i32)
+  case Chapter              => i32 0x0020_0001
+}
+
+CharOrSectionMarker.Char('\x00') => i32 0x0000_0000
+CharOrSectionMarker.Char('\u10FFFF') => i32 0x0010_FFFF
+
+enum CharOrSectionMarkerOrFootnoteMarker { => LLVM i32
+  case CharOrSectionMarker(CharOrSectionMarker) => i32 %CharOrSectionMarker
+  case Asterisk                                 => i32 0x0020_0002
+  case Dagger                                   => i32 0x0020_0003
+  case DoubleDagger                             => i32 0x0020_0004
+}
+```
+<br>
+如果数据类型没有额外的条件,或者没有足够的额外的条件表示没有数据的情况下,然后添加一个标记位enum的表示。没有数据的标记位设置情况下,然后分配数据区域中的值的枚举声明的顺序。
+<br>
+```swift
+enum IntOrInfinity { => LLVM <{ i64, i1 }>
+  case NegInfinity    => <{ i64, i1 }> {    0, 1 }
+  case Int(Int)       => <{ i64, i1 }> { %Int, 0 }
+  case PosInfinity    => <{ i64, i1 }> {    1, 1 }
+}
+
+IntOrInfinity.Int(    0) => <{ i64, i1 }> {     0, 0 }
+IntOrInfinity.Int(20721) => <{ i64, i1 }> { 20721, 0 }
+```
+</p>
+<h4 id="">多个对应枚举</h4>
+<p>
+如果一个枚举数据类型有多个情况,然后一个标签来区分数据类型是必要的。ABI首先会尝试找到共同闲置比特,即二进制数据类型的表示fixed-zero或忽略的有效值的所有数据类型。标签将被分散到这些闲置比特尽可能多。目前只备用的原始的整数类型,如高位被认为是<code>i21</code>类型。枚举数据表示为一个整数的存储大小的最大数据类型。
+<br>
+```swift
+enum TerminalChar {             => LLVM i32
+  case Plain(UnicodeScalar)     => i32     (zext i21 %Plain     to i32)
+  case Bold(UnicodeScalar)      => i32 (or (zext i21 %Bold      to i32), 0x0020_0000)
+  case Underline(UnicodeScalar) => i32 (or (zext i21 %Underline to i32), 0x0040_0000)
+  case Blink(UnicodeScalar)     => i32 (or (zext i21 %Blink     to i32), 0x0060_0000)
+  case Empty                    => i32 0x0080_0000
+  case Cursor                   => i32 0x0080_0001
+}
+```
+<br>
+如果没有足够的空闲位包含标签,然后添加额外的比特表示包含标签。标签的值分配给数据情况下按声明顺序。如果有任何数据的情况下,他们被收集在一个共同的标签,并指定数据区域中的值的枚举声明的顺序。
+<br>
+```swift
+class Bignum {}
+
+enum IntDoubleOrBignum { => LLVM <{ i64, i2 }>
+  case Int(Int)           => <{ i64, i2 }> {           %Int,            0 }
+  case Double(Double)     => <{ i64, i2 }> { (bitcast  %Double to i64), 1 }
+  case Bignum(Bignum)     => <{ i64, i2 }> { (ptrtoint %Bignum to i64), 2 }
+}
+```
+</p>
+<h2 id="">存在容器的设计</h2>
+<p>值的协议类型,协议组成类型,或“any”类型(<code>protocol<></code>)提出使用存在容器(所谓的因为这些类型是类型理论中的“生存类型”)。</p>
+<h4 id="">存在的不透明容器</h4>
+<p>如果没有类限制协议或协议组成类型,存在的容器必须适应值为任意大小和对齐。它使用一个固定大小的缓冲区,这是三个指针大小和pointer-aligned。这个直接包含的值,如果它的大小和对齐都小于或等于固定大小的缓冲区,或包含一个指针指向一个分配属于存在的容器。所包含的值的类型是由其类型标识元数据记录,为所有需要的协议和映射表的一致性。设计好像声明在C结构体如下:
+<br>
+```
+struct OpaqueExistentialContainer {
+  void *fixedSizeBuffer[3];
+  Metadata *type;
+  WitnessTable *witnessTables[NUM_WITNESS_TABLES];
+};
+```
+</p>
+<h4 id="">存在的类的容器</h4>
+<p>
+如果一个或多个协议的协议或协议组成类型有一个类约束,然后只能存储在已经存在的容器,并使用一个更有效的表示。类实例总是一个指针的大小,所以不需要分配一个固定大小的缓冲区,和类实例总是有自己的引用类型的元数据,因此不需要单独的元数据记录。声明中的设计就好像下面C结构体:
+<br>
+```
+struct ClassExistentialContainer {
+  HeapObject *value;
+  WitnessTable *witnessTables[NUM_WITNESS_TABLES];
+};
+```
+<br>
+注意,如果不需要映射表,如“任何类”类型的<code>protocol<class></code>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id <Protocol></code>类型在Objective-C中。
+</p>
+
+<h2 id="">元数据类型</h2>
+<p>快速运行时保持元数据记录为每一类型在程序中使用,包括每一个实例化泛型类型的。可以使用这些元数据记录(TODO:映射)调试器工具发现的信息类型。对于非泛型名义类型,这些元数据是由编译器生成的静态记录。对泛型类型的实例,和内在类型如元组、功能、协议等等组成,元数据记录懒洋洋地根据需要运行时创建的。每个类型都有一个独特的元数据记录,两种元数据指针值相等,如果他们的类型相同。<br>
+在下面的设计描述中,抵消了相对于元数据指针作为指针数组的索引。在32位平台上,抵消1意味着一个偏移量的4个字节,在64位平台上,这意味着8个字节的偏移量。<br>
+</p>
+<h4 id="">通用元数据设计</h4>
+<p>
+所有元数据记录共享一个共同的数据头,下面字段:
+<ul>
+<li>映射价值表指针引用的vtable函数实现值的语义类型,提供了基本的操作,如分配,复制,销毁的类型。映射表也记录的值大小、对齐、步长等基本属性的类型。映射价值表指针偏移-1元数据的指针,即指针字节所在位置立即在指针的引用地址偏移。</li>
+<li>类型字段是一个pointer-sized整数描述元数据描述。这个字段的偏移量为0的元数据的指针。</li>
+</ul>
+</p>
+<h4 id="">结构体元数据</h4>
+<p>
+除了常见的元数据字段设计、结构元数据记录包含以下字段:<br>
+<ul>
+<li>名义类型描述符引用偏移量1。</li>
+<li>引用父元数据记录存储在偏移2。是一个封闭的名义类型的成员的结构,这是一个封闭类型的元数据的引用。对于高层结构体,这是null。（父指针总是空）</li>
+<li>矢量偏移量从3开始。每个字段的结构体,在var声明顺序,字段的偏移字节从一开始的结构是存储为pointer-sized整数倍。</li>
+<li>如果结构是通用的,那么通用参数向量始于抵消3 + n,其中n是结构中的字段的数量</li>
+</ul>
+</p>
+<h4 id="">枚举元数据</h4>
+<p>除了常见的元数据字段设计,enum记录元数据包含以下字段:<br>
+<ul>
+<li>名义类型描述符引用偏移量1。</li>
+<li>引用父元数据记录存储在偏移2。是一个封闭的名义类型的成员的结构,这是一个封闭类型的元数据的引用。对于高层结构体,这是null。（父指针总是空）</li>
+<li>如果enum是通用的,那么通用参数向量始于偏移地址3。</li>
+</ul>
+</p>
+<h4 id="">元组元数据</h4>
+<p>
+除了常见的元数据字段设计、元组元数据记录包含以下字段:<br>
+<ul>
+<li>名义类型描述符引用偏移量1。</li>
+<li>标签字符串指针连续以null结尾的标签名称的列表在元组偏移2。每个标签的名字是作为一个以null结尾,UTF-8编码的字符串序列。如果元组没有标签,这是一个空指针。(目前标签字符串指针总是空,独特的标签不考虑元组元数据)</li>
+<li>向量的元素开始的偏移地址3,由一个向量type-offset对。第n个元素的元数据类型是指针的偏移地址3+2*n。字节的偏移量从一开始的第n个元素的元组开始的偏移量是3+2*n+1。</li>
+</ul>
+</p>
+<h4 id="">函数元数据</h4>
+<p>除了常见的元数据字段设计,函数元数据记录包含以下字段:<br>
+<ul>
+<li>参数的数量函数存储在偏移量为1的地址。</li>
+<li>结果的引用类型元数据记录存储在偏移量为2。如果函数有多个返回,这引用一个元组元数据记录</li>
+<li>参数向量始于偏移地址3,由指针指向的函数的参数元数据记录。</li>
+</ul>
+<br>
+如果函数需要任何in/out参数,每个参数的元数据记录指针将另外附加,一些被设置如果in/out最低位。由于指针对准,最低位持有这个标签总是空。
+如果函数没有in/out参数,将只有一个指针在下列情形的向量:
+<ul>
+<li>0参数:一个元组元数据记录为空元组</li>
+<li>1参数:第一个也是唯一一个参数的元数据记录</li>
+<li>> 1的参数:tuple包含参数的元数据记录</li>
+</ul>
+</p>
+<h4 id="">协议元数据</h4>
+除了常见的元数据字段设计,协议元数据记录包含以下字段:<br>
+<ul>
+<li>设计标志词是储存在偏移为1。这个词的部分描述存在容器设计用于表示值的类型。这个词设计如下:<ul>
+<li>映射表存储在最低位31位。协议类型的值包含这个数字映射表指针的设计。</li>
+<li>类约束条件是储存在31位。这个位设置如果不类容器类型,这意味着结构、枚举、或类值中可以存储类型。如果没有设置,那么只能存储在类值类型,并使用一个更高效的设计类型。</li>
+</ul>
+注意字段pointer-sized,尽管只有最低的32位目前在所有平台上。这些值可以来自协议描述符记录,但预计算会更便利。
+</li>
+<li>协议的协议组成的数量是储存在偏移2。“任何”<code>protocol<> </code>或<code>protocol<class> </code>。对于单一协议 <code>P</code>。协议构成类型<code>protocol<P, Q, ...></code>,这是协议的数量</li>
+<li>协议描述符向量始于偏移地址3。这是内联的协议描述符的指针数组中的每个协议组成,或单一协议为协议类型描述符。“任何”类型,没有协议描述符向量。</li>
+</ul>
+</p>
+<h4 id="">变型的元数据</h4>
+<p>
+除了常见的元数据字段布局、变型的元数据记录包含以下字段:
+<ul>
+<li>引用的实例类型的元数据记录变型代表是储存在偏移为1的地址。</li>
+</ul>
+</p>
+
+<h4 id="">类元数据</h4>
+<p>
+类元数据设计和Objective-C互操作;所有类元数据记录也有效的Objective-C类对象。类元数据指针的值被用作类变型,所以派生类的元数据记录也作为一个有效的为其父类的所有类变型价值。
+</p>
+
+
+
+
+ -->
+
+
+<hr />
+</li></ul></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Swift的强大之处]]></title>
