@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-13T13:21:48+08:00</updated>
+  <updated>2015-12-13T15:13:28+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -312,8 +312,8 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 </span><span class="line"><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 <br />
-注意,如果不需要映射表,如“任何类”类型的<code>protocol\\&lt;class\\&gt;</code>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id \\&lt;Protocol\\&gt;</code>类型在Objective-C中。
-</p>
+注意,如果不需要映射表,如“任何类”类型的<code>protocol&lt;&gt;</code>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id <protocol>类型在Objective-C中。
+
 
 <h2>元数据类型</h2>
 <p>快速运行时保持元数据记录为每一类型在程序中使用,包括每一个实例化泛型类型的。可以使用这些元数据记录(TODO:映射)调试器工具发现的信息类型。对于非泛型名义类型,这些元数据是由编译器生成的静态记录。对泛型类型的实例,和内在类型如元组、功能、协议等等组成,元数据记录懒洋洋地根据需要运行时创建的。每个类型都有一个独特的元数据记录,两种元数据指针值相等,如果他们的类型相同。<br />
@@ -381,7 +381,7 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 </ul>
 注意字段pointer-sized,尽管只有最低的32位目前在所有平台上。这些值可以来自协议描述符记录,但预计算会更便利。
 </li>
-<li>协议的协议组成的数量是储存在偏移2。“任何”<code>protocol&lt;&gt; </code>或<code>protocol\\&lt;class\\&gt; </code>。对于单一协议 <code>P</code>。协议构成类型<code>protocol&lt;P, Q, ...&gt;</code>,这是协议的数量</li>
+<li>协议的协议组成的数量是储存在偏移2。“任何”<code>protocol&lt;&gt; </code>。对于单一协议 <code>P</code>。协议构成类型<code>protocol&lt;P, Q, ...&gt;</code>,这是协议的数量</li>
 <li>协议描述符向量始于偏移地址3。这是内联的协议描述符的指针数组中的每个协议组成,或单一协议为协议类型描述符。“任何”类型,没有协议描述符向量。</li>
 </ul>
 
@@ -407,7 +407,7 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 <hr />
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</li></ul></p>
+</protocol></code></p></li></ul></p>
 ]]></content>
   </entry>
   
