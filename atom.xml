@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-13T12:28:07+08:00</updated>
+  <updated>2015-12-13T13:14:12+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -312,7 +312,7 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 </span><span class="line"><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 <br />
-注意,如果不需要映射表,如“任何类”类型的<code>protocol<class>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id <protocol>类型在Objective-C中。
+注意,如果不需要映射表,如“任何类”类型的<code>protocol\&lt;class\&gt;</code>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id <protocol>类型在Objective-C中。
 
 
 <h2>元数据类型</h2>
@@ -361,9 +361,10 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 <li>结果的引用类型元数据记录存储在偏移量为2。如果函数有多个返回,这引用一个元组元数据记录</li>
 <li>参数向量始于偏移地址3,由指针指向的函数的参数元数据记录。</li>
 </ul>
-<br />
+<p>
 如果函数需要任何in/out参数,每个参数的元数据记录指针将另外附加,一些被设置如果in/out最低位。由于指针对准,最低位持有这个标签总是空。
 如果函数没有in/out参数,将只有一个指针在下列情形的向量:
+</p>
 <ul>
 <li>0参数:一个元组元数据记录为空元组</li>
 <li>1参数:第一个也是唯一一个参数的元数据记录</li>
@@ -371,7 +372,8 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 </ul>
 </p>
 <h4>协议元数据</h4>
-除了常见的元数据字段设计,协议元数据记录包含以下字段:<br />
+<p>
+除了常见的元数据字段设计,协议元数据记录包含以下字段:</p>
 <ul>
 <li>设计标志词是储存在偏移为1。这个词的部分描述存在容器设计用于表示值的类型。这个词设计如下:<ul>
 <li>映射表存储在最低位31位。协议类型的值包含这个数字映射表指针的设计。</li>
@@ -379,9 +381,9 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 </ul>
 注意字段pointer-sized,尽管只有最低的32位目前在所有平台上。这些值可以来自协议描述符记录,但预计算会更便利。
 </li>
-<li>协议的协议组成的数量是储存在偏移2。“任何”<code>protocol&lt;&gt; </code>或<code>protocol<class> 。对于单一协议 <code>P</code>。协议构成类型<code>protocol&lt;P, Q, ...&gt;</code>,这是协议的数量
+<li>协议的协议组成的数量是储存在偏移2。“任何”<code>protocol&lt;&gt; </code>或<code>protocol\&lt;class\&gt; </code>。对于单一协议 <code>P</code>。协议构成类型<code>protocol&lt;P, Q, ...&gt;</code>,这是协议的数量</li>
 <li>协议描述符向量始于偏移地址3。这是内联的协议描述符的指针数组中的每个协议组成,或单一协议为协议类型描述符。“任何”类型,没有协议描述符向量。</li>
-
+</ul>
 
 <h4>变型的元数据</h4>
 <p>
@@ -405,7 +407,7 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 <hr />
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</class></code></li></ul></protocol></code></class></code></p></li></ul></p>
+</protocol></code></p></li></ul></p>
 ]]></content>
   </entry>
   

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-13T12:28:07+08:00</updated>
+  <updated>2015-12-13T13:15:34+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -1311,7 +1311,7 @@ void foo(string myname) {
 <!-- more -->
 <p>在这篇文章中，我们介绍了一种称之为 <a href="http://mutualmobile.github.io/blog/2013/12/04/viper-introduction/">VIPER</a> 的 iOS 应用架构的方式。VIPER 已经在很多大型的项目上成功实践，但是出于本文的目的我们将通过一个待办事项清单 (to-do app) 来介绍 VIPER 。你可以在 <a href="https://github.com/objcio/issue-13-viper">GitHub</a> 上关注这个项目。</p>
 
-<p><video style="display:block;max-width:316px;height:auto;border:0;" poster="/issue-13/2014-06-07-viper-screenshot.png" controls="1"> <br />
+<p><video style="display:block;max-width:316px;height:auto;border:0;" poster="{{site.images_path}}/issue-13/2014-06-07-viper-screenshot.png" controls="1"> <br />
   <source src="http://img.objccn.io//issue-13/2014-06-07-viper-preview.mp4" />
 </video></p>
 
