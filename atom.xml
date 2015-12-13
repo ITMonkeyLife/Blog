@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-13T15:13:28+08:00</updated>
+  <updated>2015-12-13T15:20:08+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -312,7 +312,7 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 </span><span class="line"><span class="p">};</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 <br />
-注意,如果不需要映射表,如“任何类”类型的<code>protocol&lt;&gt;</code>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id <protocol>类型在Objective-C中。
+注意,如果不需要映射表,如“任何类”类型的<code>protocol&lt;&gt;</code>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id<protocol>类型在Objective-C中。
 
 
 <h2>元数据类型</h2>
