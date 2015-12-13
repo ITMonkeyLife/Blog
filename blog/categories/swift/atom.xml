@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Swift | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/swift/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-13T15:20:56+08:00</updated>
+  <updated>2015-12-13T15:49:10+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -235,8 +235,8 @@ struct ClassExistentialContainer {
 };
 ```
 <br />
-注意,如果不需要映射表,如“任何类”类型的<code>protocol&lt;&gt;</code>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id<protocol>类型在Objective-C中。
-
+注意,如果不需要映射表,如“任何类”类型的<code>protocol&lt;&gt;</code>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>Protocol</code>类型在Objective-C中。
+</p>
 
 <h2>元数据类型</h2>
 <p>快速运行时保持元数据记录为每一类型在程序中使用,包括每一个实例化泛型类型的。可以使用这些元数据记录(TODO:映射)调试器工具发现的信息类型。对于非泛型名义类型,这些元数据是由编译器生成的静态记录。对泛型类型的实例,和内在类型如元组、功能、协议等等组成,元数据记录懒洋洋地根据需要运行时创建的。每个类型都有一个独特的元数据记录,两种元数据指针值相等,如果他们的类型相同。<br />
@@ -328,7 +328,7 @@ struct ClassExistentialContainer {
 
 
 <hr />
-</protocol></code></p></li></ul></p>
+</li></ul></p>
 ]]></content>
   </entry>
   
