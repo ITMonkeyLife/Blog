@@ -118,55 +118,55 @@ ABI不同于应用程序接口（API），API定义了源代码和库之间的�
 </ul>
 
 注意这不同于C或LLVM是正常的设计规则,大小和步幅是不同的,而C设计要求,嵌入式结构的大小是填充其对齐,迅速设计允许外部结构布置内部结构的尾巴填充字段,允许对齐。与C不同,大小结构和元组也允许,没有存储在包含总量。快速编译器发出LLVM包装结构类型与手动填充必要的控制二进制设计。一些例子:
-<!-- <br>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="c1">// LLVM &lt;{ i64, i8 }&gt;</span>
-</span><span class='line'><span class="k">struct</span> <span class="n">S</span> <span class="p">{</span>
-</span><span class='line'>  <span class="n">var</span> <span class="nl">x:</span> <span class="n">Int</span>
-</span><span class='line'>  <span class="n">var</span> <span class="nl">y:</span> <span class="n">UInt8</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// LLVM &lt;{ i8, [7 x i8], &lt;{ i64, i8 }&gt;, i8 }&gt;</span>
-</span><span class='line'><span class="k">struct</span> <span class="n">S2</span> <span class="p">{</span>
-</span><span class='line'>  <span class="n">var</span> <span class="nl">x:</span> <span class="n">UInt8</span>
-</span><span class='line'>  <span class="n">var</span> <span class="nl">s:</span> <span class="n">S</span>
-</span><span class='line'>  <span class="n">var</span> <span class="nl">y:</span> <span class="n">UInt8</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// LLVM &lt;{}&gt;</span>
-</span><span class='line'><span class="k">struct</span> <span class="n">Empty</span> <span class="p">{}</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// LLVM &lt;{ i64, i64 }&gt;</span>
-</span><span class='line'><span class="k">struct</span> <span class="n">ContainsEmpty</span> <span class="p">{</span>
-</span><span class='line'>  <span class="n">var</span> <span class="nl">x:</span> <span class="n">Int</span>
-</span><span class='line'>  <span class="n">var</span> <span class="nl">y:</span> <span class="n">Empty</span>
-</span><span class='line'>  <span class="n">var</span> <span class="nl">z:</span> <span class="n">Int</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-</p>
+<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// LLVM &lt;{ i64, i8 }&gt;</span>
+</span><span class="line"><span class="k">struct</span> <span class="n">S</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">var</span> <span class="nl">x:</span> <span class="n">Int</span>
+</span><span class="line">  <span class="n">var</span> <span class="nl">y:</span> <span class="n">UInt8</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// LLVM &lt;{ i8, [7 x i8], &lt;{ i64, i8 }&gt;, i8 }&gt;</span>
+</span><span class="line"><span class="k">struct</span> <span class="n">S2</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">var</span> <span class="nl">x:</span> <span class="n">UInt8</span>
+</span><span class="line">  <span class="n">var</span> <span class="nl">s:</span> <span class="n">S</span>
+</span><span class="line">  <span class="n">var</span> <span class="nl">y:</span> <span class="n">UInt8</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// LLVM &lt;{}&gt;</span>
+</span><span class="line"><span class="k">struct</span> <span class="n">Empty</span> <span class="p">{}</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// LLVM &lt;{ i64, i64 }&gt;</span>
+</span><span class="line"><span class="k">struct</span> <span class="n">ContainsEmpty</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">var</span> <span class="nl">x:</span> <span class="n">Int</span>
+</span><span class="line">  <span class="n">var</span> <span class="nl">y:</span> <span class="n">Empty</span>
+</span><span class="line">  <span class="n">var</span> <span class="nl">z:</span> <span class="n">Int</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<h4 id="">类设计</h4>
+
+<h4>类设计</h4>
 <p>
 Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的一部分：
 <ul>
@@ -174,7 +174,7 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 <li>在x86-64,一个标记指针设置指针的最低位或最高位的指针。因此,这两位都是0当且仅当该值不是一个标记指针。</li>
 <li>ARM64,标记指针总是设置最高位的指针。</li>
 <li>32位平台不会执行任何isa掩饰<code>object_getClass</code>总是相当于<code>*(Class*)object</code></li>
-<li>64位平台上执行isa掩饰只有在运行时才导出的符号<code>uintptr_t objc_debug_isa_class_mask;</code>。如果导出这个符号，<code>object_getClass</code>在一个非标记指针总是相当于<code>(Class)(objc_debug_isa_class_mask & *(uintptr_t*)object)</code></li>
+<li>64位平台上执行isa掩饰只有在运行时才导出的符号<code>uintptr_t objc_debug_isa_class_mask;</code>。如果导出这个符号，<code>object_getClass</code>在一个非标记指针总是相当于<code>(Class)(objc_debug_isa_class_mask &amp; *(uintptr_t*)object)</code></li>
 <li>超类的类对象总是isa字段后立即存储。它的值是nil或一个指向父类的类对象;它从来没有其他设置。</li>
 </ul>
 
@@ -184,199 +184,199 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 </ul>
 </p>
 
-<h2 id="">脆弱的Enum设计</h2>
+<h2>脆弱的Enum设计</h2>
 <p>
 在设计enum类型、ABI试图避免需要额外存储来存储枚举的标签。ABI选择的五个策略基于enum的设计:
 </p>
-<h4 id="">空枚举</h4>
+<h4>空枚举</h4>
 <p>enum在没有case的情况下,枚举是一个空的类型。
-<br>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">Empty</span> <span class="p">{}</span> <span class="c1">// =&gt; empty type</span>
-</span></code></pre></td></tr></table></div></figure>
+<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">enum</span> <span class="n">Empty</span> <span class="p">{}</span> <span class="c1">// =&gt; empty type</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 </p>
-<h4 id="">单一类型枚举</h4>
+<h4>单一类型枚举</h4>
 <p>只有一个情况下的枚举，没有必要筛选,和枚举类型相同的设计的情况下的数据类型,可以是空的,如果没有数据类型。
-<br>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">EmptyCase</span> <span class="p">{</span> <span class="k">case</span> <span class="n">X</span> <span class="p">}</span>             <span class="c1">// =&gt; empty type</span>
-</span><span class='line'><span class="k">enum</span> <span class="n">DataCase</span> <span class="p">{</span> <span class="k">case</span> <span class="n">Y</span><span class="p">(</span><span class="n">Int</span><span class="p">,</span> <span class="n">Double</span><span class="p">)</span> <span class="p">}</span> <span class="c1">// =&gt; LLVM &lt;{ i64, double }&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
+<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">enum</span> <span class="n">EmptyCase</span> <span class="p">{</span> <span class="k">case</span> <span class="n">X</span> <span class="p">}</span>             <span class="c1">// =&gt; empty type</span>
+</span><span class="line"><span class="k">enum</span> <span class="n">DataCase</span> <span class="p">{</span> <span class="k">case</span> <span class="n">Y</span><span class="p">(</span><span class="n">Int</span><span class="p">,</span> <span class="n">Double</span><span class="p">)</span> <span class="p">}</span> <span class="c1">// =&gt; LLVM &lt;{ i64, double }&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 </p>
-<h4 id="">类C枚举</h4>
+<h4>类C枚举</h4>
 <p>如果没有一个case有数据类型(一个典型的“c”enum),那么enum是最小整数标记包含的比特数的所有情况。遵循LLVM的数据设计规则整数类型在目标平台上。被分配的case标签的值依次排列声明顺序。
-<br>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">EnumLike2</span> <span class="p">{</span> <span class="c1">// =&gt; LLVM i1</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">A</span>         <span class="c1">// =&gt; i1 0</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">B</span>         <span class="c1">// =&gt; i1 1</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">enum</span> <span class="n">EnumLike8</span> <span class="p">{</span> <span class="c1">// =&gt; LLVM i3</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">A</span>         <span class="c1">// =&gt; i3 0</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">B</span>         <span class="c1">// =&gt; i3 1</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">C</span>         <span class="c1">// =&gt; i3 2</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">D</span>         <span class="c1">// etc.</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">E</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">F</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">G</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">H</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-<br>
+<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">enum</span> <span class="n">EnumLike2</span> <span class="p">{</span> <span class="c1">// =&gt; LLVM i1</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">A</span>         <span class="c1">// =&gt; i1 0</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">B</span>         <span class="c1">// =&gt; i1 1</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">enum</span> <span class="n">EnumLike8</span> <span class="p">{</span> <span class="c1">// =&gt; LLVM i3</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">A</span>         <span class="c1">// =&gt; i3 0</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">B</span>         <span class="c1">// =&gt; i3 1</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">C</span>         <span class="c1">// =&gt; i3 2</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">D</span>         <span class="c1">// etc.</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">E</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">F</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">G</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">H</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<br />
 辨别值之后，一个用于最后的case成为额外例子的枚举类型。
 </p>
 
 <h4>单一的对应枚举</h4>
 <p>
 如果枚举数据类型和一个或多个单情况没有数据的情况下(一个“单一的对应枚举”),然后与数据类型使用的数据类型来表示的二进制表示,必要时添加了零位标记。如果数据类型的二进制表示额外的条件,也就是说,有些模式类型的大小和对齐,但没有形成有效的值的类型,它们是用来表示没有数据的情况下,case的提升数值匹配的顺序没有数据情况下按声明顺序。如果类型有空闲位(见多个对应枚举),它们被用来形成额外的条件。然后枚举值表示为一个整数的存储大小的数据类型。额外的条件使用的负载类型不是枚举类型成为额外的条件enum类型本身。
-<br>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">CharOrSectionMarker</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="n">i32</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Paragraph</span>            <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0000</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Char</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>  <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Char</span> <span class="n">to</span> <span class="n">i32</span><span class="p">)</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Chapter</span>              <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0001</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">CharOrSectionMarker</span><span class="p">.</span><span class="n">Char</span><span class="p">(</span><span class="sc">&#39;\x00&#39;</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0000</span><span class="n">_0000</span>
-</span><span class='line'><span class="n">CharOrSectionMarker</span><span class="p">.</span><span class="n">Char</span><span class="p">(</span><span class="err">&#39;\</span><span class="n">u10FFFF</span><span class="err">&#39;</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0010</span><span class="n">_FFFF</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">enum</span> <span class="n">CharOrSectionMarkerOrFootnoteMarker</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="n">i32</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">CharOrSectionMarker</span><span class="p">(</span><span class="n">CharOrSectionMarker</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="o">%</span><span class="n">CharOrSectionMarker</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Asterisk</span>                                 <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0002</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Dagger</span>                                   <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0003</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">DoubleDagger</span>                             <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0004</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-<br>
+<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">enum</span> <span class="n">CharOrSectionMarker</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="n">i32</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Paragraph</span>            <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0000</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Char</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>  <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Char</span> <span class="n">to</span> <span class="n">i32</span><span class="p">)</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Chapter</span>              <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0001</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="n">CharOrSectionMarker</span><span class="p">.</span><span class="n">Char</span><span class="p">(</span><span class="sc">&#39;\x00&#39;</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0000</span><span class="n">_0000</span>
+</span><span class="line"><span class="n">CharOrSectionMarker</span><span class="p">.</span><span class="n">Char</span><span class="p">(</span><span class="err">&#39;\</span><span class="n">u10FFFF</span><span class="err">&#39;</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0010</span><span class="n">_FFFF</span>
+</span><span class="line">
+</span><span class="line"><span class="k">enum</span> <span class="n">CharOrSectionMarkerOrFootnoteMarker</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="n">i32</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">CharOrSectionMarker</span><span class="p">(</span><span class="n">CharOrSectionMarker</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="o">%</span><span class="n">CharOrSectionMarker</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Asterisk</span>                                 <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0002</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Dagger</span>                                   <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0003</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">DoubleDagger</span>                             <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0020</span><span class="n">_0004</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<br />
 如果数据类型没有额外的条件,或者没有足够的额外的条件表示没有数据的情况下,然后添加一个标记位enum的表示。没有数据的标记位设置情况下,然后分配数据区域中的值的枚举声明的顺序。
-<br>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">IntOrInfinity</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">NegInfinity</span>    <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>    <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="p">}</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Int</span><span class="p">(</span><span class="n">Int</span><span class="p">)</span>       <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="o">%</span><span class="n">Int</span><span class="p">,</span> <span class="mi">0</span> <span class="p">}</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">PosInfinity</span>    <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>    <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">IntOrInfinity</span><span class="p">.</span><span class="n">Int</span><span class="p">(</span>    <span class="mi">0</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>     <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">}</span>
-</span><span class='line'><span class="n">IntOrInfinity</span><span class="p">.</span><span class="n">Int</span><span class="p">(</span><span class="mi">20721</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="mi">20721</span><span class="p">,</span> <span class="mi">0</span> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">enum</span> <span class="n">IntOrInfinity</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">NegInfinity</span>    <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>    <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="p">}</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Int</span><span class="p">(</span><span class="n">Int</span><span class="p">)</span>       <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="o">%</span><span class="n">Int</span><span class="p">,</span> <span class="mi">0</span> <span class="p">}</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">PosInfinity</span>    <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>    <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="n">IntOrInfinity</span><span class="p">.</span><span class="n">Int</span><span class="p">(</span>    <span class="mi">0</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>     <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">}</span>
+</span><span class="line"><span class="n">IntOrInfinity</span><span class="p">.</span><span class="n">Int</span><span class="p">(</span><span class="mi">20721</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i1</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="mi">20721</span><span class="p">,</span> <span class="mi">0</span> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 </p>
-<h4 id="">多个对应枚举</h4>
+<h4>多个对应枚举</h4>
 <p>
 如果一个枚举数据类型有多个情况,然后一个标签来区分数据类型是必要的。ABI首先会尝试找到共同闲置比特,即二进制数据类型的表示fixed-zero或忽略的有效值的所有数据类型。标签将被分散到这些闲置比特尽可能多。目前只备用的原始的整数类型,如高位被认为是<code>i21</code>类型。枚举数据表示为一个整数的存储大小的最大数据类型。
-<br>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">enum</span> <span class="n">TerminalChar</span> <span class="p">{</span>             <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="n">i32</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Plain</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="n">i32</span>     <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Plain</span>     <span class="n">to</span> <span class="n">i32</span><span class="p">)</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Bold</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>      <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">or</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Bold</span>      <span class="n">to</span> <span class="n">i32</span><span class="p">),</span> <span class="mh">0x0020</span><span class="n">_0000</span><span class="p">)</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Underline</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">or</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Underline</span> <span class="n">to</span> <span class="n">i32</span><span class="p">),</span> <span class="mh">0x0040</span><span class="n">_0000</span><span class="p">)</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Blink</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">or</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Blink</span>     <span class="n">to</span> <span class="n">i32</span><span class="p">),</span> <span class="mh">0x0060</span><span class="n">_0000</span><span class="p">)</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Empty</span>                    <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0080</span><span class="n">_0000</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Cursor</span>                   <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0080</span><span class="n">_0001</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-<br>
+<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">enum</span> <span class="n">TerminalChar</span> <span class="p">{</span>             <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="n">i32</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Plain</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="n">i32</span>     <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Plain</span>     <span class="n">to</span> <span class="n">i32</span><span class="p">)</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Bold</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>      <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">or</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Bold</span>      <span class="n">to</span> <span class="n">i32</span><span class="p">),</span> <span class="mh">0x0020</span><span class="n">_0000</span><span class="p">)</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Underline</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">or</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Underline</span> <span class="n">to</span> <span class="n">i32</span><span class="p">),</span> <span class="mh">0x0040</span><span class="n">_0000</span><span class="p">)</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Blink</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="n">i32</span> <span class="p">(</span><span class="n">or</span> <span class="p">(</span><span class="n">zext</span> <span class="n">i21</span> <span class="o">%</span><span class="n">Blink</span>     <span class="n">to</span> <span class="n">i32</span><span class="p">),</span> <span class="mh">0x0060</span><span class="n">_0000</span><span class="p">)</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Empty</span>                    <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0080</span><span class="n">_0000</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Cursor</span>                   <span class="o">=&gt;</span> <span class="n">i32</span> <span class="mh">0x0080</span><span class="n">_0001</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<br />
 如果没有足够的空闲位包含标签,然后添加额外的比特表示包含标签。标签的值分配给数据情况下按声明顺序。如果有任何数据的情况下,他们被收集在一个共同的标签,并指定数据区域中的值的枚举声明的顺序。
-<br>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="n">class</span> <span class="n">Bignum</span> <span class="p">{}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">enum</span> <span class="n">IntDoubleOrBignum</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Int</span><span class="p">(</span><span class="n">Int</span><span class="p">)</span>           <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>           <span class="o">%</span><span class="n">Int</span><span class="p">,</span>            <span class="mi">0</span> <span class="p">}</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Double</span><span class="p">(</span><span class="n">Double</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="p">(</span><span class="n">bitcast</span>  <span class="o">%</span><span class="n">Double</span> <span class="n">to</span> <span class="n">i64</span><span class="p">),</span> <span class="mi">1</span> <span class="p">}</span>
-</span><span class='line'>  <span class="k">case</span> <span class="n">Bignum</span><span class="p">(</span><span class="n">Bignum</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="p">(</span><span class="n">ptrtoint</span> <span class="o">%</span><span class="n">Bignum</span> <span class="n">to</span> <span class="n">i64</span><span class="p">),</span> <span class="mi">2</span> <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">class</span> <span class="n">Bignum</span> <span class="p">{}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">enum</span> <span class="n">IntDoubleOrBignum</span> <span class="p">{</span> <span class="o">=&gt;</span> <span class="n">LLVM</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Int</span><span class="p">(</span><span class="n">Int</span><span class="p">)</span>           <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>           <span class="o">%</span><span class="n">Int</span><span class="p">,</span>            <span class="mi">0</span> <span class="p">}</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Double</span><span class="p">(</span><span class="n">Double</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="p">(</span><span class="n">bitcast</span>  <span class="o">%</span><span class="n">Double</span> <span class="n">to</span> <span class="n">i64</span><span class="p">),</span> <span class="mi">1</span> <span class="p">}</span>
+</span><span class="line">  <span class="k">case</span> <span class="n">Bignum</span><span class="p">(</span><span class="n">Bignum</span><span class="p">)</span>     <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="p">{</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i2</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span> <span class="p">(</span><span class="n">ptrtoint</span> <span class="o">%</span><span class="n">Bignum</span> <span class="n">to</span> <span class="n">i64</span><span class="p">),</span> <span class="mi">2</span> <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 </p>
-<h2 id="">存在容器的设计</h2>
-<p>值的协议类型,协议组成类型,或“any”类型(<code>protocol<></code>)提出使用存在容器(所谓的因为这些类型是类型理论中的“生存类型”)。</p>
-<h4 id="">存在的不透明容器</h4>
+<h2>存在容器的设计</h2>
+<p>值的协议类型,协议组成类型,或“any”类型(<code>protocol&lt;&gt;</code>)提出使用存在容器(所谓的因为这些类型是类型理论中的“生存类型”)。</p>
+<h4>存在的不透明容器</h4>
 <p>如果没有类限制协议或协议组成类型,存在的容器必须适应值为任意大小和对齐。它使用一个固定大小的缓冲区,这是三个指针大小和pointer-aligned。这个直接包含的值,如果它的大小和对齐都小于或等于固定大小的缓冲区,或包含一个指针指向一个分配属于存在的容器。所包含的值的类型是由其类型标识元数据记录,为所有需要的协议和映射表的一致性。设计好像声明在C结构体如下:
-<br>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">struct</span> <span class="n">OpaqueExistentialContainer</span> <span class="p">{</span>
-</span><span class='line'>  <span class="kt">void</span> <span class="o">*</span><span class="n">fixedSizeBuffer</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
-</span><span class='line'>  <span class="n">Metadata</span> <span class="o">*</span><span class="n">type</span><span class="p">;</span>
-</span><span class='line'>  <span class="n">WitnessTable</span> <span class="o">*</span><span class="n">witnessTables</span><span class="p">[</span><span class="n">NUM_WITNESS_TABLES</span><span class="p">];</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
+<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">struct</span> <span class="n">OpaqueExistentialContainer</span> <span class="p">{</span>
+</span><span class="line">  <span class="kt">void</span> <span class="o">*</span><span class="n">fixedSizeBuffer</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+</span><span class="line">  <span class="n">Metadata</span> <span class="o">*</span><span class="n">type</span><span class="p">;</span>
+</span><span class="line">  <span class="n">WitnessTable</span> <span class="o">*</span><span class="n">witnessTables</span><span class="p">[</span><span class="n">NUM_WITNESS_TABLES</span><span class="p">];</span>
+</span><span class="line"><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 </p>
-<h4 id="">存在的类的容器</h4>
+<h4>存在的类的容器</h4>
 <p>
 如果一个或多个协议的协议或协议组成类型有一个类约束,然后只能存储在已经存在的容器,并使用一个更有效的表示。类实例总是一个指针的大小,所以不需要分配一个固定大小的缓冲区,和类实例总是有自己的引用类型的元数据,因此不需要单独的元数据记录。声明中的设计就好像下面C结构体:
-<br>
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="k">struct</span> <span class="n">ClassExistentialContainer</span> <span class="p">{</span>
-</span><span class='line'>  <span class="n">HeapObject</span> <span class="o">*</span><span class="n">value</span><span class="p">;</span>
-</span><span class='line'>  <span class="n">WitnessTable</span> <span class="o">*</span><span class="n">witnessTables</span><span class="p">[</span><span class="n">NUM_WITNESS_TABLES</span><span class="p">];</span>
-</span><span class='line'><span class="p">};</span>
-</span></code></pre></td></tr></table></div></figure>
-<br>
-注意,如果不需要映射表,如“任何类”类型的<code>protocol<class></code>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id <Protocol></code>类型在Objective-C中。
-</p>
+<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">struct</span> <span class="n">ClassExistentialContainer</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">HeapObject</span> <span class="o">*</span><span class="n">value</span><span class="p">;</span>
+</span><span class="line">  <span class="n">WitnessTable</span> <span class="o">*</span><span class="n">witnessTables</span><span class="p">[</span><span class="n">NUM_WITNESS_TABLES</span><span class="p">];</span>
+</span><span class="line"><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<br />
+注意,如果不需要映射表,如“任何类”类型的<code>protocol<class>或一个Objective-C协议类型,然后唯一元素设计堆对象的指针。这是ABI兼容的id,<code>id <protocol>类型在Objective-C中。
 
-<h2 id="">元数据类型</h2>
-<p>快速运行时保持元数据记录为每一类型在程序中使用,包括每一个实例化泛型类型的。可以使用这些元数据记录(TODO:映射)调试器工具发现的信息类型。对于非泛型名义类型,这些元数据是由编译器生成的静态记录。对泛型类型的实例,和内在类型如元组、功能、协议等等组成,元数据记录懒洋洋地根据需要运行时创建的。每个类型都有一个独特的元数据记录,两种元数据指针值相等,如果他们的类型相同。<br>
-在下面的设计描述中,抵消了相对于元数据指针作为指针数组的索引。在32位平台上,抵消1意味着一个偏移量的4个字节,在64位平台上,这意味着8个字节的偏移量。<br>
+
+<h2>元数据类型</h2>
+<p>快速运行时保持元数据记录为每一类型在程序中使用,包括每一个实例化泛型类型的。可以使用这些元数据记录(TODO:映射)调试器工具发现的信息类型。对于非泛型名义类型,这些元数据是由编译器生成的静态记录。对泛型类型的实例,和内在类型如元组、功能、协议等等组成,元数据记录懒洋洋地根据需要运行时创建的。每个类型都有一个独特的元数据记录,两种元数据指针值相等,如果他们的类型相同。<br />
+在下面的设计描述中,抵消了相对于元数据指针作为指针数组的索引。在32位平台上,抵消1意味着一个偏移量的4个字节,在64位平台上,这意味着8个字节的偏移量。<br />
 </p>
-<h4 id="">通用元数据设计</h4>
+<h4>通用元数据设计</h4>
 <p>
 所有元数据记录共享一个共同的数据头,下面字段:
 <ul>
@@ -384,9 +384,9 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 <li>类型字段是一个pointer-sized整数描述元数据描述。这个字段的偏移量为0的元数据的指针。</li>
 </ul>
 </p>
-<h4 id="">结构体元数据</h4>
+<h4>结构体元数据</h4>
 <p>
-除了常见的元数据字段设计、结构元数据记录包含以下字段:<br>
+除了常见的元数据字段设计、结构元数据记录包含以下字段:<br />
 <ul>
 <li>名义类型描述符引用偏移量1。</li>
 <li>引用父元数据记录存储在偏移2。是一个封闭的名义类型的成员的结构,这是一个封闭类型的元数据的引用。对于高层结构体,这是null。（父指针总是空）</li>
@@ -394,41 +394,41 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 <li>如果结构是通用的,那么通用参数向量始于抵消3 + n,其中n是结构中的字段的数量</li>
 </ul>
 </p>
-<h4 id="">枚举元数据</h4>
-<p>除了常见的元数据字段设计,enum记录元数据包含以下字段:<br>
+<h4>枚举元数据</h4>
+<p>除了常见的元数据字段设计,enum记录元数据包含以下字段:<br />
 <ul>
 <li>名义类型描述符引用偏移量1。</li>
 <li>引用父元数据记录存储在偏移2。是一个封闭的名义类型的成员的结构,这是一个封闭类型的元数据的引用。对于高层结构体,这是null。（父指针总是空）</li>
 <li>如果enum是通用的,那么通用参数向量始于偏移地址3。</li>
 </ul>
 </p>
-<h4 id="">元组元数据</h4>
+<h4>元组元数据</h4>
 <p>
-除了常见的元数据字段设计、元组元数据记录包含以下字段:<br>
+除了常见的元数据字段设计、元组元数据记录包含以下字段:<br />
 <ul>
 <li>名义类型描述符引用偏移量1。</li>
 <li>标签字符串指针连续以null结尾的标签名称的列表在元组偏移2。每个标签的名字是作为一个以null结尾,UTF-8编码的字符串序列。如果元组没有标签,这是一个空指针。(目前标签字符串指针总是空,独特的标签不考虑元组元数据)</li>
 <li>向量的元素开始的偏移地址3,由一个向量type-offset对。第n个元素的元数据类型是指针的偏移地址3+2*n。字节的偏移量从一开始的第n个元素的元组开始的偏移量是3+2*n+1。</li>
 </ul>
 </p>
-<h4 id="">函数元数据</h4>
-<p>除了常见的元数据字段设计,函数元数据记录包含以下字段:<br>
+<h4>函数元数据</h4>
+<p>除了常见的元数据字段设计,函数元数据记录包含以下字段:<br />
 <ul>
 <li>参数的数量函数存储在偏移量为1的地址。</li>
 <li>结果的引用类型元数据记录存储在偏移量为2。如果函数有多个返回,这引用一个元组元数据记录</li>
 <li>参数向量始于偏移地址3,由指针指向的函数的参数元数据记录。</li>
 </ul>
-<br>
+<br />
 如果函数需要任何in/out参数,每个参数的元数据记录指针将另外附加,一些被设置如果in/out最低位。由于指针对准,最低位持有这个标签总是空。
 如果函数没有in/out参数,将只有一个指针在下列情形的向量:
 <ul>
 <li>0参数:一个元组元数据记录为空元组</li>
 <li>1参数:第一个也是唯一一个参数的元数据记录</li>
-<li>> 1的参数:tuple包含参数的元数据记录</li>
+<li>&gt; 1的参数:tuple包含参数的元数据记录</li>
 </ul>
 </p>
-<h4 id="">协议元数据</h4>
-除了常见的元数据字段设计,协议元数据记录包含以下字段:<br>
+<h4>协议元数据</h4>
+除了常见的元数据字段设计,协议元数据记录包含以下字段:<br />
 <ul>
 <li>设计标志词是储存在偏移为1。这个词的部分描述存在容器设计用于表示值的类型。这个词设计如下:<ul>
 <li>映射表存储在最低位31位。协议类型的值包含这个数字映射表指针的设计。</li>
@@ -436,19 +436,19 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 </ul>
 注意字段pointer-sized,尽管只有最低的32位目前在所有平台上。这些值可以来自协议描述符记录,但预计算会更便利。
 </li>
-<li>协议的协议组成的数量是储存在偏移2。“任何”<code>protocol<> </code>或<code>protocol<class> </code>。对于单一协议 <code>P</code>。协议构成类型<code>protocol<P, Q, ...></code>,这是协议的数量</li>
+<li>协议的协议组成的数量是储存在偏移2。“任何”<code>protocol&lt;&gt; </code>或<code>protocol<class> 。对于单一协议 <code>P</code>。协议构成类型<code>protocol&lt;P, Q, ...&gt;</code>,这是协议的数量
 <li>协议描述符向量始于偏移地址3。这是内联的协议描述符的指针数组中的每个协议组成,或单一协议为协议类型描述符。“任何”类型,没有协议描述符向量。</li>
-</ul>
-</p>
-<h4 id="">变型的元数据</h4>
+
+
+<h4>变型的元数据</h4>
 <p>
-除了常见的元数据字段布局、变型的元数据记录包含以下字段:
+除了常见的元数据字段设计、变型的元数据记录包含以下字段:
 <ul>
 <li>引用的实例类型的元数据记录变型代表是储存在偏移为1的地址。</li>
 </ul>
 </p>
 
-<h4 id="">类元数据</h4>
+<h4>类元数据</h4>
 <p>
 类元数据设计和Objective-C互操作;所有类元数据记录也有效的Objective-C类对象。类元数据指针的值被用作类变型,所以派生类的元数据记录也作为一个有效的为其父类的所有类变型价值。
 </p>
@@ -456,13 +456,13 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 
 
 
- &#8211;>
+
 
 
 <hr />
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</li></ul></p>
+</class></code></li></ul></protocol></code></class></code></p></li></ul></p>
 </div>
 
 
