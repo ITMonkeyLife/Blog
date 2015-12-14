@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-13T15:49:10+08:00</updated>
+  <updated>2015-12-14T17:16:45+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -396,18 +396,738 @@ Swift依赖下面的关于Objective-C运行时的假设，是Objective-C ABI的�
 <h4>类元数据</h4>
 <p>
 类元数据设计和Objective-C互操作;所有类元数据记录也有效的Objective-C类对象。类元数据指针的值被用作类变型,所以派生类的元数据记录也作为一个有效的为其父类的所有类变型价值。
+<ul>
+<li>析构函数指针存储在从元数据指针偏移2的地址，背后的价值关联表。此功能由Swift的析构器调用时的类实例被销毁<ul>
+<li>isa指针指向Objective-C的兼容元类记录村春在偏移量是0的地址</li>
+<li>父类指针指向元类数据记录的父类存储在偏移量1的地址，如果是根类，它为null</li>
+<li>偏移2和偏移3保留用于Objective-C的运行时使用</li>
+<li>该rodata指针存储在偏移4;它指向的类的Objective-C兼容rodata记录。该指针值包括标签。低位始终设置为1，Swift类和始终设置为0的Objective-C类。</li>
+<li>类标志是一个32位字段偏移量5</li>
+<li>实例地址指针是一个32位的字段后面的这个类的标志。此类指针实例的开始之后此字节数的实例指针。</li>
+<li>实例大小是32位的字段后面的这个实例地址指针。这是存储本字节在这种类型的每一个对象的数</li>
+<li>实例对准mask是一个16位的字段后面的这个实例的大小。这是一组低位，它们不能在一指针被设置为这个类的一个实例的。 </li>
+<li>运行时保留字段是一个16位的字段后面的这个实例对齐mask。编译器初始化这个为零。 </li>
+<li>类对象的大小是32位的字段，运行时保留字段之后。这是存储在类元数据对象的字节的总数。</li>
+<li>对象的地址指针是一个32位的字段后面的这个类的对象的大小。这是存储在类元数据对象的字节数。 </li>
+<li>名义类型描述为最派生类的类型被引用以立即偏移后的类对象的地址点。这是在64位的平台偏移8或在32位平台偏移11。 </li>
+<li>对于每一个Swift类在类的继承层次结构，从根类订单开始一直到最派生类，以下领域都存在： </li>
+<li>首先，参考到母体元数据记录被存储。对于类是一个封闭的名义类型的成员，这是一个引用封闭类型的元数据。对于顶级类，这是空。 </li>
+<li>如果类是通用的，它的泛型参数向量的内联存储</li>
+<li>V表被内嵌存储，并包含一个函数指针类的声明顺序的每一个方法的实现。 </li>
+<li>如果一个类的实例的布局是依赖于它的通用参数，则字段偏置矢量存储直列，含有以字节偏移从实例指针类的每个字段中声明的顺序。 （对于类与固定布局，字段偏移都可以访问静态的全局变量，类似于Objective-C的ivar偏移。）</li>
+</ul>
+
+<p>请注意，这些字段都存在在继承层次的Objective-C基类。 </p>
+<h4>通用参数向量</h4>
+<p>元数据记录泛型类型的实例包含有关其泛型参数信息。对于类型的每个参数，引用为类型参数的元数据记录存储。在所有类型参数的元数据参考，对于每种类型的参数，如果有该类​​型参数的协议要求，引用的证人表中为每个协议，要求符合储存在声明顺序。 <br />
+例如，给定一个泛型类型，在继承的参数&lt;T，U，V&gt;，它的泛型参数的记录将包括引用的元数据记录，T，U型和V，仿佛在C结构布局：<br />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">struct</span> <span class="n">GenericParameterVector</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">TypeMetadata</span> <span class="o">*</span><span class="n">T</span><span class="p">,</span> <span class="o">*</span><span class="n">U</span><span class="p">,</span> <span class="o">*</span><span class="n">V</span><span class="p">;</span>
+</span><span class="line"><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+如果再加协议要求的参数，例如，<code> &lt;T: Runcible, U: protocol&lt;Fungible, Ansible&gt;, V&gt; </code>，那么该类型的泛型参数向量包含这些协议关联表，设计：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">struct</span> <span class="n">GenericParameterVector</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">TypeMetadata</span> <span class="o">*</span><span class="n">T</span><span class="p">,</span> <span class="o">*</span><span class="n">U</span><span class="p">,</span> <span class="o">*</span><span class="n">V</span><span class="p">;</span>
+</span><span class="line">  <span class="n">RuncibleWitnessTable</span> <span class="o">*</span><span class="n">T_Runcible</span><span class="p">;</span>
+</span><span class="line">  <span class="n">FungibleWitnessTable</span> <span class="o">*</span><span class="n">U_Fungible</span><span class="p">;</span>
+</span><span class="line">  <span class="n">AnsibleWitnessTable</span> <span class="o">*</span><span class="n">U_Ansible</span><span class="p">;</span>
+</span><span class="line"><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 </p>
+<h4>通用类型描述符</h4>
+<p>元数据记录类，结构和枚举类型包含一个指向类型描述符，其中包含有关名义类型的基本信息，如名称，成员和元数据的布局。对于泛型类型，一是名义类型描述符是该类型的所有实例共享。布局如下：
+<ul>
+<li>偏移0的存储类型<ul>
+<li>若为0则是类</li>
+<li>结构体为1</li>
+<li>枚举是2</li>
+</ul></li>
+<li>错位的名称被引用为空值终止的C字符串量。本名称不包括绑定泛型参数。 </li>
+<li>以下四个字段依赖于一种通用类型。 <ul>
+<li>对一个类或者结构体来说:<ul>
+<li>字段的数量被存储在偏移2。这是在元数据记录中的字段偏置向量的长度，如果有的话。 </li>
+<li>的偏移到字段偏移矢量被存储在偏移3.这是中的偏移在元数据记录中的类型字段偏置向量的指针大小词语。如果没有字段偏置矢量被存储在元数据记录，这是零。 </li>
+<li>字段名称偏移量4名的顺序对应的字段的领域偏移向量的顺序被引用为C字符串的双空结尾的列表。</li>
+<li>该字段类型的访问是一个函数指针偏移5.如果非空，该函数需要一个指针类型的元数据标称类型的实例，并返回一个指针类型的元数据引用的字段类型的数组该实例。的顺序相匹配的领域偏移向量和字段名列表。 </li></ul></li>
+<li>对一个枚举来说：<ul>
+<li>的有效载荷的情况下和有效载荷大小偏移数被存储在偏移2的至少显著24位是有效载荷的情况下的数量，和在类型元数据的有效载荷大小的最显著8位的偏移，如果有的话。</li>
+<li>没有效载荷的情况下的数量被存储在偏移3。 </li>
+<li>case名称偏移量4名进行排序，从而有效载荷的情况下是第一位的，其次是无负载情况下被引用为C字符串的双空结尾的列表。在列表中的每个一半，名称的顺序对应于枚举声明的情况下的顺序。 </li>
+<li>case类型的访问是一个函数指针偏移5.如果非空，该函数需要一个指针类型的元数据枚举的一个实例，并返回一个指针类型的元数据的引用为案件的类型数组该实例。的顺序相匹配的情况下，名单中。这个功能类似于字段类型存取器为一个结构，除了还结果中的每个元件的至少显著位如果枚举的情况下是一种间接的情况下设置的。 </li></ul></li>
+</ul></li>
+<li>如果名义类型是通用的，一个指针，在用于形成该类型的实例的元图形存储在偏移6.指针是空的，如果类型是不通用的。 </li>
+<li>泛型参数描述开始于偏移7。这说明在元数据记录中的泛型参数向量的布局： <ul>
+<li>通用参数向量的偏移存储在偏移7.这是中的偏移元数据记录内的通用参数向量的指针大小词语。如果该类型不是通用的，这是零。 </li>
+<li>类型参数的数量存储在偏移8.这个计数包括相关类型的类型参数与协议约束。 </li>
+<li>类型参数的数目被储存在仅偏移9.本计数包括初级形式类型参数。 </li>
+<li>对于每个类型的参数n，以下字段中存储： <ul>
+<li>该类型参数的数目存储在偏移10 + N。这是存储用于在通用参数向量类型参数表指针的数目。 </li></ul></li></ul></li>
+</ul>
+请注意，没有名义类型说明符的协议或协议类型。请参阅下面的协议描述符描述。
+</p>
+<h4>Protocol描述符</h4>
+协议元数据包含描述所需的类型的协议值以符合引用零个，一个或多个协议的描述符。本协议描述的布局要与Objective-C的协议对象是兼容的。设计如下：
+<ul>
+<li>一个isa占位符存放在偏移0填充这个字段的Objective-C运行。 </li>
+<li>错位的名称被引用为空值终止的C字符串偏移量1。 </li>
+<li>如果协议继承的一个或多个其他协议，一个指针到继承的协议列表存储在偏移2.名单开始的继承协议作为一个指针大小整数的数目，和后跟许多协议描述符指针。如果协议继承了没有其他协议，这个指针为空。 </li>
+<li>对于ObjC兼容协议，它需要的实例方法存储在偏移3作为ObjC兼容的方法列表。这是原生Swift协议无效。 </li>
+<li>对于ObjC兼容协议，它需要的类方法都存储在偏移4作为ObjC兼容的方法列表。这是原生Swift协议无效。 </li>
+<li>对于ObjC兼容协议，其可选实例方法存储在偏移5作为ObjC兼容的方法列表。这是原生Swift协议无效。 </li>
+<li>对于ObjC兼容协议，其可选类的方法存储在偏移6作为ObjC兼容的方法列表。这是原生Swift协议无效。 </li>
+<li>对于ObjC兼容协议，它的实例属性存储在偏移7作为ObjC兼容属性列表。这是原生Swift协议无效。 </li>
+<li>该协议描述符记录的大小存储为一个32位整数偏移量8。这是目前72在64位的平台和40在32位的平台。</li>
+<li>标志被存储为尺寸后的32位整数。以下位目前使用的（从最低计数显著零位）： <ul>
+<li>位0是Swift位。坐落在Swift定义和取消的Objective-C中定义的协议所有协议。 </li>
+<li>第1位是类约束一下。如果该协议不是类的限制，这意味着任何结构，枚举，或类类型可能符合协议设置它。它没有设置，如果只有类能遵守协议。 （该倒的意思是使用Objective-C协议的记录，在该位从未设置的兼容性。Objective-C的协议只能由类效法。） </li>
+<li>第2位是映射表位。它设置，如果派遣协议的方法是通过映射表，可以是传递一个额外的参数，以通用的功能或包含在协议类型的存在容器设计完成。这是未设置如果调度是通过objc_msgSend完成，不需要额外的信息，陪符合类型的值。 </li>
+<li>第31位是由Objective-C运行时设置它已经完成了它的初始化协议纪录。它是未使用的Swift运行。 </li>
+</ul></li>
+</ul>
 
+<h2>重整</h2>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">mangled</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">_T</span><span class="err">&#39;</span> <span class="n">global</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+所有Swift-重整的名称以此前缀开头。
+</p>
+<h4>全局</h4>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+<span class="line-number">59</span>
+<span class="line-number">60</span>
+<span class="line-number">61</span>
+<span class="line-number">62</span>
+<span class="line-number">63</span>
+<span class="line-number">64</span>
+<span class="line-number">65</span>
+<span class="line-number">66</span>
+<span class="line-number">67</span>
+<span class="line-number">68</span>
+<span class="line-number">69</span>
+<span class="line-number">70</span>
+<span class="line-number">71</span>
+<span class="line-number">72</span>
+<span class="line-number">73</span>
+<span class="line-number">74</span>
+<span class="line-number">75</span>
+<span class="line-number">76</span>
+<span class="line-number">77</span>
+<span class="line-number">78</span>
+<span class="line-number">79</span>
+<span class="line-number">80</span>
+<span class="line-number">81</span>
+<span class="line-number">82</span>
+<span class="line-number">83</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="sc">&#39;t&#39;</span> <span class="n">type</span>                    <span class="c1">// standalone type (for DWARF)</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="sc">&#39;M&#39;</span> <span class="n">type</span>                    <span class="c1">// type metadata (address point)</span>
+</span><span class="line">                                       <span class="c1">// -- type starts with [BCOSTV]</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Mf</span><span class="err">&#39;</span> <span class="n">type</span>                   <span class="c1">// &#39;full&#39; type metadata (start of object)</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">MP</span><span class="err">&#39;</span> <span class="n">type</span>                   <span class="c1">// type metadata pattern</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Ma</span><span class="err">&#39;</span> <span class="n">type</span>                   <span class="c1">// type metadata access function</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">ML</span><span class="err">&#39;</span> <span class="n">type</span>                   <span class="c1">// type metadata lazy cache variable</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Mm</span><span class="err">&#39;</span> <span class="n">type</span>                   <span class="c1">// class metaclass</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Mn</span><span class="err">&#39;</span> <span class="n">nominal</span><span class="o">-</span><span class="n">type</span>           <span class="c1">// nominal type descriptor</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Mp</span><span class="err">&#39;</span> <span class="n">protocol</span>               <span class="c1">// protocol descriptor</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">PA</span><span class="err">&#39;</span> <span class="p">.</span><span class="o">*</span>                     <span class="c1">// partial application forwarder</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">PAo</span><span class="err">&#39;</span> <span class="p">.</span><span class="o">*</span>                    <span class="c1">// ObjC partial application forwarder</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="sc">&#39;w&#39;</span> <span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="n">type</span> <span class="c1">// value witness</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">WV</span><span class="err">&#39;</span> <span class="n">type</span>                   <span class="c1">// value witness table</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Wo</span><span class="err">&#39;</span> <span class="n">entity</span>                 <span class="c1">// witness table offset</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Wv</span><span class="err">&#39;</span> <span class="n">directness</span> <span class="n">entity</span>      <span class="c1">// field offset</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">WP</span><span class="err">&#39;</span> <span class="n">protocol</span><span class="o">-</span><span class="n">conformance</span>   <span class="c1">// protocol witness table</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Wa</span><span class="err">&#39;</span> <span class="n">protocol</span><span class="o">-</span><span class="n">conformance</span>   <span class="c1">// protocol witness table accessor</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Wl</span><span class="err">&#39;</span> <span class="n">type</span> <span class="n">protocol</span><span class="o">-</span><span class="n">conformance</span> <span class="c1">// lazy protocol witness table accessor</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">WL</span><span class="err">&#39;</span> <span class="n">protocol</span><span class="o">-</span><span class="n">conformance</span>   <span class="c1">// lazy protocol witness table cache variable</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">WD</span><span class="err">&#39;</span> <span class="n">protocol</span><span class="o">-</span><span class="n">conformance</span>   <span class="c1">// dependent proto witness table generator</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Wd</span><span class="err">&#39;</span> <span class="n">protocol</span><span class="o">-</span><span class="n">conformance</span>   <span class="c1">// dependent proto witness table template</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="n">entity</span>                      <span class="c1">// some identifiable thing</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">TO</span><span class="err">&#39;</span> <span class="n">global</span>                 <span class="c1">// ObjC-as-swift thunk</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">To</span><span class="err">&#39;</span> <span class="n">global</span>                 <span class="c1">// swift-as-ObjC thunk</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">TD</span><span class="err">&#39;</span> <span class="n">global</span>                 <span class="c1">// dynamic dispatch thunk</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Td</span><span class="err">&#39;</span> <span class="n">global</span>                 <span class="c1">// direct method reference thunk</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">TR</span><span class="err">&#39;</span> <span class="n">reabstract</span><span class="o">-</span><span class="n">signature</span>   <span class="c1">// reabstraction thunk helper function</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Tr</span><span class="err">&#39;</span> <span class="n">reabstract</span><span class="o">-</span><span class="n">signature</span>   <span class="c1">// reabstraction thunk</span>
+</span><span class="line">
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">TS</span><span class="err">&#39;</span> <span class="n">specializationinfo</span> <span class="sc">&#39;_&#39;</span> <span class="n">mangled</span><span class="o">-</span><span class="n">name</span>
+</span><span class="line"><span class="n">specializationinfo</span> <span class="o">::=</span> <span class="sc">&#39;g&#39;</span> <span class="n">passid</span> <span class="p">(</span><span class="n">type</span> <span class="n">protocol</span><span class="o">-</span><span class="n">conformance</span><span class="o">*</span> <span class="sc">&#39;_&#39;</span><span class="p">)</span><span class="o">+</span>            <span class="c1">// Generic specialization info.</span>
+</span><span class="line"><span class="n">specializationinfo</span> <span class="o">::=</span> <span class="sc">&#39;f&#39;</span> <span class="n">passid</span> <span class="p">(</span><span class="n">funcspecializationarginfo</span> <span class="sc">&#39;_&#39;</span><span class="p">)</span><span class="o">+</span>             <span class="c1">// Function signature specialization kind</span>
+</span><span class="line"><span class="n">passid</span> <span class="o">::=</span> <span class="n">integer</span>                                                             <span class="c1">// The id of the pass that generated this specialization.</span>
+</span><span class="line"><span class="n">funcsigspecializationarginfo</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">cl</span><span class="err">&#39;</span> <span class="n">closurename</span> <span class="n">type</span><span class="o">*</span>                        <span class="c1">// Closure specialized with closed over types in argument order.</span>
+</span><span class="line"><span class="n">funcsigspecializationarginfo</span> <span class="o">::=</span> <span class="sc">&#39;n&#39;</span>                                           <span class="c1">// Unmodified argument</span>
+</span><span class="line"><span class="n">funcsigspecializationarginfo</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">cp</span><span class="err">&#39;</span> <span class="n">funcsigspecializationconstantproppayload</span> <span class="c1">// Constant propagated argument</span>
+</span><span class="line"><span class="n">funcsigspecializationarginfo</span> <span class="o">::=</span> <span class="sc">&#39;d&#39;</span>                                           <span class="c1">// Dead argument</span>
+</span><span class="line"><span class="n">funcsigspecializationarginfo</span> <span class="o">::=</span> <span class="sc">&#39;g&#39;</span> <span class="sc">&#39;s&#39;</span><span class="o">?</span>                                      <span class="c1">// Owned =&gt; Guaranteed and Exploded if &#39;s&#39; present.</span>
+</span><span class="line"><span class="n">funcsigspecializationarginfo</span> <span class="o">::=</span> <span class="sc">&#39;s&#39;</span>                                           <span class="c1">// Exploded</span>
+</span><span class="line"><span class="n">funcsigspecializationarginfo</span> <span class="o">::=</span> <span class="sc">&#39;k&#39;</span>                                           <span class="c1">// Exploded</span>
+</span><span class="line"><span class="n">funcsigspecializationconstantpropinfo</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">fr</span><span class="err">&#39;</span> <span class="n">mangled</span><span class="o">-</span><span class="n">name</span>
+</span><span class="line"><span class="n">funcsigspecializationconstantpropinfo</span> <span class="o">::=</span> <span class="sc">&#39;g&#39;</span> <span class="n">mangled</span><span class="o">-</span><span class="n">name</span>
+</span><span class="line"><span class="n">funcsigspecializationconstantpropinfo</span> <span class="o">::=</span> <span class="sc">&#39;i&#39;</span> <span class="mi">64</span><span class="o">-</span><span class="n">bit</span><span class="o">-</span><span class="n">integer</span>
+</span><span class="line"><span class="n">funcsigspecializationconstantpropinfo</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">fl</span><span class="err">&#39;</span> <span class="kt">float</span><span class="o">-</span><span class="n">as</span><span class="o">-</span><span class="mi">64</span><span class="o">-</span><span class="n">bit</span><span class="o">-</span><span class="n">integer</span>
+</span><span class="line"><span class="n">funcsigspecializationconstantpropinfo</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">se</span><span class="err">&#39;</span> <span class="n">stringencoding</span> <span class="sc">&#39;v&#39;</span> <span class="n">md5hash</span>
+</span><span class="line">
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">TV</span><span class="err">&#39;</span> <span class="n">global</span>                 <span class="c1">// vtable override thunk</span>
+</span><span class="line"><span class="n">global</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">TW</span><span class="err">&#39;</span> <span class="n">protocol</span><span class="o">-</span><span class="n">conformance</span> <span class="n">entity</span>
+</span><span class="line">                                       <span class="c1">// protocol witness thunk</span>
+</span><span class="line"><span class="n">entity</span> <span class="o">::=</span> <span class="n">nominal</span><span class="o">-</span><span class="n">type</span>                <span class="c1">// named type declaration</span>
+</span><span class="line"><span class="n">entity</span> <span class="o">::=</span> <span class="k">static</span><span class="o">?</span> <span class="n">entity</span><span class="o">-</span><span class="n">kind</span> <span class="n">context</span> <span class="n">entity</span><span class="o">-</span><span class="n">name</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;F&#39;</span>                    <span class="c1">// function (ctor, accessor, etc.)</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;v&#39;</span>                    <span class="c1">// variable (let/var)</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;i&#39;</span>                    <span class="c1">// subscript (&#39;i&#39;ndex) itself (not the individual accessors)</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;I&#39;</span>                    <span class="c1">// initializer</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="n">type</span>         <span class="c1">// named declaration</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;A&#39;</span> <span class="n">index</span>              <span class="c1">// default argument generator</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;a&#39;</span> <span class="n">addressor</span><span class="o">-</span><span class="n">kind</span> <span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="n">type</span>     <span class="c1">// mutable addressor</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;C&#39;</span> <span class="n">type</span>               <span class="c1">// allocating constructor</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;c&#39;</span> <span class="n">type</span>               <span class="c1">// non-allocating constructor</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;D&#39;</span>                    <span class="c1">// deallocating destructor; untyped</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;d&#39;</span>                    <span class="c1">// non-deallocating destructor; untyped</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;g&#39;</span> <span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="n">type</span>     <span class="c1">// getter</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;i&#39;</span>                    <span class="c1">// non-local variable initializer</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;l&#39;</span> <span class="n">addressor</span><span class="o">-</span><span class="n">kind</span> <span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="n">type</span>     <span class="c1">// non-mutable addressor</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;m&#39;</span> <span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="n">type</span>     <span class="c1">// materializeForSet</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;s&#39;</span> <span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="n">type</span>     <span class="c1">// setter</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;U&#39;</span> <span class="n">index</span> <span class="n">type</span>         <span class="c1">// explicit anonymous closure expression</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;u&#39;</span> <span class="n">index</span> <span class="n">type</span>         <span class="c1">// implicit anonymous closure</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;w&#39;</span> <span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="n">type</span>     <span class="c1">// willSet</span>
+</span><span class="line"><span class="n">entity</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;W&#39;</span> <span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="n">type</span>     <span class="c1">// didSet</span>
+</span><span class="line"><span class="k">static</span> <span class="o">::=</span> <span class="sc">&#39;Z&#39;</span>                         <span class="c1">// entity is a static member of a type</span>
+</span><span class="line"><span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="n">identifier</span>
+</span><span class="line"><span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="n">local</span><span class="o">-</span><span class="n">decl</span><span class="o">-</span><span class="n">name</span>
+</span><span class="line"><span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="n">private</span><span class="o">-</span><span class="n">decl</span><span class="o">-</span><span class="n">name</span>
+</span><span class="line"><span class="n">local</span><span class="o">-</span><span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;L&#39;</span> <span class="n">index</span> <span class="n">identifier</span>  <span class="c1">// locally-discriminated declaration</span>
+</span><span class="line"><span class="n">private</span><span class="o">-</span><span class="n">decl</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="sc">&#39;P&#39;</span> <span class="n">identifier</span> <span class="n">identifier</span>  <span class="c1">// file-discriminated declaration</span>
+</span><span class="line"><span class="n">reabstract</span><span class="o">-</span><span class="n">signature</span> <span class="o">::=</span> <span class="p">(</span><span class="sc">&#39;G&#39;</span> <span class="n">generic</span><span class="o">-</span><span class="n">signature</span><span class="p">)</span><span class="o">?</span> <span class="n">type</span> <span class="n">type</span>
+</span><span class="line"><span class="n">addressor</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;u&#39;</span>                 <span class="c1">// unsafe addressor (no owner)</span>
+</span><span class="line"><span class="n">addressor</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;O&#39;</span>                 <span class="c1">// owning addressor (non-native owner)</span>
+</span><span class="line"><span class="n">addressor</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;o&#39;</span>                 <span class="c1">// owning addressor (native owner)</span>
+</span><span class="line"><span class="n">addressor</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;p&#39;</span>                 <span class="c1">// pinning addressor (native owner)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+实体开始于<code>entity</code> <code>nominal-type-kind ([COPV])</code>,去取代 <code>([Ss])</code> <code> entity-kind ([FIiv])</code>。
+<code>entity-name</code>开头<code>[AaCcDggis]</code>或<code>decl-name</code>。一个<code>decl-name</code>开头<code>[LP]</code>或标识符<code>（[0-9oX]）</code>。
+一个上下文开始于任一实体，一个扩展（其开头[EE]），或者一个模块，它可能是一个标识符（[0-9oX]）或模块的取代（[SS]）。
+全局的修正开始于<code>[MTWw]</code>。
+如果部分应用程序转发器是一个静态符号，它的名字将开始与序列_TPA_随后转发的目的地的错位符号名称。
+一个普通的专业化的mangling由一个头，指定用于专门的泛型函数的类型和不合格，其次是原来的非专业化的通用符号的全面重整名称。
+在一<private-decl-name>中的第一标识符是表示原始声明来自文件的字符串。应考虑的包围模块内是唯一的。第二标识符是实体的名称。
+并非所有的声明标志着民营声明中，将使用<private-decl-name>压延;如果实体的上下文是足以唯一标识该实体中，简单的标识符形式是优选的。
+在<reabstract-signature>的类型始终是非多态<实现了一套功能型>类型。
 
+<h4>直接和间接的符号</h4>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">directness</span> <span class="o">::=</span> <span class="sc">&#39;d&#39;</span>                         <span class="c1">// direct</span>
+</span><span class="line"><span class="n">directness</span> <span class="o">::=</span> <span class="sc">&#39;i&#39;</span>                         <span class="c1">// indirect</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+直接符号解析直接对象的地址。间接符号解析为一个指向对象的地址。他们是不同的manglings做某一类的错误显而易见。
 
+讨论补偿时的术语稍微超载。直接抵消解析为一个变量持有真正的偏移。间接偏移解析为一个变量保持的偏移被应用到输入的元数据，以获得真实的地址偏移。 （偏移量是必需的变量时，被一个弹性的结构，当物体的布局可能依赖于通用的参数中访问谎言的对象，这些偏移量必须保持在元数据中，间接磁场偏移访问泛型类型的字段时，因此，需要地方元数据本身具有未知的布局。）
+</p>
+<h4>声明上下文</h4>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">context</span> <span class="o">::=</span> <span class="n">module</span>
+</span><span class="line"><span class="n">context</span> <span class="o">::=</span> <span class="n">extension</span>
+</span><span class="line"><span class="n">context</span> <span class="o">::=</span> <span class="n">entity</span>
+</span><span class="line"><span class="n">module</span> <span class="o">::=</span> <span class="n">substitution</span>                    <span class="c1">// other substitution</span>
+</span><span class="line"><span class="n">module</span> <span class="o">::=</span> <span class="n">identifier</span>                      <span class="c1">// module name</span>
+</span><span class="line"><span class="n">module</span> <span class="o">::=</span> <span class="n">known</span><span class="o">-</span><span class="n">module</span>                    <span class="c1">// abbreviation</span>
+</span><span class="line"><span class="n">extension</span> <span class="o">::=</span> <span class="sc">&#39;E&#39;</span> <span class="n">module</span> <span class="n">entity</span>
+</span><span class="line"><span class="n">extension</span> <span class="o">::=</span> <span class="sc">&#39;e&#39;</span> <span class="n">module</span> <span class="n">generic</span><span class="o">-</span><span class="n">signature</span> <span class="n">entity</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+这些manglings确定封闭的上下文中，一个实体被声明，如它的封闭模块，功​​能，或名义类型。
+一个扩展的mangling时则使用一个实体的声明上下文是一个扩展和被扩展的实体是在不同的模块。在这种情况下，扩展的模块第一错位，随后由实体被扩展。如果延伸和扩展的实体都在同一模块中，普通实体重整是首选。如果扩展受到限制，在延长的限制被损毁，其一般签名。
+当重整本地实体的一个构造或析构，该非分配或非重新分配的方式用于内的上下文。
+</p>
+<h4>类型</h4>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+<span class="line-number">59</span>
+<span class="line-number">60</span>
+<span class="line-number">61</span>
+<span class="line-number">62</span>
+<span class="line-number">63</span>
+<span class="line-number">64</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Bb</span><span class="err">&#39;</span>                              <span class="c1">// Builtin.BridgeObject</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">BB</span><span class="err">&#39;</span>                              <span class="c1">// Builtin.UnsafeValueBuffer</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Bf</span><span class="err">&#39;</span> <span class="n">natural</span> <span class="sc">&#39;_&#39;</span>                  <span class="c1">// Builtin.Float&lt;n&gt;</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Bi</span><span class="err">&#39;</span> <span class="n">natural</span> <span class="sc">&#39;_&#39;</span>                  <span class="c1">// Builtin.Int&lt;n&gt;</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">BO</span><span class="err">&#39;</span>                              <span class="c1">// Builtin.ObjCPointer</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Bo</span><span class="err">&#39;</span>                              <span class="c1">// Builtin.ObjectPointer</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Bp</span><span class="err">&#39;</span>                              <span class="c1">// Builtin.RawPointer</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Bv</span><span class="err">&#39;</span> <span class="n">natural</span> <span class="n">type</span>                 <span class="c1">// Builtin.Vec&lt;n&gt;x&lt;type&gt;</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Bw</span><span class="err">&#39;</span>                              <span class="c1">// Builtin.Word</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="n">nominal</span><span class="o">-</span><span class="n">type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="n">associated</span><span class="o">-</span><span class="n">type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;a&#39;</span> <span class="n">context</span> <span class="n">identifier</span>            <span class="c1">// Type alias (DWARF only)</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;b&#39;</span> <span class="n">type</span> <span class="n">type</span>                     <span class="c1">// objc block function type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;c&#39;</span> <span class="n">type</span> <span class="n">type</span>                     <span class="c1">// C function pointer type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;F&#39;</span> <span class="n">throws</span><span class="o">-</span><span class="n">annotation</span><span class="o">?</span> <span class="n">type</span> <span class="n">type</span>  <span class="c1">// function type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;f&#39;</span> <span class="n">throws</span><span class="o">-</span><span class="n">annotation</span><span class="o">?</span> <span class="n">type</span> <span class="n">type</span>  <span class="c1">// uncurried function type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;G&#39;</span> <span class="n">type</span> <span class="o">&lt;</span><span class="n">type</span><span class="o">&gt;+</span> <span class="sc">&#39;_&#39;</span>              <span class="c1">// generic type application</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;K&#39;</span> <span class="n">type</span> <span class="n">type</span>                     <span class="c1">// @auto_closure function type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;M&#39;</span> <span class="n">type</span>                          <span class="c1">// metatype without representation</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">XM</span><span class="err">&#39;</span> <span class="n">metatype</span><span class="o">-</span><span class="n">repr</span> <span class="n">type</span>           <span class="c1">// metatype with representation</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;P&#39;</span> <span class="n">protocol</span><span class="o">-</span><span class="n">list</span> <span class="sc">&#39;_&#39;</span>             <span class="c1">// protocol type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">PM</span><span class="err">&#39;</span> <span class="n">type</span>                         <span class="c1">// existential metatype without representation</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">XPM</span><span class="err">&#39;</span> <span class="n">metatype</span><span class="o">-</span><span class="n">repr</span> <span class="n">type</span>          <span class="c1">// existential metatype with representation</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="n">archetype</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;R&#39;</span> <span class="n">type</span>                          <span class="c1">// inout</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;T&#39;</span> <span class="n">tuple</span><span class="o">-</span><span class="n">element</span><span class="o">*</span> <span class="sc">&#39;_&#39;</span>            <span class="c1">// tuple</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;t&#39;</span> <span class="n">tuple</span><span class="o">-</span><span class="n">element</span><span class="o">*</span> <span class="sc">&#39;_&#39;</span>            <span class="c1">// variadic tuple</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Xo</span><span class="err">&#39;</span> <span class="n">type</span>                         <span class="c1">// @unowned type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Xu</span><span class="err">&#39;</span> <span class="n">type</span>                         <span class="c1">// @unowned(unsafe) type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Xw</span><span class="err">&#39;</span> <span class="n">type</span>                         <span class="c1">// @weak type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">XF</span><span class="err">&#39;</span> <span class="n">impl</span><span class="o">-</span><span class="n">function</span><span class="o">-</span><span class="n">type</span>           <span class="c1">// function implementation type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Xf</span><span class="err">&#39;</span> <span class="n">type</span> <span class="n">type</span>                    <span class="c1">// @thin function type</span>
+</span><span class="line"><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span>
+</span><span class="line"><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="n">substitution</span>
+</span><span class="line"><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="n">nominal</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">kind</span> <span class="n">declaration</span><span class="o">-</span><span class="n">name</span>
+</span><span class="line"><span class="n">nominal</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;C&#39;</span>                  <span class="c1">// class</span>
+</span><span class="line"><span class="n">nominal</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;O&#39;</span>                  <span class="c1">// enum</span>
+</span><span class="line"><span class="n">nominal</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="sc">&#39;V&#39;</span>                  <span class="c1">// struct</span>
+</span><span class="line"><span class="n">archetype</span> <span class="o">::=</span> <span class="sc">&#39;Q&#39;</span> <span class="n">index</span>                    <span class="c1">// archetype with depth=0, idx=N</span>
+</span><span class="line"><span class="n">archetype</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Qd</span><span class="err">&#39;</span> <span class="n">index</span> <span class="n">index</span>             <span class="c1">// archetype with depth=M+1, idx=N</span>
+</span><span class="line"><span class="n">archetype</span> <span class="o">::=</span> <span class="n">associated</span><span class="o">-</span><span class="n">type</span>
+</span><span class="line"><span class="n">archetype</span> <span class="o">::=</span> <span class="n">qualified</span><span class="o">-</span><span class="n">archetype</span>
+</span><span class="line"><span class="n">associated</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="n">substitution</span>
+</span><span class="line"><span class="n">associated</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;Q&#39;</span> <span class="n">protocol</span><span class="o">-</span><span class="n">context</span>     <span class="c1">// self type of protocol</span>
+</span><span class="line"><span class="n">associated</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;Q&#39;</span> <span class="n">archetype</span> <span class="n">identifier</span> <span class="c1">// associated type</span>
+</span><span class="line"><span class="n">qualified</span><span class="o">-</span><span class="n">archetype</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Qq</span><span class="err">&#39;</span> <span class="n">index</span> <span class="n">context</span>   <span class="c1">// archetype+context (DWARF only)</span>
+</span><span class="line"><span class="n">protocol</span><span class="o">-</span><span class="n">context</span> <span class="o">::=</span> <span class="sc">&#39;P&#39;</span> <span class="n">protocol</span>
+</span><span class="line"><span class="n">tuple</span><span class="o">-</span><span class="n">element</span> <span class="o">::=</span> <span class="n">identifier</span><span class="o">?</span> <span class="n">type</span>
+</span><span class="line"><span class="n">metatype</span><span class="o">-</span><span class="n">repr</span> <span class="o">::=</span> <span class="sc">&#39;t&#39;</span>                      <span class="c1">// Thin metatype representation</span>
+</span><span class="line"><span class="n">metatype</span><span class="o">-</span><span class="n">repr</span> <span class="o">::=</span> <span class="sc">&#39;T&#39;</span>                      <span class="c1">// Thick metatype representation</span>
+</span><span class="line"><span class="n">metatype</span><span class="o">-</span><span class="n">repr</span> <span class="o">::=</span> <span class="sc">&#39;o&#39;</span>                      <span class="c1">// ObjC metatype representation</span>
+</span><span class="line"><span class="n">throws</span><span class="o">-</span><span class="n">annotation</span> <span class="o">::=</span> <span class="sc">&#39;z&#39;</span>                  <span class="c1">// &#39;throws&#39; annotation on function types</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;u&#39;</span> <span class="n">generic</span><span class="o">-</span><span class="n">signature</span> <span class="n">type</span>        <span class="c1">// generic type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;x&#39;</span>                               <span class="c1">// generic param, depth=0, idx=0</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;q&#39;</span> <span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">index</span>           <span class="c1">// dependent generic parameter</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;q&#39;</span> <span class="n">type</span> <span class="n">assoc</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">name</span>          <span class="c1">// associated type of non-generic param</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;w&#39;</span> <span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">index</span> <span class="n">assoc</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">name</span> <span class="c1">// associated type</span>
+</span><span class="line"><span class="n">type</span> <span class="o">::=</span> <span class="sc">&#39;W&#39;</span> <span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">index</span> <span class="n">assoc</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">name</span><span class="o">+</span> <span class="sc">&#39;_&#39;</span> <span class="c1">// associated type at depth</span>
+</span><span class="line">
+</span><span class="line"><span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">index</span> <span class="o">::=</span> <span class="sc">&#39;x&#39;</span>                <span class="c1">// depth = 0,   idx = 0</span>
+</span><span class="line"><span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">index</span> <span class="o">::=</span> <span class="n">index</span>              <span class="c1">// depth = 0,   idx = N+1</span>
+</span><span class="line"><span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">index</span> <span class="o">::=</span> <span class="sc">&#39;d&#39;</span> <span class="n">index</span> <span class="n">index</span>    <span class="c1">// depth = M+1, idx = N</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<type>从未开始或以数字结束。 <type>从不以下划线开头。 <type>从来没有开始与D。 <type>从来没有开始以Z。
 
+请注意，协议裂伤不同的类型和作为背景。一个协议方面总是由一个单一的协议名称等等轧液没有一个结尾下划线。协议类型可以有并列设置，结束于结尾下划线零个，一个或多个协议的范围。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">assoc</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="p">(</span><span class="sc">&#39;P&#39;</span> <span class="n">protocol</span><span class="o">-</span><span class="n">name</span><span class="p">)</span><span class="o">?</span> <span class="n">identifier</span>
+</span><span class="line"><span class="n">assoc</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">name</span> <span class="o">::=</span> <span class="n">substitution</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+相关类型因此使用缩写的mangling当基座通用参数或关联式是由一个单一的规约要求的限制。在这种情况下，相关联的类型可以明确引用的名字单独。如果基有多个符合性限制，那么协议名称是错位的消除歧义。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">function</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span>
+</span><span class="line">  <span class="n">impl</span><span class="o">-</span><span class="n">callee</span><span class="o">-</span><span class="n">convention</span> <span class="n">impl</span><span class="o">-</span><span class="n">function</span><span class="o">-</span><span class="n">attribute</span><span class="o">*</span> <span class="n">generic</span><span class="o">-</span><span class="n">signature</span><span class="o">?</span> <span class="sc">&#39;_&#39;</span>
+</span><span class="line">  <span class="n">impl</span><span class="o">-</span><span class="n">parameter</span><span class="o">*</span> <span class="sc">&#39;_&#39;</span> <span class="n">impl</span><span class="o">-</span><span class="n">result</span><span class="o">*</span> <span class="sc">&#39;_&#39;</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">callee</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;t&#39;</span>              <span class="c1">// thin</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">callee</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="n">impl</span><span class="o">-</span><span class="n">convention</span>  <span class="c1">// thick, callee transferred with given convention</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;a&#39;</span>                     <span class="c1">// direct, autoreleased</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;d&#39;</span>                     <span class="c1">// direct, no ownership transfer</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;D&#39;</span>                     <span class="c1">// direct, no ownership transfer,</span>
+</span><span class="line">                                            <span class="c1">// dependent on &#39;self&#39; parameter</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;g&#39;</span>                     <span class="c1">// direct, guaranteed</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;e&#39;</span>                     <span class="c1">// direct, deallocating</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;i&#39;</span>                     <span class="c1">// indirect, ownership transfer</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;l&#39;</span>                     <span class="c1">// indirect, inout</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;G&#39;</span>                     <span class="c1">// indirect, guaranteed</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;o&#39;</span>                     <span class="c1">// direct, ownership transfer</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="o">::=</span> <span class="sc">&#39;z&#39;</span> <span class="n">impl</span><span class="o">-</span><span class="n">convention</span>     <span class="c1">// error result</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">function</span><span class="o">-</span><span class="n">attribute</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Cb</span><span class="err">&#39;</span>            <span class="c1">// compatible with C block invocation function</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">function</span><span class="o">-</span><span class="n">attribute</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Cc</span><span class="err">&#39;</span>            <span class="c1">// compatible with C global function</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">function</span><span class="o">-</span><span class="n">attribute</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Cm</span><span class="err">&#39;</span>            <span class="c1">// compatible with Swift method</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">function</span><span class="o">-</span><span class="n">attribute</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">CO</span><span class="err">&#39;</span>            <span class="c1">// compatible with ObjC method</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">function</span><span class="o">-</span><span class="n">attribute</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Cw</span><span class="err">&#39;</span>            <span class="c1">// compatible with protocol witness</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">function</span><span class="o">-</span><span class="n">attribute</span> <span class="o">::=</span> <span class="sc">&#39;N&#39;</span>             <span class="c1">// noreturn</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">function</span><span class="o">-</span><span class="n">attribute</span> <span class="o">::=</span> <span class="sc">&#39;G&#39;</span>             <span class="c1">// generic</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">parameter</span> <span class="o">::=</span> <span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="n">type</span>
+</span><span class="line"><span class="n">impl</span><span class="o">-</span><span class="n">result</span> <span class="o">::=</span> <span class="n">impl</span><span class="o">-</span><span class="n">convention</span> <span class="n">type</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+在大多数情况下，manglings遵循的正式语言类型的结构。然而，在某些情况下，它是更为有用的函数类型的准确实现细节进行编码。
+任何<impl-function-attribute>产品必须出现在它们上面指定的顺序：例如：一个不返回的C函数的错位与CCN。
+需要注意的是，公约和功能属性的制作并不需要从一个<type>的开始消除歧义。
 
+<h4>泛型</h4>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">protocol</span><span class="o">-</span><span class="n">conformance</span> <span class="o">::=</span> <span class="p">(</span><span class="sc">&#39;u&#39;</span> <span class="n">generic</span><span class="o">-</span><span class="n">signature</span><span class="p">)</span><span class="o">?</span> <span class="n">type</span> <span class="n">protocol</span> <span class="n">module</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<protocol-conformance>是指一个类型的一致性协议。命名模块包含声明的一致性扩展或类型声明之一。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">generic</span><span class="o">-</span><span class="n">signature</span> <span class="o">::=</span> <span class="p">(</span><span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">count</span><span class="o">+</span><span class="p">)</span><span class="o">?</span> <span class="p">(</span><span class="sc">&#39;R&#39;</span> <span class="n">requirement</span><span class="o">*</span><span class="p">)</span><span class="o">?</span> <span class="sc">&#39;r&#39;</span>
+</span><span class="line"><span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">count</span> <span class="o">::=</span> <span class="sc">&#39;z&#39;</span>       <span class="c1">// zero parameters</span>
+</span><span class="line"><span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">count</span> <span class="o">::=</span> <span class="n">index</span>     <span class="c1">// N+1 parameters</span>
+</span><span class="line"><span class="n">requirement</span> <span class="o">::=</span> <span class="n">type</span><span class="o">-</span><span class="n">param</span> <span class="n">protocol</span><span class="o">-</span><span class="n">name</span> <span class="c1">// protocol requirement</span>
+</span><span class="line"><span class="n">requirement</span> <span class="o">::=</span> <span class="n">type</span><span class="o">-</span><span class="n">param</span> <span class="n">type</span>          <span class="c1">// base class requirement</span>
+</span><span class="line">                                         <span class="c1">// type starts with [CS]</span>
+</span><span class="line"><span class="n">requirement</span> <span class="o">::=</span> <span class="n">type</span><span class="o">-</span><span class="n">param</span> <span class="sc">&#39;z&#39;</span> <span class="n">type</span>      <span class="c1">// &#39;z&#39;ame-type requirement</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// Special type mangling for type params that saves the initial &#39;q&#39; on</span>
+</span><span class="line"><span class="c1">// generic params</span>
+</span><span class="line"><span class="n">type</span><span class="o">-</span><span class="n">param</span> <span class="o">::=</span> <span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">index</span>       <span class="c1">// generic parameter</span>
+</span><span class="line"><span class="n">type</span><span class="o">-</span><span class="n">param</span> <span class="o">::=</span> <span class="sc">&#39;w&#39;</span> <span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">index</span> <span class="n">assoc</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">name</span> <span class="c1">// associated type</span>
+</span><span class="line"><span class="n">type</span><span class="o">-</span><span class="n">param</span> <span class="o">::=</span> <span class="sc">&#39;W&#39;</span> <span class="n">generic</span><span class="o">-</span><span class="n">param</span><span class="o">-</span><span class="n">index</span> <span class="n">assoc</span><span class="o">-</span><span class="n">type</span><span class="o">-</span><span class="n">name</span><span class="o">+</span> <span class="sc">&#39;_&#39;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+一个通用的签名首先描述在每个深度的签名，随后要求的通用参数的数量。作为一个特殊的情况下，没有generic-param-count表示在最外深度单个通用参数：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">urFq_q_</span>                           <span class="c1">// &lt;T_0_0&gt; T_0_0 -&gt; T_0_0</span>
+</span><span class="line"><span class="n">u_0_rFq_qd_0_</span>                     <span class="c1">// &lt;T_0_0&gt;&lt;T_1_0, T_1_1&gt; T_0_0 -&gt; T_1_1</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h4>映射值</h4>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">al</span><span class="err">&#39;</span>           <span class="c1">// allocateBuffer</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">ca</span><span class="err">&#39;</span>           <span class="c1">// assignWithCopy</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">ta</span><span class="err">&#39;</span>           <span class="c1">// assignWithTake</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">de</span><span class="err">&#39;</span>           <span class="c1">// deallocateBuffer</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">xx</span><span class="err">&#39;</span>           <span class="c1">// destroy</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">XX</span><span class="err">&#39;</span>           <span class="c1">// destroyBuffer</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Xx</span><span class="err">&#39;</span>           <span class="c1">// destroyArray</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">CP</span><span class="err">&#39;</span>           <span class="c1">// initializeBufferWithCopyOfBuffer</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Cp</span><span class="err">&#39;</span>           <span class="c1">// initializeBufferWithCopy</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">cp</span><span class="err">&#39;</span>           <span class="c1">// initializeWithCopy</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">TK</span><span class="err">&#39;</span>           <span class="c1">// initializeBufferWithTakeOfBuffer</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Tk</span><span class="err">&#39;</span>           <span class="c1">// initializeBufferWithTake</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">tk</span><span class="err">&#39;</span>           <span class="c1">// initializeWithTake</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">pr</span><span class="err">&#39;</span>           <span class="c1">// projectBuffer</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">xs</span><span class="err">&#39;</span>           <span class="c1">// storeExtraInhabitant</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">xg</span><span class="err">&#39;</span>           <span class="c1">// getExtraInhabitantIndex</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Cc</span><span class="err">&#39;</span>           <span class="c1">// initializeArrayWithCopy</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Tt</span><span class="err">&#39;</span>           <span class="c1">// initializeArrayWithTakeFrontToBack</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">tT</span><span class="err">&#39;</span>           <span class="c1">// initializeArrayWithTakeBackToFront</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">ug</span><span class="err">&#39;</span>           <span class="c1">// getEnumTag</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">up</span><span class="err">&#39;</span>           <span class="c1">// destructiveProjectEnumData</span>
+</span><span class="line"><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">ui</span><span class="err">&#39;</span>           <span class="c1">// destructiveInjectEnumTag</span>
+</span><span class="line"><span class="o">&lt;</span><span class="n">value</span><span class="o">-</span><span class="n">witness</span><span class="o">-</span><span class="n">kind</span><span class="o">&gt;</span> <span class="n">differentiates</span> <span class="n">the</span> <span class="n">kinds</span> <span class="n">of</span> <span class="n">value</span> <span class="n">witness</span> <span class="n">functions</span> <span class="k">for</span> <span class="n">a</span> <span class="n">type</span><span class="p">.</span>
+</span><span class="line">
+</span><span class="line"><span class="n">Identifiers</span>
+</span><span class="line">
+</span><span class="line"><span class="n">identifier</span> <span class="o">::=</span> <span class="n">natural</span> <span class="n">identifier</span><span class="o">-</span><span class="n">start</span><span class="o">-</span><span class="kt">char</span> <span class="n">identifier</span><span class="o">-</span><span class="kt">char</span><span class="o">*</span>
+</span><span class="line"><span class="n">identifier</span> <span class="o">::=</span> <span class="sc">&#39;o&#39;</span> <span class="n">operator</span><span class="o">-</span><span class="n">fixity</span> <span class="n">natural</span> <span class="n">operator</span><span class="o">-</span><span class="kt">char</span><span class="o">+</span>
+</span><span class="line">
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="n">fixity</span> <span class="o">::=</span> <span class="sc">&#39;p&#39;</span>                    <span class="c1">// prefix operator</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="n">fixity</span> <span class="o">::=</span> <span class="sc">&#39;P&#39;</span>                    <span class="c1">// postfix operator</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="n">fixity</span> <span class="o">::=</span> <span class="sc">&#39;i&#39;</span>                    <span class="c1">// infix operator</span>
+</span><span class="line">
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;a&#39;</span>                      <span class="c1">// &amp; &#39;and&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;c&#39;</span>                      <span class="c1">// @ &#39;commercial at&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;d&#39;</span>                      <span class="c1">// / &#39;divide&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;e&#39;</span>                      <span class="c1">// = &#39;equals&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;g&#39;</span>                      <span class="c1">// &gt; &#39;greater&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;l&#39;</span>                      <span class="c1">// &lt; &#39;less&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;m&#39;</span>                      <span class="c1">// * &#39;multiply&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;n&#39;</span>                      <span class="c1">// ! &#39;not&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;o&#39;</span>                      <span class="c1">// | &#39;or&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;p&#39;</span>                      <span class="c1">// + &#39;plus&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;q&#39;</span>                      <span class="c1">// ? &#39;question&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;r&#39;</span>                      <span class="c1">// % &#39;remainder&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;s&#39;</span>                      <span class="c1">// - &#39;subtract&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;t&#39;</span>                      <span class="c1">// ~ &#39;tilde&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;x&#39;</span>                      <span class="c1">// ^ &#39;xor&#39;</span>
+</span><span class="line"><span class="n">operator</span><span class="o">-</span><span class="kt">char</span> <span class="o">::=</span> <span class="sc">&#39;z&#39;</span>                      <span class="c1">// . &#39;zperiod&#39;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<identifier>是运行长度编码：自然表示的字符如何跟进。操作字符映射到字母字符给出。在两种情况下可以一个标识符以数字开头，所以有与运行长度没有歧义。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">identifier</span> <span class="o">::=</span> <span class="sc">&#39;X&#39;</span> <span class="n">natural</span> <span class="n">identifier</span><span class="o">-</span><span class="n">start</span><span class="o">-</span><span class="kt">char</span> <span class="n">identifier</span><span class="o">-</span><span class="kt">char</span><span class="o">*</span>
+</span><span class="line"><span class="n">identifier</span> <span class="o">::=</span> <span class="sc">&#39;X&#39;</span> <span class="sc">&#39;o&#39;</span> <span class="n">operator</span><span class="o">-</span><span class="n">fixity</span> <span class="n">natural</span> <span class="n">identifier</span><span class="o">-</span><span class="kt">char</span><span class="o">*</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+包含非ASCII字符都使用在RFC 3492中指定Punycode算法编码，与该_用作编码定界符的修改和大写字母A至J标识符被用来代替数字0至9中的编码字符集。是混淆然后由一个X后跟编码串的游程长度和所述编码的字符串本身。例如，标识符vergüenza被错位到X12vergenza_JFa。 （在标准的Punycode编码是vergenza-95A）
+
+包含非ASCII字符，运营商首先映射ASCII运营字符的字母作为纯ASCII运营商名称错位，然后Punycode码编码取代字符串。是混淆然后由XO后跟的固定性，该编码串的运行长度，以及编码的字符串本身。例如，管道符“+”的错位，以Xoi7p_qcaDc（p_qcaDc是的替代字符串“P»编码）。
+
+<h4>代替</h4>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">substitution</span> <span class="o">::=</span> <span class="sc">&#39;S&#39;</span> <span class="n">index</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<substitution>是一个向后引用到先前错位实体。该重整算法维护实体的映射来替代指标，因为它运行。时，可以通过取代（的模块，名义类型或协议）来表示一个实体是错位，一个取代是第一所期望的是取代的地图，并且如果存在，该实体使用相关替代索引错位。否则，该实体通常错位，且随后添加到替代地图，并与下一个可利用的取代索引相关联。
+例如，在重整函数类型（zim.zang.zung，zim.zang.zung，zim.zippity） - &gt; zim.zang.zoo（与模块ZIM和类zim.zang），重复上下文ZIM，以星。臧和zim.zang.zung将使用替代被错位的第一次后，被截断。第一个参数类型将在长形裂伤，CC3zim4zang4zung，并在这样做，ZIM将获得替代S_，zim.zang将获得替代S0_，并zim.zang.zung将收购S1_。第二个参数是一样的第一和裂伤将利用其替换，CS1_。第三个参数类型将裂伤使用替代ZIM，CS_7zippity。 （它也获得替代S2_这将被使用，如果再次错位。）结果类型将裂伤使用替代zim.zang，CS0_zoo（并获得替代S3_）。全功能型因而轧液作为fTCC3zim4zang4zungCS1_CS_7zippity_CS0_zoo。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">substitution</span> <span class="o">::=</span> <span class="sc">&#39;s&#39;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+在特殊的替换s被用于Swift标准库模块。
+
+<h4>预定义替换</h4>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">module</span> <span class="o">::=</span> <span class="sc">&#39;s&#39;</span>                       <span class="c1">// Swift</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">module</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">SC</span><span class="err">&#39;</span>                      <span class="c1">// C</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">module</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">So</span><span class="err">&#39;</span>                      <span class="c1">// Objective-C</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Sa</span><span class="err">&#39;</span>                <span class="c1">// Swift.Array</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Sb</span><span class="err">&#39;</span>                <span class="c1">// Swift.Bool</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Sc</span><span class="err">&#39;</span>                <span class="c1">// Swift.UnicodeScalar</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Sd</span><span class="err">&#39;</span>                <span class="c1">// Swift.Float64</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Sf</span><span class="err">&#39;</span>                <span class="c1">// Swift.Float32</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Si</span><span class="err">&#39;</span>                <span class="c1">// Swift.Int</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">SP</span><span class="err">&#39;</span>                <span class="c1">// Swift.UnsafePointer</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Sp</span><span class="err">&#39;</span>                <span class="c1">// Swift.UnsafeMutablePointer</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">SQ</span><span class="err">&#39;</span>                <span class="c1">// Swift.ImplicitlyUnwrappedOptional</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Sq</span><span class="err">&#39;</span>                <span class="c1">// Swift.Optional</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">SR</span><span class="err">&#39;</span>                <span class="c1">// Swift.UnsafeBufferPointer</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Sr</span><span class="err">&#39;</span>                <span class="c1">// Swift.UnsafeMutableBufferPointer</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">SS</span><span class="err">&#39;</span>                <span class="c1">// Swift.String</span>
+</span><span class="line"><span class="n">known</span><span class="o">-</span><span class="n">nominal</span><span class="o">-</span><span class="n">type</span> <span class="o">::=</span> <span class="err">&#39;</span><span class="n">Su</span><span class="err">&#39;</span>                <span class="c1">// Swift.UInt</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<known-module> 以及 <known-nominal-type>是内置的替换对于某些常见的实体。像任何其他的替代，他们都以&#8217;S&#8217;。
+Objective-C的模块作为上下文重整Objective-C类为的<type>。
+
+<h4>索引</h4>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">index</span> <span class="o">::=</span> <span class="sc">&#39;_&#39;</span>                              <span class="c1">// 0</span>
+</span><span class="line"><span class="n">index</span> <span class="o">::=</span> <span class="n">natural</span> <span class="sc">&#39;_&#39;</span>                      <span class="c1">// N+1</span>
+</span><span class="line"><span class="n">natural</span> <span class="o">::=</span> <span class="p">[</span><span class="mi">0</span><span class="o">-</span><span class="mi">9</span><span class="p">]</span><span class="o">+</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<index>是一个生产环境中不能在一个数字结尾的数字编码;它的编码数量较少的优化。
 
 
 <hr />
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</li></ul></p>
+</index></p></type></known-nominal-type></known-module></p></substitution></p></identifier></p></protocol-conformance></p></type></impl-function-attribute></type></type></type></type></p></实现了一套功能型></reabstract-signature></private-decl-name></private-decl-name></p></li></ul></p></li></ul></p>
 ]]></content>
   </entry>
   

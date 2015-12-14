@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Swift | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/swift/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-13T15:49:10+08:00</updated>
+  <updated>2015-12-14T17:16:45+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -319,16 +319,471 @@ struct ClassExistentialContainer {
 <h4>类元数据</h4>
 <p>
 类元数据设计和Objective-C互操作;所有类元数据记录也有效的Objective-C类对象。类元数据指针的值被用作类变型,所以派生类的元数据记录也作为一个有效的为其父类的所有类变型价值。
+<ul>
+<li>析构函数指针存储在从元数据指针偏移2的地址，背后的价值关联表。此功能由Swift的析构器调用时的类实例被销毁<ul>
+<li>isa指针指向Objective-C的兼容元类记录村春在偏移量是0的地址</li>
+<li>父类指针指向元类数据记录的父类存储在偏移量1的地址，如果是根类，它为null</li>
+<li>偏移2和偏移3保留用于Objective-C的运行时使用</li>
+<li>该rodata指针存储在偏移4;它指向的类的Objective-C兼容rodata记录。该指针值包括标签。低位始终设置为1，Swift类和始终设置为0的Objective-C类。</li>
+<li>类标志是一个32位字段偏移量5</li>
+<li>实例地址指针是一个32位的字段后面的这个类的标志。此类指针实例的开始之后此字节数的实例指针。</li>
+<li>实例大小是32位的字段后面的这个实例地址指针。这是存储本字节在这种类型的每一个对象的数</li>
+<li>实例对准mask是一个16位的字段后面的这个实例的大小。这是一组低位，它们不能在一指针被设置为这个类的一个实例的。 </li>
+<li>运行时保留字段是一个16位的字段后面的这个实例对齐mask。编译器初始化这个为零。 </li>
+<li>类对象的大小是32位的字段，运行时保留字段之后。这是存储在类元数据对象的字节的总数。</li>
+<li>对象的地址指针是一个32位的字段后面的这个类的对象的大小。这是存储在类元数据对象的字节数。 </li>
+<li>名义类型描述为最派生类的类型被引用以立即偏移后的类对象的地址点。这是在64位的平台偏移8或在32位平台偏移11。 </li>
+<li>对于每一个Swift类在类的继承层次结构，从根类订单开始一直到最派生类，以下领域都存在： </li>
+<li>首先，参考到母体元数据记录被存储。对于类是一个封闭的名义类型的成员，这是一个引用封闭类型的元数据。对于顶级类，这是空。 </li>
+<li>如果类是通用的，它的泛型参数向量的内联存储</li>
+<li>V表被内嵌存储，并包含一个函数指针类的声明顺序的每一个方法的实现。 </li>
+<li>如果一个类的实例的布局是依赖于它的通用参数，则字段偏置矢量存储直列，含有以字节偏移从实例指针类的每个字段中声明的顺序。 （对于类与固定布局，字段偏移都可以访问静态的全局变量，类似于Objective-C的ivar偏移。）</li>
+</ul>
+
+<p>请注意，这些字段都存在在继承层次的Objective-C基类。 </p>
+<h4>通用参数向量</h4>
+<p>元数据记录泛型类型的实例包含有关其泛型参数信息。对于类型的每个参数，引用为类型参数的元数据记录存储。在所有类型参数的元数据参考，对于每种类型的参数，如果有该类​​型参数的协议要求，引用的证人表中为每个协议，要求符合储存在声明顺序。 <br />
+例如，给定一个泛型类型，在继承的参数&lt;T，U，V&gt;，它的泛型参数的记录将包括引用的元数据记录，T，U型和V，仿佛在C结构布局：<br />
+```swift
+struct GenericParameterVector {
+  TypeMetadata *T, *U, *V;
+};
+```
+如果再加协议要求的参数，例如，<code> &lt;T: Runcible, U: protocol&lt;Fungible, Ansible&gt;, V&gt; </code>，那么该类型的泛型参数向量包含这些协议关联表，设计：
+```swift
+struct GenericParameterVector {
+  TypeMetadata *T, *U, *V;
+  RuncibleWitnessTable *T_Runcible;
+  FungibleWitnessTable *U_Fungible;
+  AnsibleWitnessTable *U_Ansible;
+};
+```
 </p>
+<h4>通用类型描述符</h4>
+<p>元数据记录类，结构和枚举类型包含一个指向类型描述符，其中包含有关名义类型的基本信息，如名称，成员和元数据的布局。对于泛型类型，一是名义类型描述符是该类型的所有实例共享。布局如下：
+<ul>
+<li>偏移0的存储类型<ul>
+<li>若为0则是类</li>
+<li>结构体为1</li>
+<li>枚举是2</li>
+</ul></li>
+<li>错位的名称被引用为空值终止的C字符串量。本名称不包括绑定泛型参数。 </li>
+<li>以下四个字段依赖于一种通用类型。 <ul>
+<li>对一个类或者结构体来说:<ul>
+<li>字段的数量被存储在偏移2。这是在元数据记录中的字段偏置向量的长度，如果有的话。 </li>
+<li>的偏移到字段偏移矢量被存储在偏移3.这是中的偏移在元数据记录中的类型字段偏置向量的指针大小词语。如果没有字段偏置矢量被存储在元数据记录，这是零。 </li>
+<li>字段名称偏移量4名的顺序对应的字段的领域偏移向量的顺序被引用为C字符串的双空结尾的列表。</li>
+<li>该字段类型的访问是一个函数指针偏移5.如果非空，该函数需要一个指针类型的元数据标称类型的实例，并返回一个指针类型的元数据引用的字段类型的数组该实例。的顺序相匹配的领域偏移向量和字段名列表。 </li></ul></li>
+<li>对一个枚举来说：<ul>
+<li>的有效载荷的情况下和有效载荷大小偏移数被存储在偏移2的至少显著24位是有效载荷的情况下的数量，和在类型元数据的有效载荷大小的最显著8位的偏移，如果有的话。</li>
+<li>没有效载荷的情况下的数量被存储在偏移3。 </li>
+<li>case名称偏移量4名进行排序，从而有效载荷的情况下是第一位的，其次是无负载情况下被引用为C字符串的双空结尾的列表。在列表中的每个一半，名称的顺序对应于枚举声明的情况下的顺序。 </li>
+<li>case类型的访问是一个函数指针偏移5.如果非空，该函数需要一个指针类型的元数据枚举的一个实例，并返回一个指针类型的元数据的引用为案件的类型数组该实例。的顺序相匹配的情况下，名单中。这个功能类似于字段类型存取器为一个结构，除了还结果中的每个元件的至少显著位如果枚举的情况下是一种间接的情况下设置的。 </li></ul></li>
+</ul></li>
+<li>如果名义类型是通用的，一个指针，在用于形成该类型的实例的元图形存储在偏移6.指针是空的，如果类型是不通用的。 </li>
+<li>泛型参数描述开始于偏移7。这说明在元数据记录中的泛型参数向量的布局： <ul>
+<li>通用参数向量的偏移存储在偏移7.这是中的偏移元数据记录内的通用参数向量的指针大小词语。如果该类型不是通用的，这是零。 </li>
+<li>类型参数的数量存储在偏移8.这个计数包括相关类型的类型参数与协议约束。 </li>
+<li>类型参数的数目被储存在仅偏移9.本计数包括初级形式类型参数。 </li>
+<li>对于每个类型的参数n，以下字段中存储： <ul>
+<li>该类型参数的数目存储在偏移10 + N。这是存储用于在通用参数向量类型参数表指针的数目。 </li></ul></li></ul></li>
+</ul>
+请注意，没有名义类型说明符的协议或协议类型。请参阅下面的协议描述符描述。
+</p>
+<h4>Protocol描述符</h4>
+协议元数据包含描述所需的类型的协议值以符合引用零个，一个或多个协议的描述符。本协议描述的布局要与Objective-C的协议对象是兼容的。设计如下：
+<ul>
+<li>一个isa占位符存放在偏移0填充这个字段的Objective-C运行。 </li>
+<li>错位的名称被引用为空值终止的C字符串偏移量1。 </li>
+<li>如果协议继承的一个或多个其他协议，一个指针到继承的协议列表存储在偏移2.名单开始的继承协议作为一个指针大小整数的数目，和后跟许多协议描述符指针。如果协议继承了没有其他协议，这个指针为空。 </li>
+<li>对于ObjC兼容协议，它需要的实例方法存储在偏移3作为ObjC兼容的方法列表。这是原生Swift协议无效。 </li>
+<li>对于ObjC兼容协议，它需要的类方法都存储在偏移4作为ObjC兼容的方法列表。这是原生Swift协议无效。 </li>
+<li>对于ObjC兼容协议，其可选实例方法存储在偏移5作为ObjC兼容的方法列表。这是原生Swift协议无效。 </li>
+<li>对于ObjC兼容协议，其可选类的方法存储在偏移6作为ObjC兼容的方法列表。这是原生Swift协议无效。 </li>
+<li>对于ObjC兼容协议，它的实例属性存储在偏移7作为ObjC兼容属性列表。这是原生Swift协议无效。 </li>
+<li>该协议描述符记录的大小存储为一个32位整数偏移量8。这是目前72在64位的平台和40在32位的平台。</li>
+<li>标志被存储为尺寸后的32位整数。以下位目前使用的（从最低计数显著零位）： <ul>
+<li>位0是Swift位。坐落在Swift定义和取消的Objective-C中定义的协议所有协议。 </li>
+<li>第1位是类约束一下。如果该协议不是类的限制，这意味着任何结构，枚举，或类类型可能符合协议设置它。它没有设置，如果只有类能遵守协议。 （该倒的意思是使用Objective-C协议的记录，在该位从未设置的兼容性。Objective-C的协议只能由类效法。） </li>
+<li>第2位是映射表位。它设置，如果派遣协议的方法是通过映射表，可以是传递一个额外的参数，以通用的功能或包含在协议类型的存在容器设计完成。这是未设置如果调度是通过objc_msgSend完成，不需要额外的信息，陪符合类型的值。 </li>
+<li>第31位是由Objective-C运行时设置它已经完成了它的初始化协议纪录。它是未使用的Swift运行。 </li>
+</ul></li>
+</ul>
+
+<h2>重整</h2>
+<p>
+```
+mangled-name ::= '_T' global
+```
+所有Swift-重整的名称以此前缀开头。
+</p>
+<h4>全局</h4>
+<p>
+```
+global ::= 't' type                    // standalone type (for DWARF)
+global ::= 'M' type                    // type metadata (address point)
+                                       // -- type starts with [BCOSTV]
+global ::= 'Mf' type                   // 'full' type metadata (start of object)
+global ::= 'MP' type                   // type metadata pattern
+global ::= 'Ma' type                   // type metadata access function
+global ::= 'ML' type                   // type metadata lazy cache variable
+global ::= 'Mm' type                   // class metaclass
+global ::= 'Mn' nominal-type           // nominal type descriptor
+global ::= 'Mp' protocol               // protocol descriptor
+global ::= 'PA' .*                     // partial application forwarder
+global ::= 'PAo' .*                    // ObjC partial application forwarder
+global ::= 'w' value-witness-kind type // value witness
+global ::= 'WV' type                   // value witness table
+global ::= 'Wo' entity                 // witness table offset
+global ::= 'Wv' directness entity      // field offset
+global ::= 'WP' protocol-conformance   // protocol witness table
+global ::= 'Wa' protocol-conformance   // protocol witness table accessor
+global ::= 'Wl' type protocol-conformance // lazy protocol witness table accessor
+global ::= 'WL' protocol-conformance   // lazy protocol witness table cache variable
+global ::= 'WD' protocol-conformance   // dependent proto witness table generator
+global ::= 'Wd' protocol-conformance   // dependent proto witness table template
+global ::= entity                      // some identifiable thing
+global ::= 'TO' global                 // ObjC-as-swift thunk
+global ::= 'To' global                 // swift-as-ObjC thunk
+global ::= 'TD' global                 // dynamic dispatch thunk
+global ::= 'Td' global                 // direct method reference thunk
+global ::= 'TR' reabstract-signature   // reabstraction thunk helper function
+global ::= 'Tr' reabstract-signature   // reabstraction thunk
+
+global ::= 'TS' specializationinfo '_' mangled-name
+specializationinfo ::= 'g' passid (type protocol-conformance* '_')+            // Generic specialization info.
+specializationinfo ::= 'f' passid (funcspecializationarginfo '_')+             // Function signature specialization kind
+passid ::= integer                                                             // The id of the pass that generated this specialization.
+funcsigspecializationarginfo ::= 'cl' closurename type*                        // Closure specialized with closed over types in argument order.
+funcsigspecializationarginfo ::= 'n'                                           // Unmodified argument
+funcsigspecializationarginfo ::= 'cp' funcsigspecializationconstantproppayload // Constant propagated argument
+funcsigspecializationarginfo ::= 'd'                                           // Dead argument
+funcsigspecializationarginfo ::= 'g' 's'?                                      // Owned =&gt; Guaranteed and Exploded if 's' present.
+funcsigspecializationarginfo ::= 's'                                           // Exploded
+funcsigspecializationarginfo ::= 'k'                                           // Exploded
+funcsigspecializationconstantpropinfo ::= 'fr' mangled-name
+funcsigspecializationconstantpropinfo ::= 'g' mangled-name
+funcsigspecializationconstantpropinfo ::= 'i' 64-bit-integer
+funcsigspecializationconstantpropinfo ::= 'fl' float-as-64-bit-integer
+funcsigspecializationconstantpropinfo ::= 'se' stringencoding 'v' md5hash
+
+global ::= 'TV' global                 // vtable override thunk
+global ::= 'TW' protocol-conformance entity
+                                       // protocol witness thunk
+entity ::= nominal-type                // named type declaration
+entity ::= static? entity-kind context entity-name
+entity-kind ::= 'F'                    // function (ctor, accessor, etc.)
+entity-kind ::= 'v'                    // variable (let/var)
+entity-kind ::= 'i'                    // subscript ('i'ndex) itself (not the individual accessors)
+entity-kind ::= 'I'                    // initializer
+entity-name ::= decl-name type         // named declaration
+entity-name ::= 'A' index              // default argument generator
+entity-name ::= 'a' addressor-kind decl-name type     // mutable addressor
+entity-name ::= 'C' type               // allocating constructor
+entity-name ::= 'c' type               // non-allocating constructor
+entity-name ::= 'D'                    // deallocating destructor; untyped
+entity-name ::= 'd'                    // non-deallocating destructor; untyped
+entity-name ::= 'g' decl-name type     // getter
+entity-name ::= 'i'                    // non-local variable initializer
+entity-name ::= 'l' addressor-kind decl-name type     // non-mutable addressor
+entity-name ::= 'm' decl-name type     // materializeForSet
+entity-name ::= 's' decl-name type     // setter
+entity-name ::= 'U' index type         // explicit anonymous closure expression
+entity-name ::= 'u' index type         // implicit anonymous closure
+entity-name ::= 'w' decl-name type     // willSet
+entity-name ::= 'W' decl-name type     // didSet
+static ::= 'Z'                         // entity is a static member of a type
+decl-name ::= identifier
+decl-name ::= local-decl-name
+decl-name ::= private-decl-name
+local-decl-name ::= 'L' index identifier  // locally-discriminated declaration
+private-decl-name ::= 'P' identifier identifier  // file-discriminated declaration
+reabstract-signature ::= ('G' generic-signature)? type type
+addressor-kind ::= 'u'                 // unsafe addressor (no owner)
+addressor-kind ::= 'O'                 // owning addressor (non-native owner)
+addressor-kind ::= 'o'                 // owning addressor (native owner)
+addressor-kind ::= 'p'                 // pinning addressor (native owner)
+```
+实体开始于<code>entity</code> <code>nominal-type-kind ([COPV])</code>,去取代 <code>([Ss])</code> <code> entity-kind ([FIiv])</code>。
+<code>entity-name</code>开头<code>[AaCcDggis]</code>或<code>decl-name</code>。一个<code>decl-name</code>开头<code>[LP]</code>或标识符<code>（[0-9oX]）</code>。
+一个上下文开始于任一实体，一个扩展（其开头[EE]），或者一个模块，它可能是一个标识符（[0-9oX]）或模块的取代（[SS]）。
+全局的修正开始于<code>[MTWw]</code>。
+如果部分应用程序转发器是一个静态符号，它的名字将开始与序列_TPA_随后转发的目的地的错位符号名称。
+一个普通的专业化的mangling由一个头，指定用于专门的泛型函数的类型和不合格，其次是原来的非专业化的通用符号的全面重整名称。
+在一<private-decl-name>中的第一标识符是表示原始声明来自文件的字符串。应考虑的包围模块内是唯一的。第二标识符是实体的名称。
+并非所有的声明标志着民营声明中，将使用<private-decl-name>压延;如果实体的上下文是足以唯一标识该实体中，简单的标识符形式是优选的。
+在<reabstract-signature>的类型始终是非多态<实现了一套功能型>类型。
+
+<h4>直接和间接的符号</h4>
+<p>
+```
+directness ::= 'd'                         // direct
+directness ::= 'i'                         // indirect
+```
+直接符号解析直接对象的地址。间接符号解析为一个指向对象的地址。他们是不同的manglings做某一类的错误显而易见。
+
+讨论补偿时的术语稍微超载。直接抵消解析为一个变量持有真正的偏移。间接偏移解析为一个变量保持的偏移被应用到输入的元数据，以获得真实的地址偏移。 （偏移量是必需的变量时，被一个弹性的结构，当物体的布局可能依赖于通用的参数中访问谎言的对象，这些偏移量必须保持在元数据中，间接磁场偏移访问泛型类型的字段时，因此，需要地方元数据本身具有未知的布局。）
+</p>
+<h4>声明上下文</h4>
+<p>
+```
+context ::= module
+context ::= extension
+context ::= entity
+module ::= substitution                    // other substitution
+module ::= identifier                      // module name
+module ::= known-module                    // abbreviation
+extension ::= 'E' module entity
+extension ::= 'e' module generic-signature entity
+```
+这些manglings确定封闭的上下文中，一个实体被声明，如它的封闭模块，功​​能，或名义类型。
+一个扩展的mangling时则使用一个实体的声明上下文是一个扩展和被扩展的实体是在不同的模块。在这种情况下，扩展的模块第一错位，随后由实体被扩展。如果延伸和扩展的实体都在同一模块中，普通实体重整是首选。如果扩展受到限制，在延长的限制被损毁，其一般签名。
+当重整本地实体的一个构造或析构，该非分配或非重新分配的方式用于内的上下文。
+</p>
+<h4>类型</h4>
+<p>
+```
+type ::= 'Bb'                              // Builtin.BridgeObject
+type ::= 'BB'                              // Builtin.UnsafeValueBuffer
+type ::= 'Bf' natural '_'                  // Builtin.Float<n>
+type ::= 'Bi' natural '_'                  // Builtin.Int<n>
+type ::= 'BO'                              // Builtin.ObjCPointer
+type ::= 'Bo'                              // Builtin.ObjectPointer
+type ::= 'Bp'                              // Builtin.RawPointer
+type ::= 'Bv' natural type                 // Builtin.Vec<n>x<type>
+type ::= 'Bw'                              // Builtin.Word
+type ::= nominal-type
+type ::= associated-type
+type ::= 'a' context identifier            // Type alias (DWARF only)
+type ::= 'b' type type                     // objc block function type
+type ::= 'c' type type                     // C function pointer type
+type ::= 'F' throws-annotation? type type  // function type
+type ::= 'f' throws-annotation? type type  // uncurried function type
+type ::= 'G' type <type>+ '_'              // generic type application
+type ::= 'K' type type                     // @auto_closure function type
+type ::= 'M' type                          // metatype without representation
+type ::= 'XM' metatype-repr type           // metatype with representation
+type ::= 'P' protocol-list '_'             // protocol type
+type ::= 'PM' type                         // existential metatype without representation
+type ::= 'XPM' metatype-repr type          // existential metatype with representation
+type ::= archetype
+type ::= 'R' type                          // inout
+type ::= 'T' tuple-element* '_'            // tuple
+type ::= 't' tuple-element* '_'            // variadic tuple
+type ::= 'Xo' type                         // @unowned type
+type ::= 'Xu' type                         // @unowned(unsafe) type
+type ::= 'Xw' type                         // @weak type
+type ::= 'XF' impl-function-type           // function implementation type
+type ::= 'Xf' type type                    // @thin function type
+nominal-type ::= known-nominal-type
+nominal-type ::= substitution
+nominal-type ::= nominal-type-kind declaration-name
+nominal-type-kind ::= 'C'                  // class
+nominal-type-kind ::= 'O'                  // enum
+nominal-type-kind ::= 'V'                  // struct
+archetype ::= 'Q' index                    // archetype with depth=0, idx=N
+archetype ::= 'Qd' index index             // archetype with depth=M+1, idx=N
+archetype ::= associated-type
+archetype ::= qualified-archetype
+associated-type ::= substitution
+associated-type ::= 'Q' protocol-context     // self type of protocol
+associated-type ::= 'Q' archetype identifier // associated type
+qualified-archetype ::= 'Qq' index context   // archetype+context (DWARF only)
+protocol-context ::= 'P' protocol
+tuple-element ::= identifier? type
+metatype-repr ::= 't'                      // Thin metatype representation
+metatype-repr ::= 'T'                      // Thick metatype representation
+metatype-repr ::= 'o'                      // ObjC metatype representation
+throws-annotation ::= 'z'                  // 'throws' annotation on function types
 
 
+type ::= 'u' generic-signature type        // generic type
+type ::= 'x'                               // generic param, depth=0, idx=0
+type ::= 'q' generic-param-index           // dependent generic parameter
+type ::= 'q' type assoc-type-name          // associated type of non-generic param
+type ::= 'w' generic-param-index assoc-type-name // associated type
+type ::= 'W' generic-param-index assoc-type-name+ '_' // associated type at depth
 
+generic-param-index ::= 'x'                // depth = 0,   idx = 0
+generic-param-index ::= index              // depth = 0,   idx = N+1
+generic-param-index ::= 'd' index index    // depth = M+1, idx = N
+```
+<type>从未开始或以数字结束。 <type>从不以下划线开头。 <type>从来没有开始与D。 <type>从来没有开始以Z。
 
+请注意，协议裂伤不同的类型和作为背景。一个协议方面总是由一个单一的协议名称等等轧液没有一个结尾下划线。协议类型可以有并列设置，结束于结尾下划线零个，一个或多个协议的范围。
+```
+assoc-type-name ::= ('P' protocol-name)? identifier
+assoc-type-name ::= substitution
+```
+相关类型因此使用缩写的mangling当基座通用参数或关联式是由一个单一的规约要求的限制。在这种情况下，相关联的类型可以明确引用的名字单独。如果基有多个符合性限制，那么协议名称是错位的消除歧义。
+```
+impl-function-type ::=
+  impl-callee-convention impl-function-attribute* generic-signature? '_'
+  impl-parameter* '_' impl-result* '_'
+impl-callee-convention ::= 't'              // thin
+impl-callee-convention ::= impl-convention  // thick, callee transferred with given convention
+impl-convention ::= 'a'                     // direct, autoreleased
+impl-convention ::= 'd'                     // direct, no ownership transfer
+impl-convention ::= 'D'                     // direct, no ownership transfer,
+                                            // dependent on 'self' parameter
+impl-convention ::= 'g'                     // direct, guaranteed
+impl-convention ::= 'e'                     // direct, deallocating
+impl-convention ::= 'i'                     // indirect, ownership transfer
+impl-convention ::= 'l'                     // indirect, inout
+impl-convention ::= 'G'                     // indirect, guaranteed
+impl-convention ::= 'o'                     // direct, ownership transfer
+impl-convention ::= 'z' impl-convention     // error result
+impl-function-attribute ::= 'Cb'            // compatible with C block invocation function
+impl-function-attribute ::= 'Cc'            // compatible with C global function
+impl-function-attribute ::= 'Cm'            // compatible with Swift method
+impl-function-attribute ::= 'CO'            // compatible with ObjC method
+impl-function-attribute ::= 'Cw'            // compatible with protocol witness
+impl-function-attribute ::= 'N'             // noreturn
+impl-function-attribute ::= 'G'             // generic
+impl-parameter ::= impl-convention type
+impl-result ::= impl-convention type
+```
+在大多数情况下，manglings遵循的正式语言类型的结构。然而，在某些情况下，它是更为有用的函数类型的准确实现细节进行编码。
+任何<impl-function-attribute>产品必须出现在它们上面指定的顺序：例如：一个不返回的C函数的错位与CCN。
+需要注意的是，公约和功能属性的制作并不需要从一个<type>的开始消除歧义。
 
+<h4>泛型</h4>
+<p>
+```
+protocol-conformance ::= ('u' generic-signature)? type protocol module
+```
+<protocol-conformance>是指一个类型的一致性协议。命名模块包含声明的一致性扩展或类型声明之一。
+```
+generic-signature ::= (generic-param-count+)? ('R' requirement*)? 'r'
+generic-param-count ::= 'z'       // zero parameters
+generic-param-count ::= index     // N+1 parameters
+requirement ::= type-param protocol-name // protocol requirement
+requirement ::= type-param type          // base class requirement
+                                         // type starts with [CS]
+requirement ::= type-param 'z' type      // 'z'ame-type requirement
+
+// Special type mangling for type params that saves the initial 'q' on
+// generic params
+type-param ::= generic-param-index       // generic parameter
+type-param ::= 'w' generic-param-index assoc-type-name // associated type
+type-param ::= 'W' generic-param-index assoc-type-name+ '_'
+```
+一个通用的签名首先描述在每个深度的签名，随后要求的通用参数的数量。作为一个特殊的情况下，没有generic-param-count表示在最外深度单个通用参数：
+```
+urFq_q_                           // <t_0_0> T_0_0 -&gt; T_0_0
+u_0_rFq_qd_0_                     // <t_0_0>&lt;T_1_0, T_1_1&gt; T_0_0 -&gt; T_1_1
+```
+
+<h4>映射值</h4>
+<p>
+```
+value-witness-kind ::= 'al'           // allocateBuffer
+value-witness-kind ::= 'ca'           // assignWithCopy
+value-witness-kind ::= 'ta'           // assignWithTake
+value-witness-kind ::= 'de'           // deallocateBuffer
+value-witness-kind ::= 'xx'           // destroy
+value-witness-kind ::= 'XX'           // destroyBuffer
+value-witness-kind ::= 'Xx'           // destroyArray
+value-witness-kind ::= 'CP'           // initializeBufferWithCopyOfBuffer
+value-witness-kind ::= 'Cp'           // initializeBufferWithCopy
+value-witness-kind ::= 'cp'           // initializeWithCopy
+value-witness-kind ::= 'TK'           // initializeBufferWithTakeOfBuffer
+value-witness-kind ::= 'Tk'           // initializeBufferWithTake
+value-witness-kind ::= 'tk'           // initializeWithTake
+value-witness-kind ::= 'pr'           // projectBuffer
+value-witness-kind ::= 'xs'           // storeExtraInhabitant
+value-witness-kind ::= 'xg'           // getExtraInhabitantIndex
+value-witness-kind ::= 'Cc'           // initializeArrayWithCopy
+value-witness-kind ::= 'Tt'           // initializeArrayWithTakeFrontToBack
+value-witness-kind ::= 'tT'           // initializeArrayWithTakeBackToFront
+value-witness-kind ::= 'ug'           // getEnumTag
+value-witness-kind ::= 'up'           // destructiveProjectEnumData
+value-witness-kind ::= 'ui'           // destructiveInjectEnumTag
+<value-witness-kind> differentiates the kinds of value witness functions for a type.
+
+Identifiers
+
+identifier ::= natural identifier-start-char identifier-char*
+identifier ::= 'o' operator-fixity natural operator-char+
+
+operator-fixity ::= 'p'                    // prefix operator
+operator-fixity ::= 'P'                    // postfix operator
+operator-fixity ::= 'i'                    // infix operator
+
+operator-char ::= 'a'                      // &amp; 'and'
+operator-char ::= 'c'                      // @ 'commercial at'
+operator-char ::= 'd'                      // / 'divide'
+operator-char ::= 'e'                      // = 'equals'
+operator-char ::= 'g'                      // &gt; 'greater'
+operator-char ::= 'l'                      // &lt; 'less'
+operator-char ::= 'm'                      // * 'multiply'
+operator-char ::= 'n'                      // ! 'not'
+operator-char ::= 'o'                      // | 'or'
+operator-char ::= 'p'                      // + 'plus'
+operator-char ::= 'q'                      // ? 'question'
+operator-char ::= 'r'                      // % 'remainder'
+operator-char ::= 's'                      // - 'subtract'
+operator-char ::= 't'                      // ~ 'tilde'
+operator-char ::= 'x'                      // ^ 'xor'
+operator-char ::= 'z'                      // . 'zperiod'
+```
+<identifier>是运行长度编码：自然表示的字符如何跟进。操作字符映射到字母字符给出。在两种情况下可以一个标识符以数字开头，所以有与运行长度没有歧义。
+```
+identifier ::= 'X' natural identifier-start-char identifier-char*
+identifier ::= 'X' 'o' operator-fixity natural identifier-char*
+```
+包含非ASCII字符都使用在RFC 3492中指定Punycode算法编码，与该_用作编码定界符的修改和大写字母A至J标识符被用来代替数字0至9中的编码字符集。是混淆然后由一个X后跟编码串的游程长度和所述编码的字符串本身。例如，标识符vergüenza被错位到X12vergenza_JFa。 （在标准的Punycode编码是vergenza-95A）
+
+包含非ASCII字符，运营商首先映射ASCII运营字符的字母作为纯ASCII运营商名称错位，然后Punycode码编码取代字符串。是混淆然后由XO后跟的固定性，该编码串的运行长度，以及编码的字符串本身。例如，管道符“+”的错位，以Xoi7p_qcaDc（p_qcaDc是的替代字符串“P»编码）。
+
+<h4>代替</h4>
+<p>
+```
+substitution ::= 'S' index
+```
+<substitution>是一个向后引用到先前错位实体。该重整算法维护实体的映射来替代指标，因为它运行。时，可以通过取代（的模块，名义类型或协议）来表示一个实体是错位，一个取代是第一所期望的是取代的地图，并且如果存在，该实体使用相关替代索引错位。否则，该实体通常错位，且随后添加到替代地图，并与下一个可利用的取代索引相关联。
+例如，在重整函数类型（zim.zang.zung，zim.zang.zung，zim.zippity） - &gt; zim.zang.zoo（与模块ZIM和类zim.zang），重复上下文ZIM，以星。臧和zim.zang.zung将使用替代被错位的第一次后，被截断。第一个参数类型将在长形裂伤，CC3zim4zang4zung，并在这样做，ZIM将获得替代S_，zim.zang将获得替代S0_，并zim.zang.zung将收购S1_。第二个参数是一样的第一和裂伤将利用其替换，CS1_。第三个参数类型将裂伤使用替代ZIM，CS_7zippity。 （它也获得替代S2_这将被使用，如果再次错位。）结果类型将裂伤使用替代zim.zang，CS0_zoo（并获得替代S3_）。全功能型因而轧液作为fTCC3zim4zang4zungCS1_CS_7zippity_CS0_zoo。
+```
+substitution ::= 's'
+```
+在特殊的替换s被用于Swift标准库模块。
+
+<h4>预定义替换</h4>
+<p>
+```
+known-module ::= 's'                       // Swift
+known-module ::= 'SC'                      // C
+known-module ::= 'So'                      // Objective-C
+known-nominal-type ::= 'Sa'                // Swift.Array
+known-nominal-type ::= 'Sb'                // Swift.Bool
+known-nominal-type ::= 'Sc'                // Swift.UnicodeScalar
+known-nominal-type ::= 'Sd'                // Swift.Float64
+known-nominal-type ::= 'Sf'                // Swift.Float32
+known-nominal-type ::= 'Si'                // Swift.Int
+known-nominal-type ::= 'SP'                // Swift.UnsafePointer
+known-nominal-type ::= 'Sp'                // Swift.UnsafeMutablePointer
+known-nominal-type ::= 'SQ'                // Swift.ImplicitlyUnwrappedOptional
+known-nominal-type ::= 'Sq'                // Swift.Optional
+known-nominal-type ::= 'SR'                // Swift.UnsafeBufferPointer
+known-nominal-type ::= 'Sr'                // Swift.UnsafeMutableBufferPointer
+known-nominal-type ::= 'SS'                // Swift.String
+known-nominal-type ::= 'Su'                // Swift.UInt
+```
+<known-module> 以及 <known-nominal-type>是内置的替换对于某些常见的实体。像任何其他的替代，他们都以'S'。
+Objective-C的模块作为上下文重整Objective-C类为的<type>。
+
+<h4>索引</h4>
+<p>
+```
+index ::= '_'                              // 0
+index ::= natural '_'                      // N+1
+natural ::= [0-9]+
+```
+<index>是一个生产环境中不能在一个数字结尾的数字编码;它的编码数量较少的优化。
 
 
 <hr />
-</li></ul></p>
+</index></p></type></known-nominal-type></known-module></p></substitution></p></identifier></value-witness-kind></p></t_0_0></t_0_0></protocol-conformance></p></type></impl-function-attribute></type></type></type></type></type></type></n></n></n></p></实现了一套功能型></reabstract-signature></private-decl-name></private-decl-name></p></li></ul></p></li></ul></p>
 ]]></content>
   </entry>
   
