@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Swift | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/swift/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-14T17:16:45+08:00</updated>
+  <updated>2015-12-14T17:32:48+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Swift 2.2 源码解读 Swift 的 ABI]]></title>
+    <title type="html"><![CDATA[Swift 的 ABI]]></title>
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/"/>
     <updated>2015-12-11T10:10:22+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du</id>
@@ -782,7 +782,6 @@ natural ::= [0-9]+
 <index>是一个生产环境中不能在一个数字结尾的数字编码;它的编码数量较少的优化。
 
 
-<hr />
 </index></p></type></known-nominal-type></known-module></p></substitution></p></identifier></value-witness-kind></p></t_0_0></t_0_0></protocol-conformance></p></type></impl-function-attribute></type></type></type></type></type></type></n></n></n></p></实现了一套功能型></reabstract-signature></private-decl-name></private-decl-name></p></li></ul></p></li></ul></p>
 ]]></content>
   </entry>
