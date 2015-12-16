@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="有时我感觉就像我不知道在做什么。虽然我知道自己的设计模式——就像任何好的编程人员那样 —— 但我太接近我在做的产品以至于不能客观地衡量我的架构决策的有效性。当队伍中来了另外一位开发者时，我意识到我们陷入困境了。 从没听过 MVC ？有人称之为 Massive View Controller（ &hellip;">
+	<meta name="description" content="这篇文章跟我以往的文章有点不一样。它主要是一些思想与模式的汇集，而不是一篇指南。下面我所写的模式几乎全都来之不易，都是我犯了错之后才学到的。我并不认为自己是子类方面的权威，但我确实想把我学到的一些东西分享出来。别把本文当做权威指南，它只是一些例子的汇集。 在被问到 OOP（面向对象编程）的时候， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +74,48 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/06/18/ocde-zi-lei/">
+		
+			OC的子类</a>
+	</h2>
+	<div class="entry-content">
+		<p>这篇文章跟我以往的文章有点不一样。它主要是一些思想与模式的汇集，而不是一篇指南。下面我所写的模式几乎全都来之不易，都是我犯了错之后才学到的。我并不认为自己是子类方面的权威，但我确实想把我学到的一些东西分享出来。别把本文当做权威指南，它只是一些例子的汇集。</p>
+
+<p>在被问到 OOP（面向对象编程）的时候，Alan Kay（OOP 的发明人）写到：它跟类无关，但跟消息有关。<a href="http://c2.com/cgi/wiki?AlanKayOnMessaging">^1</a>然而，很多人的关注点仍然还在类层次上。在本文中，我们会看几个我们可能会把注意力放在创建复杂的类结构上的例子，并给出更有用的替代方案。根据经验，这样会让代码更简单，更易维护。关于这个话题，在 <a href="http://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882">Clean Code</a>（中文版：<a href="http://www.amazon.cn/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E9%A9%AC%E4%B8%81/dp/B0031M9GHC/ref=pd_bxgy_b_img_y">代码整洁之道</a>）和 <a href="http://www.amazon.com/Code-Complete-Practical-Handbook-Construction/dp/0735619670">Code Complete</a>（中文版：<a href="http://www.amazon.cn/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8-%E5%8F%B2%E8%92%82%E5%A4%AB%E2%80%A2%E8%BF%88%E5%85%8B%E5%BA%B7%E5%A5%88%E5%B0%94/dp/B0061XKRXA/ref=pd_bxgy_b_img_z">代码大全</a>）中已经有大量讨论。推荐你阅读这两本书。</p>
+
+<h2>何时用子类</h2>
+
+<p>首先，我们讨论几种使用子类比较合适的场景。如果你要写一个自定义布局的 <code>UITableViewCell</code> ，那就创建一个子类。这同样适用于几乎每个视图。一旦你开始布局，把这块代码放入子类就更合理一些，不光代码得到了更好的封装，你也能得到一个可在工程之间重用的组件。</p>
+
+		
+		<a href="/Blog/blog/2014/06/18/ocde-zi-lei/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/06/18/ocde-zi-lei/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -648,149 +690,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/">
-		
-			Layer中动画概述</a>
-	</h2>
-	<div class="entry-content">
-		<p>默认情况下，<code>CALayer</code> 及其子类的绝大部分标准属性都可以执行动画，无论是添加一个 <code>CAAnimation</code> 到 Layer（显式动画），亦或是为属性指定一个动作然后修改它（隐式动画）。</p>
-
-<p>但有时候我们希望能同时为好几个属性添加动画，使它们看起来像是一个动画一样；或者，我们需要执行的动画不能通过使用标准 Layer 属性动画来实现。</p>
-
-<p>在本文中，我们将讨论如何子类化 <code>CALayer</code> 并添加我们自己的属性，以便比较容易地创建那些如果以其他方式实现起来会很麻烦的动画效果。</p>
-
-<p>一般说来，我们希望添加到 <code>CALayer</code> 的子类上的可动画属性有三种类型：</p>
-
-<ul>
-<li>能间接动画 Layer （或其子类）的一个或多个标准属性的属性。</li>
-<li>能触发 Layer 背后的图像（即 <code>contents</code> 属性）重绘的属性。</li>
-<li>不涉及 Layer 重绘或对任何已有属性执行动画的属性。</li>
-</ul>
-
-<h2>间接属性动画</h2>
-
-<p>能间接修改其它标准 Layer 属性的自定义属性是这些选项中最简单的。它们仅仅只是自定义 setter 方法。然后将它们的输入转换为适用于创建动画的一个或多个不同的值。</p>
-
-<p>如果被我们设置的属性已经预设好标准动画，那我们完全不需要编写任何实际的动画代码，因为我们修改这些属性后，它们就会继承任何被配置在当前 <code>CATransaction</code> 上的动画设置，并且自动执行动画。</p>
-
-<p>换句话说，即使 <code>CALayer</code> 不知道如何对我们自定义的属性进行动画，它依然能对因自定义属性被改变而引起的其它可见副作用进行动画，而这恰好就是我们所需要的。</p>
-
-<p>为了演示这种方法，让我们来创建一个简单的模拟时钟，之后我们可以使用被声明为 <code>NSDate</code> 类型 <code>time</code> 属性来设置它的时间。我会将从创建一个静态的时钟面盘开始。这个时钟包含三个 <code>CAShapeLayer</code> 实例 —— 一个用于时钟面盘的圆形 Layer 和两个用于时针和分针的长方形 Sublayer。</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span>: <span class="nc">CAShapeLayer</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">NSDate</span> <span class="o">*</span><span class="n">time</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span> <span class="p">()</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">// 私有属性</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">CAShapeLayer</span> <span class="o">*</span><span class="n">hourHand</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">CAShapeLayer</span> <span class="o">*</span><span class="n">minuteHand</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">ClockFace</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">((</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">]))</span>
-</span><span class="line">    <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithOvalInRect:</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">].</span><span class="n">CGPath</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">whiteColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">strokeColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">lineWidth</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAShapeLayer</span> <span class="n">layer</span><span class="p">];</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">70</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">70</span><span class="p">)].</span><span class="n">CGPath</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAShapeLayer</span> <span class="n">layer</span><span class="p">];</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">90</span><span class="p">)].</span><span class="n">CGPath</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
