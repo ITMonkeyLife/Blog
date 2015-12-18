@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-18T17:54:58+08:00</updated>
+  <updated>2015-12-18T21:50:57+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -18,7 +18,9 @@
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2015/12/18/bootstrapru-men/"/>
     <updated>2015-12-18T10:38:37+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2015/12/18/bootstrapru-men</id>
-    <content type="html"><![CDATA[<p>简单介绍Bootstrap，下载以及使用。</p>
+    <content type="html"><![CDATA[<p>
+简单介绍Bootstrap，下载以及使用。
+</p>
 <h2>下载</h2>
 <p>
   Bootstrap（当前版本v3.3.5）提供以下几种方式帮你快速上手，每一种方式针对具有不同技能等级的开发者和不同的使用场景。
