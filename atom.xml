@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-18T21:50:57+08:00</updated>
+  <updated>2015-12-18T22:01:26+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -74,48 +74,26 @@
   Bootstrap利用[Autoprefixer](https://github.com/postcss/autoprefixer)自动为[某些CSS属性添加针对特定厂商的前缀](http://webdesign.about.com/od/css/a/css-vendor-prefixes.htm)。如果你是从Less/Sass源码编译Bootstrap的，并且没有使用Bootstrap自带的Gruntfile文件，那你必须将Autoprefixer集成到你的编译工具和编译过程中。如果你使用的是预先编译好的Bootstrap文件，那就无需担心这个问题。
   </p>
 <h2>Bootstrap包含的内容</h2>
-<p>Bootstrap提供了两种形式的压缩包，在下载下来的压缩包内可以看到下面的目录和文件，这些文件按照类别不同放在不同的目录，并提供了压缩和未压缩两种版本。</p>
+<p>
+  Bootstrap提供了两种形式的压缩包，在下载下来的压缩包内可以看到下面的目录和文件，这些文件按照类别不同放在不同的目录，并提供了压缩和未压缩两种版本。
+  </p>
+
 <h4>Bootstrap 插件全部依赖 jQuery</h4>
-<p>请注意，Bootstrap的所有Javascript插件都依赖jQuery，因此jQuery必须在Bootstrap之前引入，在<code>bower.json</code>文件中列出了Bootstrap所支持的jQuery版本。</p>
+<p>
+  请注意，Bootstrap的所有Javascript插件都依赖jQuery，因此jQuery必须在Bootstrap之前引入，在<code>bower.json</code>文件中列出了Bootstrap所支持的jQuery版本。
+  </p>
 <h4>预编译版本</h4>
 <p>
   下载解压之后，将其解压到任意目录下，可看到以下目录结构:
-  &#8220;`
-  bootstrap/
-├── css/
-│   ├── bootstrap.css
-│   ├── bootstrap.css.map
-│   ├── bootstrap.min.css
-│   ├── bootstrap-theme.css
-│   ├── bootstrap-theme.css.map
-│   └── bootstrap-theme.min.css
-├── js/
-│   ├── bootstrap.js
-│   └── bootstrap.min.js
-└── fonts/
-    ├── glyphicons-halflings-regular.eot
-    ├── glyphicons-halflings-regular.svg
-    ├── glyphicons-halflings-regular.ttf
-    ├── glyphicons-halflings-regular.woff
-    └── glyphicons-halflings-regular.woff2
-  &#8220;`
+![](http://ww2.sinaimg.cn/large/626e5d69gw1ez45q0hoxnj20pi0jydjt.jpg)
+
+
   上面所展示的就是Bootstrap的基本文件结构:预编译文件可以直接使用到任何web项目中。我们提供了编译好的CSS和JS（<code>bootstrap.</code>)文件，还有经过压缩的CSS和JS（<code>bootstrap.min.</code>)文件。同时还提供了CSS[源码映射表](https://developer.chrome.com/devtools/docs/css-preprocessors)(<code>bootstrap..map</code>)。可以在某些浏览器的开发工具中使用。同时还包含了来自glyphicons-halflings-regular的图标字体，在附带的Bootstrap主题中使用到了这些图标。
 </p>
 <h4>Bootstrap 源码</h4>
 <p>
   Bootstrap源码包含了预先编译的CSS、Javascript和图标字体文件，并且还有LESS、Javascript和文档的源码。具体来说，主要文件组织结构如下：
-  &#8220;`
-  bootstrap/
-├── less/
-├── js/
-├── fonts/
-├── dist/
-│   ├── css/
-│   ├── js/
-│   └── fonts/
-└── docs/
-    └── examples/
-  &#8220;`
+  ![](http://ww4.sinaimg.cn/large/626e5d69gw1ez45qmj696j20o20c0js3.jpg)
   <code>less/</code>、<code>js/</code>、<code>fonts/</code>目录分别包含了CSS、JS和字体图标的源码。<code>dist/</code>目录包含了上面所说的预编译Bootstrap包内的所有文件。<code>docs/</code>包含了所有文档的源码文件，<code>examples/</code>目录是Bootstrap官方提供的实例工程。除了这些，其他文件还包含Bootstrap安装包的定义文件、许可证文件和编译脚本。
 </p>
 <h2>编译 CSS 和 Javascript 文件</h2>
