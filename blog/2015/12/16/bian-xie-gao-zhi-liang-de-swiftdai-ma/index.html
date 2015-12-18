@@ -141,7 +141,7 @@ Swift在默认下是一个类似Objective-C的非常动态的语言。与Objecti
 </span><span class="line"><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 <br />
-在swift 中，动态调度默认通过一个vtable（虚函数表）间接调用。如果使用一个dynamic关键字声明，Swift将通过调用Objective-C通知来发送调用代替。这两种情况中，这种情况会比直接的函数调用较慢，因为它防止了对间接调用本身之外的程序开销的编译器优化。在关键性能的代码出，人常常会想限制这种动态行为。
+在Swift 中，动态调度默认通过一个vtable（虚函数表）间接调用。如果使用一个dynamic关键字声明，Swift将通过调用Objective-C通知来发送调用代替。这两种情况中，这种情况会比直接的函数调用较慢，因为它防止了对间接调用本身之外的程序开销的编译器优化。在关键性能的代码出，人常常会想限制这种动态行为。
 </p>
 <h4>建议：当你知道声明不需要被重写时使用<code>final</code></h4>
 <p>
