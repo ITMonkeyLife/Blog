@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Table view 是 iOS 应用程序中非常通用的组件。许多代码和 table view 都有直接或间接的关系，随便举几个例子，比如提供数据、更新 table view，控制它的行为以及响应选择事件。在这篇文章中，我们将会展示保持 table view 相关代码的整洁和良好组织的技术。 &hellip;">
+	<meta name="description" content="在开发高质量应用程序的过程中，测试是一个很重要的工具。在过去，当并发并不是应用程序架构中重要组成部分的时候，测试就相对简单。随着这几年的发展，使用并发设计模式已愈发重要了，想要测试好并发应用程序，已成了一个不小的挑战。 测试并发代码最主要的困难在于程序或信息流不是反映在调用堆栈上。 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,94 +74,6 @@
 		
 	
 	<div id="content" class="inner">
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/">
-		
-			整洁的TableView代码</a>
-	</h2>
-	<div class="entry-content">
-		<p>Table view 是 iOS 应用程序中非常通用的组件。许多代码和 table view 都有直接或间接的关系，随便举几个例子，比如提供数据、更新 table view，控制它的行为以及响应选择事件。在这篇文章中，我们将会展示保持 table view 相关代码的整洁和良好组织的技术。</p>
-
-<h2 id="uitableviewcontrollervsuiviewcontroller">UITableViewController vs. UIViewController</h2>
-
-<p>Apple 提供了 <code>UITableViewController</code> 作为 table views 专属的 view controller 类。Table view controllers 实现了一些非常有用的特性，来帮你避免一遍又一遍地写那些死板的代码！但是话又说回来，table view controller 只限于管理一个全屏展示的 table view。大多数情况下，这就是你想要的，但如果不是，还有其他方法来解决这个问题，就像下面我们展示的那样。</p>
-
-<h3 id="tableviewcontrollers">Table View Controllers 的特性</h3>
-
-<p>Table view controllers 会在第一次显示 table view 的时候帮你加载其数据。另外，它还会帮你切换 table view 的编辑模式、响应键盘通知、以及一些小任务，比如闪现侧边的滑动提示条和清除选中时的背景色。为了让这些特性生效，当你在子类中覆写类似 <code>viewWillAppear:</code> 或者 <code>viewDidAppear:</code> 等事件方法时，需要调用 super 版本。</p>
-
-<p>Table view controllers 相对于标准 view controllers 的一个特别的好处是它支持 Apple 实现的“下拉刷新”。目前，文档中唯一的使用 <code>UIRefreshControl</code> 的方式就是通过 table view controller ，虽然通过努力在其他地方也能让它工作（<a href="http://stackoverflow.com/questions/12805003/uirefreshcontrol-issues">见此处</a>），但很可能在下一次 iOS 更新的时候就不行了。</p>
-
-<p>这些要素加一起，为我们提供了大部分 Apple 所定义的标准 table view 交互行为，如果你的应用恰好符合这些标准，那么直接使用 table view controllers 来避免写那些死板的代码是个很好的方法。</p>
-
-<h3 id="tableviewcontrollers">Table View Controllers 的限制</h3>
-
-<p>Table view controllers 的 view 属性永远都是一个 table view。如果你稍后决定在 table view 旁边显示一些东西（比如一个地图），如果不依赖于那些奇怪的 hacks，估计就没什么办法了。</p>
-
-<p>如果你是用代码或 .xib 文件来定义的界面，那么迁移到一个标准 view controller 将会非常简单。但是如果你使用了 storyboards，那么这个过程要多包含几个步骤。除非重新创建，否则你并不能在 storyboards 中将 table view controller 改成一个标准的 view controller。这意味着你必须将所有内容拷贝到新的 view controller，然后再重新连接一遍。</p>
-
-<p>最后，你需要把迁移后丢失的 table view controller 的特性给补回来。大多数都是 <code>viewWillAppear:</code> 或 <code>viewDidAppear:</code> 中简单的一条语句。切换编辑模式需要实现一个 action 方法，用来切换 table view 的 <code>editing</code> 属性。大多数工作来自重新创建对键盘的支持。</p>
-
-<p>在选择条路之前，其实还有一个更轻松的选择，它可以通过分离我们需要关心的功能（关注点分离），让你获得额外的好处：</p>
-
-<h3 id="childviewcontrollers">使用Child View Controllers</h3>
-
-<p>和完全抛弃 table view controller 不同，你还可以将它作为 child view controller 添加到其他 view controller 中（<a href="http://objccn.io/issue-1-4">关于此话题的文章</a>）。这样，parent view controller 在管理其他的你需要的新加的界面元素的同时，table view controller 还可以继续管理它的 table view。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addPhotoDetailsTableView</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">DetailsViewController</span> <span class="o">*</span><span class="n">details</span> <span class="o">=</span> <span class="p">[[</span><span class="n">DetailsViewController</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">photo</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">photo</span><span class="p">;</span>
-</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">delegate</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">addChildViewController:</span><span class="n">details</span><span class="p">];</span>
-</span><span class="line">    <span class="n">CGRect</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">bounds</span><span class="p">;</span>
-</span><span class="line">    <span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">110</span><span class="p">;</span>
-</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">addSubview:</span><span class="n">details</span><span class="p">.</span><span class="n">view</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">details</span> <span class="nl">didMoveToParentViewController:</span><span class="n">self</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
 
 
     <article class="post">
@@ -772,6 +684,67 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/03/31/%E7%B2%BE%E7%AE%80%E5%BC%80%E5%8F%91iOS/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/03/24/%E4%BD%A0%E7%9C%9F%E7%9A%84%E6%87%82GCD%E5%90%97%3F/">
+		
+			你真的懂GCD吗?</a>
+	</h2>
+	<div class="entry-content">
+		<p>GCD是什么，你知道吗？你知道了GCD，你确定你会使用吗？</p>
+<p> 这一篇文章是站在初学者角度去分析GCD，原因是这个很多iOS开发者根本就没用过，即使用过，不知道其中的原理。讲解之前认识一下什么是线程，为什么要介绍线程。是因为GCD是Grand Central Dispatch的缩写，是一系列的BSD层面的接口，在Mac 10.6 和iOS4.0以后才引入的，且现在NSOperation和NSOperationQueue的多线程的实现就是基于GCD的。目前这个特性也被移植到 FreeBSD上了，可以查看libdispatch这个开源项目。</p>
+<blockquote>
+	iPhone中的线程应用并不是无节制的，官方给出的资料显示iPhone  OS下的主线程的堆栈大小是1M，第二个线程开始都是512KB。并且该值不能通过编译器开关或线程API函数来更改。只有主线程有直接修改UI的能力。
+</blockquote>
+<h2>
+	一、线程的概述
+</h2>
+<p><br /></p>
+<p>有些程序是一条直线，起点到终点；有些程序是一个圆，不断循环，直到将它切断。直线的如简单的Hello World，运行打印完,它的生命周期便结束了，像昙花一现那样；圆如操作系统，一直运行直到你关机。 </p>
+<p>一个运行着的程序就是一个进程或者叫做一个任务，一个进程至少包含一个线程，线程就是程序的执行流。Mac和iOS中的程序启动，创建好一个进程的同时， 一个线程便开始运行，这个线程叫主线程。主线程在程序中的地位和其他线程不同，它是其他线程最终的父线程，且所有界面的显示操作即AppKit或 UIKit的操作必须在主线程进行。 </p>
+<p>系统中的每一个进程都有自己独立的虚拟内存空间，而同一个进程中的多个线程则共用进程的内存空间。每创建一个新的线程，都需要一些内存(如每个线程有自己的Stack空间)和消耗一定的CPU时间。另外当多个线程对同一个资源出现争夺的时候需要注意线程安全问题。</p>
+<h2>二、创建线程</h2>
+<p>创建一个新的线程就是给进程增加了一个执行流，执行流总得有要执行的代码吧，所以新建一个线程需要提供一个函数或者方法作为线程的入口。</p>
+<h3>1.使用NSThread</h3>
+<p>NSThread提供了创建线程的途径，还可以提供了检测当前线程是否是主线程的方法。 使用NSThread创建一个新的线程有两种方式：</p>
+<ul>
+<li>1.创建一个NSThread的对象，调用其start方法。对于这种方式的NSThread对象的创建，可以使用一个目标对象的方法初始化一个NSThread对象，或者创建一个继承NSThread类的子类，实现其main方法，然后在直接创建这个子类的对象。</li>
+<li>2.使用 detachNewThreadSelector:toTarget:withObject:这个类方法创建一个线程，这个比较直接了，直接使用目标对象的方法作为线程启动入口。</li>
+</ul>
+<h3>2.使用NSObject</h3>
+<p>其实NSObject直接就加入了多线程的支持，允许对象的某个方法在后台运行。如:</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">myObj</span> <span class="nl">performSelectorInBackground:</span><span class="k">@selector</span><span class="p">(</span><span class="n">doSomething</span><span class="p">)</span> <span class="nl">withObject:</span><span class="nb">nil</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<h3>3.POSIX Thread</h3>
+
+		
+		<a href="/Blog/blog/2014/03/24/%E4%BD%A0%E7%9C%9F%E7%9A%84%E6%87%82GCD%E5%90%97%3F/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/03/24/%E4%BD%A0%E7%9C%9F%E7%9A%84%E6%87%82GCD%E5%90%97%3F/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
