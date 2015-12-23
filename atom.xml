@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-23T20:51:29+08:00</updated>
+  <updated>2015-12-23T21:18:20+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -846,7 +846,7 @@ I am no longer developing iOS applications and don’t have time to work on Wax.
 </span><span class="line"><span class="p">......</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 <h2 id="六、遇到的问题与解决方法"><a name="jspatch-problem">六、遇到的问题与解决方法</a></h2>
-<p>在与bang维护与开发JSPatch的过程中，也遇到过一些比较棘手的问题，这里总结一下。</p>
+<p>在了解JSPatch的过程中，也遇到过一些比较棘手的问题，这里总结一下。</p>
 <h3 id="1-_在JSPatch中初始化UIWebView导致HTML无法渲染">1. 在JSPatch中初始化UIWebView导致HTML无法渲染</h3>
 <p>这个问题最初是由一个JSPatch用户在<a href="https://github.com/bang590/JSPatch/issues/61" target="_blank" rel="external">issue</a>中提出。具体的表现是当在JSPatch中声明一个UIWebView，并对一个URL调用loadRequest方法后，无法渲染该HTML页面。<br /><img src="https://cloud.githubusercontent.com/assets/7334742/8666691/731b0354-2a27-11e5-95cc-90df45fac11f.png" alt="图片" /><br />后来经过查资料发现在JSContext中初始化UIWebView就会<a href="http://stackoverflow.com/questions/28638293/creating-a-uiwebview-from-a-jscontext-block-prevents-assets-from-loading-on-ios8" target="_blank" rel="external">出现这个问题</a>。</p>
 <p>我猜测是<code>UIWebView</code>在初始化的过程中会初始化一个全局的<code>JSContext</code>对象，但是JSPatch也有用到<code>JSContext</code>，这其中造成了某种冲突。导致在<code>UIWebView</code>初始化JSContext失败。</p>
