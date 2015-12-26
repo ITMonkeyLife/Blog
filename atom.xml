@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-26T14:17:38+08:00</updated>
+  <updated>2015-12-26T14:28:29+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -43,7 +43,6 @@
 <p>JSPatch的出现解决了这样的问题，只需要在项目中引入极小的JSPatch引擎，就可以使用JavaScript语言调用Objective-C的原生接口，获得脚本语言的能力：动态更新iOS APP，替换项目原生代码、快速修复bug。      </p>
 <h3 id="技术核心">技术核心</h3>
 <p>JSPatch核心主要是JSBinding和Objective-C中的runtime技术。一方面，它采用Apple在iOS7中发布的JavaScriptCore.framework作为Javascript引擎解析JavaScript脚本，执行JavaSript代码并与Objective-C端的代码进行桥接。另一方面则是使用Objective-C runtime中的method swizzling的方式达到使用JavaScript脚本动态替换原有Objective-C方法的目的，并利用ForwardInvocation标准消息转发机制使得在JavaScript脚本中调用Objective-C的方法成为可能。</p>
-<!-- more -->
 <h2 id="二、JSPatch_VS_lua_Wax"><a name="jspatch-wax">二、JSPatch VS lua Wax</a></h2>
 <p>wax是可以实现动态打补丁快速修补Crash的另外一种解决方案，初衷是为了使用lua来编写iOS原生应用而诞生的一个框架。它利用lua的C语言API(可以让C代码与lua进行交互的函数集，包括读写lua全局变量的函数，调用lua函数的函数，运行lua代码片段的函数，注册C函数然后可以在lua中被调用的函数，等等)和 Objective-C 强大的runtime使lua能调用原生Objective-C接口，可以使用lua创建，继承，扩展oc类，使用lua实现oc所能实现的所有功能。</p>
 <p>lua wax由几个部分组成:</p>
@@ -62,15 +61,6 @@
 <li><p>更符合Apple的规则。iOS Developer Program License Agreement里3.3.2提到不可动态下发可执行代码，但通过苹果JavaScriptCore.framework或WebKit执行的代码除外，JS正是通过JavaScriptCore.framework执行的。</p>
 </li>
 <li><p>小巧。 使用系统内置的JavaScriptCore.framework，无需内嵌脚本引擎，体积小巧。而Wax需要导入c代码写的lua引擎。</p>
-</li>
-<li><p>支持block。<br />wax在几年前就停止了开发和维护，不支持Objective-C里block跟lua程序的互传，虽然一些第三方已经实现block，但使用时参数上也有比较多的限制。</p>
-<p>wax年久失修，多年之前作者便不作更新，并留下这样一句话就离开了iOS界:<br /></p>
-<blockquota>
-I am no longer developing iOS applications and don’t have time to work on Wax. If you would like to take over as the maintainer, fork Wax and maintain it there. If your fork becomes popular I will add a link to it to this Readme.
-</blockquota>
-<p>
-这明显是财产自由了才跑了吧- -||。
-</p>
 </li>
 <li><p>不需要担心内存回收的问题。JavascriptCore.framework通过GC来对垃圾进行回收。而lua wax需要显式调用内存回收方法。</p>
 </li>
