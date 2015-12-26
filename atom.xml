@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-26T14:07:15+08:00</updated>
+  <updated>2015-12-26T14:12:37+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -54,10 +54,11 @@
 <li><p>小巧。 使用系统内置的JavaScriptCore.framework，无需内嵌脚本引擎，体积小巧。而Wax需要导入c代码写的lua引擎。</p>
 </li>
 <li><p>支持block。<br />wax在几年前就停止了开发和维护，不支持Objective-C里block跟lua程序的互传，虽然一些第三方已经实现block，但使用时参数上也有比较多的限制。</p>
-<p>wax年久失修，多年之前作者便不作更新，并留下这样一句话就离开了iOS界:<br />
+<p>wax年久失修，多年之前作者便不作更新，并留下这样一句话就离开了iOS界:<br /></p>
 <blockquota>
 I am no longer developing iOS applications and don’t have time to work on Wax. If you would like to take over as the maintainer, fork Wax and maintain it there. If your fork becomes popular I will add a link to it to this Readme.
 </blockquota><br />
+<p>
 这明显是财产自由了才跑了吧- -||。
 </p>
 </li>
