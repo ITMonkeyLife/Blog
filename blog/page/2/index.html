@@ -7,7 +7,9 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="var wumiiPermaLink = ""; //请用代码生成文章永久的链接 var wumiiTitle = ""; //请用代码生成文章标题 var wumiiTags = ""; //请用代码生成文章标签，以英文逗号分隔，如："标签1,标签2" var wumiiCategories &hellip;">
+	<meta name="description" content="一直更新了iOS8，但是一直没有开始研究这个iOS8，今天因为项目用到了推送，于是体验了iOS8的推送，先讲讲这个推送。目前分为四个推送：用户推送，本地推送，远程推送，地理位置推送。 用户推送
+我们先开始讲这个用户推送,我们要使用之前必须先注册这个推送，用户要允许这个程序进行推送
+注册过程： 1 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +76,100 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/">
+		
+			iOS 8 体验推送</a>
+	</h2>
+	<div class="entry-content">
+		<p> 一直更新了iOS8，但是一直没有开始研究这个iOS8，今天因为项目用到了推送，于是体验了iOS8的推送，先讲讲这个推送。目前分为四个推送：用户推送，本地推送，远程推送，地理位置推送。
+</p>
+<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1ehyeq298goj21kw0sadmt.jpg" alt="推送界面" /></p>
+
+<h2>用户推送</h2>
+<p>我们先开始讲这个用户推送,我们要使用之前必须先注册这个推送，用户要允许这个程序进行推送</p>
+<p>注册过程：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="nv">application</span> <span class="nf">didFinishLaunchingWithOptions:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">launchOptions</span> <span class="p">{</span>
+</span><span class="line">    <span class="c1">// Override point for customization after application launch.</span>
+</span><span class="line">    <span class="n">UIUserNotificationType</span>  <span class="n">types</span> <span class="o">=</span> <span class="n">UIUserNotificationTypeBadge</span> <span class="o">|</span> <span class="n">UIUserNotificationTypeSound</span> <span class="o">|</span> <span class="n">UIUserNotificationTypeAlert</span> <span class="p">;</span>
+</span><span class="line">    <span class="n">UIUserNotificationSettings</span>  <span class="o">*</span><span class="n">mySettings</span>  <span class="o">=</span> <span class="p">[</span><span class="n">UIUserNotificationSettings</span> <span class="nl">settingsForTypes:</span><span class="n">types</span> <span class="nl">categories:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="nl">registerUserNotificationSettings:</span><span class="n">mySettings</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="nv">application</span> <span class="nf">didRegisterUserNotificationSettings:</span><span class="p">(</span><span class="n">UIUserNotificationSettings</span> <span class="o">*</span><span class="p">)</span><span class="nv">notificationSettings</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIUserNotificationType</span> <span class="n">allowTypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">notificationSettings</span> <span class="n">types</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">getReadyForNotification</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIUserNotificationSettings</span> <span class="o">*</span><span class="n">currentNotificationSettings</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="n">currentUserNotificationSettings</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">checkSetting:</span><span class="n">currentNotificationSettings</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>总结就是三个方法进行注册</p>
+<p><img src="http://ww4.sinaimg.cn/large/626e5d69gw1ehyeumz8inj21f80d40up.jpg" alt="推送注册三个方法" /></p>
+
+<p>我们现在仅仅是注册了通知的设置，还要注册推送通知的行为，在iOS8中，行为能直接在推送消息进行，如回复消息，拒绝消息等</p>
+<p><img src="http://ww1.sinaimg.cn/large/626e5d69gw1ehyeyi825mj21aa12ggoc.jpg" alt="直接在推送消息进行回复" /></p>
+<p>这个真心碉堡了</p>
+<p>我们如何能进行这些行为，首先我们需注册这些行为。</p>
+
+		
+		<a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -628,59 +724,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/05/14/view-layerxie-zuo/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/">
-		
-			CollectionView布局动画</a>
-	</h2>
-	<div class="entry-content">
-		<p><code>UICollectionView</code> 和相关类的设置非常灵活和强大。但是灵活性一旦增强，某种程度上也增加了其复杂性： <code>UICollectionView</code> 比老式的 <code>UITableView</code> 更有深度，适用性也更强。</p>
-
-<p>Collection View 深入太多了，事实上，<a href="http://oleb.net">Ole Begeman</a> 和 <a href="https://twitter.com/ashfurrow">Ash Furrow</a> 之前曾在 objc.io 上发表过 <a href="http://objccn.io/issue-3-3/">自定义 Collection View 布局</a> 和 <a href="http://objccn.io/issue-5-2/">UICollectionView + UIKit 力学</a>，但是我依然有一些他们没有提及的内容可以写。在这篇文章中，我假设你已经非常熟悉 <code>UICollectionView</code> 的基本布局，并且至少阅读了苹果精彩的<a href="https://developer.apple.com/library/ios/documentation/WindowsViews/Conceptual/CollectionViewPGforIOS/Introduction/Introduction.html#//apple_ref/doc/uid/TP40012334">编程指南</a>以及 Ole 之前的<a href="http://objccn.io/issue-3-3/">文章</a>。</p>
-
-<p>本文的第一部分将集中讨论并举例说明如何用不同的类和方法来共同帮助实现一些常见的 <code>UICollectionView</code> 动画。在第二部分，我们将看一下带有 collection views 的 view controller 转场动画以及在 <code>useLayoutToLayoutNavigationTransitions</code> 可用时使用其进行转场，如果不可用时，我们会实现一个自定义转场动画。</p>
-
-<p>你可以在 GitHub 中找到本文提到的两个示例工程:</p>
-
-<ul>
-<li><a href="https://github.com/objcio/issue-12-CollectionViewAnimations">布局动画</a></li>
-<li><a href="https://github.com/objcio/issue-12-CustomCollectionViewTransition">自定义 collection view 转场动画</a></li>
-</ul>
-
-<h2 id="collectionview">Collection View 布局动画</h2>
-
-<p>标准 <code>UICollectionViewFlowLayout</code> 除了动画是非常容易自定义的，苹果选择了一种安全的途径去实现一个简单的淡入淡出动画作为所有布局的默认动画。如果你想实现自定义动画，最好的办法是子类化 <code>UICollectionViewFlowLayout</code> 并且在适当的地方实现你的动画。让我们通过一些例子来了解 <code>UICollectionViewFlowLayout</code> 子类中的一些方法如何协助完成自定义动画。</p>
-
-<h3>插入删除元素</h3>
-
-		
-		<a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

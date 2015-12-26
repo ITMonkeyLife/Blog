@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Table view 是 iOS 应用程序中非常通用的组件。许多代码和 table view 都有直接或间接的关系，随便举几个例子，比如提供数据、更新 table view，控制它的行为以及响应选择事件。在这篇文章中，我们将会展示保持 table view 相关代码的整洁和良好组织的技术。 &hellip;">
+	<meta name="description" content="在每个应用里我们都大量使用字符串。下面我们将快速看看一些常见的操作字符串的方法，过一遍常见操作的最佳实践。 字符串的比较、搜索和排序 排序和比较字符串比第一眼看上去要复杂得多。不只是因为字符串可以包含代理对（surrogate pairs ）(详见 Ole 写的这篇关于 Unicode 的文章 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +74,95 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/">
+		
+			iOS之玩转字符串</a>
+	</h2>
+	<div class="entry-content">
+		<p>在每个应用里我们都大量使用字符串。下面我们将快速看看一些常见的操作字符串的方法，过一遍常见操作的最佳实践。</p>
+
+<h2>字符串的比较、搜索和排序</h2>
+
+<p>排序和比较字符串比第一眼看上去要复杂得多。不只是因为字符串可以包含<strong>代理对（surrogate pairs ）</strong>(详见 <a href="http://objccn.io/issue-9-1/#peculiar-unicode-features">Ole 写的这篇关于 Unicode 的文章</a>) ，而且比较还与字符串的本地化相关。在某些极端情况下相当棘手。</p>
+
+<p>苹果文档中 <em>String Programming Guide</em> 里有一节叫做 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/Strings/Articles/stringsClusters.html"><strong>“字符与字形集群（Characters and Grapheme Clusters）”</strong></a>，里面提到一些陷阱。例如对于排序来说，一些欧洲语言将序列“ch”当作单个字母。在一些语言里，“ä”被认为等同于 ‘a’ ，而在其它语言里它却被排在 ‘z’ 后面。</p>
+
+<p>而 <code>NSString</code> 有一些方法来帮助我们处理这种复杂性。首先看下面的方法：</p>
+
+<pre><code>- (NSComparisonResult)compare:(NSString *)aString options:(NSStringCompareOptions)mask range:(NSRange)range locale:(id)locale
+</code></pre>
+
+<p>它带给我们充分的灵活性。另外，还有很多<strong>便捷函数（convenience functions）</strong>都使用了这个方法。</p>
+
+<p>与比较有关的可用参数如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSCaseInsensitiveSearch</span>
+</span><span class="line"><span class="n">NSLiteralSearch</span>
+</span><span class="line"><span class="n">NSNumericSearch</span>
+</span><span class="line"><span class="n">NSDiacriticInsensitiveSearch</span>
+</span><span class="line"><span class="n">NSWidthInsensitiveSearch</span>
+</span><span class="line"><span class="n">NSForcedOrderingSearch</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>它们都可以用逻辑“或”运算符组合在一起。</p>
+
+<p><code>NSCaseInsensitiveSearch</code>：“A”等同于“a”，然而在某些地方还有更复杂的情况。例如，在德国，“ß” 和 “SS”是等价的。</p>
+
+<p><code>NSLiteralSearch</code>：Unicode 的点对点比较。它只在所有字符都用相同的方式组成的情况下才会返回相等（即 <code>NSOrderedSame</code>）。LATIN CAPITAL LETTER A 加上 COMBINING RING ABOVE 并不等同于 LATIN CAPITAL LETTER A WITH RING ABOVE.</p>
+
+<blockquote>
+  <p><span class="secondary radius label">编者注</span> 这里要解释一下，首先，每一个Unicode都是有官方名字的！LATIN CAPITAL LETTER A是一个大写“A”，COMBINING RING ABOVE是一个  ̊，LATIN CAPITAL LETTER A WITH RING ABOVE，这是Å。前两者的组合不等同于后者。</p>
+</blockquote>
+
+<p><code>NSNumericSearch</code>：它对字符串里的数字排序，所以 “Section 9” &lt; “Section 20” &lt; “Section 100.”</p>
+
+<p><code>NSDiacriticInsensitiveSearch</code>：“A” 等同于 “Å” 等同于 “Ä.”</p>
+
+<p><code>NSWidthInsensitiveSearch</code>：一些东亚文字（平假名和片假名）有全宽与半宽两种形式。</p>
+
+<p>很值得一提的是<code>-localizedStandardCompare:</code>，它排序的方式和 Finder 一样。它对应的选项是 <code>NSCaseInsensitiveSearch</code>、<code>NSNumericSearch</code>、<code>NSWidthInsensitiveSearch</code> 以及 <code>NSForcedOrderingSearch</code>。如果我们要在 UI 上显示一个文件列表，用它就最合适不过了。</p>
+
+<p>大小写不敏感的比较和音调符号不敏感的比较都是相对复杂和昂贵的操作。如果我们需要比较很多次字符串那这就会成为一个性能上的瓶颈（例如对一个大的数据集进行排序），一个常见的解决方法是同时存储原始字符串和折叠字符串。例如，我们的 <code>Contact</code> 类有一个正常的 <code>name</code> 属性，在内部它还有一个 <code>foldedName</code> 属性，它将自动在 name 变化时更新。那么我们就可以使用 <code>NSLiteralSearch</code> 来比较 name 的折叠版本。 <code>NSString</code> 有一个方法来创建折叠版本：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringByFoldingWithOptions:</span><span class="p">(</span><span class="n">NSStringCompareOptions</span><span class="p">)</span><span class="nv">options</span> <span class="nf">locale:</span><span class="p">(</span><span class="n">NSLocale</span> <span class="o">*</span><span class="p">)</span><span class="nv">locale</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -650,128 +739,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/02/%5B%3F%5D-ge-shao-nian/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/03/31/%E7%B2%BE%E7%AE%80%E5%BC%80%E5%8F%91iOS/">
-		
-			精简开发iOS</a>
-	</h2>
-	<div class="entry-content">
-		<p>View controllers 通常是 iOS 项目中最大的文件，并且它们包含了许多不必要的代码。所以 View controllers 中的代码几乎总是复用率最低的。我们将会看到给 view controllers 瘦身的技术，让代码变得可以复用，以及把代码移动到更合适的地方。</p>
-<h2>把 Data Source 和其他 Protocols 分离出来</h2>
-<p>把 <code>UITableViewDataSource</code> 的代码提取出来放到一个单独的类中，是为 view controller 瘦身的强大技术之一。当你多做几次，你就能总结出一些模式，并且创建出可复用的类。</p>
-<p>举个例，在示例项目中，有个 <code>PhotosViewController</code> 类，它有以下几个方法：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp"># pragma mark Pragma</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">Photo</span><span class="o">*</span><span class="p">)</span><span class="nf">photoAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span><span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">photos</span><span class="p">[(</span><span class="n">NSUInteger</span><span class="p">)</span><span class="n">indexPath</span><span class="p">.</span><span class="n">row</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span><span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
-</span><span class="line"> <span class="nf">numberOfRowsInSection:</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">section</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">photos</span><span class="p">.</span><span class="n">count</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UITableViewCell</span><span class="o">*</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span><span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
-</span><span class="line">        <span class="nf">cellForRowAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span><span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">PhotoCell</span><span class="o">*</span> <span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">tableView</span> <span class="nl">dequeueReusableCellWithIdentifier:</span><span class="n">PhotoCellIdentifier</span>
-</span><span class="line">                                                      <span class="nl">forIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
-</span><span class="line">    <span class="n">Photo</span><span class="o">*</span> <span class="n">photo</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">photoAtIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
-</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">label</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">photo</span><span class="p">.</span><span class="n">name</span><span class="p">;</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>这些代码基本都是围绕数组做一些事情，更针对地说，是围绕 view controller 所管理的 photos 数组做一些事情。我们可以尝试把数组相关的代码移到<code>单独的类</code>中。我们使用一个 block 来设置 cell，也可以用 delegate 来做这件事，这取决于你的习惯。</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">ArrayDataSource</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">itemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span><span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">items</span><span class="p">[(</span><span class="n">NSUInteger</span><span class="p">)</span><span class="n">indexPath</span><span class="p">.</span><span class="n">row</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span><span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
-</span><span class="line"> <span class="nf">numberOfRowsInSection:</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">section</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">items</span><span class="p">.</span><span class="n">count</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UITableViewCell</span><span class="o">*</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="n">UITableView</span><span class="o">*</span><span class="p">)</span><span class="nv">tableView</span>
-</span><span class="line">        <span class="nf">cellForRowAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span><span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
-</span><span class="line">    <span class="kt">id</span> <span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">tableView</span> <span class="nl">dequeueReusableCellWithIdentifier:</span><span class="n">cellIdentifier</span>
-</span><span class="line">                                              <span class="nl">forIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
-</span><span class="line">    <span class="kt">id</span> <span class="n">item</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">itemAtIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
-</span><span class="line">    <span class="n">configureCellBlock</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span><span class="n">item</span><span class="p">);</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/03/31/%E7%B2%BE%E7%AE%80%E5%BC%80%E5%8F%91iOS/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/03/31/%E7%B2%BE%E7%AE%80%E5%BC%80%E5%8F%91iOS/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
