@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2015-12-26T16:58:12+08:00</updated>
+  <updated>2015-12-28T09:48:13+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -58,9 +58,9 @@
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Jspatchyong Fa Pou Xi]]></title>
+    <title type="html"><![CDATA[JSPatch用法剖析]]></title>
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/"/>
-    <updated>2015-12-23T00:00:00+08:00</updated>
+    <updated>2015-12-23T09:51:39+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi</id>
     <content type="html"><![CDATA[<h2 id="目录"><a name="jspatchIntroducton">目录</a></h2>
 <ol>
