@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="NSArray, NSSet, NSOrderedSet 和 NSDictionary 基础集合类是每一个 Mac/iOS 应用的基本组成部分。在本文中，我们将对”老类” (NSArray, NSSet)和”新类” (NSMapTable, NSHashTable, NSPointerArray &hellip;">
+	<meta name="description" content="当 app 和服务器进行通信的时候，大多数情况下，都是采用 HTTP 协议。HTTP 最初是为 web 浏览器而定制的，如果在浏览器里输入 http://www.objc.io ，浏览器会通过 HTTP 协议和 www.objc.io 所对应的服务器进行通信。 HTTP是运行在应用层上的应用协议 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +74,79 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/21/http/">
+		
+			Http,Tcp,IP协议</a>
+	</h2>
+	<div class="entry-content">
+		<p>当 app 和服务器进行通信的时候，大多数情况下，都是采用 HTTP 协议。HTTP 最初是为 web 浏览器而定制的，如果在浏览器里输入 <a href="http://www.objc.io">http://www.objc.io</a> ，浏览器会通过 HTTP 协议和 www.objc.io 所对应的服务器进行通信。</p>
+
+<p>HTTP是运行在应用层上的应用协议，而不同的层级上都有相应的协议在运行。层级的堆栈关系一般可以这么描述：</p>
+
+<pre><code>Application Layer -- e.g. HTTP
+----
+Transport Layer -- e.g. TCP
+----
+Internet Layer -- e.g. IP
+----
+Link Layer -- e.g. IEEE 802.2
+</code></pre>
+
+<p>所谓的 <a href="https://en.wikipedia.org/wiki/OSI_model">OSI（Open Systems Interconnection，开放式系统互联）</a>模型定义了七层结构。本文会关注应用层 (application layer)、传输层 (transport layer) 和网络层 (internet layer)，它们分别代表了典型的 HTTP 的应用的 HTTP，TCP 以及 IP。在 IP 之下的是数据连接和物理层级，比如像 Ethernet 的实现之类的东西（Ethernet 拥有一个数据连接部分以及一个物理部分）。</p>
+
+<p>如上文所述，我们只关注应用层，传输层和互联网层的部分，更确切的说，着重探讨一种特殊的混合模式：基于 IP 的 TCP，以及基于 TCP 实现的 HTTP。这就是我们每天使用的 app 的基本网络配置。</p>
+
+<p>通过本文，希望大家能够对HTTP工作原理有一个细致的了解，知道一些常见的 HTTP 问题的产生原因，从而能在实践中尽量避免这些问题的发生。</p>
+
+<p>其实在互联网上传递数据的方式并不只 HTTP 一种。HTTP 之所以被广泛使用的原因是其非常稳定、易用，即便是防火墙一般也是允许 HTTP 协议穿透的。</p>
+
+<p>接下来我们从最低的一层谈起，说说 IP 网络协议。</p>
+
+<h2 id="ipipinternetproctocol">IP网络协议 (IP-Internet Proctocol)</h2>
+
+<p>TCP/IP 中的 IP 是<a href="https://en.wikipedia.org/wiki/Internet_Protocol">网络协议 (Internet Protocol)</a> 的缩写。从字面意思便知，它是互联网众多协议的基础。</p>
+
+<p>IP 实现了<a href="https://en.wikipedia.org/wiki/Packet_switching">分组交换网络</a>。在协议下，机器被叫做 <em>主机 (host)</em>，IP 协议明确了 host 之间的资料包（数据包）的传输方式。</p>
+
+<p>所谓数据包是指一段二进制数据，其中包含了发送源主机和目标主机的信息。IP 网络负责源主机与目标主机之间的数据包传输。IP 协议的特点是 <em>best effort</em>（尽力服务，其目标是提供有效服务并尽力传输）。这意味着，在传输过程中，数据包可能会丢失，也有可能被重复传送导致目标主机收到多个同样的数据包。</p>
+
+<p>IP 网络中的主机都配有自己的地址，被称为 <em>IP 地址</em>。每个数据包中都包含了源主机和目标主机的 IP 地址。IP 协议负责路径计算，即 IP 数据包在网络中的传输传输时，数据包所经过的每一个主机节点都会读取数据包中的目标主机地址信息，以便选择朝什么地方传送数据包。</p>
+
+<p>今天，绝大多数的数据包仍旧是 IPv4（Internet Protocol version 4 网际协议版本 4）的，每一个 IPv4 地址是长度为 32 位。常见采用 <a href="https://en.wikipedia.org/wiki/Dotted_decimal">dotted-decimal</a>（点分十进制）表示法，具体形式如：198.51.100.42。</p>
+
+<p>新的 IPv6 标准也正在逐渐推广中。它有更大的地址空间：长度为 128 位，这使得数据包在网络中传输时的寻址更容易一些。另外，由于有更多的地址可以分配，诸如<a href="https://en.wikipedia.org/wiki/Network_address_translation">网络地址转换</a>等问题也迎刃而解。IPv6 的表示形式为：八组十六进制数以冒号分割，比如：2001:0db8:85a3:0042:1000:8a2e:0370:7334。</p>
+
+<h2 id="iphearder">IP Hearder</h2>
+
+		
+		<a href="/Blog/blog/2014/04/21/http/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/http/'>Http</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/21/http/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -766,84 +839,6 @@ Build target objcio
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/">
-		
-			ScrollView的前世今生</a>
-	</h2>
-	<div class="entry-content">
-		<p>可能你很难相信 <a href="http://developer.apple.com/library/ios/#documentation/uikit/reference/UIScrollView_Class/Reference/UIScrollView.html">UIScrollView</a> 和一个标准的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html">UIView</a> 差异并不大，scroll view 确实会多出一些方法，但这些方法只是和 UIView 的属性很好的结合到一起了。因此，在要想弄懂 UIScrollView 是怎么工作之前，你需要先了解一下 UIView，特别是视图渲染的两步过程。</p>
-
-<h2>光栅化和组合</h2>
-
-<p>渲染过程的第一部分是众所周知的光栅化(<code>rasterization</code>)，光栅化简单的说就是产生一组绘图指令并且生成一张图片。比如绘制一个圆角矩形、带图片、标题居中的 UIButtons。这些图片并没有被绘制到屏幕上去；取而代之的是，他们被自己的视图保持着留到下一个步骤使用。</p>
-
-<p>一旦每个视图都产生了自己的光栅化图片，这些图片便被一个接一个的绘制，并产生一个屏幕大小的图片，这便是上文所说的组合。视图层级(view hierarchy)对于组合如何进行扮演了很重要的角色：一个视图的图片被组合在它父视图的图片上面。然后，组合好的图片被组合到父视图的父视图图片上面。视图层级最顶端是窗口(window)，它组合好的图片便是我们看到的东西了。</p>
-
-<p>概念上，依次在每个视图上放置独立分层的图片并最终产生一个图片，单调的图像更容易被理解，特别是如果你以前使用过像 Photoshop 这样的工具。我们还有另外一篇文章详细解释了<a href="http://objccn.io/issue-3-1/">像素是如何绘制到屏幕上去的</a>。</p>
-
-<p>现在，回想一下，每个视图都有一个 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/bounds">bounds</a> 和 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/frame">frame</a>。当布局一个界面时，我们需要处理视图的 frame。这允许我们放置并设置视图的大小。视图的 frame 和 bounds 的大小总是一样的，但是他们的 origin 有可能不同。弄懂这两个工作原理是理解 UIScrollView 的关键。</p>
-
-<p>在光栅化步骤中，视图并不关心即将发生的组合步骤。也就是说，它并不关心自己的 frame (这是用来放置视图的图像)或自己在视图层级中的位置(这是决定组合的顺序)。这时视图只关心一件事就是绘制它自己的 content。这个绘制发生在每个视图的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instm/UIView/drawRect:"><code>drawRect:</code></a> 方法中。</p>
-
-<p>在 <code>drawRect:</code> 方法被调用前，会为视图创建一个空白的图片来绘制 content。这个图片的坐标系统是视图的 bounds。几乎每个视图 bounds 的 origin 都是 {0，0}。因此，当在光栅化图片左上角绘制一些东西的时候，你都会在 bounds 的 origin {x:0, y:0} 处绘制。在一个图片右下角的地方绘制东西的时候，你都会绘制在 {x:width, y:height} 处。如果你的绘制超出了视图的 bounds，那么超出的部分就不属于光栅化图片的部分了，并且会被丢弃。</p>
-
-<p><img src="http://img.objccn.io/issue-3/SV2.png" alt="" title="" /></p>
-
-<p>在组合的步骤中，每个视图将自己光栅化图片组合到自己父视图的光栅化图片上面。视图的 frame 决定了自己在父视图中绘制的位置，frame 的 origin 表明了视图光栅化图片左上角相对父视图光栅化图片左上角的偏移量。所以，一个 origin 为 {x:20, y:15} 的 frame 所绘制的图片左边距其父视图 20 点，上边距父视图 15 点。因为视图的 frame 和 bounds 矩形的大小总是一样的，所以光栅化图片组合的时候是像素对齐的。这确保了光栅化图片不会被拉伸或缩小。</p>
-
-<p><img src="http://img.objccn.io/issue-3/SV1.png" alt="" title="" /></p>
-
-<p>记住，我们才仅仅讨论了一个视图和它父视图之间的组合操作。一旦这两个视图被组合到一起，组合的结果图片将会和父视图的父视图进行组合，这是一个雪球效应。</p>
-
-<p>考虑一下组合图片背后的公式。视图图片的左上角会根据它 frame 的 origin 进行偏移，并绘制到父视图的图片上：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">Superview</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">Superview</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>正如之前所说的，如果一个视图 bounds 的 origin 是 {0,0}。那么，我们得到这个公式：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
