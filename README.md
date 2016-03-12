@@ -1,1 +1,2 @@
-# Blog
+# My Blog
+## Write By Rick
