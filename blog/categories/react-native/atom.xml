@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: React-Native | IT Monkey Life]]></title>
+  <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/react-native/atom.xml" rel="self"/>
+  <link href="http://ITMonkeyLife.github.io/Blog/"/>
+  <updated>2016-03-23T14:56:16+08:00</updated>
+  <id>http://ITMonkeyLife.github.io/Blog/</id>
+  <author>
+    <name><![CDATA[Rick]]></name>
+    <email><![CDATA[382542165@qq.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[React Native]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/03/23/react-native/"/>
+    <updated>2016-03-23T11:46:49+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/03/23/react-native</id>
+    <content type="html"><![CDATA[<p>
+React-Native 帮助在原生平台打造世界一流的应用体验，使用基于<code>JavaSript</code>和React的结合的开发经验。React-Native的宗旨是更有效的开发全平台的应用。
+</p>
+
+<h2>Native Components</h2>
+<p>
+在React-Native你能使用标准平台组件如：iOS的<code>UITabBar</code>以及<code>Android</code>的<code>Drawer</code>。这个给了你APP标准统一的外观，使用这个平台的生态系统，去保持高质量。这些组件能轻易的嵌入到你的APP中使用，和React组件是差不多的，例如:<code>TabBariOS</code>和<code>DrawerLayoutAndroid</code>
+
+```javascript
+// iOS
+
+var React = require('react-native');
+var { TabBarIOS, NavigatorIOS } = React;
+
+var App = React.createClass({
+  render: function() {
+    return (
+      <tabbarios>
+        &lt;TabBarIOS.Item title="React Native" selected={true}&gt;
+          &lt;NavigatorIOS initialRoute= /&gt;
+        
+      </tabbarios>
+    );
+  },
+});
+```
+```javascript
+// Android
+
+var React = require('react-native');
+var { DrawerLayoutAndroid, ProgressBarAndroid, Text } = React;
+
+var App = React.createClass({
+  render: function() {
+    return (
+      &lt;DrawerLayoutAndroid
+        renderNavigationView={() =&gt; <text>React Native</text>}&gt;
+        <progressbarandroid />
+      
+    );
+  },
+});
+```
+</p>
+
+<h2>异步执行</h2>
+<p>
+所有的<code>Javascript</code>应用程序代码以及原生平台的操作都是异步的，并且原生模块也能够使用额外的线程。这意味着我们能关闭主线程的图像解码，后台把图片保存到磁盘，渲染文字和计算布局而不会阻塞UI。这样一来，React-Native应用自然流畅性和响应。通信也完全序列化，这使我们能够充分利用<code>Chrome</code>开发者工具来调试<code>Javascript</code>的运行时完整的应用程序，无论是模拟器还是真实设备。
+</p>
+
+<h2>触摸处理</h2>
+<p>
+React-Native实现了一个功能强大的系统解决触摸在复杂的视图层次中，并且提供高层级的组件，例如：<code>TouchableHighlight</code>和滚动视图和其他元素融合在一起，不需要额外的配置。
+```javascript
+// iOS &amp; Android
+
+var React = require('react-native');
+var { ScrollView, TouchableHighlight, Text } = React;
+
+var TouchDemo = React.createClass({
+  render: function() {
+    return (
+      <scrollview>
+        &lt;TouchableHighlight onPress={() =&gt; console.log('pressed')}&gt;
+          <text>Proper Touch Handling</text>
+        
+      </scrollview>
+    );
+  },
+});
+```
+</p>
+
+<h2>Flexbox和样式</h2>
+<p>
+视图布局应该很容易，这就是为什么我们把<code>Flexbox</code>的布局模型从web带到了React-Native。Flexbox让构建大部分公共部分的UI布局更简单，例如用<code>margin</code>和<code>padding</code>堆叠和嵌套的Box。React-Native也支持公共的网页样式，如：<code>fontWeight</code>和<code>StyleSheet</code>抽象提供了一个优化的机制来声明所有的样式和布局正确一起使用它们和内联应用它们的组件
+```javascript
+// iOS &amp; Android
+
+var React = require('react-native');
+var { Image, StyleSheet, Text, View } = React;
+
+var ReactNative = React.createClass({
+  render: function() {
+    return (
+      &lt;View style={styles.row}&gt;
+        &lt;Image
+          source=
+          style={styles.image}
+        /&gt;
+        &lt;View style={styles.text}&gt;
+          &lt;Text style={styles.title}&gt;
+            React Native
+          
+          &lt;Text style={styles.subtitle}&gt;
+            Build high quality mobile apps using React
+          
+        
+      
+    );
+  },
+});
+var styles = StyleSheet.create({
+  row: { flexDirection: 'row', margin: 40 },
+  image: { width: 40, height: 40, marginRight: 10 },
+  text: { flex: 1, justifyContent: 'center'},
+  title: { fontSize: 11, fontWeight: 'bold' },
+  subtitle: { fontSize: 10 },
+});
+```
+</p>
+
+<h2>开源</h2>
+<p>
+React-Native集中于改变视图代码编写的方式，至于剩下的，我们期待在网络的普遍标准和在恰当情况下填充那些API。你能使用npm安装<code>JavaSript</code>库拷贝到React-Native运行。如:<code>XMLHttpRequest</code>,window.requestAnimationFrame,navigator.geolocation。我们努力扩展可用的API，并且很高兴为开源贡献力量。
+```javascript
+// iOS (Android support for geolocation coming)
+
+var React = require('react-native');
+var { Text } = React;
+
+var GeoInfo = React.createClass({
+  getInitialState: function() {
+    return { position: 'unknown' };
+  },
+  componentDidMount: function() {
+    navigator.geolocation.getCurrentPosition(
+      (position) =&gt; this.setState({position}),
+      (error) =&gt; console.error(error)
+    );
+  },
+  render: function() {
+    return (
+      <text>
+        Position: {JSON.stringify(this.state.position)}
+      </text>
+    );
+  },
+});
+```
+</p>
+
+<h2>可扩展性</h2>
+<p>
+React-Native可用来开发一个伟大的APP而不用写一行原生代码，但是React-Native的设计也与自定义原生的视图和模块的扩展，这意味着你开源复用任何你之前已经构建过的，也能导入使用你喜欢的原生库。
+</p>
+
+<h3>创建iOS模块</h3>
+<p>
+创建一个简单的iOS模块，创建一个新的类来实现<code>RCTBridgeModule</code>协议,包含函数实现JavaSript在RCT_EXPORT_METHOD的功能。额外，这个类自身必须明确的导出RCT_EXPORT_MODULE();。
+```objc
+#import "RCTBridgeModule.h"
+
+@interface MyCustomModule : NSObject <rctbridgemodule>
+@end
+
+@implementation MyCustomModule
+
+RCT_EXPORT_MODULE();
+
+// Available as NativeModules.MyCustomModule.processString
+
+RCT_EXPORT_METHOD(processString:(NSString * )input callback:(RCTResponseSenderBlock)callback)
+{
+  callback(@[[input stringByReplacingOccurrencesOfString:@"Goodbye" withString:@"Hello"]]);
+}
+@end
+```
+```javascript
+var React = require('react-native');
+var { NativeModules, Text } = React;
+
+var Message = React.createClass({
+  getInitialState() {
+    return { text: 'Goodbye World.' };
+  },
+  componentDidMount() {
+    NativeModules.MyCustomModule.processString(this.state.text, (text) =&gt; {
+      this.setState({text});
+    });
+  },
+  render: function() {
+    return (
+      <text>{this.state.text}</text>
+    );
+  }
+});
+```
+
+
+<h3>创建iOS视图</h3>
+<p>
+自定义的iOS视图能被导出，继承于<code>RCTViewManager</code>,实现-(UIView*)view方法，并且导出属性通过<code>RCT_EXPORT_VIEW_PROPERTY</code>这个宏。
+```objc
+#import "RCTViewManager.h"
+
+@interface MyCustomViewManager : RCTViewManager
+@end
+
+@implementation MyCustomViewManager
+
+RCT_EXPORT_MODULE()
+
+- (UIView * )view
+{
+  return [[MyCustomView alloc] init];
+}
+
+RCT_EXPORT_VIEW_PROPERTY(myCustomProperty, NSString);
+@end
+```
+```javascript
+
+var React = require('react-native');
+var { requireNativeComponent } = React;
+
+class MyCustomView extends React.Component {
+  render() {
+    return &lt;NativeMyCustomView {...this.props} /&gt;;
+  }
+}
+MyCustomView.propTypes = {
+  myCustomProperty: React.PropTypes.oneOf(['a', 'b']),
+};
+
+var NativeMyCustomView = requireNativeComponent('MyCustomView', MyCustomView);
+module.exports = MyCustomView;
+```
+</p>
+
+<h3>创建安卓模块</h3>
+<p>
+同样，安卓也支持自定义扩展，这些方法只是略有不同。
+</p>
+<p>
+要在Android的一个简单的模块，创建一个扩展<code>ReactContextBaseJavaModule</code>类的新类和注释，你要提供给<code>JavaScript</code>与@ReactMethod功能。此外，类本身必须的<code>ReactPackage</code>注册您的React-Native程序。
+```java
+public class MyCustomModule extends ReactContextBaseJavaModule {
+
+// Available as NativeModules.MyCustomModule.processString
+  @ReactMethod
+  public void processString(String input, Callback callback) {
+    callback.invoke(input.replace("Goodbye", "Hello"));
+  }
+}
+```
+```javascript
+var React = require('react-native');
+var { NativeModules, Text } = React;
+var Message = React.createClass({
+  getInitialState() {
+    return { text: 'Goodbye World.' };
+  },
+  componentDidMount() {
+    NativeModules.MyCustomModule.processString(this.state.text, (text) =&gt; {
+      this.setState({text});
+    });
+  },
+  render: function() {
+    return (
+      <text>{this.state.text}</text>
+    );
+  }
+});
+```
+</p>
+
+<h3>创建安卓视图</h3>
+<p>
+定制安卓视图能通过<code>SimpleViewManager</code>扩展，实现一个创建视图实例并且返货函数名称的方法，并与@UIProp标记导出属性被暴露。
+```java
+
+public class MyCustomViewManager extends SimpleViewManager<mycustomview> {
+
+  private static final String REACT_CLASS = "MyCustomView";
+
+  @UIProp(UIProp.Type.STRING)
+  public static final String PROP_MY_CUSTOM_PROPERTY = "myCustomProperty";
+
+  @Override
+  public String getName() {
+    return REACT_CLASS;
+  }
+
+  @Override
+  protected MyCustomView createViewInstance(ThemedReactContext reactContext) {
+    return new MyCustomView(reactContext);
+  }
+
+  @Override
+  public void updateView(MyCustomView view, ReactStylesDiffMap props) {
+    super.updateView(view, props);
+
+    if (props.hasKey(PROP_MY_CUSTOM_PROPERTY)) {
+      view.setMyCustomProperty(props.getString(PROP_MY_CUSTOM_PROPERTY));
+    }
+  }
+}
+```
+```javascript
+var React = require('react-native');
+var { requireNativeComponent } = React;
+
+class MyCustomView extends React.Component {
+  render() {
+    return &lt;NativeMyCustomView {...this.props} /&gt;;
+  }
+}
+MyCustomView.propTypes = {
+  myCustomProperty: React.PropTypes.oneOf(['a', 'b']),
+};
+
+var NativeMyCustomView = requireNativeComponent('MyCustomView', MyCustomView);
+module.exports = MyCustomView;
+```
+
+</mycustomview></p></rctbridgemodule></p>
+]]></content>
+  </entry>
+  
+</feed>

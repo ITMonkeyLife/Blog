@@ -7,12 +7,8 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="我要是没有生在这个世界就好了 受伤的心灵如此诉说
-要是这么想的话就中了那个混蛋的当了 不要认输呀少年
-「让内心休息一下」这种事 看来是不会被允许的呢
-略微玩耍一下 把该做的事都置于身后吧 选择自己喜欢的事情吧
-在这双手伸出之前 还有着无尽的喜悦
-那无穷无尽而来的悲伤 如果无法背负的话就不背好了 &hellip;">
+	<meta name="description" content="当乔布斯第一次在苹果全球开发大会上介绍 iCloud 的时候，他将无缝同步的功能描述的太过完美，以至于让人怀疑其是否真的能实现。但当你在 iOS 5 和 iOS 6 系统中尝试使用 iCloud Core Data 同步的时候你会对其真实情况了如指掌。
+库风格应用(译者注:&#8221;盒子类型 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -79,6 +75,62 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/">
+		
+			iCould 和 Core Data</a>
+	</h2>
+	<div class="entry-content">
+		<div><p>当乔布斯第一次在苹果全球开发大会上介绍 <a href="http://en.wikipedia.org/wiki/ICloud">iCloud</a> 的时候，他将无缝同步的功能描述的太过完美，以至于让人怀疑其是否真的能实现。但当你在 <a href="http://adcdownload.apple.com//videos/wwdc_2011__hd/session_303__whats_new_in_core_data_on_ios.m4v">iOS 5</a> 和 <a href="http://adcdownload.apple.com//videos/wwdc_2012__hd/session_227__using_icloud_with_core_data.mov">iOS 6</a> 系统中尝试使用 iCloud <a href="http://www.objc.io/issue-4/core-data-overview.html">Core Data</a> 同步的时候你会对其真实情况了如指掌。</p>
+<p><a href="https://developer.apple.com/library/mac/documentation/General/Conceptual/MOSXAppProgrammingGuide/CoreAppDesign/CoreAppDesign.html#//apple_ref/doc/uid/TP40010543-CH3-SW3">库风格应用</a>(译者注:&#8221;盒子类型&#8221;，比如 iPhoto )的同步中的问题导致<a href="http://www.macworld.com/article/1167742/developers_dish_on_iclouds_challenges.html">很多</a><a href="http://blog.caffeine.lu/problems-with-core-data-icloud-storage.html">开发者</a><a href="http://www.jumsoft.com/2013/01/response-to-sync-issues/">放弃</a>支持 iCloud，而选择一些其他的方案比如 <a href="http://simperium.com">Simperium</a>，<a href="https://github.com/nothirst/TICoreDataSync">TICoreDataSync</a> 和 <a href="http://www.wasabisync.com">WasabiSync</a>。</p>
+
+<p>2013年初，在苹果公司不透明及充满 bug 的 iCloud Core Data 同步实现中挣扎多年后，开发者终于公开批判了这项服务的重大缺陷并将这个话题推上了<a href="http://arstechnica.com/apple/2013/03/frustrated-with-icloud-apples-developer-community-speaks-up-en-masse/">风口浪尖</a>。 最终被 Ellis Hamburger 在一篇<a href="http://www.theverge.com/2013/3/26/4148628/why-doesnt-icloud-just-work">尖锐文章</a>提出。</p>
+
+<h2 id="wwdc">WWDC</h2>
+
+<p>苹果也注意到了，很明显这些事情必须改变。在 WWDC 2013，<a href="http://about.me/nickgillett">Nick Gillett</a> 宣布 Core Data 团队花了一年时间专注于在 iOS 7 中解决一些 iCloud 最令人挫败的漏洞，承诺大幅改善问题并且让开发者更简单的使用。“我们明显减少了开发者所需要编写的复杂代码的数量。” Nick Gillett在 [“What’s New in Core Data and iCloud”] 舞台上讲到。 在 iOS 7 中，Apple 专注于 iCloud 的速度，可靠性，和性能，事实上这卓有成效。</p>
+
+<p>让我们看看具体有哪些改变，以及如何在 iOS 7 应用程序实现 Core Data。</p>
+
+<h2>设置</h2>
+
+<p>要设置一个 iCloud Core Data 应用，你首先需要在你的应用中请求 iCloud 的<a href="https://developer.apple.com/library/mac/documentation/General/Conceptual/iCloudDesignGuide/Chapters/iCloudFundametals.html">访问权限</a>，让你的应用程序可以读写一个或多个开放性容器 (ubiquity containers)，在 Xcode 5中你可以在你应用 target 的 <a href="https://developer.apple.com/xcode/">“Capabilities”</a> 选项卡中轻易完成着这一切。</p>
+
+<p>在开放性容器内部，Core Data Framework 将会存储所有的事务日志 &#8211; 记录你的所有持久化的存储 &#8211; 为了跨设备同步数据做准备。 Core Data 使用了一个被称为<a href="http://en.wikipedia.org/wiki/Multi-master_replication">多源复制</a>(multi-master replication)的技术来同步 iOS 和 Macs 之间的数据。可持久化存储的数据存在了每个设备的 <code>CoreDataUbiquitySupport</code> 文件夹里，你可以在应用沙盒中找到他。当用户修改了 iCloud accounts，Core Data framework 会管理多个账户，而并不需要你自己去监听<a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/foundation/classes/nsfilemanager_class/Reference/Reference.html#//apple_ref/doc/uid/20000305-SW81"><code>NSUbiquityIdentityDidChangeNotification</code></a>。</p>
+
+<p>每一个事务日志都是一个<code>plist</code>文件，负责实体的跟踪插入，删除以及更新。这些日志会自动被系统按照一定<a href="http://mentalfaculty.tumblr.com/post/23788055417/under-the-sheets-with-icloud-and-core-data-seeding">基准</a>合并。</p>
+<div>
+<p>在你设置iCloud的持久化存储的时候，调用</p><code>addPersistentStoreWithType:configuration:URL:options:error:</code><p>或者</p> <code>migratePersistentStore:toURL:options:withType:error:</code>的时候注意需要设置一些选项:
+</div>
+
+		
+		<a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">

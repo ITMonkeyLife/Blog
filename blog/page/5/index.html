@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="可能你很难相信 UIScrollView 和一个标准的 UIView 差异并不大，scroll view 确实会多出一些方法，但这些方法只是和 UIView 的属性很好的结合到一起了。因此，在要想弄懂 UIScrollView 是怎么工作之前，你需要先了解一下 UIView， &hellip;">
+	<meta name="description" content="当 iOS 7 刚发布的时候，全世界的苹果开发人员都立马尝试着去编译他们的 app，接着再花上数月的时间来修复任何出现的错误，甚至从头开始重建这个 app。这样的结果，使得人们根本无暇去探究 iOS 7 所带来的新思想。除开一些明显而细微的更新，比如说 NSArray 的 firstObject &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +74,74 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/">
+		
+			iOS7.0:隐藏技巧和变通之道</a>
+	</h2>
+	<div class="entry-content">
+		<p>当 iOS 7 刚发布的时候，全世界的苹果开发人员都立马尝试着去编译他们的 app，接着再花上数月的时间来修复任何出现的错误，甚至从头开始重建这个 app。这样的结果，使得人们根本无暇去探究 iOS 7 所带来的新思想。除开一些明显而细微的更新，比如说 NSArray 的 <code>firstObject</code> 方法——这个方法可追溯到 iOS 4 时代，现在被提为公有 API——还有很多隐藏的技巧等着我们去挖掘。</p>
+
+<h2>平滑淡入淡出动画</h2>
+
+<p>我在这里要讨论的并非新的弹性动画 API 或者 UIDynamics，而是一些更细微的东西。CALayer 增加了两个新方法：<code>allowsGroupOpacity</code> 和 <code>allowsEdgeAntialiasing</code>。现在，组不透明度（group opacity）不再是什么新鲜的东西了。iOS 会多次使用存在于 Info.plist 中的键 <code>UIViewGroupOpacity</code> 并可在应用程序范围内启用或禁用它。对于大多数 app 而言，这（译注：启用）并非所期望的，因为它会降低整体性能。在 iOS 7 中，用 SDK 7 所链接的程序，这项属性默认是启用的。当它被启用时，一些动画将会变得不流畅，它也可以在 layer 层上被控制。</p>
+
+<p>一个有趣的细节，如果 <code>allowsGroupOpacity</code> 启用的话，<code>_UIBackdropView</code>（被用作 <code>UIToolbar</code> 或者 <code>UIPopoverView</code> 的背景视图）不能对其模糊进行动画处理，所以当你做一个 alpha 转换时，你可能会临时禁用这项属性。因为这会降低动画体验，你可以回到旧的方式然后在动画期间临时启用 <code>shouldRasterize</code>。别忘了设置适当的 <code>rasterizationScale</code>，否则在 retina 的设备上这些视图会成锯齿状（pixelerated）。</p>
+
+<p>如果你想要复制 Safari 显示所有选项卡时的动画，那么边缘抗锯齿属性将变得非常有用。</p>
+
+<h2>阻塞动画</h2>
+
+<p>有一个小但是非常有用的新方法 <code>[UIView performWithoutAnimation:]</code>。它是一个简单的封装，先检查动画当前是否启用，如果是则停用动画，执行块语句，然后重新启用动画。一个需要说明的地方是，它并 <em>不会</em> 阻塞基于 CoreAnimation 的动画。因此，不用急于将你的方法调用从：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">CATransaction</span> <span class="n">begin</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">CATransaction</span> <span class="nl">setDisableActions:</span><span class="n">YES</span><span class="p">];</span>
+</span><span class="line"><span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(...);</span>
+</span><span class="line"><span class="p">[</span><span class="n">CATransaction</span> <span class="n">commit</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>替换成:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">UIView</span> <span class="nl">performWithoutAnimation:</span><span class="o">^</span><span class="p">{</span>
+</span><span class="line">    <span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(...);</span>
+</span><span class="line"><span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -706,62 +774,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/">
-		
-			iCould 和 Core Data</a>
-	</h2>
-	<div class="entry-content">
-		<div><p>当乔布斯第一次在苹果全球开发大会上介绍 <a href="http://en.wikipedia.org/wiki/ICloud">iCloud</a> 的时候，他将无缝同步的功能描述的太过完美，以至于让人怀疑其是否真的能实现。但当你在 <a href="http://adcdownload.apple.com//videos/wwdc_2011__hd/session_303__whats_new_in_core_data_on_ios.m4v">iOS 5</a> 和 <a href="http://adcdownload.apple.com//videos/wwdc_2012__hd/session_227__using_icloud_with_core_data.mov">iOS 6</a> 系统中尝试使用 iCloud <a href="http://www.objc.io/issue-4/core-data-overview.html">Core Data</a> 同步的时候你会对其真实情况了如指掌。</p>
-<p><a href="https://developer.apple.com/library/mac/documentation/General/Conceptual/MOSXAppProgrammingGuide/CoreAppDesign/CoreAppDesign.html#//apple_ref/doc/uid/TP40010543-CH3-SW3">库风格应用</a>(译者注:&#8221;盒子类型&#8221;，比如 iPhoto )的同步中的问题导致<a href="http://www.macworld.com/article/1167742/developers_dish_on_iclouds_challenges.html">很多</a><a href="http://blog.caffeine.lu/problems-with-core-data-icloud-storage.html">开发者</a><a href="http://www.jumsoft.com/2013/01/response-to-sync-issues/">放弃</a>支持 iCloud，而选择一些其他的方案比如 <a href="http://simperium.com">Simperium</a>，<a href="https://github.com/nothirst/TICoreDataSync">TICoreDataSync</a> 和 <a href="http://www.wasabisync.com">WasabiSync</a>。</p>
-
-<p>2013年初，在苹果公司不透明及充满 bug 的 iCloud Core Data 同步实现中挣扎多年后，开发者终于公开批判了这项服务的重大缺陷并将这个话题推上了<a href="http://arstechnica.com/apple/2013/03/frustrated-with-icloud-apples-developer-community-speaks-up-en-masse/">风口浪尖</a>。 最终被 Ellis Hamburger 在一篇<a href="http://www.theverge.com/2013/3/26/4148628/why-doesnt-icloud-just-work">尖锐文章</a>提出。</p>
-
-<h2 id="wwdc">WWDC</h2>
-
-<p>苹果也注意到了，很明显这些事情必须改变。在 WWDC 2013，<a href="http://about.me/nickgillett">Nick Gillett</a> 宣布 Core Data 团队花了一年时间专注于在 iOS 7 中解决一些 iCloud 最令人挫败的漏洞，承诺大幅改善问题并且让开发者更简单的使用。“我们明显减少了开发者所需要编写的复杂代码的数量。” Nick Gillett在 [“What’s New in Core Data and iCloud”] 舞台上讲到。 在 iOS 7 中，Apple 专注于 iCloud 的速度，可靠性，和性能，事实上这卓有成效。</p>
-
-<p>让我们看看具体有哪些改变，以及如何在 iOS 7 应用程序实现 Core Data。</p>
-
-<h2>设置</h2>
-
-<p>要设置一个 iCloud Core Data 应用，你首先需要在你的应用中请求 iCloud 的<a href="https://developer.apple.com/library/mac/documentation/General/Conceptual/iCloudDesignGuide/Chapters/iCloudFundametals.html">访问权限</a>，让你的应用程序可以读写一个或多个开放性容器 (ubiquity containers)，在 Xcode 5中你可以在你应用 target 的 <a href="https://developer.apple.com/xcode/">“Capabilities”</a> 选项卡中轻易完成着这一切。</p>
-
-<p>在开放性容器内部，Core Data Framework 将会存储所有的事务日志 &#8211; 记录你的所有持久化的存储 &#8211; 为了跨设备同步数据做准备。 Core Data 使用了一个被称为<a href="http://en.wikipedia.org/wiki/Multi-master_replication">多源复制</a>(multi-master replication)的技术来同步 iOS 和 Macs 之间的数据。可持久化存储的数据存在了每个设备的 <code>CoreDataUbiquitySupport</code> 文件夹里，你可以在应用沙盒中找到他。当用户修改了 iCloud accounts，Core Data framework 会管理多个账户，而并不需要你自己去监听<a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/foundation/classes/nsfilemanager_class/Reference/Reference.html#//apple_ref/doc/uid/20000305-SW81"><code>NSUbiquityIdentityDidChangeNotification</code></a>。</p>
-
-<p>每一个事务日志都是一个<code>plist</code>文件，负责实体的跟踪插入，删除以及更新。这些日志会自动被系统按照一定<a href="http://mentalfaculty.tumblr.com/post/23788055417/under-the-sheets-with-icloud-and-core-data-seeding">基准</a>合并。</p>
-<div>
-<p>在你设置iCloud的持久化存储的时候，调用</p><code>addPersistentStoreWithType:configuration:URL:options:error:</code><p>或者</p> <code>migratePersistentStore:toURL:options:withType:error:</code>的时候注意需要设置一些选项:
-</div>
-
-		
-		<a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
