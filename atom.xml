@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-03-23T15:17:58+08:00</updated>
+  <updated>2016-05-26T17:11:13+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,274 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[React-Native 资源整理]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/"/>
+    <updated>2016-05-26T16:20:13+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li</id>
+    <content type="html"><![CDATA[<p>
+最近在学习React-Native过程中整理了一些学习的资源。
+</p>
+
+<h2 id="section">教程</h2>
+
+<p><a href="http://facebook.github.io/react-native/docs/getting-started.html">react-native 官方api文档</a>.</p>
+
+<p><a href="https://github.com/jondot/awesome-react-native">Awesome React-Native</a>.</p>
+
+<p><a href="https://github.com/ecomfe/react-native-cn">react-native 中文api文档 (翻译中)</a>.</p>
+
+<p><a href="http://reactjs.cn/">react.js中文文档</a>.</p>
+
+<p><a href="http://hulufei.gitbooks.io/react-tutorial/content/introduction.html">react.js入门教程(gitbook)</a>.</p>
+
+<p><a href="http://www.ruanyifeng.com/blog/2015/03/react.html">react.js快速入门教程</a>.</p>
+
+<p><a href="http://react.nodejs-china.org/t/reactjszhong-wen-shi-pin-jiao-cheng-bai-du-wang-pan/584">react.js视频教程</a>.</p>
+
+<p><a href="http://html-js.com/article/2783">react-native第一课</a>.
+<!-- more -->
+<a href="http://zhuanlan.zhihu.com/FrontendMagazine/19996445">深入浅出 React Native：使用 JavaScript 构建原生应用</a>.</p>
+
+<p><a href="http://blog.cnbang.net/tech/2698/">React Native通信机制详解</a>.</p>
+
+<p><a href="http://segmentfault.com/a/1190000002658374">React Native布局篇</a>.</p>
+
+<p><a href="http://segmentfault.com/a/1190000002645929">React Native 基础练习指北（一)</a>.</p>
+
+<p><a href="http://segmentfault.com/a/1190000002647733">React Native 基础练习指北（二）</a>.</p>
+
+<p><a href="http://www.逍遥仙.cn/archives/235#6838470-tsina-1-17436-6a377b1a66595f9ede646cf5c012734c">构建一个简单的列表页和2页导航</a>.</p>
+
+<p><a href="http://herman.asia/building-a-flashcard-app-with-react-native">Diary of Building an iOS App with React Native</a>.</p>
+
+<p><a href="http://blog-en.leapoahead.com/post/use-react-native-in-existing-ios-app">Use React Native in Existing iOS App</a>.</p>
+
+<p><a href="http://react.rocks/example/tcomb-form-native">tcomb-form-native使用视频教程(需翻墙)</a>.</p>
+
+<h2 id="app">开源APP</h2>
+
+<p>
+研究源码也是很好的方式去掌握React-Native
+</p>
+<p><a href="https://github.com/facebook/react-native/tree/master/Examples">官方演示App</a>.</p>
+
+<p><a href="https://github.com/henter/ReactNativeRubyChina">ReactNativeRubyChina</a>.</p>
+
+<p><a href="https://github.com/iSimar/HackerNews-React-Native">HackerNews-React-Native</a>.</p>
+
+<p><a href="https://github.com/tabalt/ReactNativeNews">React-Native新闻客户端</a>.</p>
+
+<p><a href="https://github.com/bradoyler/newswatch-react-native">newswatch(新闻客户端)</a>.</p>
+
+<p><a href="https://github.com/appintheair/react-native-buyscreen">buyscreen(购买页面)</a>.</p>
+
+<p><a href="https://github.com/samuel1112/v2er">V2EX客户端</a>.</p>
+
+<p><a href="https://github.com/joemaddalone/react-native-todo">react-native-todo</a>.</p>
+
+<p><a href="https://github.com/muratsu/react-native-beer">react-native-beer</a>.</p>
+
+<p><a href="https://github.com/86/react-native-stars">react-native-stars</a>.</p>
+
+<p><a href="https://github.com/baofen14787/react-native-demo">模仿天猫首页的app</a>.</p>
+
+<p><a href="https://github.com/csarsam/ReactNativeChess">ReactNativeChess</a>.</p>
+
+<p><a href="https://github.com/Johnqing/miumiu">react native 编写的音乐软件</a>.</p>
+
+<p><a href="https://github.com/ababol/react-native-pokedex">react-native-pokedex</a>.</p>
+
+<p><a href="https://github.com/SFantasy/CNode-React-Native">CNode-React-Native</a>.</p>
+
+<p><a href="https://github.com/voronianski/EightTracksReactNative">8tracks电台客户端</a>.</p>
+
+<p><a href="https://github.com/yoxisem544/Calculator-using-React-Native">React-Native实现的计算器</a>.</p>
+
+<p><a href="https://github.com/jawee/react-native-PropertyFinder">房产搜索app</a>.</p>
+
+<p><a href="https://github.com/LeezQ/react-native-zhihu-app">知乎专栏app</a>.</p>
+
+<p><a href="https://github.com/peralmq/ForeignExchangeApp">ForeignExchangeApp</a>.</p>
+
+<p><a href="https://github.com/peralmq/ForeignExchangeApp">ForeignExchangeApp</a>.</p>
+
+<p><a href="https://github.com/fakefish/sf-react-native">Segmentfault 客户端</a>.</p>
+
+<p><a href="https://github.com/stormhouse/QiuShiReactNative">糗事百科app</a>.</p>
+
+<p><a href="https://github.com/Hi-Rube/baoz-ReactNative">孢子社区app</a>.</p>
+
+<p><a href="https://github.com/fraserxu/shenjs">深JS app</a>.</p>
+
+<p><a href="https://github.com/asamiller/den">Den - 房屋销售app</a>.</p>
+
+<p><a href="https://github.com/soliury/noder-react-native">Noder-cnodejs客户端</a>.</p>
+
+<p><a href="https://github.com/race604/ZhiHuDaily-React-Native">知乎日报Android版</a>.</p>
+
+<p><a href="https://github.com/sonnylazuardi/ziliun-react-native">ziliun-react-native</a>.</p>
+
+<p><a href="https://github.com/shevawen/react-native-weather-app">react-native-weather-app</a>.</p>
+
+<p><a href="https://github.com/taskrabbit/ReactNativeSampleApp">React Native Sample App(Navigation,Flux)</a>.</p>
+
+<p><a href="https://github.com/qddegtya/A-ReactNative-TesterHome">TesterHome社区app</a>.</p>
+
+<p><a href="https://github.com/7kfpun/FinanceReactNative">Finance - 股票报价app</a>.</p>
+
+<p><a href="https://github.com/bigsui/shopping-react-native">shopping - 购物app</a>.</p>
+
+<p><a href="https://github.com/kazaff/ZhuiYuanDemo">zhuiyuan - 追源cms app</a></p>
+
+<p><a href="https://github.com/just4fun/uestc-bbs-react-native">uestc-bbs-react-native - UESTC清水河畔RN客户端(with Redux)</a>.</p>
+
+<p><a href="https://github.com/benoitvallon/react-native-nw-react-calculator">react-native-nw-react-calculator(iOS/Android、Web、桌面多端)</a>.</p>
+
+<p><a href="https://github.com/wwayne/react-native-nba-app">react-native-nba-app</a>.</p>
+
+<p><a href="http://git.oschina.net/rplees/react-native-gitosc">开源中国的Git@OSC客户端</a>.</p>
+
+<p><a href="https://github.com/liuchungui/rn_bycloud">rn_bycloud 帮瀛律师端app</a>.</p>
+
+<h2 id="section-1">工具</h2>
+
+<p><a href="https://github.com/Shrugs/react-native-snippets">react-native-snippets(代码提示)</a>.</p>
+
+<p><a href="https://github.com/roman01la/react-native-babel">react-native-babel(使用ES6+)</a>.</p>
+
+<p><a href="https://github.com/almost/react-native-sqlite">sqlite for react-native</a>.</p>
+
+<p><a href="https://github.com/soliury/gulp-react-native-css">gulp-react-native-css(就像写css一样写React Style)</a>.</p>
+
+<p><a href="https://github.com/rnpm/rnpm">rnpm(React Native Package Manager)</a>.</p>
+
+<p><a href="https://github.com/futurice/pepperoni-app-kit">Pepperoni - React Native项目初始化套件</a>.</p>
+
+<p><a href="https://www.decosoftware.com/">Deco IDE - React Native IDE</a>.</p>
+
+<h2 id="section-2">资源文件</h2>
+
+<p><a href="http://facebook.github.io/react-native/">React-native官网</a>.</p>
+
+<p><a href="http://react-china.org/">React-China社区</a>.</p>
+
+<p><a href="http://react.parts/">React-native组件库（比较全的组件库）</a>.</p>
+
+<p><a href="http://reactnativemodules.com/">React Native Modules</a>.</p>
+
+<p><a href="http://www.oschina.net/news/61214/11-react-native-ui-components">11款React Native开源移动 UI 组件</a>.</p>
+
+<hr />
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[iOS小技巧]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu/"/>
+    <updated>2016-05-04T14:08:52+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu</id>
+    <content type="html"><![CDATA[<p>最近开始记录下自己开发遇到的问题，如果解决了就会记录下来，以便自己日后回顾工作。
+</p>
+<p>测试妹子给我提了一个问题是视图遮挡了，我一看，确实会遮挡，我顺手就加了下面的这段代码
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIView</span><span class="o">*</span><span class="p">)</span><span class="nf">keyboardView</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span> <span class="n">windows</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="n">windows</span><span class="p">];</span>
+</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">UIWindow</span> <span class="o">*</span> <span class="n">window</span> <span class="k">in</span> <span class="p">[</span><span class="n">windows</span> <span class="n">reverseObjectEnumerator</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="k">for</span> <span class="p">(</span><span class="n">UIView</span> <span class="o">*</span> <span class="n">view</span> <span class="k">in</span> <span class="p">[</span><span class="n">window</span> <span class="n">subviews</span><span class="p">])</span>
+</span><span class="line">        <span class="p">{</span>
+</span><span class="line">            <span class="c1">// UIPeripheralHostView is used from iOS 4.0, UIKeyboard was used in previous versions,UIInputSetContainerView was used iOS 8.0</span>
+</span><span class="line">            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIPeripheralHostView&quot;</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIKeyboard&quot;</span><span class="p">)</span> <span class="o">||</span>
+</span><span class="line">                <span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIInputSetContainerView&quot;</span><span class="p">))</span>
+</span><span class="line">            <span class="p">{</span>
+</span><span class="line">                <span class="k">return</span> <span class="n">view</span><span class="p">;</span>
+</span><span class="line">            <span class="p">}</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIView</span><span class="o">*</span><span class="p">)</span><span class="nf">keyboardViewForView:</span><span class="p">(</span><span class="n">UIView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIView</span> <span class="o">*</span> <span class="n">keyboardView</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">keyboardView</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">keyboardView</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">view</span> <span class="o">=</span> <span class="n">keyboardView</span><span class="p">.</span><span class="n">superview</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">view</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+这样我们在调用下面的方法就能
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Git Control Version]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/04/07/git-control-version/"/>
+    <updated>2016-04-07T16:35:09+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/04/07/git-control-version</id>
+    <content type="html"><![CDATA[<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Javascript学习之基本概念]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/03/23/javascriptxue-xi-zhi-ji-ben-gai-nian/"/>
+    <updated>2016-03-23T15:20:45+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/03/23/javascriptxue-xi-zhi-ji-ben-gai-nian</id>
+    <content type="html"><![CDATA[<p>
+任何语言的核心都会描述这门语言的最基本的工作原理。而描述的内容又涉及到这门语言的语法、操作符、数据类型、内置功能等用于构建复杂解决方案的基本概念。
+</p>
+
+<h2>语法</h2>
+<p>
+</p>
+
+<h3>区分大小写</h3>
+<p>
+</p>
+
+<h3>标识符</h3>
+<p>
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[React Native]]></title>
@@ -7020,1547 +7288,6 @@ C++11标准已经支持了闭包，这是一种特殊的函数对象，由特殊
 <p>在 OS X 上，我们可以使用 Cocoa 绑定，但在 iOS 上我们并没有这样好的配置可用。我们想到了 KVO（Key-Value Observation），而且它确实做了很伟大的工作。然而，对于一个简单的绑定都需要很大的样板代码，更不用说有许多属性需要绑定了。作为替代，我个人喜欢使用 ReactiveCocoa，但 MVVM 并未强制我们使用 ReactiveCocoa。MVVM 是一个伟大的典范，它自身独立，只是在有一个良好的绑定框架时做得更好。</p>
 
 <p>我们覆盖了不少内容：从普通的 MVC 派生出 MVVM，看它们是如何相兼容的范式，从一个可测试的例子观察 MVVM，并看到 MVVM 在有一个配对的绑定机制时工作得更好。如果你有兴趣学习更多关于 MVVM 的知识，你可以看看<a href="http://www.teehanlax.com/blog/model-view-viewmodel-for-ios/">这篇博客</a>，它用更多细节解释了 MVVM 的好处，或者<a href="http://www.teehanlax.com/blog/krush-ios-architecture/">这一篇</a>关于我们如何在最近的项目里使用 MVVM 获得巨大的成功的文章。我同样还有一个经过完整测试，基于 MVVM 的应用，叫做 <a href="https://github.com/AshFurrow/C-41">C-41</a> ，它是开源的。去看看吧，如果你有任何疑问，请<a href="http://weibo.com/u/1651400041">告诉我</a>。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[交互式动画]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/"/>
-    <updated>2014-05-23T10:11:17+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua</id>
-    <content type="html"><![CDATA[<p>在2007年，乔布斯在第一次介绍 iPhone 的时候，iPhone 的触摸屏交互简直就像是一种魔法。最好的例子就是在他<a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">第一次滑动 TableView 的展示上</a>。你可以感受到当时观众的反应是多么惊讶，但是对于现在的我们来说早已习以为常。在展示的后面一部分，他特别指出当他给别人看了这个滑动例子，别人说的一句话: <a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">“当这个界面滑动的时候我就已经被征服了”</a>.</p>
-
-<p>是什么样的滑动能让人有‘哇哦’的效果呢？</p>
-
-<p>滑动是最完美地展示了通过触摸屏直接操作的例子。滚动视图遵从于你的手指，当你的手指离开屏幕的时，视图会自然地继续滑动直到该停止的时候停止。它用自然的方式减速，甚至在快到界限的时候也能表现出细腻的弹力效果。滑动在任何时候都保持相应，并且看上去非常真实。</p>
-
-<h2>动画的状态</h2>
-
-<p>在 iOS 中的大部分动画仍然没有按照最初 iPhone 指定的滑动标准实现。这里有很多动画一旦它们运行就不能交互（比如说解锁动画，主界面中打开文件夹和关闭文件夹的动画，和导航栏切换的动画，还有很多）。</p>
-
-<p>然而现在有一些应用给我一种始终在控制动画的体验，我们可以直接操作那些我在用的动画。当我们将这些应用和其他的应用相比较之后，我们就能感觉到明显的区别。这些应用中最优秀的有最初的 Twitter iPad app， 和现在的 Facebook Paper。但目前，使用直接操作为主并且可以中断动画的应用仍然很少。这就给我们做出更好的应用提供了机会，让我们的应用有更不同的，更高质量的体验。</p>
-
-<h2>真实交互式动画的挑战</h2>
-
-<p>当我们用 UIView 或者 CAAnimation 来实现交互式动画时会有两个大问题: 这些动画会将你在屏幕上的内容和 layer 上的实际的特定属性分离开来，并且他们直接操作这些特定属性。</p>
-
-<h3 id="modelpresentation">模型 (Model) 和显示 (Presentation) 的分离</h3>
-
-<p>Core Animation 是通过分离 layer 的模型属性和你在屏幕上看到的界面 (显示层) 的方式来设计的，这就导致我们很难去创建一个可以在任何时候能交互的动画，因为在动画时，模型和界面已经不能匹配了。这时，我们不得不通过手动的方式来同步这两个的状态，来达到改变动画的效果：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">presentationLayer</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
-</span><span class="line"><span class="p">[</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">removeAnimationForKey:</span><span class="s">@&quot;animation&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="c1">// 添加新动画</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3 id="vs">直接控制 vs 间接控制</h3>
-
-<p><code>CAAnimation</code> 动画的更大的问题是它们是直接在 layer 上对属性进行操作的。这意味着什么呢？比如我们想指定一个 layer 从坐标为 (100, 100) 的位置运动到 (300, 300) 的位置，但是在它运动到中间的时候，我们想它停下来并且让它回到它原来的位置，事情就变得非常复杂了。如果你只是简单地删除当前的动画然后再添加一个新的，那么这个 layer 的速率就会不连续。</p>
-
-<p><img src="http://img.objccn.io/issue-12/abrupt.png" width="600" /></p>
-
-<p>然而，我们想要的是一个漂亮的，流畅地减速和加速的动画。</p>
-
-<p><img src="http://img.objccn.io/issue-12/smooth.png" width="600" /></p>
-
-<p>只有通过<em>间接</em>操作动画才能达到上面的效果，比如通过模拟力在界面上的表现。新的动画需要用 layer 的当前<em>速度矢量</em>作为参数传入来达到流畅的效果。</p>
-
-<p>看一下 UIView 中关于弹簧动画的 API </p>
-<p>animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:</p>
-<p>，你会注意到速率是个 CGFloat。所以当我们给一个移动 view 的动画在其运动的方向上加一个初始的速率时，你没法告知动画这个 view 现在的运动状态，比如我们不知道要添加的动画的方向是不是和原来的 view 的速度方向垂直。为了使其成为可能，这个速度需要用向量来表示。</p>
-
-<h2>解决方案</h2>
-<!-- more -->
-<p>让我们看一下我们怎样来正确实现一个可交互并且可以中断的动画。我们来做一个类似于控制中心板的东西来实现这个效果：</p>
-
-<p><video controls="1" style="display:block;max-width:100%;height:auto;border:0;"> <br />
-  <source src="http://www.objc.io/images/issue-12/interactive-animation.mov" />
-</video></p>
-
-<p>这个控制板有两个状态：打开和关闭。你可以通过点击来切换这两个状态，或者通过上下拖动来调调整它向上或向下。我要将这个控制面板的所有状态都做到可以交互，甚至是在动画的过程中也可以，这是一个很大的挑战。比如，当你在这个控制板还没有切换到打开状态的动画过程中，你点击了它，那么它应该从现在这个点的位置马上回到关闭状态的位置。在现在很多的应用中，大部分都是用默认的动画 API，你必须要等一个动画结束之后你才能做自己想做的事情。或者，如果你不等待的话，就会看到一个不连续的速度曲线。我们要解决这个问题。</p>
-
-<h3 id="uikit">UIKit 力学</h3>
-
-<p>随着 iOS7 的发布，苹果向我们展示了一个叫 UIKit 力学的动画框架 (可以参见 WWDC 2013 sessions <a href="https://developer.apple.com/videos/wwdc/2013/index.php?id=206">206</a> 和 <a href="https://developer.apple.com/videos/wwdc/2013/index.php?id=221">221</a>)。UIKit 力学是一个基于模拟物理引擎的框架，只要你添加指定的行为到动画对象上来实现 <a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIDynamicItem_Protocol/Reference/Reference.html">UIDynamicItem</a> 协议就能实现很多动画。这个框架非常强大，并且它能够在多个物体间启用像是附着和碰撞这样的复杂行为。请看一下 <a href="https://developer.apple.com/library/ios/samplecode/DynamicsCatalog/Introduction/Intro.html">UIKit Dynamics Catalog</a>，确认一下什么是可用的。</p>
-
-<p>因为 UIKit 力学中的的动画是被间接驱动的，就像我在上面提到的，这使我们实现真实的交互式动画成为可能，它能在任何时候被中断并且拥有连续的加速度。同时，UIKit 力学在物理层的抽象上能完全胜任我们一般情况下在用户界面中的所需要的所有动画。其实在大部分情况下，我们只会用到其中的一小部分功能。</p>
-
-<h4>定义行为</h4>
-
-<p>为了实现我们的控制板的行为，我们将使用 UIkit 力学中的两个不同行为：<a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIAttachmentBehavior_Class/Reference/Reference.html">UIAttachmentBehavior</a> 和 <a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIDynamicItemBehavior_Class/Reference/Reference.html">UIDynamicItemBehavior</a>。附着行为用来扮演弹簧的角色，它将界面向目标点拉动。另一方面，我们用动态 item behvaior 定义了比如摩擦系数这样的界面的内置属性。</p>
-
-<p>我创建了一个我们自己的行为子类，以将这两个行为封装到我们的控制板上:</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">PaneBehavior</span> : <span class="nc">UIDynamicBehavior</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">)</span> <span class="n">CGPoint</span> <span class="n">targetPoint</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">)</span> <span class="n">CGPoint</span> <span class="n">velocity</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithItem:</span><span class="p">(</span><span class="kt">id</span> <span class="o">&lt;</span><span class="n">UIDynamicItem</span><span class="o">&gt;</span><span class="p">)</span><span class="nv">item</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我们通过一个 dynamic item 来初始化这个行为，然后就可以设置它的目标点和我们想要的任何速度。在内部，我们创建了附着行为和 dynamic item 行为，并且将这些行为添加到我们自定义的行为中:</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setup</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">attachmentBehavior</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAttachmentBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItem:</span><span class="n">self</span><span class="p">.</span><span class="n">item</span> <span class="nl">attachedToAnchor:</span><span class="n">CGPointZero</span><span class="p">];</span>
-</span><span class="line">    <span class="n">attachmentBehavior</span><span class="p">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="mf">3.5</span><span class="p">;</span>
-</span><span class="line">    <span class="n">attachmentBehavior</span><span class="p">.</span><span class="n">damping</span> <span class="o">=</span> <span class="mf">.4</span><span class="p">;</span>
-</span><span class="line">    <span class="n">attachmentBehavior</span><span class="p">.</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">addChildBehavior:</span><span class="n">attachmentBehavior</span><span class="p">];</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">attachmentBehavior</span> <span class="o">=</span> <span class="n">attachmentBehavior</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">UIDynamicItemBehavior</span> <span class="o">*</span><span class="n">itemBehavior</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIDynamicItemBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItems:</span><span class="err">@</span><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">item</span><span class="p">]];</span>
-</span><span class="line">    <span class="n">itemBehavior</span><span class="p">.</span><span class="n">density</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-</span><span class="line">    <span class="n">itemBehavior</span><span class="p">.</span><span class="n">resistance</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">addChildBehavior:</span><span class="n">itemBehavior</span><span class="p">];</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">itemBehavior</span> <span class="o">=</span> <span class="n">itemBehavior</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>为了用 <code>targetPoint</code> 和 <code>velocity</code> 属性来影响 item 的 behavior，我们需要重写它们的 setter 方法，并且分别修改在附着行为和 item behaviors 中的对应的属性。我们对目标点的 setter 方法来说，这个改动很简单：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setTargetPoint:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">targetPoint</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">_targetPoint</span> <span class="o">=</span> <span class="n">targetPoint</span><span class="p">;</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">attachmentBehavior</span><span class="p">.</span><span class="n">anchorPoint</span> <span class="o">=</span> <span class="n">targetPoint</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>对于 <code>velocity</code> 属性，我们需要多做一些工作，因为 dynamic item behavior 只允许相对地改变速度。这就意味如果我们要将 <code>velocity</code> 设置为绝对值，首先我们就需要得到当前的速度，然后再加上速度差才能得到我们的目标速度。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">velocity</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">_velocity</span> <span class="o">=</span> <span class="n">velocity</span><span class="p">;</span>
-</span><span class="line">    <span class="n">CGPoint</span> <span class="n">currentVelocity</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">itemBehavior</span> <span class="nl">linearVelocityForItem:</span><span class="n">self</span><span class="p">.</span><span class="n">item</span><span class="p">];</span>
-</span><span class="line">    <span class="n">CGPoint</span> <span class="n">velocityDelta</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">velocity</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">currentVelocity</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">velocity</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">currentVelocity</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">itemBehavior</span> <span class="nl">addLinearVelocity:</span><span class="n">velocityDelta</span> <span class="nl">forItem:</span><span class="n">self</span><span class="p">.</span><span class="n">item</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3 id="behavior">将Behavior投入使用</h3>
-
-<p>我们的控制板有三个不同状态：在开始或结束位置的静止状态，正在被用户拖动的状态，以及在没有用户控制时运动到结束位置的动画状态。</p>
-
-<p>为了将从直接操作状态 (用户拖动这个滑动板) 过渡到动画状态这个过程做的流畅，我们还有很多其他的事要做。当用户停止拖动控制板时，它会发送一个消息到它的 delegate。根据这个方法，我们可以知道这个板应该朝哪个方向运动，然后在我们自定义的 <code>PaneBehavior</code> 上设置结束点，以及初始速度 (这非常重要)，并将行为添加到动画器中去，以此确保从拖动操作到动画状态这个过程能够非常流畅。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">draggableView:</span><span class="p">(</span><span class="n">DraggableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span> <span class="nf">draggingEndedWithVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">velocity</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">PaneState</span> <span class="n">targetState</span> <span class="o">=</span> <span class="n">velocity</span><span class="p">.</span><span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">PaneStateClosed</span> <span class="o">:</span> <span class="n">PaneStateOpen</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">animatePaneToState:</span><span class="n">targetState</span> <span class="nl">initialVelocity:</span><span class="n">velocity</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animatePaneToState:</span><span class="p">(</span><span class="n">PaneState</span><span class="p">)</span><span class="nv">targetState</span> <span class="nf">initialVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">velocity</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">self</span><span class="p">.</span><span class="n">paneBehavior</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">PaneBehavior</span> <span class="o">*</span><span class="n">behavior</span> <span class="o">=</span> <span class="p">[[</span><span class="n">PaneBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItem:</span><span class="n">self</span><span class="p">.</span><span class="n">pane</span><span class="p">];</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">paneBehavior</span> <span class="o">=</span> <span class="n">behavior</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">paneBehavior</span><span class="p">.</span><span class="n">targetPoint</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">targetPointForState:</span><span class="n">targetState</span><span class="p">];</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">CGPointEqualToPoint</span><span class="p">(</span><span class="n">velocity</span><span class="p">,</span> <span class="n">CGPointZero</span><span class="p">))</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">paneBehavior</span><span class="p">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="n">velocity</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">animator</span> <span class="nl">addBehavior:</span><span class="n">self</span><span class="p">.</span><span class="n">paneBehavior</span><span class="p">];</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">paneState</span> <span class="o">=</span> <span class="n">targetState</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>一旦用户用他的手指再次触动控制板时，我必须要将所有的 dynamic behavior 从 animator 删除，这样才不会影响控制板对拖动手势的响应：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">draggableViewBeganDragging:</span><span class="p">(</span><span class="n">DraggableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">animator</span> <span class="n">removeAllBehaviors</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我们不仅仅允许控制板可以被拖动，还要允许它可以被点击，让它可以从一个位置跳转到另一个位置以达到开关的效果。一旦点击事件发生，我们就会立即调整这个滑动板的目标位置。因为我们不能直接控制动画，但是通过弹力和摩擦力，我们的动画可以非常流畅地执行这个动作：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">didTap:</span><span class="p">(</span><span class="n">UITapGestureRecognizer</span> <span class="o">*</span><span class="p">)</span><span class="nv">tapRecognizer</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">PaneState</span> <span class="n">targetState</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">paneState</span> <span class="o">==</span> <span class="n">PaneStateOpen</span> <span class="o">?</span> <span class="n">PaneStateClosed</span> <span class="o">:</span> <span class="n">PaneStateOpen</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">animatePaneToState:</span><span class="n">targetState</span> <span class="nl">initialVelocity:</span><span class="n">CGPointZero</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这样就实现了我们的大部分功能了。你可以在 <a href="https://github.com/objcio/issue-12-interactive-animations-uidynamics">GitHub</a> 上查看完整的例子。</p>
-
-<p>重申一点：UIKit 力学可以通过在界面上模拟力来间接地驱动动画（我们的例子中，使用的是弹力和摩擦力）。这间接地使我们在任何时候都能以连续的速度曲线来与界面进行交互。</p>
-
-<p>现在我们已经通过 UIKit 力学实现了整个交互，让我们回顾一下这个场景。这个例子的动画中我们只用了 UIKit 力学中一小部分功能，并且它的实现方式也非常简单。对于我们来说这是一个去理解它其中的过程的很好的例子，但是如果我们使用的环境中没有 UIKit  力学 (比如说在 Mac 上)，或者你的使用场景中不能很好的适用 UIKit 力学呢。</p>
-
-<h2>自己操作动画</h2>
-
-<p>至于在你的应用中大部分时间会用的动画，比如简单的弹力动画，我们控制它真的不难。我们可以做一个练习，来看看如何抛弃 UIKit 力学这个巨大的黑盒子，看要如何“手动”来实现一个简单的交互。想法非常简单：我们只要每秒修改这个 view 的 frame 60 次。每一帧我们都基于当前速度和作用在 view 上的力来调整 view 的 frame 就可以了。</p>
-
-<h3>物理原理</h3>
-
-<p>首先让我们看一下我们需要知道的基础物理知识，这样我们才能实现出刚才使用 UIKit 力学实现的那种弹簧动画效果。为了简化问题，虽然引入第二个维度也是很直接的，但我们在这里只关注一维的情况 (在我们的例子中就是这样的情况)。</p>
-
-<p>我们的目标是依据控制面板当前的位置和上一次动画后到现在为止经过的时间，来计算它的新位置。我们可以把它表示成这样：</p>
-
-<pre><code>y = y0 + Δy
-</code></pre>
-
-<p>位置的偏移量可以通过速度和时间的函数来表达：</p>
-
-<pre><code>Δy = v ⋅ Δt
-</code></pre>
-
-<p>这个速度可以通过前一次的速度加上速度偏移量算出来，这个速度偏移量是由力在 view 上的作用引起的。</p>
-
-<pre><code>v = v0 + Δv
-</code></pre>
-
-<p>速度的变化可以通过作用在这个 view 上的冲量计算出来：</p>
-
-<pre><code>Δv = (F ⋅ Δt) / m
-</code></pre>
-
-<p>现在，让我们看一下作用在这个界面上的力。为了得到弹簧效果，我们必须要将摩擦力和弹力结合起来：</p>
-
-<pre><code>F = F_spring + F_friction
-</code></pre>
-
-<p>弹力的计算方法我们可以从任何一本教科书中得到 (编者注：简单的胡克定律)：</p>
-
-<pre><code>F_spring = k ⋅ x
-</code></pre>
-
-<p><code>k</code> 是弹簧的劲度系数，<code>x</code> 是 view 到目标结束位置的距离 (也就是弹簧的长度)。因此，我们可以把它写成这样：</p>
-
-<pre><code>F_spring = k ⋅ abs(y_target - y0)
-</code></pre>
-
-<p>摩擦力和 view 的速度成正比：</p>
-
-<pre><code>F_friction = μ ⋅ v
-</code></pre>
-
-<p><code>μ</code> 是一个简单的摩擦系数。你可以通过别的方式来计算摩擦力，但是这个方法能很好地做出我们想要的动画效果。</p>
-
-<p>将上面的表达式放在一起，我们就可以算出作用在界面上的力：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">F</span> <span class="o">=</span> <span class="n">k</span> <span class="err">⋅</span> <span class="n">abs</span><span class="p">(</span><span class="n">y_target</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">+</span> <span class="err">μ</span> <span class="err">⋅</span> <span class="n">v</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>为了实现起来更简单点些，我们将 view 的质量设为 1，这样我们就能计算在位置上的变化：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="err">Δ</span><span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">v0</span> <span class="o">+</span> <span class="p">(</span><span class="n">k</span> <span class="err">⋅</span> <span class="n">abs</span><span class="p">(</span><span class="n">y_target</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">+</span> <span class="err">μ</span> <span class="err">⋅</span> <span class="n">v</span><span class="p">)</span> <span class="err">⋅</span> <span class="err">Δ</span><span class="n">t</span><span class="p">)</span> <span class="err">⋅</span> <span class="err">Δ</span><span class="n">t</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>实现动画</h3>
-
-<p>为了实现这个动画，我们首先需要创建我们自己的 <code>Animator</code> 类，它将扮演驱动动画的角色。这个类使用了 <code>CADisplayLink</code>，<code>CADisplayLink</code> 是专门用来将绘图与屏幕刷新频率相同步的定时器。换句话说，如果你的动画是流畅的，这个定时器就会每秒调用你的方法60次。接下来，我们需要实现 <code>Animation</code> 协议来和我们的 <code>Animator</code> 一起工作。这个协议只有一个方法，<code>animationTick:finished:</code>。屏幕每次被刷新时都会调用这个方法，并且在方法中会得到两个参数：第一个参数是前一个 frame 的持续时间，第二个参数是一个指向 <code>BOOL</code> 的指针。当我们设置这个指针的值为 <code>YES</code> 时，我们就可以与 <code>Animator</code> 取得通讯并汇报动画完成；</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">Animation</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
-</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">animationTick:</span><span class="p">(</span><span class="n">CFTimeInterval</span><span class="p">)</span><span class="n">dt</span> <span class="nl">finished:</span><span class="p">(</span><span class="kt">BOOL</span> <span class="o">*</span><span class="p">)</span><span class="n">finished</span><span class="p">;</span>
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我们会在下面实现这个方法。首先，根据时间间隔我们来计算由弹力和摩擦力的合力。然后根据这个力来更新速度，并调整 view 的中心位置。最后，当这个速度降低并且 view 到达结束位置时，我们就停止这个动画：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animationTick:</span><span class="p">(</span><span class="n">CFTimeInterval</span><span class="p">)</span><span class="nv">dt</span> <span class="nf">finished:</span><span class="p">(</span><span class="kt">BOOL</span> <span class="o">*</span><span class="p">)</span><span class="nv">finished</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">static</span> <span class="k">const</span> <span class="kt">float</span> <span class="n">frictionConstant</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-</span><span class="line">    <span class="k">static</span> <span class="k">const</span> <span class="kt">float</span> <span class="n">springConstant</span> <span class="o">=</span> <span class="mi">300</span><span class="p">;</span>
-</span><span class="line">    <span class="n">CGFloat</span> <span class="n">time</span> <span class="o">=</span> <span class="p">(</span><span class="n">CGFloat</span><span class="p">)</span> <span class="n">dt</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="c1">//摩擦力 = 速度 * 摩擦系数</span>
-</span><span class="line">    <span class="n">CGPoint</span> <span class="n">frictionForce</span> <span class="o">=</span> <span class="n">CGPointMultiply</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">velocity</span><span class="p">,</span> <span class="n">frictionConstant</span><span class="p">);</span>
-</span><span class="line">    <span class="c1">//弹力 = (目标位置 - 当前位置) * 弹簧劲度系数</span>
-</span><span class="line">    <span class="n">CGPoint</span> <span class="n">springForce</span> <span class="o">=</span> <span class="n">CGPointMultiply</span><span class="p">(</span><span class="n">CGPointSubtract</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">targetPoint</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">center</span><span class="p">),</span> <span class="n">springConstant</span><span class="p">);</span>
-</span><span class="line">    <span class="c1">//力 = 弹力 - 摩擦力</span>
-</span><span class="line">    <span class="n">CGPoint</span> <span class="n">force</span> <span class="o">=</span> <span class="n">CGPointSubtract</span><span class="p">(</span><span class="n">springForce</span><span class="p">,</span> <span class="n">frictionForce</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="c1">//速度 = 当前速度 + 力 * 时间 / 质量</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="n">CGPointAdd</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">velocity</span><span class="p">,</span> <span class="n">CGPointMultiply</span><span class="p">(</span><span class="n">force</span><span class="p">,</span> <span class="n">time</span><span class="p">));</span>
-</span><span class="line">    <span class="c1">//位置 = 当前位置 + 速度 * 时间</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">CGPointAdd</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">center</span><span class="p">,</span> <span class="n">CGPointMultiply</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">velocity</span><span class="p">,</span> <span class="n">time</span><span class="p">));</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">CGFloat</span> <span class="n">speed</span> <span class="o">=</span> <span class="n">CGPointLength</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">velocity</span><span class="p">);</span>
-</span><span class="line">    <span class="n">CGFloat</span> <span class="n">distanceToGoal</span> <span class="o">=</span> <span class="n">CGPointLength</span><span class="p">(</span><span class="n">CGPointSubtract</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">targetPoint</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">center</span><span class="p">));</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">speed</span> <span class="o">&lt;</span> <span class="mf">0.05</span> <span class="o">&amp;&amp;</span> <span class="n">distanceToGoal</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">targetPoint</span><span class="p">;</span>
-</span><span class="line">        <span class="o">*</span><span class="n">finished</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这就是这个方法里的全部内容。我们把这个方法封装到一个 <code>SpringAnimation</code> 对象中。除了这个方法之外，这个对象中还有一个初始化方法，它指定了 view 中心的目标位置 (在我们的例子中，就是打开状态时界面的中心位置，或者关闭状态时界面的中心位置) 和初始的速度。</p>
-
-<h3 id="view">将动画添加到 view 上</h3>
-
-<p>我们的 view 类刚好和使用 UIDynamic 的例子一样：它有一个拖动手势，并且根据拖动手势来更新中心位置。它也有两个同样的 delegate 方法，这两个方法会实现动画的初始化。首先，一旦用户开始拖动控制板时，我们就取消所有动画：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">draggableViewBeganDragging:</span><span class="p">(</span><span class="n">DraggableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">cancelSpringAnimation</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>一旦停止拖动，我们就根据从拖动手势中得到的最后一个速率值来开始我们的动画。我们根据拖动状态 <code>paneState</code> 计算出动画的结束位置：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">draggableView:</span><span class="p">(</span><span class="n">DraggableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span> <span class="nf">draggingEndedWithVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">velocity</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">PaneState</span> <span class="n">targetState</span> <span class="o">=</span> <span class="n">velocity</span><span class="p">.</span><span class="n">y</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">=</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">PaneStateClosed</span> <span class="o">:</span> <span class="n">PaneStateOpen</span><span class="p">;</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">paneState</span> <span class="o">=</span> <span class="n">targetState</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">startAnimatingView:</span><span class="n">view</span> <span class="nl">initialVelocity:</span><span class="n">velocity</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">startAnimatingView:</span><span class="p">(</span><span class="n">DraggableView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span> <span class="nf">initialVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">velocity</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">cancelSpringAnimation</span><span class="p">];</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">springAnimation</span> <span class="o">=</span> <span class="p">[</span><span class="n">UINTSpringAnimation</span> <span class="nl">animationWithView:</span><span class="n">view</span> <span class="nl">target:</span><span class="n">self</span><span class="p">.</span><span class="n">targetPoint</span> <span class="nl">velocity:</span><span class="n">velocity</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">view</span><span class="p">.</span><span class="n">animator</span> <span class="nl">addAnimation:</span><span class="n">self</span><span class="p">.</span><span class="n">springAnimation</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>剩下来要做的就是添加点击动画了，这很简单。一旦我们触发这个状态，就开始动画。如果这里正在进行弹簧动画，我们就用当时的速度作为开始。如果这个弹簧动画是 nil，那么这个开始速度就是 CGPointZero。想要知道为什么依然可以进行动画，可以看看 <code>animationTick:finished:</code> 里的代码。当这个起始速度为 0 的时候，弹力就会使速度缓慢地增长，直到面板到达目标位置：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">didTap:</span><span class="p">(</span><span class="n">UITapGestureRecognizer</span> <span class="o">*</span><span class="p">)</span><span class="nv">tapRecognizer</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">PaneState</span> <span class="n">targetState</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">paneState</span> <span class="o">==</span> <span class="n">PaneStateOpen</span> <span class="o">?</span> <span class="n">PaneStateClosed</span> <span class="o">:</span> <span class="n">PaneStateOpen</span><span class="p">;</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">paneState</span> <span class="o">=</span> <span class="n">targetState</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">startAnimatingView:</span><span class="n">self</span><span class="p">.</span><span class="n">pane</span> <span class="nl">initialVelocity:</span><span class="n">self</span><span class="p">.</span><span class="n">springAnimation</span><span class="p">.</span><span class="n">velocity</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>动画驱动</h3>
-
-<p>最后，我们需要一个 <code>Animator</code>，也就是动画的驱动者。Animator 封装了 display link。因为每个 display link 都链接一个指定的 <code>UIScreen</code>，所以我们根据这个指定的 UIScreen 来初始化我们的 animator。我们初始化一个 display link，并且将它加入到 run loop 中。因为现在还没有动画，所以我们是从暂停状态开始的：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithScreen:</span><span class="p">(</span><span class="n">UIScreen</span> <span class="o">*</span><span class="p">)</span><span class="nv">screen</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">displayLink</span> <span class="o">=</span> <span class="p">[</span><span class="n">screen</span> <span class="nl">displayLinkWithTarget:</span><span class="n">self</span> <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">animationTick:</span><span class="p">)];</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">displayLink</span><span class="p">.</span><span class="n">paused</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">displayLink</span> <span class="nl">addToRunLoop:</span><span class="p">[</span><span class="n">NSRunLoop</span> <span class="n">mainRunLoop</span><span class="p">]</span> <span class="nl">forMode:</span><span class="n">NSRunLoopCommonModes</span><span class="p">];</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">animations</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableSet</span> <span class="n">new</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>一旦我们添加了这个动画，我们要确保这个 display link 不再是停止状态：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addAnimation:</span><span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">Animation</span><span class="o">&gt;</span><span class="p">)</span><span class="nv">animation</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">animations</span> <span class="nl">addObject:</span><span class="n">animation</span><span class="p">];</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">animations</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">displayLink</span><span class="p">.</span><span class="n">paused</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我们设置这个 display link 来调用 <code>animationTick:</code> 方法，在每个 Tick 中，我们都遍历它的动画数组，并且给这些动画数组中的每个动画发送一个消息。如果这个动画数组中已经没有动画了，我们就暂停这个 display link。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"> <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">animationTick:</span><span class="p">(</span><span class="n">CADisplayLink</span> <span class="o">*</span><span class="p">)</span><span class="n">displayLink</span>
-</span><span class="line"> <span class="p">{</span>
-</span><span class="line">     <span class="n">CFTimeInterval</span> <span class="n">dt</span> <span class="o">=</span> <span class="n">displayLink</span><span class="p">.</span><span class="n">duration</span><span class="p">;</span>
-</span><span class="line">     <span class="k">for</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">Animation</span><span class="o">&gt;</span> <span class="n">a</span> <span class="k">in</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">animations</span> <span class="n">copy</span><span class="p">])</span> <span class="p">{</span>
-</span><span class="line">         <span class="kt">BOOL</span> <span class="n">finished</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
-</span><span class="line">         <span class="p">[</span><span class="n">a</span> <span class="nl">animationTick:</span><span class="n">dt</span> <span class="nl">finished:</span><span class="o">&amp;</span><span class="n">finished</span><span class="p">];</span>
-</span><span class="line">         <span class="k">if</span> <span class="p">(</span><span class="n">finished</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">             <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">animations</span> <span class="nl">removeObject:</span><span class="n">a</span><span class="p">];</span>
-</span><span class="line">         <span class="p">}</span>
-</span><span class="line">     <span class="p">}</span>
-</span><span class="line">     <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">animations</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">         <span class="n">self</span><span class="p">.</span><span class="n">displayLink</span><span class="p">.</span><span class="n">paused</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">     <span class="p">}</span>
-</span><span class="line"> <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>完整的项目在 <a href="https://github.com/objcio/issue-12-interactive-animations">GitHub</a> 上。</p>
-
-<h3>权衡</h3>
-
-<p>我们必须记住，通过 display link 来驱动动画 (就像我们刚才演示的例子，或者我们使用UIkit力学来做的例子，又或者是使用 Facebook 的 Pop 框架) 是有代价需要进行权衡的。就像 <a href="https://twitter.com/andy_matuschak/status/464790108072206337">Andy Matuschar 指出的</a>那样，UIView 和 CAAnimation 动画比其他任务更少受系统的影响，因为比起你的应用来说，渲染处于更高的优先级。</p>
-
-<h2 id="mac">回到 Mac</h2>
-
-<p>现在 Mac 中还没有 UIKit 力学。如果你想在 Mac 中创建一个真实的交互式动画，你必须自己去实现这些动画。我们已经向你展示了如何在 iOS 中实现这些动画，所以在 OS X 中实现相似的功能也是非常简单的。你可以查看在 GitHub 中的<a href="https://github.com/objcio/issue-12-interactive-animations-osx">完整项目</a>，如果你想要应用到 OS X 中，这里还有一些地方需要修改：</p>
-
-<ul>
-<li>第一个要修改的就是 <code>Animator</code>。在Mac中没有 <code>CADisplayLink</code>，但是取而代之的有 <code>CVDisplayLink</code>，它是以 C 语言为基础的 API。创建它需要做更多的工作，但也是很直接。</li>
-<li>iOS 中的弹簧动画是基于调整 view 的中心位置来实现的。而 OS X 中的 <code>NSView</code> 类没有 center 这个属性，所以我们用为 frame 中的 origin 做动画来代替。</li>
-<li>在 Mac 中是没有手势识别，所以我要在我们自定义的 view 子类中实现 <code>mouseDown:</code>，<code>mouseUp:</code> 和 <code>mouseDragged:</code> 方法。</li>
-</ul>
-
-<p>上面就是我们需要在 Mac 中使用我们的动画效果在代码所需要做的修改。对于像这样的简单 view，它能很好的胜任。但对于更复杂的动画，你可能就不会想通过为 frame 做动画来实现了，我们可以用 <code>transform</code> 来代替，浏览 Jonathan Willing 写的关于 <a href="http://jwilling.com/osx-animations">OS X 动画</a>的博客，你会获益良多。</p>
-
-<h3 id="facebookpop">Facebook 的 POP 框架</h3>
-
-<p>上个星期围绕着 Facebook 的 <a href="https://github.com/facebook/pop">POP 框架</a>的讨论络绎不绝。POP 框架是 Paper 应用背后支持的动画引擎。它的操作非常像我们上面讲的驱动动画的例子，但是它以非常灵活的方式巧妙地封装到了一个程序包中。</p>
-
-<p>让我们动手用 POP 来驱动我们的动画吧。因为我们自己的类中已经封装了弹簧动画，这些改变就非常简单了。我们所要做的就是初始化一个 POP 动画来代替我们刚才自己做的动画，并将下面这段代码加入到 view
- 中：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">animatePaneWithInitialVelocity:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="nv">initialVelocity</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">pane</span> <span class="n">pop_removeAllAnimations</span><span class="p">];</span>
-</span><span class="line">    <span class="n">POPSpringAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">POPSpringAnimation</span> <span class="nl">animationWithPropertyNamed:</span><span class="n">kPOPViewCenter</span><span class="p">];</span>
-</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">initialVelocity</span><span class="p">];</span>
-</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">self</span><span class="p">.</span><span class="n">targetPoint</span><span class="p">];</span>
-</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">springSpeed</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
-</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">springBounciness</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">pane</span> <span class="nl">pop_addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;animation&quot;</span><span class="p">];</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">animation</span> <span class="o">=</span> <span class="n">animation</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>你可以在 <a href="https://github.com/objcio/issue-12-interactive-animations-pop">GitHub</a> 中找到使用 POP 框架的完整例子。</p>
-
-<p>让其工作非常简单，并且通过它我们可以实现很多更复杂的动画。但是它真正强大的地方在于它能够实现真正的可交互和可中断的动画，就像我们上面提到的那样，因为它直接支持以速度作为输入参数。如果你打算从一开始到被中断这过程中的任何时候都能交互，像 POP 这样的框架就能帮你实现这些动画，并且它能始终保证动画一直很平滑。</p>
-
-<p>如果你不满足于用 <code>POPSpringAnimation</code> 和 <code>POPDecayAnimation</code> 的开箱即用的处理方式的话，POP 还提供了 <code>POPCustomAnimation</code> 类，它基本上是一个 display link 的方便的转换，来在动画的每一个 tick 的回调 block 中驱动你自己的动画。</p>
-
-<h2>展望未来</h2>
-
-<p>随着 iOS7 中从对拟物化的视觉效果的远离，以及对 UI 行为的关注，真实的交互式动画通向未来的大道变得越来越明显。它们也是将初代 iPhone 中滑动行为的魔力延续到交互的各个方面的一条康庄大道。为了让这些魔力成为现实，我们就不能在开发过程中才想到这些动画，而是应该在设计时就要考虑这些交互，这一点非常重要。</p>
-
-<p>非常感谢 <a href="https://twitter.com/lorenb">Loren Brichter</a> 给这篇文章提出的一些意见。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[iOS动画解释]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/18/iosdong-hua-jie-shi/"/>
-    <updated>2014-05-18T10:03:54+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/18/iosdong-hua-jie-shi</id>
-    <content type="html"><![CDATA[<p>我们写的应用程序往往都不是静态的，因为它们需要适应用户的需求以及为执行各种任务而改变状态。</p>
-
-<p>在这些状态之间转换时，清晰的揭示正在发生什么是非常重要的。而不是在页面之间跳跃，动画帮助我们解释用户从哪里来，要到哪里去。</p>
-
-<p>键盘在 view 中滑进滑出给了我们一个错觉，让我们以为它是简单的被隐藏在屏幕下方的，并且是手机很自然的一个部分。View controller 转场加强了我们的应用程序的导航结构，并且给了用户正在移向哪个方向的提示。微妙的反弹和碰撞使界面栩栩如生，并且激发出了物理的质感。要是没有这些的话，我们就只有一个没有视觉修饰的干巴巴环境了。</p>
-
-<p>动画是叙述你的应用的故事的绝佳方式，在了解动画背后的基本原理之后，设计它们会轻松很多。</p>
-
-<h2>首要任务</h2>
-
-<p>在这篇文章 (以及这个话题中其余大多数文章) 中，我们将特别地针对 Core Animation 进行探讨。虽然你将看到的很多东西也可以用更高层级的 UIKit 的方法来完成，但是 Core Animation 将会让你更好的理解正在发生什么。它以一种更明确的方式来描述动画，这对这篇文章读者以及你自己的代码的读者来说都非常有用。</p>
-
-<p>在看动画如何与我们在屏幕上看到的内容交互之前，我们需要快速浏览一下 Core Animation 的 <code>CALayer</code>，这是动画产生作用的地方。</p>
-
-<p>你大概知道 <code>UIView</code> 实例，以及 layer-backed 的 <code>NSView</code>，修改它们的 <code>layer</code> 来委托强大的 Core Graphics 框架来进行渲染。然而，你务必要理解，当把动画添加到一个 layer 时，是不直接修改它的属性的。</p>
-
-<p>取而代之，Core Animation 维护了两个平行 layer 层次结构： <em>model layer tree（模型层树）</em> 和 <em>presentation layer tree（表示层树）</em>。前者中的 layers 反映了我们能直接看到的 layers 的状态，而后者的 layers 则是动画正在表现的值的近似。</p>
-
-<blockquote>
-  <p>实际上还有所谓的第三个 layer 树，叫做 <em>rendering tree（渲染树）</em>。因为它对 Core Animation 而言是私有的，所以我们在这里不讨论它。</p>
-</blockquote>
-
-<p>考虑在 view 上增加一个渐出动画。如果在动画中的任意时刻，查看 layer 的 <code>opacity</code> 值，你是得不到与屏幕内容对应的透明度的。取而代之，你需要查看 presentation layer 以获得正确的结果。</p>
-
-<p>虽然你可能不会去直接设置 presentation layer 的属性，但是使用它的当前值来创建新的动画或者在动画发生时与 layers 交互是非常有用的。</p>
-
-<p>通过使用 <code>-[CALayer presentationLayer]</code> 和 <code>-[CALayer modelLayer]</code>，你可以在两个 layer 之间轻松切换。</p>
-
-<h2>基本动画</h2>
-
-<p>可能最常见的情况是将一个 view 的属性从一个值改变为另一个值，考虑下面这个例子：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/rocket-linear.gif" width="400px" /></center></p>
-
-<p>在这里，我们让红色小火箭的 x-position 从 <code>77.0</code> 变为 <code>455.0</code>，刚好超过它的 parent view 的边。为了填充所有路径，我们需要确定我们的火箭在任意时刻所到达的位置。这通常使用线性插值法来完成：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/lerp.png" width="135" /></center></p>
-
-<p>也就是说，对于动画给定的一个分数 <code>t</code>，火箭的 x 坐标就是起始点的 x 坐标 <code>77</code>，加上一个到终点的距离 <code>∆x = 378</code> 乘以该分数的值。</p>
-
-<p>使用 <code>CABasicAnimation</code>，我们可以如下实现这个动画：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">77</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">455</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<!-- more -->
-<p>请注意我们要动画的键路径，也就是 <code>position.x</code>，实际上包含一个存储在 <code>position</code> 属性中的 <code>CGPoint</code> 结构体成员。这是 Core Animation 一个非常方便的特性。请务必查看<a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreAnimation_guide/Key-ValueCodingExtensions/Key-ValueCodingExtensions.html">支持的键路径的完整列表</a>。</p>
-
-<p>然而，当我们运行该代码时，我们意识到火箭在完成动画后马上回到了初始位置。这是因为在默认情况下，动画不会在超出其持续时间后还修改 presentation layer。实际上，在结束时它甚至会被彻底移除。</p>
-
-<p>一旦动画被移除，presentation layer 将回到 model layer 的值，并且因为我们从未修改该 layer 的 <code>position</code> 属性，所以我们的飞船将重新出现在它开始的地方。</p>
-
-<p>这里有两种解决这个问题的方法：</p>
-
-<p>第一种方法是直接在 model layer 上更新属性。<em>这是推荐的的做法</em>，因为它使得动画完全可选。</p>
-
-<p>一旦动画完成并且从 layer 中移除，presentation layer 将回到 model layer 设置的值，而这个值恰好与动画最后一个步骤相匹配。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">77</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">455</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="mi">455</span><span class="p">,</span> <span class="mi">61</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>或者，你可以通过设置动画的 <code>fillMode</code> 属性为 <code>kCAFillModeForward</code> 以留在最终状态，并设置<code>removedOnCompletion</code> 为 <code>NO</code> 以防止它被自动移除：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">77</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">455</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fillMode</span> <span class="o">=</span> <span class="n">kCAFillModeForward</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">removedOnCompletion</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">rectangle</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><a href="https://twitter.com/andy_matuschak/status/464799423785336832">Andy Matuschak 指出了</a>，如果将已完成的动画保持在 layer 上时，会造成额外的开销，因为渲染器会去进行额外的绘画工作。</p>
-
-<p>值得指出的是，实际上我们创建的动画对象在被添加到 layer 时立刻就复制了一份。这个特性在多个 view 中重用动画时这非常有用。比方说我们想要第二个火箭在第一个火箭起飞不久后起飞：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">byValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">378</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">rocket1</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="n">rocket1</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="mi">455</span><span class="p">,</span> <span class="mi">61</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">beginTime</span> <span class="o">=</span> <span class="n">CACurrentMediaTime</span><span class="p">()</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">rocket2</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="n">rocket2</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="mi">455</span><span class="p">,</span> <span class="mi">111</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>设置动画的 <code>beginTime</code> 为未来 0.5 秒将只会影响 <code>rocket2</code>，因为动画在执行语句 <code>[rocket1.layer addAnimation:animation forKey:@"basic"];</code> 时已经被复制了，并且之后 <code>rocket1</code> 也不会考虑对动画对象的改变。</p>
-
-<p>不妨看一看 David 的 <a href="http://ronnqvi.st/controlling-animation-timing/">关于动画时间的一篇很棒的文章</a>，通过它可以学习如何更精确的控制你的动画。</p>
-
-<p>我决定再使用 <code>CABasicAnimation</code> 的 <code>byValue</code> 属性创建一个动画，这个动画从 presentation layer 的当前值开始，加上 <code>byValue</code> 的值后结束。这使得动画更易于重用，因为你不需要精确的指定可能无法提前知道的 <code>from-</code> 和 <code>toValue</code> 的值。</p>
-
-<p><code>fromValue</code>, <code>byValue</code> 和 <code>toValue</code> 的不同组合可以用来实现不同的效果，如果你需要创建一个可以在你的不同应用中重用的动画，你可以<a href="https://developer.apple.com/library/ios/documentation/GraphicsImaging/Reference/CABasicAnimation_class/Introduction/Introduction.html#//apple_ref/doc/uid/TP40004496-CH1-SW4">查看文档</a>。</p>
-
-<h2>多步动画</h2>
-
-<p>这很容易想到一个场景，你想要为你的动画定义超过两个步骤，我们可以使用更通用的 <code>CAKeyframeAnimation</code>，而不是去链接多个 <code>CABasicAnimation</code> 实例。</p>
-
-<p>关键帧（keyframe）使我们能够定义动画中任意的一个点，然后让 Core Animation 填充所谓的中间帧。</p>
-
-<p>比方说我们正在制作我们下一个 iPhone 应用程序上的登陆表单，我们希望当用户输入错误的密码时表单会晃动。使用关键帧动画，看起来大概像下面这样：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/form.gif" width="320px" /></center></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">values</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mi">0</span><span class="p">,</span> <span class="err">@</span><span class="mi">10</span><span class="p">,</span> <span class="err">@</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="err">@</span><span class="mi">10</span><span class="p">,</span> <span class="err">@</span><span class="mi">0</span> <span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyTimes</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mi">0</span><span class="p">,</span> <span class="err">@</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">6.0</span><span class="p">),</span> <span class="err">@</span><span class="p">(</span><span class="mi">3</span> <span class="o">/</span> <span class="mf">6.0</span><span class="p">),</span> <span class="err">@</span><span class="p">(</span><span class="mi">5</span> <span class="o">/</span> <span class="mf">6.0</span><span class="p">),</span> <span class="err">@</span><span class="mi">1</span> <span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">additive</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">form</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;shake&quot;</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><code>values</code> 数组定义了表单应该到哪些位置。</p>
-
-<p>设置 <code>keyTimes</code> 属性让我们能够指定关键帧动画发生的时间。它们被指定为关键帧动画总持续时间的一个分数。</p>
-
-<blockquote>
-  <p>请注意我是如何选择不同的值从 0 到 10 和从 10 到 -10 转换以维持恒定的速度的。</p>
-</blockquote>
-
-<p>设置 <code>additive</code> 属性为 <code>YES</code> 使 Core Animation 在更新 presentation layer 之前将动画的值添加到 model layer 中去。这使我们能够对所有形式的需要更新的元素重用相同的动画，且无需提前知道它们的位置。因为这个属性从 <code>CAPropertyAnimation</code> 继承，所以你也可以在使用 <code>CABasicAnimation</code> 时使用它。</p>
-
-<h2>沿路径的动画</h2>
-
-<p>虽然用代码实现一个简单的水平晃动并不难，但是沿着复杂路径的动画就需要我们在关键帧的 <code>values</code> 数组中存储大量 box 化的 <code>CGPoint</code>。 值得庆幸的是，<code>CAKeyframeAnimation</code>  提供了更加便利的 <code>path</code> 属性作为代替。</p>
-
-<p>举个例子，我们如何让一个 view 做圆周运动：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/planets.gif" width="400px" /></center></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGRect</span> <span class="n">boundingRect</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">150</span><span class="p">,</span> <span class="o">-</span><span class="mi">150</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line"><span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">orbit</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">orbit</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">orbit</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">CFAutorelease</span><span class="p">(</span><span class="n">CGPathCreateWithEllipseInRect</span><span class="p">(</span><span class="n">boundingRect</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">));</span>
-</span><span class="line"><span class="n">orbit</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-</span><span class="line"><span class="n">orbit</span><span class="p">.</span><span class="n">additive</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line"><span class="n">orbit</span><span class="p">.</span><span class="n">repeatCount</span> <span class="o">=</span> <span class="n">HUGE_VALF</span><span class="p">;</span>
-</span><span class="line"><span class="n">orbit</span><span class="p">.</span><span class="n">calculationMode</span> <span class="o">=</span> <span class="n">kCAAnimationPaced</span><span class="p">;</span>
-</span><span class="line"><span class="n">orbit</span><span class="p">.</span><span class="n">rotationMode</span> <span class="o">=</span> <span class="n">kCAAnimationRotateAuto</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">satellite</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">orbit</span> <span class="nl">forKey:</span><span class="s">@&quot;orbit&quot;</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>使用 <code>CGPathCreateWithEllipseInRect()</code>，我们创建一个圆形的 <code>CGPath</code> 作为我们的关键帧动画的 <code>path</code>。</p>
-
-<p>使用 <code>calculationMode</code> 是控制关键帧动画时间的另一种方法。我们通过将其设置为 <code>kCAAnimationPaced</code>，让 Core Animation 向被驱动的对象施加一个恒定速度，不管路径的各个线段有多长。将其设置为 <code>kCAAnimationPaced</code> 将无视所有我们已经设置的 <code>keyTimes</code>。</p>
-
-<p>设置 <code>rotationMode</code> 属性为 <code>kCAAnimationRotateAuto</code> 确保飞船沿着路径旋转。作为对比，如果我们将该属性设置为 <code>nil</code> 那动画会是什么样的呢。</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/planets-incorrect.gif" width="400px" /></center></p>
-
-<p>你可以使用带路径的动画来实现几个有趣的效果；资深 objc.io 作者 <a href="https://twitter.com/olebegemann">Ole Begemann</a> 写了<a href="http://oleb.net/blog/2010/12/animating-drawing-of-cgpath-with-cashapelayer">一篇文章</a>，阐述了如何将 <code>CAShapeLayer</code> 与基于路径的动画组合起来使用，并只用几行代码来创建酷炫的绘图动画。</p>
-
-<h2>时间函数</h2>
-
-<p>让我们再次来看看第一个例子：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/rocket-linear.gif" width="400px" /></center></p>
-
-<p>你会发现我们的火箭的动画有一些看起来非常不自然的地方。那是因为我们在现实世界中看到的大部分运动需要时间来加速或减速。对象瞬间达到最高速度，然后再立即停止往往看起来非常不自然。除非你在让<a href="https://www.youtube.com/watch?v=o8HkEprSaAs&amp;t=1m2s">机器人跳舞</a>，但这很少是想要的效果。</p>
-
-<p>为了给我们的动画一个存在惯性的感觉，我们可以使用我们上面提到的参数因子来进行插值。然而，如果我们接下来需要为每个需要加速或减速的行为创建一个新的插值函数，这将是一个很难扩展的方法。</p>
-
-<p>取而代之，常见的做法是把要进行动画的属性的插值从动画的速度中解耦出来。这样一来，给动画提速会产生一种小火箭加速运动的效果，而不用改变我们的插值函数。</p>
-
-<p>我们可以通过引入一个 <em>时间函数 (timing function)</em> （有时也被称为 easing 函数）来实现这个目标。该函数通过修改持续时间的分数来控制动画的速度。</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/lerp-with-easing.png" width="145" /></center></p>
-
-<p>最简单的 easing 函数是 <em>linear</em>。它在整个动画上维持一个恒定的速度。在 Core Animation 中，这个功能由 <code>CAMediaTimingFunction</code> 类表示。</p>
-
-<p><img src="http://img.objccn.io/issue-12/rect-linear.gif" width="540px" /></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">50</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">150</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">timingFunction</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">rectangle</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="n">rectangle</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Core Animation 附带了一些 linear 之外的内置 easing 函数，如：</p>
-
-<ul>
-<li>Ease in (<code>kCAMediaTimingFunctionEaseIn</code>): <br />
-<center><img src="http://img.objccn.io/issue-12/rect-easein.gif" width="540px" /></center></li>
-<li>Ease out (<code>kCAMediaTimingFunctionEaseOut</code>): <br />
-<center><img src="http://img.objccn.io/issue-12/rect-easeout.gif" width="540px" /></center></li>
-<li>Ease in ease out (<code>kCAMediaTimingFunctionEaseInEaseOut</code>): <br />
-<center><img src="http://img.objccn.io/issue-12/rect-easeineaseout.gif" width="540px" /></center></li>
-<li>默认 (<code>kCAMediaTimingFunctionDefault</code>): <br />
-<center><img src="http://img.objccn.io/issue-12/rect-default.gif" width="540px" /></center></li>
-</ul>
-
-<p>在一定限度内，你也可以使用 <code>+functionWithControlPoints::::</code> 创建自己的 easing 函数。通过传递 cubic Bézier 曲线的两个控制点的 <em>x</em> 和 <em>y</em> 坐标，你可以轻松的创建自定义 easing 函数，比如我为我们的红色小火箭选择的那个。</p>
-
-<blockquote>
-  <p>这个方法因为有三个无名参数而声名狼藉，我们并不推荐在你的 API 中使用这种蛋疼的写法。</p>
-</blockquote>
-
-<p><center><img src="http://img.objccn.io/issue-12/rocket-custom.gif" width="400px" /></center></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">77</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">455</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">timingFunction</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithControlPoints:</span><span class="mf">0.5</span><span class="o">:</span><span class="mi">0</span><span class="o">:</span><span class="mf">0.9</span><span class="o">:</span><span class="mf">0.7</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我不打算讲太多关于 Bézier 曲线的细节，在计算机图形学中，它们是创建平滑曲线的常用技术。你可能在基于矢量的绘图工具，比如 Sketch 或 Adobe Illustrator 中见过它们。</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/bezier.png" /></center></p>
-
-<p>传递给 <code>+functionWithControlPoints::::</code> 的值有效地控制了控制点的位置。所得到的定时函数将基于得到的路径来调整动画的速度。x 轴代表时间的分数，而 y 轴是插值函数的输入值。</p>
-
-<p>遗憾的是，由于这些部分被锁定在 <code>[0–1]</code> 的范围内，我们不可能用它来创建一些像预期动作 (Anticipation，一种像目标进发前先回退一点，到达目标后还过冲一会儿，见下图) 这样的常见效果。</p>
-
-<p>我写了一个小型库，叫做 <a href="https://github.com/robb/RBBAnimation">RBBAnimation</a>，它包含一个允许使用 <a href="https://github.com/robb/RBBAnimation#rbbtweenanimation">更多复杂 easing 函数</a> 的自定义子类 <code>CAKeyframeAnimation</code>，包括反弹和包含负分量的 cubic Bézier 函数：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/anticipate.gif" width="140" /></center></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">RBBTweenAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">RBBTweenAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">50</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">150</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">easing</span> <span class="o">=</span> <span class="n">RBBCubicBezier</span><span class="p">(</span><span class="mf">0.68</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.55</span><span class="p">,</span> <span class="mf">0.735</span><span class="p">,</span> <span class="mf">1.55</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p><center><img src="http://img.objccn.io/issue-12/bounce.gif" width="140" /></center></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">RBBTweenAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">RBBTweenAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">50</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">150</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">easing</span> <span class="o">=</span> <span class="n">RBBEasingFunctionEaseOutBounce</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h2>动画组</h2>
-
-<p>对于某些复杂的效果，可能需要同时为多个属性进行动画。想象一下，在一个媒体播放程序中，当切换到到随机曲目时我们让随机动画生效。看起来就像下面这样：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/covers.gif" width="440" /></center></p>
-
-<p>你可以看到，我们需要同时对上面的封面的 position，rotation 和 z-position 进行动画。使用 <code>CAAnimationGroup</code> 来动画其中一个封面的代码大概如下：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">zPosition</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">zPosition</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;zPosition&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">zPosition</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class="line"><span class="n">zPosition</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">1</span><span class="p">;</span>
-</span><span class="line"><span class="n">zPosition</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">rotation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">rotation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;transform.rotation&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">rotation</span><span class="p">.</span><span class="n">values</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mi">0</span><span class="p">,</span> <span class="err">@</span><span class="mf">0.14</span><span class="p">,</span> <span class="err">@</span><span class="mi">0</span> <span class="p">];</span>
-</span><span class="line"><span class="n">rotation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">;</span>
-</span><span class="line"><span class="n">rotation</span><span class="p">.</span><span class="n">timingFunctions</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span>
-</span><span class="line">    <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionEaseInEaseOut</span><span class="p">],</span>
-</span><span class="line">    <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionEaseInEaseOut</span><span class="p">]</span>
-</span><span class="line"><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">position</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">position</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">position</span><span class="p">.</span><span class="n">values</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span>
-</span><span class="line">    <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointZero</span><span class="p">],</span>
-</span><span class="line">    <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mi">110</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">)],</span>
-</span><span class="line">    <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointZero</span><span class="p">]</span>
-</span><span class="line"><span class="p">];</span>
-</span><span class="line"><span class="n">position</span><span class="p">.</span><span class="n">timingFunctions</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span>
-</span><span class="line">    <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionEaseInEaseOut</span><span class="p">],</span>
-</span><span class="line">    <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionEaseInEaseOut</span><span class="p">]</span>
-</span><span class="line"><span class="p">];</span>
-</span><span class="line"><span class="n">position</span><span class="p">.</span><span class="n">additive</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line"><span class="n">position</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">CAAnimationGroup</span> <span class="o">*</span><span class="n">group</span> <span class="o">=</span> <span class="p">[[</span><span class="n">CAAnimationGroup</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="n">group</span><span class="p">.</span><span class="n">animations</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="n">zPosition</span><span class="p">,</span> <span class="n">rotation</span><span class="p">,</span> <span class="n">position</span> <span class="p">];</span>
-</span><span class="line"><span class="n">group</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">;</span>
-</span><span class="line"><span class="n">group</span><span class="p">.</span><span class="n">beginTime</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">card</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">group</span> <span class="nl">forKey:</span><span class="s">@&quot;shuffle&quot;</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="n">card</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">zPosition</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我们使用 <code>CAAnimationGroup</code> 得到的一个好处是可以将所有动画作为一个对象暴露出去。如果你要在应用程序中的多个地方用工厂对象创建的重用的动画的话，这将会非常有用。</p>
-
-<p>你也可以使用动画组同时控制所有动画组成部分的时间。</p>
-
-<h2 id="coreanimation">Core Animation 之外</h2>
-
-<p>都现在了，你应该已经听说过 UIKit Dynamics 了，这是 iOS 7 中引入的一个物理模拟框架，它允许你使用约束和力来为 views 做动画。与 Core Animation 不同，它与你在屏幕上看到的内容交互更为间接，但是它的动态特性让你可以在事先不知道结果时创建动画。</p>
-
-<p>Facebook 最近开源了 Paper 背后的动画引擎 <a href="https://github.com/facebook/pop">Pop</a>。从概念上讲，它介于 Core Animation 和 UIKit Dynamics 之间。它完美的使用了弹簧（spring）动画，并且能够在动画运行时操控目标值，而无需替换它。Pop 也可以在 OS X 上使用，并且允许我们在每个 <code>NSObject</code> 的子类中为任意属性进行动画。</p>
-
-<h2>扩展阅读</h2>
-
-<ul>
-<li><a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreAnimation_guide/Introduction/Introduction.html">Core Animation 编程指南</a></li>
-<li><a href="https://en.wikipedia.org/wiki/12_basic_principles_of_animation">动画的 12 个基本原则</a></li>
-<li><a href="http://oleb.net/blog/2010/12/animating-drawing-of-cgpath-with-cashapelayer">使用 CAShapeLayer 的 CGPath 动画绘图</a></li>
-<li><a href="http://ronnqvi.st/controlling-animation-timing/">控制动画时间</a></li>
-<li><a href="https://github.com/facebook/pop">pop</a></li>
-<li><a href="https://github.com/robb/RBBAnimation">RBBAnimation</a></li>
-</ul>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[自定义Formatters]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/16/zi-ding-yi-formatters/"/>
-    <updated>2014-05-16T14:09:57+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/16/zi-ding-yi-formatters</id>
-    <content type="html"><![CDATA[<p>我们希望有一种快速的一次性的解决方案，可以把数据格式化为一种易读的格式。Foundation 框架中的就有 <code>NSFormatter</code> 可以很好地胜任这个工作。另外，在 Mac 上，Appkit 已经内建了 <code>NSFormatter</code> 的支持。</p>
-
-<h2>内建格式器</h2>
-
-<p>Foundation 框架中的 <code>NSFormatter</code> 是一个抽象类，它有两个已经实现的子类：<code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code>。现在我们先跳过这些，来实现我们自己的子类。</p>
-
-<p>如果你想了解更多的相关知识，我推荐阅读 <a href="http://nshipster.com/nsformatter/">NSHipster</a>。</p>
-
-<h2>介绍</h2>
-
-<p><code>NSFormatter</code> 除了抛出错误，其它什么事也不做。我还不知道有人想要用这个，当然如果它对你有用，就去用它吧。</p>
-
-<p>因为我们不喜欢错误，我们在此实现一个 <code>NSFormatter</code> 的子类，它可以把 <code>UIColor</code> 实例转换成可读的名字。例如，以下代码可以返回字符串“Blue”:</p>
-
-<pre><code>KPAColorFormatter *colorFormatter = [[KPAColorFormatter alloc] init];
-[colorFormatter stringForObjectValue:[UIColor blueColor]] // Blue
-</code></pre>
-
-<p><code>NSFormatter</code> 的子类化有两个方法需要实现：<code>stringForObjectValue:</code> 与 <code>getObjectValue:ForString:errorDescription:</code>。我们先开始介绍第一个方法，因为这个方法更常用。第二个方法，就我所知，经常用于 OS X 上，并且通常不是很有用，我们将稍后介绍。</p>
-
-<h2>初始化</h2>
-
-<p>首先，我们需要做些初始化的工作。由于没有事先定义好的字典可以把颜色映射至名字，这些工作将由我们来完成。为了简化，这些工作将在初始化方法中完成：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span> <span class="nl">initWithColors:</span><span class="err">@</span><span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Red&quot;</span><span class="p">,</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Blue&quot;</span><span class="p">,</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">greenColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Green&quot;</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<!-- more -->
-<p>这里的 colors 是一个以 <code>UIColor</code> 实例为键，英语名为值的字典。大家可以自行地去实现 <code>initWithColors:</code> 方法。当然你也可以自行实现，或者直接前往 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github repo</a> 获得答案。</p>
-
-<h2>格式化对象值</h2>
-
-<p>由于我们这里只可以格式化 <code>UIColor</code> 实例对象，于是在方法 <code>stringForObjectValue:</code> 中的第一件事就是判断传入的参数类型是否是 <code>UIColor</code> 类。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">[</span><span class="n">value</span> <span class="nl">isKindOfClass:</span><span class="p">[</span><span class="n">UIColor</span> <span class="n">class</span><span class="p">]])</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="c1">// To be continued...</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>在判断参数合法后，我们可以实现真正的逻辑了。我们的格式器中包含一个 <code>UIColor</code> 对象为键，颜色名为值的字典。因此，我们只需要以 <code>UIColor</code> 对象为键找到对应的值：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="c1">// Previously on KPAColorFormatter</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">colors</span> <span class="nl">objectForKey:</span><span class="n">value</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>以上代码是一个尽可能简单的实现。一个更高级（有用）的格式器应该是在我们的颜色字典中没有找到匹配的颜色时，返回一个最接近的颜色。大家可以自行实现，或是你不想花费太多功夫，可以前往 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github repo</a>。</p>
-
-<h2>反向格式化</h2>
-
-<p>我们的格式器也应该支持反向格式化，即把字符串转成实例对象。这是通过 <code>getObjectValue:forString:errorDescription:</code> 方法实现。在 OS X 上，在使用 <code>NSCell</code> 时会经常用到这个方法。</p>
-
-<p><code>NSCell</code> 有一个 <code>objectValue</code> 属性。默认情况下，<code>NSCell</code> 会用 <code>objectValue</code> 的描述，但是它也可以选择用一个格式器。在用 <code>NSTextFieldCell</code> 时，用户可以输入值，作为程序员，我们可能期望 <code>objedctValue</code> 可以根据根据输入的字符串转成一个 <code>UIColor</code> 实例。例如，用户如果输入“Blue”，我们需要返回一个 <code>[UIColor blueColor]</code> 实例的引用。</p>
-
-<p>实现反向格式化分为两部分：一部分为当格式器可以成功地把字符串转成 <code>UIColor</code> 实例，另一部分当其不能成功转换。第一部分代码如下：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">getObjectValue:</span><span class="p">(</span><span class="n">out</span> <span class="n">__autoreleasing</span> <span class="kt">id</span> <span class="o">*</span><span class="p">)</span><span class="nv">obj</span>
-</span><span class="line">             <span class="nf">forString:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">string</span>
-</span><span class="line">      <span class="nf">errorDescription:</span><span class="p">(</span><span class="n">out</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">__autoreleasing</span> <span class="o">*</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">__block</span> <span class="n">UIColor</span> <span class="o">*</span><span class="n">matchingColor</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">colors</span> <span class="nl">enumerateKeysAndObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">UIColor</span> <span class="o">*</span><span class="n">color</span><span class="p">,</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">if</span><span class="p">([</span><span class="n">name</span> <span class="nl">isEqualToString:</span><span class="n">string</span><span class="p">])</span> <span class="p">{</span>
-</span><span class="line">            <span class="n">matchingColor</span> <span class="o">=</span> <span class="n">color</span><span class="p">;</span>
-</span><span class="line">            <span class="o">*</span><span class="n">stop</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">        <span class="p">}</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">matchingColor</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="o">*</span><span class="n">obj</span> <span class="o">=</span> <span class="n">matchingColor</span><span class="p">;</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span> <span class="c1">// Snip</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这里可以做一些优化，但是我们先不去做这些。以上方法会遍历我们颜色字典里的每一个对象 ，当一个颜色名字找到时，则会返回其对应关联的 <code>UIColor</code> 实例对象的引用，同时返回 YES 告知调用者我们已经成功地把字符串转成了一个 <code>UIColor</code> 实例对象。</p>
-
-<p>现在处理第二部分：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">matchingColor</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="c1">// snap</span>
-</span><span class="line"><span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="o">*</span><span class="n">error</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;No known color for name: %@&quot;</span><span class="p">,</span> <span class="n">string</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">return</span> <span class="n">NO</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这里，我们如果不能找到一个匹配的颜色，我们会检测调用者是否需要错误信息，如果需要，则把错误通过引用返回。这里检查错误很重要。如果你不这样做，程序就会 crash。同时，我们也会返回 NO，告知调用者这次转换失败。</p>
-
-<h2>本地化</h2>
-
-<p>到现在，我们已经建立了一个完全功能的 <code>NSFormatter</code> 的子类，当然这只是对于生活在美国的英语使用者而言有用。</p>
-
-<p>但相比全世界 71.3 亿人，那才 3.19 亿。或者说，你还有 96% 的潜在用户。当然你可以说：这些潜在用户绝大部分都不是 iPhone 或 Mac 使用者，这么做有什么意思呢？这么想你就太扫兴了。</p>
-
-<p><code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code> 都有一个 locale 属性，它是 <code>NSLocale</code> 实例对象。我们现在来扩展格式器以支持本地化，让它可以根据 local 属性来返回对应翻译的名字。</p>
-
-<h3>翻译</h3>
-
-<p>首先，我们需要翻译颜色名字字符串。有关 genstring 与 *.lprojs 超出了本文的范围。有<a href="http://www.getlocalization.com/library/get-localization-mac/">很多文章</a>讨论这点。好了，不需要其它工作了，快要结束了。</p>
-
-<h3>本地化的格式化</h3>
-
-<p>接下来是本地化功能的实现。在获取翻译的字符串后，我们需要更新 <code>stringForObejectValue:</code> 方法。以前已经使用过 <code>NSLocalizedString</code> 的人可能已经早早的把每一个字符串都用 <code>NSLocalizedString</code> 替换了。但是我们不会这么做。</p>
-
-<p>我们现在处理的是一个动态的 local，而 <code>NSLocalizedString</code> 只会查找当前默认的语言的翻译。在99%的情况下，这种默认的行为是你所想要的，但是我们会用格式化器的 locale 属性来动态查询语言。</p>
-
-<p>以下是 <code>stringForObjectValue:</code> 的新的实现：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="c1">// Previously on... don&#39;t you hate these? I just watched that 20 seconds ago!</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">languageCode</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locale</span> <span class="nl">objectForKey:</span><span class="n">NSLocaleLanguageCode</span><span class="p">];</span>
-</span><span class="line">    <span class="n">NSURL</span> <span class="o">*</span><span class="n">bundleURL</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSBundle</span> <span class="nl">bundleForClass:</span><span class="n">self</span><span class="p">.</span><span class="n">class</span><span class="p">]</span> <span class="nl">URLForResource:</span><span class="n">languageCode</span>
-</span><span class="line">                                                              <span class="nl">withExtension:</span><span class="s">@&quot;lproj&quot;</span><span class="p">];</span>
-</span><span class="line">    <span class="n">NSBundle</span> <span class="o">*</span><span class="n">languageBundle</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSBundle</span> <span class="nl">bundleWithURL:</span><span class="n">bundleURL</span><span class="p">];</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">languageBundle</span> <span class="nl">localizedStringForKey:</span><span class="n">name</span> <span class="nl">value:</span><span class="n">name</span> <span class="nl">table:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>上面的代码还有可以重构改进的地方，但因为把代码都放在同一个地方可以方便阅读，所以请大家多多包涵了。</p>
-
-<p>首先，我们通过 locale 属性查找相应的语言，之后通过 NSBundle 找到对应的语言代码。最后，我们会让 bundle 对英语名称进行翻译。如果找不到对应的翻译，则会返回 name: 方法的参数（即英语名称）。如上即是 <code>NSLocalizedString</code> 的具体实现。</p>
-
-<h3>本地化的反向格式化</h3>
-
-<p>同样，我们也可以把颜色名称转成 <code>UIColor</code> 实例对象，当然，我认为这样做是不值得的。我们当前的实现适用于99%的情况。另外1%的情况是在 Mac 的 <code>NSCell</code> 上使用，而且你允许用户输入一个你试图解析的颜色的名字，这所需要做的要比简单的 子类化 NSFormatter 复杂很多。或许，你不应该允许你的用户通过文本输入颜色值。<a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSColorPanel_Class/">NSColorPanel</a> 在这里是一个更好的解决方案。</p>
-
-<h2>属性化字符串</h2>
-
-<p>到目前为止，我们的格式器都按我们预期的工作。接下来让我们做一个完全没用的功能，只是示范一下我们可以这么做，你懂的。</p>
-
-<p>格式器同时支持属性化字符串。要不要支持它取决于你特定的应用与其用户界面。因此，你最好把这个功能做成可配置。</p>
-
-<p>以下代码就是将文本颜色设置为当前正在格式化的颜色：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSAttributedString</span> <span class="o">*</span><span class="p">)</span><span class="nf">attributedStringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span>
-</span><span class="line">                                 <span class="nf">withDefaultAttributes:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">defaultAttributes</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">string</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">stringForObjectValue:</span><span class="n">value</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span>  <span class="p">(</span><span class="o">!</span><span class="n">string</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">NSMutableDictionary</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableDictionary</span> <span class="nl">dictionaryWithDictionary:</span><span class="n">defaultAttributes</span><span class="p">];</span>
-</span><span class="line">    <span class="n">attributes</span><span class="p">[</span><span class="n">NSForegroundColorAttributeName</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">NSAttributedString</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithString:</span><span class="n">string</span> <span class="nl">attributes:</span><span class="n">attributes</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>首先，我们如之前一样处理字符串，然后检查格式化是否成功。然后我们把默认的属性值与前面设置的颜色属性结合后，最终返回属性化字符串。很容易，是吗？</p>
-
-<h2>便捷</h2>
-
-<p>因为初始化内建的格式器<a href="https://twitter.com/ID_AA_Carmack/status/28939697453">太慢了</a>，所以通常需要对外给你的格式器提供一个便利的类方法。这个格式器应该用默认值与当前的本地化环境。以下是格式器的实现：</p>
-
-<pre><code>+ (NSString *)localizedStringFromColor:(UIColor *)color;
-{
-    static dispatch_once_t onceToken;
-    dispatch_once(&amp;onceToken, ^{
-        KPAColorFormatterReusableInstance = [[KPAColorFormatter alloc] init];
-    });
-
-    return [KPAColorFormatterReusableInstance stringForObjectValue:color];
-}
-</code></pre>
-
-<p>除非你的格式器像 <code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code> 一样做一些疯狂的事情 ，你可能不需要因为性能问题这么做。但是这样做也可以让使用格式器简单许多。</p>
-
-<h2>总结</h2>
-
-<p>我们的颜色格式器现在可以把一个 <code>UIColor</code> 实例格式成一个可读的名字或是反过来也行。当然还有放多有关 <code>NSFormatter</code> 的事情没有涉及。特别是在 Mac 上，因为它跟 <code>NSCell</code> 相关，你可以用更多高级的特性。例如当用户在编辑的时，你可以对字符串做一些检测。</p>
-
-<p>我们的格式器还可以做更多自定义的事情。例如，在没查找到一个你需要的颜色名字时，我们可以返回给你最相近的颜色名字。有时，你可能需要我们的格式器有一个 Boolean 属性来控制该功能。或许我们的属性化字符串的格式化不是你想要的，并且应该支持更多自定义操作。</p>
-
-<p>就此，我们完成了一个非常可靠的格式器。所有的代码（伴有 OS X 示例）都放在了 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github</a> 上， 并且你也可以在 <a href="http://cocoapods.org/">CocoaPods</a> 上看到。如果你应用需要此功能，可以将 &#8220;KPAColorFormatter&#8221; 放在你的 Podfile 中，开始使用它吧。</p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[消息传递机制]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/"/>
-    <updated>2014-05-14T21:31:58+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi</id>
-    <content type="html"><![CDATA[<p>每个应用或多或少都由一些需要相互传递消息的对象结合起来以完成任务。在这篇文章里，我们将介绍所有可用的消息传递机制，并通过例子来介绍怎样在苹果的框架里使用。我们还会选择一些最佳范例来介绍什么时候该用什么机制。</p>
-
-<p>虽然这一期的主题是关于 Foundation 框架的，但是我们会超出 Foundation 的消息传递机制 (KVO 和 通知) 来讲一讲 delegation，block 和 target-action 几种机制。</p>
-
-<p>当然，有些情况下该使用什么机制没有唯一的答案，所以应该按照自己的喜好去试试。另外大多数情况下该使用什么机制应该是很清楚的。</p>
-
-<p>本文中，我们会常常提及“接收者”和“发送者”。它们在消息传递中的意思可以通过以下的例子解释：一个 table view 是发送者，它的 delegate 就是接收者。Core Data managed object context 是它所发出的 notification 的发送者，获取 notification 的就是接收者。一个滑块 (slider) 是 action 消息的发送者，而实现这个 action （方法）的是它的接收者。任何修改一个支持 KVO 的对象的对象是发送者，这个 KVO 对象的观察者就是接收者。明白精髓了吗？</p>
-
-<h2>几种消息传递机制</h2>
-
-<p>首先我们来看看每种机制的具体特点。在这个基础上，下一节我们会画一个流程图来帮我们在具体情况下正确选择应该使用的机制。最后，我们会介绍一些苹果框架里的例子并且解释为什么在那些用例中会选择这样的机制。</p>
-
-<h3 id="kvo">KVO</h3>
-
-<p>KVO 是提供对象属性被改变时的通知的机制。KVO 的实现在 Foundation 中，很多基于 Foundation 的框架都依赖它。想要了解更多有关 KVO 的最佳实践，请阅读本期 Daniel 写的 <a href="http://objccn.io/issue-7-3">KVO 和 KVC 文章</a>。</p>
-
-<p>如果只对某个对象的值的改变感兴趣的话，就可以使用 KVO 消息传递。不过有一些前提：第一，接收者（接收对象改变的通知的对象）需要知道发送者 （值会改变的对象）；第二，接收者需要知道发送者的生命周期，因为它需要在发送者被销毁前注销观察者身份。如果这两个要去符合的话，这个消息传递机制可以一对多（多个观察者可以注册观察同一个对象的变化）</p>
-
-<p>If you plan to use KVO on Core Data objects, you have to know that things work a bit differently here. This has to do with Core Data&#8217;s faulting mechanism. Once a managed object turns into a fault, it will fire the observers on its properties although their values haven&#8217;t changed.</p>
-
-<p>如果要在 Core Data 上使用 KVO 的话，方法会有些许差别。这和 Core Data 的 faulting 机制有关。一旦一个 managed object 被 faulting 处理的话，即使它的属性没有被改变，它还是会触发相应的观察者。</p>
-
-<blockquote>
-  <span class="secondary radius label">编者注</span> 把属性值先取入缓存中，在对象需要的时候再进行一次访问，这在 Core Data 中是默认行为，这种技术称为 Faulting。这么做可以避免降低内存开销，但是如果你确定将访问结果对象的具体属性值时，可以禁用 Faults 以提高获取性能。关于这个技术更多的情况，请移步<a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreData/Articles/cdFaultingUniquing.html">官方文档</a>
-</blockquote>
-
-<h3>通知</h3>
-<!-- more -->
-<p>要在代码中的两个不相关的模块中传递消息时，通知机制是非常好的工具。通知机制广播消息，当消息内容丰富而且无需指望接收者一定要关注的话这一招特别有用。</p>
-
-<p>通知可以用来发送任意消息，甚至可以包含一个 <code>userInfo</code> 字典。你也可以继承 <code>NSNotification</code> 写一个自己的通知类来自定义行为。通知的独特之处在于，发送者和接收者不需要相互知道对方，所以通知可以被用来在不同的相隔很远的模块之间传递消息。这就意味着这种消息传递是单向的，我们不能回复一个通知。</p>
-
-<h3 id="delegation">委托 (Delegation)</h3>
-
-<p>Delegation 在苹果的框架中广泛存在。它让我们能自定义对象的行为，并收到一些触发的事件。要使用 delegation 模式的话，发送者需要知道接收者，但是反过来没有要求。因为发送者只需要知道接收者符合一定的协议，所以它们两者结合的很松。</p>
-
-<p>因为 delegate 协议可以定义任何的方法，我们可以照着自己的需求来传递消息。可以用方法参数来传递消息内容，delegate 可以通过返回值的形式来给发送者作出回应。如果只要在相对接近的两个模块间传递消息，delgation 是很灵活很直接的消息传递机制。</p>
-
-<p>过度使用 delegation 也会带来风险。如果两个对象结合得很紧密，任何其中一个对象都不能单独运转，那么就不需要用 delegate 协议了。这些情况下，对象已经知道各自的类型，可以直接交流。两个比较新的例子是 <code>UICollectionViewLayout</code> 和 <code>NSURLSessionConfiguration</code>。</p>
-
-<p><a name="blocks"> </a>  </p>
-
-<h3 id="block">Block</h3>
-
-<p>Block 是最近才加入 Objective-C 的，首次出现在 OS X 10.6 和 iOS 4 平台上。Block 通常可以完全替代 delegation 消息传递机制的角色。不过这两种机制都有它们自己的独特需求和优势。</p>
-
-<p>一个不使用 block 的理由通常是 block 会存在导致 retain 环 (<a href="https://developer.apple.com/library/mac/documentation/cocoa/conceptual/memorymgmt/Articles/mmPractical.html#//apple_ref/doc/uid/TP40004447-1000810">retain cycles</a>) 的风险。如果发送者需要 retain block 但又不能确保引用在什么时候被赋值为 <code>nil</code>， 那么所有在 block 内对 <code>self</code> 的引用就会发生潜在的 retain 环。</p>
-
-<p>假设我们要实现一个用 block 回调而不是 delegate 机制的 table view 里的选择方法，如下所示：</p>
-
-<pre><code>self.myTableView.selectionHandler = ^void(NSIndexPath *selectedIndexPath) {
-    // 处理选择
-};
-</code></pre>
-
-<p>这儿的问题是，<code>self</code> 会 retain table view，table view 为了让 block 之后可以使用而又需要 retain 这个 block。然而 table view 不能把这个引用设为 nil，因为它不知道什么时候不需要这个 block 了。如果我们不能保证打破 retain 环并且我们需要 retain 发送者，那么 block 就不是一个的好选择。</p>
-
-<p><code>NSOperation</code> 是使用 block 的一个好范例。因为它在一定的地方打破了 retain 环，解决了上述的问题。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">self</span><span class="p">.</span><span class="n">queue</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSOperationQueue</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="n">MyOperation</span> <span class="o">*</span><span class="n">operation</span> <span class="o">=</span> <span class="p">[[</span><span class="n">MyOperation</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="n">operation</span><span class="p">.</span><span class="n">completionBlock</span> <span class="o">=</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">finishedOperation</span><span class="p">];</span>
-</span><span class="line"><span class="p">};</span>
-</span><span class="line"><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">queue</span> <span class="nl">addOperation:</span><span class="n">operation</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>一眼看来好像上面的代码有一个 retain 环：<code>self</code> retain 了 queue，queue retain 了 operation， operation retain 了 completionBlock， 而 completionBlock retain 了 <code>self</code>。然而，把 operation 加入 queue 中会使 operation 在某个时间被执行，然后被从 queue 中移除。（如果没被执行，问题就大了。）一旦 queue 把 operation 移除，retain 环就被打破了。</p>
-
-<p>另一个例子是：我们在写一个视频编码器的类，在类里面我们会调用一个 <code>encodeWithCompletionHandler:</code> 的方法。为了不出问题，我们需要保证编码器对象在某个时间点会释放对 block 的引用。其代码如下所示：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">Encoder</span> <span class="p">()</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="n">completionHandler</span><span class="p">)();</span>
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">Encoder</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">encodeWithCompletionHandler:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)())</span><span class="nv">handler</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">completionHandler</span> <span class="o">=</span> <span class="n">handler</span><span class="p">;</span>
-</span><span class="line">    <span class="c1">// 进行异步处理...</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">// 这个方法会在完成后被调用一次</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">finishedEncoding</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">completionHandler</span><span class="p">();</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">completionHandler</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span> <span class="c1">// &amp;lt;- 不要忘了这个!</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>一旦任务完成，completion block 调用过了以后，我们就应该把它设为 <code>nil</code>。</p>
-
-<p>如果一个被调用的方法需要发送一个一次性的消息作为回复，那么使用 block 是很好的选择， 因为这样做我们可以打破潜在的 retain 环。另外，如果将处理的消息和对消息的调用放在一起可以增强可读性的话，我们也很难拒绝使用 block 来进行处理。在用例之中，使用 block 来做完成的回调，错误的回调，或者类似的事情，是很常见的情况。</p>
-
-<h3 id="targetaction">Target-Action</h3>
-
-<p>Target-Action 是回应 UI 事件时典型的消息传递方式。iOS 上的 <code>UIControl</code> 和 Mac 上的 <code>NSControl</code>/<code>NSCell</code> 都支持这个机制。Target-Action 在消息的发送者和接收者之间建立了一个松散的关系。消息的接收者不知道发送者，甚至消息的发送者也不知道消息的接收者会是什么。如果 target 是 <code>nil</code>，action 会在<a href="https://developer.apple.com/library/ios/documentation/general/conceptual/Devpedia-CocoaApp/Responder.html">响应链 (responder chain)</a> 中被传递下去，直到找到一个响应它的对象。在 iOS 中，每个控件甚至可以和多个 target-action 关联。</p>
-
-<p>基于 target-action 传递机制的一个局限是，发送的消息不能携带自定义的信息。在 Mac 平台上 action 方法的第一个参数永远接收者。iOS 中，可以选择性的把发送者和触发 action 的事件作为参数。除此之外就没有别的控制 action 消息内容的方法了。</p>
-
-<h2>做出正确的选择</h2>
-
-<p>基于上述对不同消息传递机制的特点，我们画了一个流程图来帮助我们在不同情境下做出不同的选择。一句忠告：流程图的建议不代表最终答案。有些时候别的选择依然能达到应有的效果。只不过大多数情况下这张图能引导你做出正确的决定。</p>
-
-<p><img src="http://img.objccn.io/issue-7/communication-patterns-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="688" /></p>
-
-<p>图中有些细节值得深究：</p>
-
-<p>有个框中说到： <em>发送者支持 KVO</em>。这不仅仅是说发送者会在值改变的时候发送 KVO 通知，而且说明观察者需要知道发送者的生命周期。如果发送者被存在一个 weak 属性中，那么发送者有可能会自己变成 nil，那时观察者会导致内存泄露。</p>
-
-<p>一个在最后一行的框里说，<em>消息直接响应方法调用</em>。也就是说方法调用的接收者需要给调用者一个消息作为方法调用的直接反馈。这也就是说处理消息的代码和调用方法的代码必须在同一个地方。</p>
-
-<p>最后在右下角的地方，一个选择分支这样说：<em>发送者能确保释放对 block 的引用吗？</em>这涉及到了我们<a href="#block">之前</a>讨论 block 的 API 存在潜在的 retain 环的问题。如果发送者不能保证在某个时间点会释放对 block 的引用，那么你会惹上 retain 环的麻烦。</p>
-
-<h2 id="framework">Framework 示例</h2>
-
-<p>本节我们通过一些苹果框架里的例子来验证流程图的选择是否有道理，同时解释为什么苹果会选择用这些机制。</p>
-
-<h3 id="kvo">KVO</h3>
-
-<p><code>NSOperationQueue</code> 用了 KVO 观察队列中的 operation 状态属性的改变情况 (<code>isFinished</code>，<code>isExecuting</code>，<code>isCancelled</code>)。当状态改变的时候，队列会收到 KVO 通知。为什么 operation 队列要用 KVO 呢？</p>
-
-<p>消息的接收者（operation 队列）知道消息的发送者（operation），并 retain 它并控制后者的生命周期。另外，在这种情况下只需要单向的消息传递机制。当然如果考虑到 oepration 队列只关心那些改变 operation 的值的改变情况的话，就还不足以说服大家使用 KVO 了。但我们可以这么理解：被传递的消息可以被当成值的改变来处理。因为 state 属性在 operation 队列以外也是有用的，所以这里适合用 KVO。</p>
-
-<p><img src="http://img.objccn.io/issue-7/kvo-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="678" /></p>
-
-<p>当然 KVO 不是唯一的选择。我们也可以将 operation 队列作为 operation 的 delegate 来使用，operation 会调用类似 <code>operationDidFinish:</code> 或者 <code>operationDidBeginExecuting:</code> 等方法把它的 state 传递给 queue。这样就不太方便了，因为 operation 要保存 state 属性，以便于调用这些 delegate 方法。另外，由于 queue 不能主动获取 state 信息，所以 queue 也必须保存所有 operation 的 state。</p>
-
-<h3 id="notifications">Notifications</h3>
-
-<p>Core Data 使用 notification 传递事件（例如一个 managed object context 中的改变————<code>NSManagedObjectContextObjectsDidChangeNotification</code>）</p>
-
-<p>发生改变时触发的 notification 是由 managed object contexts 发出的，所以我们不能假定消息的接收者知道消息的发送者。因为消息的源头不是一个 UI 事件，很多接收者可能在关注着此消息，并且消息传递是单向的，所以 notification 是唯一可行的选择。</p>
-
-<p><img src="http://img.objccn.io/issue-7/notification-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="687" /></p>
-
-<h3 id="delegation">Delegation</h3>
-
-<p>Table view 的 delegate 有多重功能，它可以从管理 accessory view，直到追踪在屏幕上显示的 cell。例如我们可以看看 <code>tableView:didSelectRowAtIndexPath:</code> 方法。为什么用 delegate 实现而不是 target-action 机制？</p>
-
-<p>正如我们在上述流程图中看到的，用 target-action 时，不能传递自定义的数据。而选中 table view 的某个 cell 时，collection view 不仅需要告诉我们一个 cell 被选中了，也要通过 index path 告诉我们哪个 cell 被选中了。如果我们照着这个思路，流程图会引导我们使用 delegation 机制。</p>
-
-<p><img src="http://img.objccn.io/issue-7/delegation-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="687" /></p>
-
-<p>如果不在消息传递中包含选中 cell 的 index path，而是让选中项改变时我们像 table view 主动询问并获取选中 cell 的相关信息，会怎样呢？这会非常不方便，因为我们必须记住当前选中项的数据，这样才能在多选择中知道哪些 cell 是被新选中的。</p>
-
-<p>同理，我们可以想象通过观察 table view 选中项的 index path 属性，当该值发生改变的时候，获得一个选中项改变的通知。不过我们会遇到上述相似问题：不做记录的话我们就不能分辨哪一个 cell 被选择或取消选择了。</p>
-
-<h3 id="block">Block</h3>
-
-<p>我们用 <code>-[NSURLSession dataTaskWithURL:completionHandler:]</code> 来作为一个 block API 的介绍。那么从 URL 加载部分返回给调用者是怎么传递消息的呢？首先，作为 API 的调用者，我们知道消息的发送者，但是我们并没有 retain 它。另外，这是个单向的消息传递————它直接调用 <code>dataTaskWithURL:</code> 的方法。如果我们对照流程图，会发现这属于 block 消息传递机制。</p>
-
-<p><img src="http://img.objccn.io/issue-7/block-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="688" /></p>
-
-<p>有其他的选项吗？当然，苹果自己的 <code>NSURLConnection</code> 就是最好的例子。<code>NSURLConnection</code>在 block 问世之前就存在了，所以它并没有用 block 来实现消息传递，而是使用 delegation 来完成。当 block 出现以后，苹果就在 OS X 10.7 和 iOS 5 平台上的 <code>NSURLConnection</code> 中加了 <code>sendAsynchronousRequest:queue:completionHandler:</code>，所以我们不再在简单的任务中使用 delegate 了。</p>
-
-<p>因为 <code>NSURLSession</code> 是个最近在 OS X 10.9 和 iOS 7 才出现的 API，所以它们使用 block 来实现消息传递机制（<code>NSURLSession</code> 有一个 delegate，但是是用于其他目的）。</p>
-
-<h3 id="targetaction">Target-Action</h3>
-
-<p>一个明显的 target-action 用例是按钮。按钮在不被按下的时候不需要发送任何的信息。为了这个目的，target-action 是 UI 中消息传递的最佳选择。</p>
-
-<p><img src="http://img.objccn.io/issue-7/target-action-flow-chart.png" title="Decision flow chart for communication patterns in Cocoa" width="585" height="678" /></p>
-
-<p>如果 target 是明确指定的，那么 action 消息会发送给指定的对象。如果 target 是 <code>nil</code>， action 消息会一直在响应链中被传递下去，直到找到一个能处理它的对象。在这种情况下，我们有一个完全解耦的消息传递机制：发送者不需要知道接收者，反之亦然。</p>
-
-<p>Target-action 机制非常适合响应 UI 的事件。没有其他的消息传递机制能够提供相同的功能。虽然 notification 在发送者和接收者的松散关系上最接近它，但是 target-action 可以用于响应链——只有一个对象获得 action 并响应，action 在响应链中传递，直到能遇到响应这个 action 的对象。</p>
-
-<h2>总结</h2>
-
-<p>一开始接触这么多的消息传递机制的时候，我们可能有些无所适从，觉得所有的机制都可以被选用。不过一旦我们仔细分析每个机制的时候，它们各自都有特殊的要求和能力。</p>
-
-<p>文中的选择流程图是帮助你清楚认识这些机制的好的开始，当然它不是所有问题的答案。如果你觉得这和你自己选择机制的方式相似或是有任何缺漏，欢迎来信指正。</p>
 
 <hr />
 <p class="post-footer">

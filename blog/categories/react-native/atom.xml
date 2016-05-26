@@ -4,7 +4,7 @@
   <title><![CDATA[Category: React-Native | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/react-native/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-03-23T15:17:58+08:00</updated>
+  <updated>2016-05-26T17:11:13+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,169 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[React-Native 资源整理]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/"/>
+    <updated>2016-05-26T16:20:13+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li</id>
+    <content type="html"><![CDATA[<p>
+最近在学习React-Native过程中整理了一些学习的资源。
+</p>
+
+<h2 id="section">教程</h2>
+
+<p><a href="http://facebook.github.io/react-native/docs/getting-started.html">react-native 官方api文档</a>.</p>
+
+<p><a href="https://github.com/jondot/awesome-react-native">Awesome React-Native</a>.</p>
+
+<p><a href="https://github.com/ecomfe/react-native-cn">react-native 中文api文档 (翻译中)</a>.</p>
+
+<p><a href="http://reactjs.cn/">react.js中文文档</a>.</p>
+
+<p><a href="http://hulufei.gitbooks.io/react-tutorial/content/introduction.html">react.js入门教程(gitbook)</a>.</p>
+
+<p><a href="http://www.ruanyifeng.com/blog/2015/03/react.html">react.js快速入门教程</a>.</p>
+
+<p><a href="http://react.nodejs-china.org/t/reactjszhong-wen-shi-pin-jiao-cheng-bai-du-wang-pan/584">react.js视频教程</a>.</p>
+
+<p><a href="http://html-js.com/article/2783">react-native第一课</a>.
+<!-- more -->
+<a href="http://zhuanlan.zhihu.com/FrontendMagazine/19996445">深入浅出 React Native：使用 JavaScript 构建原生应用</a>.</p>
+
+<p><a href="http://blog.cnbang.net/tech/2698/">React Native通信机制详解</a>.</p>
+
+<p><a href="http://segmentfault.com/a/1190000002658374">React Native布局篇</a>.</p>
+
+<p><a href="http://segmentfault.com/a/1190000002645929">React Native 基础练习指北（一)</a>.</p>
+
+<p><a href="http://segmentfault.com/a/1190000002647733">React Native 基础练习指北（二）</a>.</p>
+
+<p><a href="http://www.逍遥仙.cn/archives/235#6838470-tsina-1-17436-6a377b1a66595f9ede646cf5c012734c">构建一个简单的列表页和2页导航</a>.</p>
+
+<p><a href="http://herman.asia/building-a-flashcard-app-with-react-native">Diary of Building an iOS App with React Native</a>.</p>
+
+<p><a href="http://blog-en.leapoahead.com/post/use-react-native-in-existing-ios-app">Use React Native in Existing iOS App</a>.</p>
+
+<p><a href="http://react.rocks/example/tcomb-form-native">tcomb-form-native使用视频教程(需翻墙)</a>.</p>
+
+<h2 id="app">开源APP</h2>
+
+<p>
+研究源码也是很好的方式去掌握React-Native
+</p>
+<p><a href="https://github.com/facebook/react-native/tree/master/Examples">官方演示App</a>.</p>
+
+<p><a href="https://github.com/henter/ReactNativeRubyChina">ReactNativeRubyChina</a>.</p>
+
+<p><a href="https://github.com/iSimar/HackerNews-React-Native">HackerNews-React-Native</a>.</p>
+
+<p><a href="https://github.com/tabalt/ReactNativeNews">React-Native新闻客户端</a>.</p>
+
+<p><a href="https://github.com/bradoyler/newswatch-react-native">newswatch(新闻客户端)</a>.</p>
+
+<p><a href="https://github.com/appintheair/react-native-buyscreen">buyscreen(购买页面)</a>.</p>
+
+<p><a href="https://github.com/samuel1112/v2er">V2EX客户端</a>.</p>
+
+<p><a href="https://github.com/joemaddalone/react-native-todo">react-native-todo</a>.</p>
+
+<p><a href="https://github.com/muratsu/react-native-beer">react-native-beer</a>.</p>
+
+<p><a href="https://github.com/86/react-native-stars">react-native-stars</a>.</p>
+
+<p><a href="https://github.com/baofen14787/react-native-demo">模仿天猫首页的app</a>.</p>
+
+<p><a href="https://github.com/csarsam/ReactNativeChess">ReactNativeChess</a>.</p>
+
+<p><a href="https://github.com/Johnqing/miumiu">react native 编写的音乐软件</a>.</p>
+
+<p><a href="https://github.com/ababol/react-native-pokedex">react-native-pokedex</a>.</p>
+
+<p><a href="https://github.com/SFantasy/CNode-React-Native">CNode-React-Native</a>.</p>
+
+<p><a href="https://github.com/voronianski/EightTracksReactNative">8tracks电台客户端</a>.</p>
+
+<p><a href="https://github.com/yoxisem544/Calculator-using-React-Native">React-Native实现的计算器</a>.</p>
+
+<p><a href="https://github.com/jawee/react-native-PropertyFinder">房产搜索app</a>.</p>
+
+<p><a href="https://github.com/LeezQ/react-native-zhihu-app">知乎专栏app</a>.</p>
+
+<p><a href="https://github.com/peralmq/ForeignExchangeApp">ForeignExchangeApp</a>.</p>
+
+<p><a href="https://github.com/peralmq/ForeignExchangeApp">ForeignExchangeApp</a>.</p>
+
+<p><a href="https://github.com/fakefish/sf-react-native">Segmentfault 客户端</a>.</p>
+
+<p><a href="https://github.com/stormhouse/QiuShiReactNative">糗事百科app</a>.</p>
+
+<p><a href="https://github.com/Hi-Rube/baoz-ReactNative">孢子社区app</a>.</p>
+
+<p><a href="https://github.com/fraserxu/shenjs">深JS app</a>.</p>
+
+<p><a href="https://github.com/asamiller/den">Den - 房屋销售app</a>.</p>
+
+<p><a href="https://github.com/soliury/noder-react-native">Noder-cnodejs客户端</a>.</p>
+
+<p><a href="https://github.com/race604/ZhiHuDaily-React-Native">知乎日报Android版</a>.</p>
+
+<p><a href="https://github.com/sonnylazuardi/ziliun-react-native">ziliun-react-native</a>.</p>
+
+<p><a href="https://github.com/shevawen/react-native-weather-app">react-native-weather-app</a>.</p>
+
+<p><a href="https://github.com/taskrabbit/ReactNativeSampleApp">React Native Sample App(Navigation,Flux)</a>.</p>
+
+<p><a href="https://github.com/qddegtya/A-ReactNative-TesterHome">TesterHome社区app</a>.</p>
+
+<p><a href="https://github.com/7kfpun/FinanceReactNative">Finance - 股票报价app</a>.</p>
+
+<p><a href="https://github.com/bigsui/shopping-react-native">shopping - 购物app</a>.</p>
+
+<p><a href="https://github.com/kazaff/ZhuiYuanDemo">zhuiyuan - 追源cms app</a></p>
+
+<p><a href="https://github.com/just4fun/uestc-bbs-react-native">uestc-bbs-react-native - UESTC清水河畔RN客户端(with Redux)</a>.</p>
+
+<p><a href="https://github.com/benoitvallon/react-native-nw-react-calculator">react-native-nw-react-calculator(iOS/Android、Web、桌面多端)</a>.</p>
+
+<p><a href="https://github.com/wwayne/react-native-nba-app">react-native-nba-app</a>.</p>
+
+<p><a href="http://git.oschina.net/rplees/react-native-gitosc">开源中国的Git@OSC客户端</a>.</p>
+
+<p><a href="https://github.com/liuchungui/rn_bycloud">rn_bycloud 帮瀛律师端app</a>.</p>
+
+<h2 id="section-1">工具</h2>
+
+<p><a href="https://github.com/Shrugs/react-native-snippets">react-native-snippets(代码提示)</a>.</p>
+
+<p><a href="https://github.com/roman01la/react-native-babel">react-native-babel(使用ES6+)</a>.</p>
+
+<p><a href="https://github.com/almost/react-native-sqlite">sqlite for react-native</a>.</p>
+
+<p><a href="https://github.com/soliury/gulp-react-native-css">gulp-react-native-css(就像写css一样写React Style)</a>.</p>
+
+<p><a href="https://github.com/rnpm/rnpm">rnpm(React Native Package Manager)</a>.</p>
+
+<p><a href="https://github.com/futurice/pepperoni-app-kit">Pepperoni - React Native项目初始化套件</a>.</p>
+
+<p><a href="https://www.decosoftware.com/">Deco IDE - React Native IDE</a>.</p>
+
+<h2 id="section-2">资源文件</h2>
+
+<p><a href="http://facebook.github.io/react-native/">React-native官网</a>.</p>
+
+<p><a href="http://react-china.org/">React-China社区</a>.</p>
+
+<p><a href="http://react.parts/">React-native组件库（比较全的组件库）</a>.</p>
+
+<p><a href="http://reactnativemodules.com/">React Native Modules</a>.</p>
+
+<p><a href="http://www.oschina.net/news/61214/11-react-native-ui-components">11款React Native开源移动 UI 组件</a>.</p>
+
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[React Native]]></title>

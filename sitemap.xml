@@ -287,12 +287,34 @@
         <lastmod>2016-03-23T15:17:41+08:00</lastmod>
     </url>
     <url>
+        <loc>
+            http://ITMonkeyLife.github.io/Blog/blog/2016/03/23/javascriptxue-xi-zhi-ji-ben-gai-nian/
+        </loc>
+        <lastmod>2016-03-23T15:37:00+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://ITMonkeyLife.github.io/Blog/blog/2016/04/07/git-control-version/</loc>
+        <lastmod>2016-04-07T16:35:09+08:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://ITMonkeyLife.github.io/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu/
+        </loc>
+        <lastmod>2016-05-04T14:14:17+08:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://ITMonkeyLife.github.io/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/
+        </loc>
+        <lastmod>2016-05-26T17:11:05+08:00</lastmod>
+    </url>
+    <url>
         <loc>http://ITMonkeyLife.github.io/Blog/404.html</loc>
         <lastmod>2015-12-10T15:02:30+08:00</lastmod>
     </url>
     <url>
         <loc>http://ITMonkeyLife.github.io/Blog/blog/archives/</loc>
-        <lastmod>2016-03-23T15:17:41+08:00</lastmod>
+        <lastmod>2016-05-26T17:11:05+08:00</lastmod>
     </url>
     <url>
         <loc>http://ITMonkeyLife.github.io/Blog/blog/categories/</loc>
@@ -300,7 +322,7 @@
     </url>
     <url>
         <loc>http://ITMonkeyLife.github.io/Blog/</loc>
-        <lastmod>2016-03-23T15:17:41+08:00</lastmod>
+        <lastmod>2016-05-26T17:11:05+08:00</lastmod>
     </url>
     <url>
         <loc>http://ITMonkeyLife.github.io/Blog/robots.txt</loc>
