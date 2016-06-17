@@ -7,37 +7,12 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="最近发现自己对iOS的动画理解很肤浅，于是执行了一段相对复杂的动画，加深自己对CAKeyframeAnimation关键帧动画的理解。
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30 &hellip;">
+	<meta name="description" content="The Swift ABI Contents The Swift ABI
+Hard Constraints on Resilience
+Type Layout
+Fragile Struct and Tuple Layout
+Class Layout
+Fragile Enum Layout &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -104,6 +79,216 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/06/15/swift-3-dot-0-abi/">
+		
+			Swift 3.0 ABI</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+<span id="abi"></span><h1><a class="toc-backref" href="#id1">The Swift ABI</a><a class="headerlink" href="#the-swift-abi" title="Permalink to this headline"></a></h1>
+<div class="contents topic" id="contents">
+
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#the-swift-abi" id="id1">The Swift ABI</a><ul>
+<li><a class="reference internal" href="#hard-constraints-on-resilience" id="id2">Hard Constraints on Resilience</a></li>
+<li><a class="reference internal" href="#type-layout" id="id3">Type Layout</a><ul>
+<li><a class="reference internal" href="#fragile-struct-and-tuple-layout" id="id4">Fragile Struct and Tuple Layout</a></li>
+<li><a class="reference internal" href="#class-layout" id="id5">Class Layout</a></li>
+<li><a class="reference internal" href="#fragile-enum-layout" id="id6">Fragile Enum Layout</a><ul>
+<li><a class="reference internal" href="#empty-enums" id="id7">Empty Enums</a></li>
+<li><a class="reference internal" href="#single-case-enums" id="id8">Single-Case Enums</a></li>
+<li><a class="reference internal" href="#c-like-enums" id="id9">C-Like Enums</a></li>
+<li><a class="reference internal" href="#single-payload-enums" id="id10">Single-Payload Enums</a></li>
+<li><a class="reference internal" href="#multi-payload-enums" id="id11">Multi-Payload Enums</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#existential-container-layout" id="id12">Existential Container Layout</a><ul>
+<li><a class="reference internal" href="#opaque-existential-containers" id="id13">Opaque Existential Containers</a></li>
+<li><a class="reference internal" href="#class-existential-containers" id="id14">Class Existential Containers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#type-metadata" id="id15">Type Metadata</a><ul>
+<li><a class="reference internal" href="#common-metadata-layout" id="id16">Common Metadata Layout</a></li>
+<li><a class="reference internal" href="#struct-metadata" id="id17">Struct Metadata</a></li>
+<li><a class="reference internal" href="#enum-metadata" id="id18">Enum Metadata</a></li>
+<li><a class="reference internal" href="#tuple-metadata" id="id19">Tuple Metadata</a></li>
+<li><a class="reference internal" href="#function-metadata" id="id20">Function Metadata</a></li>
+<li><a class="reference internal" href="#protocol-metadata" id="id21">Protocol Metadata</a></li>
+<li><a class="reference internal" href="#metatype-metadata" id="id22">Metatype Metadata</a></li>
+<li><a class="reference internal" href="#class-metadata" id="id23">Class Metadata</a></li>
+<li><a class="reference internal" href="#generic-parameter-vector" id="id24">Generic Parameter Vector</a></li>
+<li><a class="reference internal" href="#nominal-type-descriptor" id="id25">Nominal Type Descriptor</a></li>
+<li><a class="reference internal" href="#protocol-descriptor" id="id26">Protocol Descriptor</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#heap-objects" id="id27">Heap Objects</a><ul>
+<li><a class="reference internal" href="#heap-metadata" id="id28">Heap Metadata</a></li>
+<li><a class="reference internal" href="#heap-object-header" id="id29">Heap Object Header</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mangling" id="id30">Mangling</a><ul>
+<li><a class="reference internal" href="#globals" id="id31">Globals</a></li>
+<li><a class="reference internal" href="#direct-and-indirect-symbols" id="id32">Direct and Indirect Symbols</a></li>
+<li><a class="reference internal" href="#declaration-contexts" id="id33">Declaration Contexts</a></li>
+<li><a class="reference internal" href="#types" id="id34">Types</a></li>
+<li><a class="reference internal" href="#generics" id="id35">Generics</a></li>
+<li><a class="reference internal" href="#value-witnesses" id="id36">Value Witnesses</a></li>
+<li><a class="reference internal" href="#identifiers" id="id37">Identifiers</a></li>
+<li><a class="reference internal" href="#substitutions" id="id38">Substitutions</a></li>
+<li><a class="reference internal" href="#predefined-substitutions" id="id39">Predefined Substitutions</a></li>
+<li><a class="reference internal" href="#indexes" id="id40">Indexes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="hard-constraints-on-resilience">
+<h2><a class="toc-backref" href="#id2">Hard Constraints on Resilience</a><a class="headerlink" href="#hard-constraints-on-resilience" title="Permalink to this headline"></a></h2>
+<p>The root of a class hierarchy must remain stable, at pain of
+invalidating the metaclass hierarchy.  Note that a Swift class without an
+explicit base class is implicitly rooted in the SwiftObject
+Objective-C class.</p>
+</div>
+<div class="section" id="type-layout">
+<h2><a class="toc-backref" href="#id3">Type Layout</a><a class="headerlink" href="#type-layout" title="Permalink to this headline"></a></h2>
+<div class="section" id="fragile-struct-and-tuple-layout">
+<h3><a class="toc-backref" href="#id4">Fragile Struct and Tuple Layout</a><a class="headerlink" href="#fragile-struct-and-tuple-layout" title="Permalink to this headline"></a></h3>
+<p>Structs and tuples currently share the same layout algorithm, noted as the
+&#8220;Universal&#8221; layout algorithm in the compiler implementation. The algorithm
+is as follows:</p>
+<ul class="simple">
+<li>Start with a <strong>size</strong> of <strong>0</strong> and an <strong>alignment</strong> of <strong>1</strong>.</li>
+<li>Iterate through the fields, in element order for tuples, or in <code class="docutils literal"><span class="pre">var</span></code>
+declaration order for structs. For each field:<ul>
+<li>Update <strong>size</strong> by rounding up to the <strong>alignment of the field</strong>, that is,
+increasing it to the least value greater or equal to <strong>size</strong> and evenly
+divisible by the <strong>alignment of the field</strong>.</li>
+<li>Assign the <strong>offset of the field</strong> to the current value of <strong>size</strong>.</li>
+<li>Update <strong>size</strong> by adding the <strong>size of the field</strong>.</li>
+<li>Update <strong>alignment</strong> to the max of <strong>alignment</strong> and the
+<strong>alignment of the field</strong>.</li>
+</ul>
+</li>
+<li>The final <strong>size</strong> and <strong>alignment</strong> are the size and alignment of the
+aggregate. The <strong>stride</strong> of the type is the final <strong>size</strong> rounded up to
+<strong>alignment</strong>.</li>
+</ul>
+<p>Note that this differs from C or LLVM&#8217;s normal layout rules in that <em>size</em>
+and <em>stride</em> are distinct; whereas C layout requires that an embedded struct&#8217;s
+size be padded out to its alignment and that nothing be laid out there,
+Swift layout allows an outer struct to lay out fields in the inner struct&#8217;s
+tail padding, alignment permitting. Unlike C, zero-sized structs and tuples
+are also allowed, and take up no storage in enclosing aggregates. The Swift
+compiler emits LLVM packed struct types with manual padding to get the
+necessary control over the binary layout. Some examples:</p>
+<div class="highlight-swift"><div class="highlight"><pre>// LLVM &lt;{ i64, i8 }&gt;
+struct S {
+  var x: Int
+  var y: UInt8
+}
+
+// LLVM &lt;{ i8, [7 x i8], &lt;{ i64, i8 }&gt;, i8 }&gt;
+struct S2 {
+  var x: UInt8
+  var s: S
+  var y: UInt8
+}
+
+// LLVM &lt;{}&gt;
+struct Empty {}
+
+// LLVM &lt;{ i64, i64 }&gt;
+struct ContainsEmpty {
+  var x: Int
+  var y: Empty
+  var z: Int
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="class-layout">
+<h3><a class="toc-backref" href="#id5">Class Layout</a><a class="headerlink" href="#class-layout" title="Permalink to this headline"></a></h3>
+<p>Swift relies on the following assumptions about the Objective-C runtime,
+which are therefore now part of the Objective-C ABI:</p>
+<ul class="simple">
+<li>32-bit platforms never have tagged pointers.  ObjC pointer types are
+either nil or an object pointer.</li>
+<li>On x86-64, a tagged pointer either sets the lowest bit of the pointer
+or the highest bit of the pointer.  Therefore, both of these bits are
+zero if and only if the value is not a tagged pointer.</li>
+<li>On ARM64, a tagged pointer always sets the highest bit of the pointer.</li>
+<li>32-bit platforms never perform any isa masking.  <code class="docutils literal"><span class="pre">object_getClass</span></code>
+is always equivalent to <code class="docutils literal"><span class="pre">*(Class*)object</span></code>.</li>
+<li>64-bit platforms perform isa masking only if the runtime exports a
+symbol <code class="docutils literal"><span class="pre">uintptr_t</span> <span class="pre">objc_debug_isa_class_mask;</span></code>.  If this symbol
+is exported, <code class="docutils literal"><span class="pre">object_getClass</span></code> on a non-tagged pointer is always
+equivalent to <code class="docutils literal"><span class="pre">(Class)(objc_debug_isa_class_mask</span> <span class="pre">&amp;</span> <span class="pre">*(uintptr_t*)object)</span></code>.</li>
+<li>The superclass field of a class object is always stored immediately
+after the isa field.  Its value is either nil or a pointer to the
+class object for the superclass; it never has other bits set.</li>
+</ul>
+<p>The following assumptions are part of the Swift ABI:</p>
+<ul class="simple">
+<li>Swift class pointers are never tagged pointers.</li>
+</ul>
+<p>TODO</p>
+</div>
+<div class="section" id="fragile-enum-layout">
+<h3><a class="toc-backref" href="#id6">Fragile Enum Layout</a><a class="headerlink" href="#fragile-enum-layout" title="Permalink to this headline"></a></h3>
+<p>In laying out enum types, the ABI attempts to avoid requiring additional
+storage to store the tag for the enum case. The ABI chooses one of five
+strategies based on the layout of the enum:</p>
+<div class="section" id="empty-enums">
+<h4><a class="toc-backref" href="#id7">Empty Enums</a><a class="headerlink" href="#empty-enums" title="Permalink to this headline"></a></h4>
+<p>In the degenerate case of an enum with no cases, the enum is an empty type.</p>
+<div class="highlight-swift"><div class="highlight"><pre><span class="n">enum</span><span class="w"> </span><span class="n">Empty</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="c1">// =&gt; empty type</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="single-case-enums">
+<h4><a class="toc-backref" href="#id8">Single-Case Enums</a><a class="headerlink" href="#single-case-enums" title="Permalink to this headline"></a></h4>
+<p>In the degenerate case of an enum with a single case, there is no
+discriminator needed, and the enum type has the exact same layout as its
+case&#8217;s data type, or is empty if the case has no data type.</p>
+<div class="highlight-swift"><div class="highlight"><pre><span class="n">enum</span><span class="w"> </span><span class="n">EmptyCase</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">case</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="p">}</span><span class="w">             </span><span class="c1">// =&gt; empty type</span>
+<span class="n">enum</span><span class="w"> </span><span class="n">DataCase</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">case</span><span class="w"> </span><span class="no">Y</span><span class="p">(</span><span class="n">Int</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// =&gt; LLVM &lt;{ i64, double }&gt;</span>
+</pre></div>
+</div>
+</div>
+
+		
+		<a href="/Blog/blog/2016/06/15/swift-3-dot-0-abi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/06/15/swift-3-dot-0-abi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -207,7 +392,7 @@
 </span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
 </span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">autoreverses</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
 </span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">removedOnCompletion</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">meteroStar</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;DSPopUpAnimation&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">meteroStar</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;PopUpAnimation&quot;</span><span class="p">];</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 </p>
@@ -395,7 +580,9 @@
 			Git Control Version</a>
 	</h2>
 	<div class="entry-content">
-		<p class="post-footer">
+		<hr />
+
+<p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
 		
@@ -443,6 +630,8 @@
 <h3>标识符</h3>
 <p>
 </p>
+<hr />
+
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
@@ -602,6 +791,8 @@ React-Native 帮助在原生平台打造世界一流的应用体验，使用基�
 <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l05usxv8j20xw0su0y9.jpg" alt="screen-shot-6" />
 <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f1l060hn0sj20yc0t6474.jpg" alt="screen-shot-7" /></p>
 
+<hr />
+
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
@@ -723,52 +914,6 @@ React-Native 帮助在原生平台打造世界一流的应用体验，使用基�
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2015/12/16/bian-xie-gao-zhi-liang-de-swiftdai-ma/">
-		
-			编写高性能的Swift代码</a>
-	</h2>
-	<div class="entry-content">
-		<p>
-下面这篇文档收集了一系列编写高性能 Swift 代码的要诀和技巧。文档的目标读者是编译器和标准库开发人员。
-
-文档中的一些技巧可以帮助提升您的 Swift 程序质量，使您的代码不容易出错且可读性更好。显式地标记最终类和类协议是两个显而易见的例子。 然而文档中还有一些技巧是不符合规矩的，扭曲的，仅仅解决一些比编译器或语言的特殊的临时性需求。文档中的很多建议来自于多方面的权衡，例如：运行时、字节大小、代码可读性等等。
-</p>
-<h2>启用优化</h2>
-<p>第一个应该做的事情就是启用优化。Swift 提供了三种不同的优化级别：<br />
-<ul>
-<li>-Onone: 这意味着正常的开发。它执行最小优化和保存所有调试信息。</li>
-<li>-O: 这意味着对于大多数生产代码。编译器执行积极地优化，可以大大改变提交代码的类型和数量。调试信息将被省略但还是会有损害的。</li>
-<li>-Ounchecked: 这是一个特殊的优化模式，它意味着特定的库或应用程序，这是以安全性来交换的。编译器将删除所有溢出检查以及一些隐式类型检查。这不是在通常情况下使用的，因为它可能会导致内存安全问题和整数溢出。如果你仔细审查你的代码，那么对整数溢出和类型转换来说是安全的。</li>
-
-		
-		<a href="/Blog/blog/2015/12/16/bian-xie-gao-zhi-liang-de-swiftdai-ma/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2015/12/16/bian-xie-gao-zhi-liang-de-swiftdai-ma/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

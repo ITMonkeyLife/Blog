@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="编译器做些什么？ 本文主要探讨一下编译器主要做些什么，以及如何有效的利用编译器。 简单的说，编译器有两个职责：把 Objective-C 代码转化成低级代码，以及对代码做分析，确保代码中没有任何明显的错误。 现在，Xcode 的默认编译器是 clang。本文中我们提到的编译器都表示 clang。 &hellip;">
+	<meta name="description" content="随着移动软件工业的发展，一个移动产品只局限于 iOS 系统变得越来越不切实际。 Android 目前占有近 80% 的智能手机份额[^1]，它能给一个产品带来的潜在用户量实在不能再被忽略了。 在本文中，我会在 iOS 的开发范围内介绍 Android 开发的核心内容。 Android 和 iOS &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +74,66 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/14/ioskai-fa-zhe-de-an-zhuo-chu-bu-kui-tan/">
+		
+			iOS开发者的安卓初步窥探</a>
+	</h2>
+	<div class="entry-content">
+		<p>随着移动软件工业的发展，一个移动产品只局限于 iOS 系统变得越来越不切实际。 Android 目前占有近 80% 的智能手机份额[^1]，它能给一个产品带来的潜在用户量实在不能再被忽略了。</p>
+
+<p>在本文中，我会在 iOS 的开发范围内介绍 Android 开发的核心内容。 Android 和 iOS 处理类似的问题集，但在大部分问题上，它们都有不同的解决方式。通过本文，我会使用一个配套项目（在 <a href="https://github.com/objcio/issue-11-android-101">GitHub</a> 上）来说明如何在两个平台上开发以完成相同的任务。</p>
+
+<p>除了 iOS 开发的相关知识，我假设你在 Java 上也有一定经验，能够安装和使用<a href="http://developer.android.com/tools/index.html">ADT（Android Development Tools）</a>。此外，如果你最近才开始 Android 开发，读一遍 Google 编写的关于<a href="http://developer.android.com/training/basics/firstapp/index.html">创建你的第一个应用</a>的教程会很有帮助。</p>
+
+<h3 id="ui">UI设计概要</h3>
+
+<p>本文不会深入到介绍 iOS 和 Android 在用户体验和设计模式上的不同。然而，了解一些当今 Android 上使用的关键 UI 范式，比如 Action Bar、Overflow Menu、Back Button、Share Action 等，还是会很有好处的。如果你正在认真考虑 Android 开发，我推荐你从 Google Play Store 买个 <a href="https://play.google.com/store/devices/details?id=nexus_5_white_16gb">Nexus 5</a>，将它作为你的主要设备，用满一周，强迫自己最大程度的去体验这个操作系统。一个开发者若不清楚要为之开发的操作系的关键使用模式，就那是对产品的不负责任。</p>
+
+<h2>语言应用结构</h2>
+
+<h3 id="java">Java</h3>
+
+<p>Objective-C 和 Java 之间有很多不同，虽然若能将 Objective-C 的方式带入 Java 可能会很有诱惑力，但这样做很可能导致代码库与驱动它的主要框架产生冲突。总之，有一些需要提防地陷阱：</p>
+
+<ul>
+<li>类前缀就留在 Objective-C 里不要带过来了。Java 有实在的命名空间和包管理，所以不再需要类前缀。</li>
+<li>实例变量的前缀是 <code>m</code>，不是 <code>_</code>。尽可能多的在代码里使用JavaDoc来写方法和类描述，它能让你和其他人更舒服些。</li>
+<li>Null 检查！Objective-C能妥善处理向nil发送消息，但Java不行。</li>
+<li>向属性说再见。如果你想要 setter 和 getter，你只能实际地创建一个 getVariableName()方法，并显式的调用它。使用 <code>this.object</code> <strong>不会</strong>调用你自定义地getter，你必须使用 <code>this.getObjct</code>。</li>
+<li>同样的，给方法名加上 <code>get</code> 和 <code>set</code> 前缀来更好的识别 getter 和 setter 。Java 方法通常写为动作和查询，例如 <code>getCell()</code>，而不是 <code>cellForRowAtIndexPath:</code>。</li>
+</ul>
+
+<h3>项目结构</h3>
+
+		
+		<a href="/Blog/blog/2014/04/14/ioskai-fa-zhe-de-an-zhuo-chu-bu-kui-tan/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/android/'>Android</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/14/ioskai-fa-zhe-de-an-zhuo-chu-bu-kui-tan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -836,70 +896,6 @@ Build target objcio
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/">
-		
-			并发程序开发测试</a>
-	</h2>
-	<div class="entry-content">
-		<p>在开发高质量应用程序的过程中，测试是一个很重要的工具。在过去，当并发并不是应用程序架构中重要组成部分的时候，测试就相对简单。随着这几年的发展，使用并发设计模式已愈发重要了，想要测试好并发应用程序，已成了一个不小的挑战。</p>
-
-<p>测试并发代码最主要的困难在于程序或信息流不是反映在调用堆栈上。函数并不会立即返回结果给调用者，而是通过回调函数，Block，通知或者一些类似的机制，这些使得测试变得更加困难。</p>
-
-<p>然而，测试异步代码也会带来一些好处，比如可以揭露较差的程序设计，让最终的实现变得更加清晰。</p>
-
-<h2>异步测试的问题</h2>
-
-<p>首先，我们来看一个简单的同步单元测试例子。两个数求和的方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">add:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">a</span> <span class="nf">to:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">b</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>测试这个方法很简单，只需要比较该方法返回的值是否与期望的值相同，如果不相同，则测试失败。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testAddition</span> <span class="p">{</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">Calculator</span> <span class="nl">add:</span><span class="mi">2</span> <span class="nl">to:</span><span class="mi">2</span><span class="p">];</span>
-</span><span class="line">    <span class="n">STAssertEquals</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="nb">nil</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
