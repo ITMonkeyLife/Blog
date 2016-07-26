@@ -7,12 +7,9 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="The Swift ABI Contents The Swift ABI
-Hard Constraints on Resilience
-Type Layout
-Fragile Struct and Tuple Layout
-Class Layout
-Fragile Enum Layout &hellip;">
+	<meta name="description" content="Hard Constraints on Resilience
+The root of a class hierarchy must remain stable, at pain of
+invalidating the metaclass hierarchy. Note that a Swift &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -89,68 +86,10 @@ Fragile Enum Layout &hellip;">
 			Swift 3.0 ABI</a>
 	</h2>
 	<div class="entry-content">
-		<p>
-<span id="abi"></span><h1><a class="toc-backref" href="#id1">The Swift ABI</a><a class="headerlink" href="#the-swift-abi" title="Permalink to this headline"></a></h1>
-<div class="contents topic" id="contents">
+		<p><br />
+<br />
+<br /></p>
 
-<p class="topic-title first">Contents</p>
-<ul class="simple">
-<li><a class="reference internal" href="#the-swift-abi" id="id1">The Swift ABI</a><ul>
-<li><a class="reference internal" href="#hard-constraints-on-resilience" id="id2">Hard Constraints on Resilience</a></li>
-<li><a class="reference internal" href="#type-layout" id="id3">Type Layout</a><ul>
-<li><a class="reference internal" href="#fragile-struct-and-tuple-layout" id="id4">Fragile Struct and Tuple Layout</a></li>
-<li><a class="reference internal" href="#class-layout" id="id5">Class Layout</a></li>
-<li><a class="reference internal" href="#fragile-enum-layout" id="id6">Fragile Enum Layout</a><ul>
-<li><a class="reference internal" href="#empty-enums" id="id7">Empty Enums</a></li>
-<li><a class="reference internal" href="#single-case-enums" id="id8">Single-Case Enums</a></li>
-<li><a class="reference internal" href="#c-like-enums" id="id9">C-Like Enums</a></li>
-<li><a class="reference internal" href="#single-payload-enums" id="id10">Single-Payload Enums</a></li>
-<li><a class="reference internal" href="#multi-payload-enums" id="id11">Multi-Payload Enums</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#existential-container-layout" id="id12">Existential Container Layout</a><ul>
-<li><a class="reference internal" href="#opaque-existential-containers" id="id13">Opaque Existential Containers</a></li>
-<li><a class="reference internal" href="#class-existential-containers" id="id14">Class Existential Containers</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#type-metadata" id="id15">Type Metadata</a><ul>
-<li><a class="reference internal" href="#common-metadata-layout" id="id16">Common Metadata Layout</a></li>
-<li><a class="reference internal" href="#struct-metadata" id="id17">Struct Metadata</a></li>
-<li><a class="reference internal" href="#enum-metadata" id="id18">Enum Metadata</a></li>
-<li><a class="reference internal" href="#tuple-metadata" id="id19">Tuple Metadata</a></li>
-<li><a class="reference internal" href="#function-metadata" id="id20">Function Metadata</a></li>
-<li><a class="reference internal" href="#protocol-metadata" id="id21">Protocol Metadata</a></li>
-<li><a class="reference internal" href="#metatype-metadata" id="id22">Metatype Metadata</a></li>
-<li><a class="reference internal" href="#class-metadata" id="id23">Class Metadata</a></li>
-<li><a class="reference internal" href="#generic-parameter-vector" id="id24">Generic Parameter Vector</a></li>
-<li><a class="reference internal" href="#nominal-type-descriptor" id="id25">Nominal Type Descriptor</a></li>
-<li><a class="reference internal" href="#protocol-descriptor" id="id26">Protocol Descriptor</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#heap-objects" id="id27">Heap Objects</a><ul>
-<li><a class="reference internal" href="#heap-metadata" id="id28">Heap Metadata</a></li>
-<li><a class="reference internal" href="#heap-object-header" id="id29">Heap Object Header</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#mangling" id="id30">Mangling</a><ul>
-<li><a class="reference internal" href="#globals" id="id31">Globals</a></li>
-<li><a class="reference internal" href="#direct-and-indirect-symbols" id="id32">Direct and Indirect Symbols</a></li>
-<li><a class="reference internal" href="#declaration-contexts" id="id33">Declaration Contexts</a></li>
-<li><a class="reference internal" href="#types" id="id34">Types</a></li>
-<li><a class="reference internal" href="#generics" id="id35">Generics</a></li>
-<li><a class="reference internal" href="#value-witnesses" id="id36">Value Witnesses</a></li>
-<li><a class="reference internal" href="#identifiers" id="id37">Identifiers</a></li>
-<li><a class="reference internal" href="#substitutions" id="id38">Substitutions</a></li>
-<li><a class="reference internal" href="#predefined-substitutions" id="id39">Predefined Substitutions</a></li>
-<li><a class="reference internal" href="#indexes" id="id40">Indexes</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div>
 <div class="section" id="hard-constraints-on-resilience">
 <h2><a class="toc-backref" href="#id2">Hard Constraints on Resilience</a><a class="headerlink" href="#hard-constraints-on-resilience" title="Permalink to this headline"></a></h2>
 <p>The root of a class hierarchy must remain stable, at pain of
@@ -278,10 +217,6 @@ case&#8217;s data type, or is empty if the case has no data type.</p>
 
 </div>
 	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
 
 </div>
 	
