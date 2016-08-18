@@ -7,7 +7,13 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="下面这篇文档收集了一系列编写高性能 Swift 代码的要诀和技巧。文档的目标读者是编译器和标准库开发人员。 文档中的一些技巧可以帮助提升您的 Swift 程序质量，使您的代码不容易出错且可读性更好。显式地标记最终类和类协议是两个显而易见的例子。 然而文档中还有一些技巧是不符合规矩的，扭曲的， &hellip;">
+	<meta name="description" content="目录 JSPatch介绍
+JSPatch VS Wax lua
+JSPatch的原理和核心
+JSPatch Extension机制
+JSPatch中的实现技巧总结 遇到的问题与解决方法 一、JSPatch介绍
+用途
+iOS产品开发之中常常会遇到这种情况: 新版本上线后发现有个严重的bug， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +80,52 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/">
+		
+			JSPatch用法剖析</a>
+	</h2>
+	<div class="entry-content">
+		<h2 id="目录"><a name="jspatchIntroducton">目录</a></h2>
+<ol>
+<li><a href="#jspatchIntroducton"><strong>JSPatch介绍</strong></a></li>
+<li><a href="#jspatch-wax"><strong>JSPatch VS Wax lua</strong></a></li>
+<li><a href="#jspatch-core"><strong>JSPatch的原理和核心</strong></a></li>
+<li><a href="#jspatch-Extension"><strong>JSPatch Extension机制</strong></a></li>
+<li><a href="#jspatch-Tech"><strong>JSPatch中的实现技巧总结</strong></a> </li>
+<li><a href="#jspatch-problem"><strong>遇到的问题与解决方法</strong></a></li>
+</ol>
+<h2 id="一、JSPatch介绍"><a name="jspatchIntroducton">一、JSPatch介绍</a></h2>
+<h3 id="用途">用途</h3>
+<p>iOS产品开发之中常常会遇到这种情况: 新版本上线后发现有个严重的bug，可能会导致crash率激增，可能会使网络请求无法发出，这时能做的只是赶紧修复bug然后提交等待漫长的AppStore审核，再盼望用户快点升级，付出巨大的人力和时间成本，才能完成此次bug的修复。</p>
+<p>JSPatch的出现解决了这样的问题，只需要在项目中引入极小的JSPatch引擎，就可以使用JavaScript语言调用Objective-C的原生接口，获得脚本语言的能力：动态更新iOS APP，替换项目原生代码、快速修复bug。      </p>
+<h3 id="技术核心">技术核心</h3>
+<p>JSPatch核心主要是JSBinding和Objective-C中的runtime技术。一方面，它采用Apple在iOS7中发布的JavaScriptCore.framework作为Javascript引擎解析JavaScript脚本，执行JavaSript代码并与Objective-C端的代码进行桥接。另一方面则是使用Objective-C runtime中的method swizzling的方式达到使用JavaScript脚本动态替换原有Objective-C方法的目的，并利用ForwardInvocation标准消息转发机制使得在JavaScript脚本中调用Objective-C的方法成为可能。</p>
+
+		
+		<a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -600,59 +652,6 @@ ABI涵盖了各个细节：
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/">
-		
-			使用VIPER构建iOS应用</a>
-	</h2>
-	<div class="entry-content">
-		<script type="text/javascript">
-    var wumiiPermaLink = ""; //请用代码生成文章永久的链接
-    var wumiiTitle = ""; //请用代码生成文章标题
-    var wumiiTags = ""; //请用代码生成文章标签，以英文逗号分隔，如："标签1,标签2"
-    var wumiiCategories = []; //请用代码生成文章分类，分类名放在 JSONArray 中，如: ["分类1", "分类2"]
-    var wumiiSitePrefix = "http://itmonkeylife.github.io/Blog/";
-    var wumiiParams = "&num=5&mode=3&pf=JAVASCRIPT";
-</script>
-
-<script type="text/javascript" src="http://widget.wumii.cn/ext/relatedItemsWidget"></script>
-
-<p><a href="http://www.wumii.com/widget/relatedItems" style="border:0;">
-    <img src="http://static.wumii.cn/images/pixel.png" alt="无觅关联推荐，快速提升流量" style="border:0;padding:0;margin:0;" />
-</a></p>
-
-<p>建筑领域流行这样一句话，“我们虽然在营造建筑，但建筑也会重新塑造我们”。正如所有开发者最终领悟到的，这句话同样适用于构建软件。</p>
-
-<p>编写代码中至关重要的是，需要使每一部分容易被识别，赋有一个特定而明显的目的，并与其他部分在逻辑关系中完美契合。这就是我们所说的软件架构。好的架构不仅让一个产品成功投入使用，还可以让产品具有可维护性，并让人不断头脑清醒的对它进行维护！</p>
-
-		
-		<a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

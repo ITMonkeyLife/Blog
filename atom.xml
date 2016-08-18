@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-07-26T20:14:40+08:00</updated>
+  <updated>2016-08-18T18:04:58+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -14,22 +14,252 @@
 
   
   <entry>
+    <title type="html"><![CDATA[JavaScript的作用域]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/18/javascriptde-zuo-yong-yu/"/>
+    <updated>2016-08-18T17:49:01+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/18/javascriptde-zuo-yong-yu</id>
+    <content type="html"><![CDATA[<script type="text/javascript">
+
+    function switchStylestyle(styleName) {
+        $('link[rel*=style][title]').each(function (i) {
+            this.disabled = true;
+            if (this.getAttribute('title') == styleName) this.disabled = false;
+        });
+    }
+
+    $(function () {
+        $('.markdown-body pre').addClass('prettyprint');
+        prettyPrint();
+
+        $(".markdown-body pre").each(function () {
+            var lines = $(this).attr("data-strong-lines");
+            if (lines == undefined || lines == "")
+                return;
+            var nums = lines.split(' ');
+            if (nums.length > 0)
+                for (var i = 0; i < nums.length; i++) {
+                    $(this).find("li:nth-child(" + nums[i] + ")").addClass("strong-code-line");
+                }
+        });
+
+    });
+
+
+</script>
+
+<h1>　作用域是什么</h1>
+<p>几乎所有编程语言最基本的功能之一，就是能够储存变量当中的值，并且能在之后对这个值进行访问或修改。事实上，正是这种储存和访问变量的值的能力将<strong>状态</strong>带给了程序。</p>
+<p>若没有了状态这个概念，程序虽然也能够执行一些简单的任务，但它会受到高度限制，做不到非常有趣。</p>
+<p>但是将变量引入程序会引起几个很有意思的问题，也正是我们将要讨论的：这些变量<strong>住在</strong>哪里？换句话说，它们储存在哪里？最重要的是，程序需要时如何找到它们？</p>
+<p>这些问题说明需要一套设计良好的规则来存储变量，并且之后可以方便地找到这些变量。这套规则被称为<strong>作用域</strong>。</p>
+<p>但是，究竟在哪里而且怎样设置这些<strong>作用域</strong>的规则呢？</p>
+<h2>　编译原理</h2>
+<p>尽管通常将JavaScript归类为“动态”或“解释执行”语言，但事实上它是一门编译语言。这个事实对你来说可能显而易见，也可能你闻所未闻，取决于你接触过多少编程语言，具有多少经验。但与传统的编译语言不同，它<strong>不是</strong>提前编译的，编译结果也不能在分布式系统中进行移植。</p>
+<p>尽管如此，JavaScript引擎进行编译的步骤和传统的编译语言非常相似，在某些环节可能比预想的要复杂。</p>
+<p>在传统编译语言的流程中，程序中的一段源代码在执行<strong>之前</strong>会经历三个步骤，统称为“编译”。</p>
+<ul>
+<li><p><strong>分词/词法分析</strong>（Tokenizing/Lexing）</p>
+<p>这个过程会将由字符组成的字符串分解成（对编程语言来说）有意义的代码块，这些代码块被称为词法单元（token）。例如，考虑程序<code>var a = 2;</code>。这段程序通常会被分解成为下面这些词法单元：<code>var</code>、<code>a</code>、<code>=</code>、<code>2</code> 、<code>;</code>。空格是否会被当作词法单元，取决于空格在这门语言中是否具有意义。</p>
+</li>
+</ul>
+<blockquote>
+<p><img src="http://epub.ituring.com.cn/api/storage/getbykey/screenshow?key=1405bfdb7c117638d93d" alt="" width="5%" style="width: 5%" />分词（tokenizing）和词法分析（Lexing）之间的区别是非常微妙、晦涩的，主要差异在于词法单元的识别是通过<strong>有状态</strong>还是<strong>无状态</strong>的方式进行的。简单来说，如果词法单元生成器在判断<code>a</code>是一个独立的词法单元还是其他词法单元的一部分时，调用的是有状态的解析规则，那么这个过程就被称为<strong>词法分析</strong>。</p>
+</blockquote>
+<ul>
+<li><p><strong>解析/语法分析</strong>（Parsing）</p>
+<p>这个过程是将词法单元流（数组）转换成一个由元素逐级嵌套所组成的代表了程序语法结构的树。这个树被称为“抽象语法树”（Abstract Syntax Tree，AST）。</p>
+<p><code>var a = 2;</code>的抽象语法树中可能会有一个叫作<code>VariableDeclaration</code>的顶级节点，接下来是一个叫作<code>Identifier</code>（它的值是<code>a</code>）的子节点，以及一个叫作<code>AssignmentExpression</code>的子节点。<code>AssignmentExpression</code>节点有一个叫作<code>NumericLiteral</code>（它的值是<code>2</code>）的子节点。</p>
+</li>
+</ul>
+<ul>
+<li><p><strong>代码生成</strong></p>
+<p>将AST转换为可执行代码的过程称被称为代码生成。这个过程与语言、目标平台等息息相关。</p>
+<p>抛开具体细节，简单来说就是有某种方法可以将<code>var a = 2;</code>的AST转化为一组机器指令，用来<strong>创建</strong>一个叫作<code>a</code>的变量（包括分配内存等），并将一个值储存在<code>a</code>中。</p>
+</li>
+</ul>
+<blockquote>
+<p><img src="http://epub.ituring.com.cn/api/storage/getbykey/screenshow?key=1405bfdb7c117638d93d" alt="" width="5%" style="width: 5%" />关于引擎如何管理系统资源超出了我们的讨论范围，因此只需要简单地了解引擎可以根据需要创建并储存变量即可。</p>
+</blockquote>
+<!-- more -->
+<p>比起那些编译过程<strong>只有</strong>三个步骤的语言的编译器，JavaScript引擎要复杂得多。例如，在语法分析和代码生成阶段有特定的步骤来对运行性能进行优化，包括对冗余元素进行优化等。</p>
+<p>因此在这里只进行宏观、简单的介绍，接下来你就会发现我们介绍的这些看起来有点高深的内容与所要讨论的事情有什么关联。</p>
+<p>首先，JavaScript引擎不会有大量的（像其他语言编译器那么多的）时间用来进行优化，因为与其他语言不同，JavaScript的编译过程不是发生在构建之前的。</p>
+<p>对于JavaScript来说，大部分情况下编译发生在代码执行前的几微秒（甚至更短！）的时间内。在我们所要讨论的<strong>作用域</strong>背后，JavaScript引擎用尽了各种办法（比如JIT，可以延迟编译甚至实施重编译）来保证性能最佳。</p>
+<p>简单地说，任何JavaScript代码片段在执行前都要进行编译（通常<strong>就在</strong>执行前）。因此，JavaScript编译器<strong>首先</strong>会对<code>var a = 2;</code>这段程序进行编译，然后做好执行它的准备，并且通常马上就会执行它。</p>
+<h2>　理解作用域</h2>
+<p>我们学习作用域的方式是将这个过程模拟成几个人物之间的对话。那么，由<strong>谁</strong>进行这场对话呢？</p>
+<h3>　演员表</h3>
+<p>首先介绍将要参与到对程序<code>var a = 2;</code>进行处理的过程中的演员们，这样才能理解接下来将要听到的对话。</p>
+<ul>
+<li><p><strong>引擎</strong></p>
+<p>从头到尾负责整个JavaScript程序的编译及执行过程。  </p>
+</li>
+<li><p><strong>编译器</strong></p>
+<p>引擎的好朋友之一，负责语法分析及代码生成等脏活累活（详见前一节的内容）。</p>
+</li>
+<li><p><strong>作用域</strong></p>
+<p>引擎的另一位好朋友，负责收集并维护由所有声明的标识符（变量）组成的一系列查询，并实施一套非常严格的规则，确定当前执行的代码对这些标识符的访问权限。</p>
+</li>
+</ul>
+<p>为了能够<strong>完全理解</strong>JavaScript的工作原理，你需要开始像引擎（和它的朋友们）一样<strong>思考</strong>，从它们的角度提出问题，并从它们的角度回答这些问题。</p>
+<h3>　对话</h3>
+<p>当你看见<code>var a = 2;</code>这段程序时，很可能认为这是一句声明。但我们的新朋友引擎却不这么看。事实上，引擎认为这里有两个完全不同的声明，一个由编译器在编译时处理，另一个则由引擎在运行时处理。</p>
+<p>下面我们将<code>var a = 2;</code>分解，看看引擎和它的朋友们是如何协同工作的。</p>
+<p>编译器首先会将这段程序分解成词法单元，然后将词法单元解析成一个树结构。但是当编译器开始进行代码生成时，它对这段程序的处理方式会和预期的有所不同。</p>
+<p>可以合理地假设编译器所产生的代码能够用下面的伪代码进行概括：“为一个变量分配内存，将其命名为<code>a</code>，然后将值<code>2</code>保存进这个变量。”然而，这并不完全正确。</p>
+<p>事实上编译器会进行如下处理。</p>
+<p>1. 遇到<code>var a</code>，编译器会询问作用域是否已经有一个该名称的变量存在于同一个作用域的集合中。如果是，编译器会忽略该声明，继续进行编译；否则它会要求作用域在当前作用域的集合中声明一个新的变量，并命名为<code>a</code>。  </p>
+<p>2. 接下来编译器会为引擎生成运行时所需的代码，这些代码被用来处理<code>a = 2</code>这个赋值操作。引擎运行时会首先询问作用域，在当前的作用域集合中是否存在一个叫作<code>a</code>的变量。如果是，引擎就会使用这个变量；如果不是，引擎会继续查找该变量（查看1.3节）。</p>
+<p>如果引擎最终找到了<code>a</code>变量，就会将<code>2</code>赋值给它。否则引擎就会举手示意并抛出一个异常！</p>
+<p><strong>总结：</strong>变量的赋值操作会执行两个动作，首先编译器会在当前作用域中声明一个变量（如果之前没有声明过），然后在运行时引擎会在作用域中查找该变量，如果能够找到就会对它赋值。</p>
+<h3>　编译器有话说</h3>
+<p>为了进一步理解，我们需要多介绍一点编译器的术语。</p>
+<p>编译器在编译过程的第二步中生成了代码，引擎执行它时，会通过查找变量<code>a</code>来判断它是否已声明过。查找的过程由作用域进行协助，但是引擎执行怎样的查找，会影响最终的查找结果。</p>
+<p>在我们的例子中，引擎会为变量<code>a</code>进行LHS查询。另外一个查找的类型叫作RHS。</p>
+<p>我打赌你一定能猜到“L”和“R”的含义，它们分别代表左侧和右侧。</p>
+<p>什么东西的左侧和右侧？<strong>是一个赋值操作的左侧和右侧。</strong></p>
+<p>换句话说，当变量出现在赋值操作的左侧时进行LHS查询，出现在右侧时进行RHS查询。</p>
+<p>讲得更准确一点，RHS查询与简单地查找某个变量的值别无二致，而LHS查询则是试图找到变量的容器本身，从而可以对其赋值。从这个角度说，RHS并不是<strong>真正</strong>意义上的“赋值操作的右侧”，更准确地说是“非左侧”。</p>
+<p>你可以将RHS理解成retrieve his source value（取到它的源值），这意味着“得到某某的值”。</p>
+<p>让我们继续深入研究。</p>
+<p>考虑以下代码：</p>
+<pre class="代码无行号"><code>console.log( a );
+
+</code></pre>
+<p>其中对<code>a</code>的引用是一个RHS引用，因为这里<code>a</code>并没有赋予任何值。相应地，需要查找并取得<code>a</code>的值，这样才能将值传递给<code>console.log(..)</code>。</p>
+<p>相比之下，例如：</p>
+<pre class="代码无行号"><code>a = 2;
+
+</code></pre>
+<p>这里对<code>a</code>的引用则是LHS引用，因为实际上我们并不关心当前的值是什么，只是想要为<code>= 2</code>这个赋值操作找到一个目标。</p>
+<blockquote>
+<p><img src="http://epub.ituring.com.cn/api/storage/getbykey/screenshow?key=1405bfdb7c117638d93d" alt="" width="5%" style="width: 5%" />LHS和RHS的含义是“赋值操作的左侧或右侧”并不一定意味着就是“<code>=</code>赋值操作符的左侧或右侧”。赋值操作还有其他几种形式，因此在概念上最好将其理解为“赋值操作的目标是谁（LHS）”以及“谁是赋值操作的源头（RHS）”。</p>
+</blockquote>
+<p>考虑下面的程序，其中既有LHS也有RHS引用：</p>
+<pre class="代码无行号"><code>function foo(a)  {
+    console.log( a ); // 2
+}
+
+foo( 2 );
+
+</code></pre>
+<p>最后一行<code>foo(..)</code>函数的调用需要对<code>foo</code>进行RHS引用，意味着“去找到<code>foo</code>的值，并把它给我”。并且<code>(..)</code>意味着<code>foo</code>的值需要被执行，因此它最好真的是一个函数类型的值！</p>
+<p>这里还有一个容易被忽略却非常重要的细节。</p>
+<p>代码中隐式的<code>a = 2</code>操作可能很容易被你忽略掉。这个操作发生在<code>2</code>被当作参数传递给<code>foo(..)</code>函数时，<code>2</code>会被<strong>分配</strong>给参数<code>a</code>。为了给参数<code>a</code>（隐式地）分配值，需要进行一次LHS查询。</p>
+<p>这里还有对<code>a</code>进行的RHS引用，并且将得到的值传给了<code>console.log(..)</code>。<code>console.log(..)</code>本身也需要一个引用才能执行，因此会对<code>console</code>对象进行RHS查询，并且检查得到的值中是否有一个叫作<code>log</code>的方法。</p>
+<p>最后，在概念上可以理解为在LHS和RHS之间通过对值<code>2</code>进行交互来将其传递进<code>log(..)</code>（通过变量<code>a</code>的RHS查询）。假设在<code>log(..)</code>函数的原生实现中它可以接受参数，在将<code>2</code>赋值给其中第一个（也许叫作<code>arg1</code>）参数之前，这个参数需要进行LHS引用查询。</p>
+<blockquote>
+<p><img src="http://epub.ituring.com.cn/api/storage/getbykey/screenshow?key=1405bfdb7c117638d93d" alt="" width="5%" style="width: 5%" /> 你可能会倾向于将函数声明<code>function foo(a) {...</code>概念化为普通的变量声明和赋值，比如<code>var foo</code>、<code>foo ＝ function(a) {...</code>。如果这样理解的话，这个函数声明将需要进行LHS查询。</p>
+<p>然而还有一个重要的细微差别，编译器可以在代码生成的同时处理声明和值的定义，比如在引擎执行代码时，并不会有线程专门用来将一个函数值“分配给”<code>foo</code>。因此，将函数声明理解成前面讨论的LHS查询和赋值的形式并不合适。</p>
+</blockquote>
+<h3>　引擎和作用域的对话</h3>
+<pre class="代码无行号"><code>function foo(a) {
+    console.log( a ); // 2
+}
+
+foo( 2 );
+
+</code></pre>
+<p>让我们把上面这段代码的处理过程想象成一段对话，这段对话可能是下面这样的。</p>
+<blockquote>
+<p>引擎：我说作用域，我需要为<code>foo</code>进行RHS引用。你见过它吗？<br />作用域：别说，我还真见过，编译器那小子刚刚声明了它。它是一个函数，给你。<br />引擎：哥们太够意思了！好吧，我来执行一下<code>foo</code>。<br />引擎：作用域，还有个事儿。我需要为<code>a</code>进行LHS引用，这个你见过吗？<br />作用域：这个也见过，编译器最近把它声名为<code>foo</code>的一个形式参数了，拿去吧。<br />引擎：大恩不言谢，你总是这么棒。现在我要把<code>2</code>赋值给<code>a</code>。<br />引擎：哥们，不好意思又来打扰你。我要为<code>console</code>进行RHS引用，你见过它吗？<br />作用域：咱俩谁跟谁啊，再说我就是干这个的。这个我也有，<code>console</code>是个内置对象。给你。<br />引擎：么么哒。我得看看这里面是不是有<code>log(..)</code>。太好了，找到了，是一个函数。<br />引擎：哥们，能帮我再找一下对<code>a</code>的RHS引用吗？虽然我记得它，但想再确认一次。<br />作用域：放心吧，这个变量没有变动过，拿走，不谢。<br />引擎：真棒。我来把<code>a</code>的值，也就是<code>2</code>，传递进<code>log(..)</code>。<br />……</p>
+</blockquote>
+<h3>　小测验</h3>
+<p>检验一下到目前的理解程度。把自己当作引擎，并同作用域进行一次“对话”：</p>
+<pre class="代码无行号"><code>function foo(a) {
+    var b = a;
+    return a + b;
+}
+
+var c = foo( 2 );
+
+</code></pre>
+<p>1. 找到其中所有的LHS查询。（这里有3处！）<br />2.找到其中所有的RHS查询。（这里有4处！）</p>
+<blockquote>
+<p><img src="http://epub.ituring.com.cn/api/storage/getbykey/screenshow?key=1405bfdb7c117638d93d" alt="" width="5%" style="width: 5%" /> 查看本章小结中的参考答案。</p>
+</blockquote>
+<h2>　作用域嵌套</h2>
+<p>我们说过，作用域是根据名称查找变量的一套规则。实际情况中，通常需要同时顾及几个作用域。</p>
+<p>当一个块或函数嵌套在另一个块或函数中时，就发生了作用域的嵌套。因此，在当前作用域中无法找到某个变量时，引擎就会在外层嵌套的作用域中继续查找，直到找到该变量，或抵达最外层的作用域（也就是全局作用域）为止。</p>
+<p>考虑以下代码：</p>
+<pre class="代码无行号"><code>function foo(a) {
+    console.log( a + b );
+}
+
+var b = 2;
+
+foo( 2 ); // 4
+
+</code></pre>
+<p>对<code>b</code>进行的RHS引用无法在函数<code>foo</code>内部完成，但可以在上一级作用域（在这个例子中就是全局作用域）中完成。</p>
+<p>因此，回顾一下引擎和作用域之间的对话，会进一步听到：</p>
+<blockquote>
+<p>引擎：<code>foo</code>的作用域兄弟，你见过<code>b</code>吗？我需要对它进行RHS引用。<br />作用域：听都没听过，走开。<br />引擎：<code>foo</code>的上级作用域兄弟，咦？有眼不识泰山，原来你是全局作用域大哥，太好了。你见过<code>b</code>吗？我需要对它进行RHS引用。<br />作用域：当然了，给你吧。</p>
+</blockquote>
+<p>遍历嵌套作用域链的规则很简单：引擎从当前的执行作用域开始查找变量，如果找不到，就向上一级继续查找。当抵达最外层的全局作用域时，无论找到还是没找到，查找过程都会停止。</p>
+<h3>把作用域链比喻成一个建筑</h3>
+<p>为了将作用域处理的过程可视化，我希望你在脑中想象下面这个高大的建筑：</p>
+<p class="图"><img src="http://epub.ituring.com.cn/api/storage/getbykey/screenshow?key=150366d05746f1e6be81" alt="" width="50%" style="width: 50%" /></p>
+<p>这个建筑代表程序中的嵌套作用域链。第一层楼代表当前的执行作用域，也就是你所处的位置。建筑的顶层代表全局作用域。</p>
+<p>LHS和RHS引用都会在当前楼层进行查找，如果没有找到，就会坐电梯前往上一层楼，如果还是没有找到就继续向上，以此类推。一旦抵达顶层（全局作用域），可能找到了你所需的变量，也可能没找到，但无论如何查找过程都将停止。</p>
+<h2>　异常</h2>
+<p>为什么区分LHS和RHS是一件重要的事情？</p>
+<p>因为在变量还没有声明（在任何作用域中都无法找到该变量）的情况下，这两种查询的行为是不一样的。</p>
+<p>考虑如下代码：</p>
+<pre class="代码无行号"><code>function foo(a) {
+    console.log( a + b );
+    b = a;
+}
+
+foo( 2 );
+
+</code></pre>
+<p>第一次对<code>b</code>进行RHS查询时是无法找到该变量的。也就是说，这是一个“未声明”的变量，因为在任何相关的作用域中都无法找到它。</p>
+<p>如果RHS查询在所有嵌套的作用域中遍寻不到所需的变量，引擎就会抛出<code>ReferenceError</code>异常。值得注意的是，<code>ReferenceError</code>是非常重要的异常类型。</p>
+<p>相较之下，当引擎执行LHS查询时，如果在顶层（全局作用域）中也无法找到目标变量，<strong>全局作用域中</strong>就会创建一个具有该名称的变量，并将其返还给引擎，前提是程序运行在非“严格模式”下。</p>
+<p><strong>“不，这个变量之前并不存在，但是我很热心地帮你创建了一个。”</strong></p>
+<p>ES5中引入了“严格模式”。同正常模式，或者说宽松/懒惰模式相比，严格模式在行为上有很多不同。其中一个不同的行为是严格模式禁止自动或隐式地创建全局变量。因此，在严格模式中LHS查询失败时，并不会创建并返回一个全局变量，引擎会抛出同RHS查询失败时类似的<code>ReferenceError</code>异常。</p>
+<p>接下来，如果RHS查询找到了一个变量，但是你尝试对这个变量的值进行不合理的操作，比如试图对一个非函数类型的值进行函数调用，或者引用<code>null</code>或<code>undefined</code>类型的值中的属性，那么引擎会抛出另外一种类型的异常，叫作<code>TypeError</code>。</p>
+<p><code>ReferenceError</code>同作用域判别失败相关，而<code>TypeError</code>则代表作用域判别成功了，但是对结果的操作是非法或不合理的。</p>
+<h2>　小结</h2>
+<p>作用域是一套规则，用于确定在何处以及如何查找变量（标识符）。如果查找的目的是对变量进行赋值，那么就会使用LHS查询；如果目的是获取变量的值，就会使用RHS查询。</p>
+<p>赋值操作符会导致LHS查询。<code>＝</code>操作符或调用函数时传入参数的操作都会导致关联作用域的赋值操作。</p>
+<p>JavaScript引擎首先会在代码执行前对其进行编译，在这个过程中，像<code>var a = 2</code>这样的声明会被分解成两个独立的步骤：</p>
+<p>1. 首先，<code>var a</code>在其作用域中声明新变量。这会在最开始的阶段，也就是代码执行前进行。<br />2. 接下来，<code>a = 2</code>会查询（LHS查询）变量<code>a</code>并对其进行赋值。</p>
+<p>LHS和RHS查询都会在当前执行作用域中开始，如果有需要（也就是说它们没有找到所需的标识符），就会向上级作用域继续查找目标标识符，这样每次上升一级作用域（一层楼），最后抵达全局作用域（顶层），无论找到或没找到都将停止。</p>
+<p>不成功的RHS引用会导致抛出<code>ReferenceError</code>异常。不成功的LHS引用会导致自动隐式地创建一个全局变量（非严格模式下），该变量使用LHS引用的目标作为标识符，或者抛出<code>ReferenceError</code>异常（严格模式下）。</p>
+<h3>小测验答案</h3>
+<pre class="代码无行号"><code>function foo(a) {
+    var b = a;
+    return a + b;
+}
+
+var c = foo( 2 );
+
+</code></pre>
+<p>1. 找出所有的LHS查询（这里有3处！）  </p>
+<pre><i>c</i> = ..;、<i>a</i> = 2（隐式变量分配）、<i>b</i> = ..</pre>
+<p>2. 找出所有的RHS查询（这里有4处！）  </p>
+<pre><i>foo</i>(2..、= <i>a</i>;、<i>a</i> ..、.. <i>b</i></pre>
+<p><br /></p>
+<hr />
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Swift 3.0 ABI]]></title>
     <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/06/15/swift-3-dot-0-abi/"/>
     <updated>2016-06-15T16:02:03+08:00</updated>
     <id>http://ITMonkeyLife.github.io/Blog/blog/2016/06/15/swift-3-dot-0-abi</id>
-    <content type="html"><![CDATA[<p><br />
-<br />
-<br /></p>
-
-<div class="section" id="hard-constraints-on-resilience">
-<h2><a class="toc-backref" href="#id2">Hard Constraints on Resilience</a><a class="headerlink" href="#hard-constraints-on-resilience" title="Permalink to this headline"></a></h2>
+    <content type="html"><![CDATA[<h2><a class="toc-backref" href="#id2">Hard Constraints on Resilience</a><a class="headerlink" href="#hard-constraints-on-resilience" title="Permalink to this headline"></a></h2>
 <p>The root of a class hierarchy must remain stable, at pain of
 invalidating the metaclass hierarchy.  Note that a Swift class without an
 explicit base class is implicitly rooted in the SwiftObject
 Objective-C class.</p>
-</div>
-<div class="section" id="type-layout">
+
 <h2><a class="toc-backref" href="#id3">Type Layout</a><a class="headerlink" href="#type-layout" title="Permalink to this headline"></a></h2>
 <div class="section" id="fragile-struct-and-tuple-layout">
 <h3><a class="toc-backref" href="#id4">Fragile Struct and Tuple Layout</a><a class="headerlink" href="#fragile-struct-and-tuple-layout" title="Permalink to this headline"></a></h3>
@@ -61,7 +291,7 @@ tail padding, alignment permitting. Unlike C, zero-sized structs and tuples
 are also allowed, and take up no storage in enclosing aggregates. The Swift
 compiler emits LLVM packed struct types with manual padding to get the
 necessary control over the binary layout. Some examples:</p>
-<div class="highlight-swift"><div class="highlight"><pre>// LLVM &lt;{ i64, i8 }&gt;
+<pre>// LLVM &lt;{ i64, i8 }&gt;
 struct S {
   var x: Int
   var y: UInt8
@@ -84,9 +314,7 @@ struct ContainsEmpty {
   var z: Int
 }
 </pre></div>
-</div>
-</div>
-<div class="section" id="class-layout">
+
 <h3><a class="toc-backref" href="#id5">Class Layout</a><a class="headerlink" href="#class-layout" title="Permalink to this headline"></a></h3>
 <p>Swift relies on the following assumptions about the Objective-C runtime,
 which are therefore now part of the Objective-C ABI:</p>
@@ -112,38 +340,29 @@ class object for the superclass; it never has other bits set.</li>
 <li>Swift class pointers are never tagged pointers.</li>
 </ul>
 <p>TODO</p>
-</div>
-<div class="section" id="fragile-enum-layout">
 <h3><a class="toc-backref" href="#id6">Fragile Enum Layout</a><a class="headerlink" href="#fragile-enum-layout" title="Permalink to this headline"></a></h3>
 <p>In laying out enum types, the ABI attempts to avoid requiring additional
 storage to store the tag for the enum case. The ABI chooses one of five
 strategies based on the layout of the enum:</p>
-<div class="section" id="empty-enums">
 <h4><a class="toc-backref" href="#id7">Empty Enums</a><a class="headerlink" href="#empty-enums" title="Permalink to this headline"></a></h4>
 <p>In the degenerate case of an enum with no cases, the enum is an empty type.</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="n">enum</span><span class="w"> </span><span class="n">Empty</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="c1">// =&gt; empty type</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="single-case-enums">
+<pre><span class="n">enum</span><span class="w"> </span><span class="n">Empty</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="c1">// =&gt; empty type</span>
+</pre>
 <h4><a class="toc-backref" href="#id8">Single-Case Enums</a><a class="headerlink" href="#single-case-enums" title="Permalink to this headline"></a></h4>
 <p>In the degenerate case of an enum with a single case, there is no
 discriminator needed, and the enum type has the exact same layout as its
 case&#8217;s data type, or is empty if the case has no data type.</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="n">enum</span><span class="w"> </span><span class="n">EmptyCase</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">case</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="p">}</span><span class="w">             </span><span class="c1">// =&gt; empty type</span>
+<pre><span class="n">enum</span><span class="w"> </span><span class="n">EmptyCase</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">case</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="p">}</span><span class="w">             </span><span class="c1">// =&gt; empty type</span>
 <span class="n">enum</span><span class="w"> </span><span class="n">DataCase</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">case</span><span class="w"> </span><span class="no">Y</span><span class="p">(</span><span class="n">Int</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// =&gt; LLVM &lt;{ i64, double }&gt;</span>
-</pre></div>
-</div>
-</div>
+</pre>
 <!-- more-->
-<div class="section" id="c-like-enums">
 <h4><a class="toc-backref" href="#id9">C-Like Enums</a><a class="headerlink" href="#c-like-enums" title="Permalink to this headline"></a></h4>
 <p>If none of the cases has a data type (a &#8220;C-like&#8221; enum), then the enum
 is laid out as an integer tag with the minimal number of bits to contain
 all of the cases. The machine-level layout of the type then follows LLVM&#8217;s
 data layout rules for integer types on the target platform. The cases are
 assigned tag values in declaration order.</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="n">enum</span><span class="w"> </span><span class="n">EnumLike2</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// =&gt; LLVM i1</span>
+<pre><span class="n">enum</span><span class="w"> </span><span class="n">EnumLike2</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// =&gt; LLVM i1</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="n">A</span><span class="w">         </span><span class="c1">// =&gt; i1 0</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="n">B</span><span class="w">         </span><span class="c1">// =&gt; i1 1</span>
 <span class="p">}</span>
@@ -158,12 +377,9 @@ assigned tag values in declaration order.</p>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="n">G</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="n">H</span>
 <span class="p">}</span>
-</pre></div>
-</div>
+</pre>
 <p>Discriminator values after the one used for the last case become <em>extra
 inhabitants</em> of the enum type (see <a class="reference internal" href="#single-payload-enums">Single-Payload Enums</a>).</p>
-</div>
-<div class="section" id="single-payload-enums">
 <h4><a class="toc-backref" href="#id10">Single-Payload Enums</a><a class="headerlink" href="#single-payload-enums" title="Permalink to this headline"></a></h4>
 <p>If an enum has a single case with a data type and one or more no-data cases
 (a &#8220;single-payload&#8221; enum), then the case with data type is represented using
@@ -177,7 +393,7 @@ has <em>spare bits</em> (see <a class="reference internal" href="#multi-payload-
 inhabitants. The enum value is then represented as an integer with the storage
 size in bits of the data type. Extra inhabitants of the payload type not used
 by the enum type become extra inhabitants of the enum type itself.</p>
-<div class="highlight-swift"><div class="highlight"><pre>enum CharOrSectionMarker { =&gt; LLVM i32
+<pre>enum CharOrSectionMarker { =&gt; LLVM i32
   case Paragraph            =&gt; i32 0x0020_0000
   case Char(UnicodeScalar)  =&gt; i32 (zext i21 %Char to i32)
   case Chapter              =&gt; i32 0x0020_0001
@@ -192,13 +408,12 @@ enum CharOrSectionMarkerOrFootnoteMarker { =&gt; LLVM i32
   case Dagger                                   =&gt; i32 0x0020_0003
   case DoubleDagger                             =&gt; i32 0x0020_0004
 }
-</pre></div>
-</div>
+</pre>
 <p>If the data type has no extra inhabitants, or there are not enough extra
 inhabitants to represent all of the no-data cases, then a tag bit is added
 to the enum&#8217;s representation. The tag bit is set for the no-data cases, which
 are then assigned values in the data area of the enum in declaration order.</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="n">enum</span><span class="w"> </span><span class="n">IntOrInfinity</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">LLVM</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span>
+<pre><span class="n">enum</span><span class="w"> </span><span class="n">IntOrInfinity</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">LLVM</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="n">NegInfinity</span><span class="w">    </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">    </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="no">Int</span><span class="p">(</span><span class="n">Int</span><span class="p">)</span><span class="w">       </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">%</span><span class="n">Int</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="n">PosInfinity</span><span class="w">    </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">    </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">}</span>
@@ -206,10 +421,7 @@ are then assigned values in the data area of the enum in declaration order.</p>
 
 <span class="n">IntOrInfinity</span><span class="p">.</span><span class="no">Int</span><span class="p">(</span><span class="w">    </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">     </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span>
 <span class="n">IntOrInfinity</span><span class="p">.</span><span class="no">Int</span><span class="p">(</span><span class="mi">20721</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i1</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">20721</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="multi-payload-enums">
+</pre>
 <h4><a class="toc-backref" href="#id11">Multi-Payload Enums</a><a class="headerlink" href="#multi-payload-enums" title="Permalink to this headline"></a></h4>
 <p>If an enum has more than one case with data type, then a tag is necessary to
 discriminate the data types. The ABI will first try to find common
@@ -219,7 +431,7 @@ will be scattered into these spare bits as much as possible. Currently only
 spare bits of primitive integer types, such as the high bits of an <code class="docutils literal"><span class="pre">i21</span></code>
 type, are considered. The enum data is represented as an integer with the
 storage size in bits of the largest data type.</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="n">enum</span><span class="w"> </span><span class="n">TerminalChar</span><span class="w"> </span><span class="p">{</span><span class="w">             </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">LLVM</span><span class="w"> </span><span class="n">i32</span>
+<pre><span class="n">enum</span><span class="w"> </span><span class="n">TerminalChar</span><span class="w"> </span><span class="p">{</span><span class="w">             </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">LLVM</span><span class="w"> </span><span class="n">i32</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="no">Plain</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">i32</span><span class="w">     </span><span class="p">(</span><span class="n">zext</span><span class="w"> </span><span class="n">i21</span><span class="w"> </span><span class="o">%</span><span class="n">Plain</span><span class="w">     </span><span class="n">to</span><span class="w"> </span><span class="n">i32</span><span class="p">)</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="no">Bold</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span><span class="w">      </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">i32</span><span class="w"> </span><span class="p">(</span><span class="n">or</span><span class="w"> </span><span class="p">(</span><span class="n">zext</span><span class="w"> </span><span class="n">i21</span><span class="w"> </span><span class="o">%</span><span class="n">Bold</span><span class="w">      </span><span class="n">to</span><span class="w"> </span><span class="n">i32</span><span class="p">),</span><span class="w"> </span><span class="mh">0x0020</span><span class="n">_0000</span><span class="p">)</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="no">Underline</span><span class="p">(</span><span class="n">UnicodeScalar</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">i32</span><span class="w"> </span><span class="p">(</span><span class="n">or</span><span class="w"> </span><span class="p">(</span><span class="n">zext</span><span class="w"> </span><span class="n">i21</span><span class="w"> </span><span class="o">%</span><span class="n">Underline</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">i32</span><span class="p">),</span><span class="w"> </span><span class="mh">0x0040</span><span class="n">_0000</span><span class="p">)</span>
@@ -227,30 +439,24 @@ storage size in bits of the largest data type.</p>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="n">Empty</span><span class="w">                    </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">i32</span><span class="w"> </span><span class="mh">0x0080</span><span class="n">_0000</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="n">Cursor</span><span class="w">                   </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">i32</span><span class="w"> </span><span class="mh">0x0080</span><span class="n">_0001</span>
 <span class="p">}</span>
-</pre></div>
-</div>
+</pre>
 <p>If there are not enough spare bits to contain the tag, then additional bits are
 added to the representation to contain the tag. Tag values are
 assigned to data cases in declaration order. If there are no-data cases, they
 are collected under a common tag, and assigned values in the data area of the
 enum in declaration order.</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="kd">class </span><span class="nc">Bignum</span><span class="w"> </span><span class="p">{}</span>
+<pre><span class="kd">class </span><span class="nc">Bignum</span><span class="w"> </span><span class="p">{}</span>
 
 <span class="n">enum</span><span class="w"> </span><span class="n">IntDoubleOrBignum</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">LLVM</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i2</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="no">Int</span><span class="p">(</span><span class="n">Int</span><span class="p">)</span><span class="w">           </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i2</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">           </span><span class="o">%</span><span class="n">Int</span><span class="p">,</span><span class="w">            </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="no">Double</span><span class="p">(</span><span class="n">Double</span><span class="p">)</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i2</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="n">bitcast</span><span class="w">  </span><span class="o">%</span><span class="n">Double</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">i64</span><span class="p">),</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">case</span><span class="w"> </span><span class="no">Bignum</span><span class="p">(</span><span class="n">Bignum</span><span class="p">)</span><span class="w">     </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">&lt;</span><span class="p">{</span><span class="w"> </span><span class="n">i64</span><span class="p">,</span><span class="w"> </span><span class="n">i2</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="n">ptrtoint</span><span class="w"> </span><span class="o">%</span><span class="n">Bignum</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">i64</span><span class="p">),</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="section" id="existential-container-layout">
+</pre>
 <h3><a class="toc-backref" href="#id12">Existential Container Layout</a><a class="headerlink" href="#existential-container-layout" title="Permalink to this headline"></a></h3>
 <p>Values of protocol type, protocol composition type, or &#8220;any&#8221; type
 (<code class="docutils literal"><span class="pre">protocol&lt;&gt;</span></code>) are laid out using <strong>existential containers</strong> (so-called
 because these types are &#8220;existential types&#8221; in type theory).</p>
-<div class="section" id="opaque-existential-containers">
 <h4><a class="toc-backref" href="#id13">Opaque Existential Containers</a><a class="headerlink" href="#opaque-existential-containers" title="Permalink to this headline"></a></h4>
 <p>If there is no class constraint on a protocol or protocol composition type,
 the existential container has to accommodate a value of arbitrary size and
@@ -261,15 +467,12 @@ contains a pointer to a side allocation owned by the existential container.
 The type of the contained value is identified by its <cite>type metadata</cite> record,
 and witness tables for all of the required protocol conformances are included.
 The layout is as if declared in the following C struct:</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="kd">struct </span><span class="nc">OpaqueExistentialContainer</span><span class="w"> </span><span class="p">{</span>
+<pre><span class="kd">struct </span><span class="nc">OpaqueExistentialContainer</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">void</span><span class="w"> </span><span class="o">*</span><span class="n">fixedSizeBuffer</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
 <span class="w">  </span><span class="n">Metadata</span><span class="w"> </span><span class="o">*</span><span class="n">type</span><span class="p">;</span>
 <span class="w">  </span><span class="n">WitnessTable</span><span class="w"> </span><span class="o">*</span><span class="n">witnessTables</span><span class="p">[</span><span class="n">NUM_WITNESS_TABLES</span><span class="p">];</span>
 <span class="p">};</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="class-existential-containers">
+</pre>
 <h4><a class="toc-backref" href="#id14">Class Existential Containers</a><a class="headerlink" href="#class-existential-containers" title="Permalink to this headline"></a></h4>
 <p>If one or more of the protocols in a protocol or protocol composition type
 have a class constraint, then only class values can be stored in the existential
@@ -278,20 +481,15 @@ always a single pointer in size, so a fixed-size buffer and potential side
 allocation is not needed, and class instances always have a reference to their
 own type metadata, so the separate metadata record is not needed. The
 layout is thus as if declared in the following C struct:</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="kd">struct </span><span class="nc">ClassExistentialContainer</span><span class="w"> </span><span class="p">{</span>
+<pre><span class="kd">struct </span><span class="nc">ClassExistentialContainer</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">HeapObject</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">;</span>
 <span class="w">  </span><span class="n">WitnessTable</span><span class="w"> </span><span class="o">*</span><span class="n">witnessTables</span><span class="p">[</span><span class="n">NUM_WITNESS_TABLES</span><span class="p">];</span>
 <span class="p">};</span>
-</pre></div>
-</div>
+</pre>
 <p>Note that if no witness tables are needed, such as for the &#8220;any class&#8221; type
 <code class="docutils literal"><span class="pre">protocol&lt;class&gt;</span></code> or an Objective-C protocol type, then the only element of
 the layout is the heap object pointer. This is ABI-compatible with <code class="docutils literal"><span class="pre">id</span></code>
 and <code class="docutils literal"><span class="pre">id</span> <span class="pre">&lt;Protocol&gt;</span></code> types in Objective-C.</p>
-</div>
-</div>
-</div>
-<div class="section" id="type-metadata">
 <h2><a class="toc-backref" href="#id15">Type Metadata</a><a class="headerlink" href="#type-metadata" title="Permalink to this headline"></a></h2>
 <p>The Swift runtime keeps a <strong>metadata record</strong> for every type used in a program,
 including every instantiation of generic types. These metadata records can
@@ -305,7 +503,6 @@ record; two <strong>metadata pointer</strong> values are equal iff the types are
 metadata pointer as an index into an array of pointers. On a 32-bit platform,
 <strong>offset 1</strong> means an offset of 4 bytes, and on 64-bit platforms, it means
 an offset of 8 bytes.</p>
-<div class="section" id="common-metadata-layout">
 <h3><a class="toc-backref" href="#id16">Common Metadata Layout</a><a class="headerlink" href="#common-metadata-layout" title="Permalink to this headline"></a></h3>
 <p>All metadata records share a common header, with the following fields:</p>
 <ul>
@@ -339,8 +536,6 @@ from non-class kind values.</li>
 </ul>
 </li>
 </ul>
-</div>
-<div class="section" id="struct-metadata">
 <h3><a class="toc-backref" href="#id17">Struct Metadata</a><a class="headerlink" href="#struct-metadata" title="Permalink to this headline"></a></h3>
 <p>In addition to the <a class="reference internal" href="#common-metadata-layout">common metadata layout</a> fields, struct metadata records
 contain the following fields:</p>
@@ -361,8 +556,6 @@ beginning of the struct is stored as a pointer-sized integer.</p>
 number of fields in the struct.</p>
 </li>
 </ul>
-</div>
-<div class="section" id="enum-metadata">
 <h3><a class="toc-backref" href="#id18">Enum Metadata</a><a class="headerlink" href="#enum-metadata" title="Permalink to this headline"></a></h3>
 <p>In addition to the <a class="reference internal" href="#common-metadata-layout">common metadata layout</a> fields, enum metadata records
 contain the following fields:</p>
@@ -378,8 +571,6 @@ the enclosing type&#8217;s metadata. For top-level enums, this is null.</p>
 <a class="reference internal" href="#generic-parameter-vector">generic parameter vector</a> begins at <strong>offset 3</strong>.</p>
 </li>
 </ul>
-</div>
-<div class="section" id="tuple-metadata">
 <h3><a class="toc-backref" href="#id19">Tuple Metadata</a><a class="headerlink" href="#tuple-metadata" title="Permalink to this headline"></a></h3>
 <p>In addition to the <a class="reference internal" href="#common-metadata-layout">common metadata layout</a> fields, tuple metadata records
 contain the following fields:</p>
@@ -400,8 +591,6 @@ at <strong>offset 3+2*n</strong>. The offset in bytes from the beginning of the 
 the beginning of the <em>n</em>th element is at <strong>offset 3+2*n+1</strong>.</p>
 </li>
 </ul>
-</div>
-<div class="section" id="function-metadata">
 <h3><a class="toc-backref" href="#id20">Function Metadata</a><a class="headerlink" href="#function-metadata" title="Permalink to this headline"></a></h3>
 <p>In addition to the <a class="reference internal" href="#common-metadata-layout">common metadata layout</a> fields, function metadata records
 contain the following fields:</p>
@@ -427,8 +616,6 @@ the vector for the following cases:</p>
 </ul>
 </li>
 </ul>
-</div>
-<div class="section" id="protocol-metadata">
 <h3><a class="toc-backref" href="#id21">Protocol Metadata</a><a class="headerlink" href="#protocol-metadata" title="Permalink to this headline"></a></h3>
 <p>In addition to the <a class="reference internal" href="#common-metadata-layout">common metadata layout</a> fields, protocol metadata records
 contain the following fields:</p>
@@ -460,8 +647,6 @@ composition, or the single protocol descriptor for a protocol type. For
 an &#8220;any&#8221; type, there is no protocol descriptor vector.</p>
 </li>
 </ul>
-</div>
-<div class="section" id="metatype-metadata">
 <h3><a class="toc-backref" href="#id22">Metatype Metadata</a><a class="headerlink" href="#metatype-metadata" title="Permalink to this headline"></a></h3>
 <p>In addition to the <a class="reference internal" href="#common-metadata-layout">common metadata layout</a> fields, metatype metadata records
 contain the following fields:</p>
@@ -469,8 +654,6 @@ contain the following fields:</p>
 <li>A reference to the metadata record for the <strong>instance type</strong> that the metatype
 represents is stored at <strong>offset 1</strong>.</li>
 </ul>
-</div>
-<div class="section" id="class-metadata">
 <h3><a class="toc-backref" href="#id23">Class Metadata</a><a class="headerlink" href="#class-metadata" title="Permalink to this headline"></a></h3>
 <p>Class metadata is designed to interoperate with Objective-C; all class metadata
 records are also valid Objective-C <code class="docutils literal"><span class="pre">Class</span></code> objects. Class metadata pointers
@@ -550,8 +733,6 @@ statically from global variables, similar to Objective-C ivar offsets.)</p>
 the inheritance hierarchy.</p>
 </li>
 </ul>
-</div>
-<div class="section" id="generic-parameter-vector">
 <h3><a class="toc-backref" href="#id24">Generic Parameter Vector</a><a class="headerlink" href="#generic-parameter-vector" title="Permalink to this headline"></a></h3>
 <p>Metadata records for instances of generic types contain information about their
 generic parameters. For each parameter of the type, a reference to the metadata
@@ -562,24 +743,20 @@ protocol it is required to conform to is stored in declaration order.</p>
 <p>For example, given a generic type with the parameters <code class="docutils literal"><span class="pre">&lt;T,</span> <span class="pre">U,</span> <span class="pre">V&gt;</span></code>, its
 generic parameter record will consist of references to the metadata records
 for <code class="docutils literal"><span class="pre">T</span></code>, <code class="docutils literal"><span class="pre">U</span></code>, and <code class="docutils literal"><span class="pre">V</span></code> in succession, as if laid out in a C struct:</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="kd">struct </span><span class="nc">GenericParameterVector</span><span class="w"> </span><span class="p">{</span>
+<pre><span class="kd">struct </span><span class="nc">GenericParameterVector</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">TypeMetadata</span><span class="w"> </span><span class="o">*</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">V</span><span class="p">;</span>
 <span class="p">};</span>
-</pre></div>
-</div>
+</pre>
 <p>If we add protocol requirements to the parameters, for example,
 <code class="docutils literal"><span class="pre">&lt;T:</span> <span class="pre">Runcible,</span> <span class="pre">U:</span> <span class="pre">protocol&lt;Fungible,</span> <span class="pre">Ansible&gt;,</span> <span class="pre">V&gt;</span></code>, then the type&#8217;s generic
 parameter vector contains witness tables for those protocols, as if laid out:</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="kd">struct </span><span class="nc">GenericParameterVector</span><span class="w"> </span><span class="p">{</span>
+<pre><span class="kd">struct </span><span class="nc">GenericParameterVector</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">TypeMetadata</span><span class="w"> </span><span class="o">*</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">U</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">V</span><span class="p">;</span>
 <span class="w">  </span><span class="n">RuncibleWitnessTable</span><span class="w"> </span><span class="o">*</span><span class="n">T_Runcible</span><span class="p">;</span>
 <span class="w">  </span><span class="n">FungibleWitnessTable</span><span class="w"> </span><span class="o">*</span><span class="n">U_Fungible</span><span class="p">;</span>
 <span class="w">  </span><span class="n">AnsibleWitnessTable</span><span class="w"> </span><span class="o">*</span><span class="n">U_Ansible</span><span class="p">;</span>
 <span class="p">};</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="nominal-type-descriptor">
+</pre>
 <h3><a class="toc-backref" href="#id25">Nominal Type Descriptor</a><a class="headerlink" href="#nominal-type-descriptor" title="Permalink to this headline"></a></h3>
 <p>The metadata records for class, struct, and enum types contain a pointer to a
 <strong>nominal type descriptor</strong>, which contains basic information about the nominal
@@ -658,8 +835,6 @@ stored for the type parameter in the generic parameter vector.</li>
 </ul>
 <p>Note that there is no nominal type descriptor for protocols or protocol types.
 See the <a class="reference internal" href="#protocol-descriptor">protocol descriptor</a> description below.</p>
-</div>
-<div class="section" id="protocol-descriptor">
 <h3><a class="toc-backref" href="#id26">Protocol Descriptor</a><a class="headerlink" href="#protocol-descriptor" title="Permalink to this headline"></a></h3>
 <p><cite>Protocol metadata</cite> contains references to zero, one, or more <strong>protocol
 descriptors</strong> that describe the protocols values of the type are required to
@@ -714,26 +889,15 @@ initialization of the protocol record. It is unused by the Swift runtime.</li>
 </ul>
 </li>
 </ul>
-</div>
-</div>
-<div class="section" id="heap-objects">
 <h2><a class="toc-backref" href="#id27">Heap Objects</a><a class="headerlink" href="#heap-objects" title="Permalink to this headline"></a></h2>
-<div class="section" id="heap-metadata">
 <h3><a class="toc-backref" href="#id28">Heap Metadata</a><a class="headerlink" href="#heap-metadata" title="Permalink to this headline"></a></h3>
-</div>
-<div class="section" id="heap-object-header">
 <h3><a class="toc-backref" href="#id29">Heap Object Header</a><a class="headerlink" href="#heap-object-header" title="Permalink to this headline"></a></h3>
-</div>
-</div>
-<div class="section" id="mangling">
 <h2><a class="toc-backref" href="#id30">Mangling</a><a class="headerlink" href="#mangling" title="Permalink to this headline"></a></h2>
-<div class="highlight-swift"><div class="highlight"><pre>mangled-name ::= &#39;_T&#39; global
-</pre></div>
-</div>
+<pre>mangled-name ::= &#39;_T&#39; global
+</pre>
 <p>All Swift-mangled names begin with this prefix.</p>
-<div class="section" id="globals">
 <h3><a class="toc-backref" href="#id31">Globals</a><a class="headerlink" href="#globals" title="Permalink to this headline"></a></h3>
-<div class="highlight-swift"><div class="highlight"><pre>global ::= &#39;t&#39; type                    // standalone type (for DWARF)
+<pre>global ::= &#39;t&#39; type                    // standalone type (for DWARF)
 global ::= &#39;M&#39; type                    // type metadata (address point)
                                        // -- type starts with [BCOSTV]
 global ::= &#39;Mf&#39; type                   // &#39;full&#39; type metadata (start of object)
@@ -818,8 +982,7 @@ addressor-kind ::= &#39;u&#39;                 // unsafe addressor (no owner)
 addressor-kind ::= &#39;O&#39;                 // owning addressor (non-native owner)
 addressor-kind ::= &#39;o&#39;                 // owning addressor (native owner)
 addressor-kind ::= &#39;p&#39;                 // pinning addressor (native owner)
-</pre></div>
-</div>
+</pre>
 <p>An <code class="docutils literal"><span class="pre">entity</span></code> starts with a <code class="docutils literal"><span class="pre">nominal-type-kind</span></code> (<code class="docutils literal"><span class="pre">[COPV]</span></code>), a
 substitution (<code class="docutils literal"><span class="pre">[Ss]</span></code>) of a nominal type, or an <code class="docutils literal"><span class="pre">entity-kind</span></code>
 (<code class="docutils literal"><span class="pre">[FIiv]</span></code>).</p>
@@ -843,13 +1006,10 @@ within the enclosing module. The second identifier is the name of the entity.</p
 identify the entity, the simple <code class="docutils literal"><span class="pre">identifier</span></code> form is preferred.</p>
 <p>The types in a <code class="docutils literal"><span class="pre">&lt;reabstract-signature&gt;</span></code> are always non-polymorphic
 <code class="docutils literal"><span class="pre">&lt;impl-function-type&gt;</span></code> types.</p>
-</div>
-<div class="section" id="direct-and-indirect-symbols">
 <h3><a class="toc-backref" href="#id32">Direct and Indirect Symbols</a><a class="headerlink" href="#direct-and-indirect-symbols" title="Permalink to this headline"></a></h3>
-<div class="highlight-swift"><div class="highlight"><pre>directness ::= &#39;d&#39;                         // direct
+<pre>directness ::= &#39;d&#39;                         // direct
 directness ::= &#39;i&#39;                         // indirect
-</pre></div>
-</div>
+</pre>
 <p>A direct symbol resolves directly to the address of an object.  An
 indirect symbol resolves to the address of a pointer to the object.
 They are distinct manglings to make a certain class of bugs
@@ -863,10 +1023,8 @@ resilient structure.  When the layout of the object may depend on
 generic arguments, these offsets must be kept in metadata.  Indirect
 field offsets are therefore required when accessing fields in generic
 types where the metadata itself has unknown layout.)</p>
-</div>
-<div class="section" id="declaration-contexts">
 <h3><a class="toc-backref" href="#id33">Declaration Contexts</a><a class="headerlink" href="#declaration-contexts" title="Permalink to this headline"></a></h3>
-<div class="highlight-swift"><div class="highlight"><pre>context ::= module
+<pre>context ::= module
 context ::= extension
 context ::= entity
 module ::= substitution                    // other substitution
@@ -874,8 +1032,7 @@ module ::= identifier                      // module name
 module ::= known-module                    // abbreviation
 extension ::= &#39;E&#39; module entity
 extension ::= &#39;e&#39; module generic-signature entity
-</pre></div>
-</div>
+</pre>
 <p>These manglings identify the enclosing context in which an entity was declared,
 such as its enclosing module, function, or nominal type.</p>
 <p>An <code class="docutils literal"><span class="pre">extension</span></code> mangling is used whenever an entity&#8217;s declaration context is
@@ -886,10 +1043,8 @@ plain <code class="docutils literal"><span class="pre">entity</span></code> mang
 constraints on the extension are mangled in its generic signature.</p>
 <p>When mangling the context of a local entity within a constructor or
 destructor, the non-allocating or non-deallocating variant is used.</p>
-</div>
-<div class="section" id="types">
 <h3><a class="toc-backref" href="#id34">Types</a><a class="headerlink" href="#types" title="Permalink to this headline"></a></h3>
-<div class="highlight-swift"><div class="highlight"><pre>type ::= &#39;Bb&#39;                              // Builtin.BridgeObject
+<pre>type ::= &#39;Bb&#39;                              // Builtin.BridgeObject
 type ::= &#39;BB&#39;                              // Builtin.UnsafeValueBuffer
 type ::= &#39;Bf&#39; natural &#39;_&#39;                  // Builtin.Float&lt;n&gt;
 type ::= &#39;Bi&#39; natural &#39;_&#39;                  // Builtin.Int&lt;n&gt;
@@ -955,8 +1110,7 @@ type ::= &#39;W&#39; generic-param-index assoc-type-name+ &#39;_&#39; // associa
 generic-param-index ::= &#39;x&#39;                // depth = 0,   idx = 0
 generic-param-index ::= index              // depth = 0,   idx = N+1
 generic-param-index ::= &#39;d&#39; index index    // depth = M+1, idx = N
-</pre></div>
-</div>
+</pre>
 <p><code class="docutils literal"><span class="pre">&lt;type&gt;</span></code> never begins or ends with a number.
 <code class="docutils literal"><span class="pre">&lt;type&gt;</span></code> never begins with an underscore.
 <code class="docutils literal"><span class="pre">&lt;type&gt;</span></code> never begins with <code class="docutils literal"><span class="pre">d</span></code>.
@@ -965,16 +1119,15 @@ generic-param-index ::= &#39;d&#39; index index    // depth = M+1, idx = N
 context always consists of a single protocol name and so mangles without a
 trailing underscore. A protocol type can have zero, one, or many protocol bounds
 which are juxtaposed and terminated with a trailing underscore.</p>
-<div class="highlight-swift"><div class="highlight"><pre>assoc-type-name ::= (&#39;P&#39; protocol-name)? identifier
+<pre>assoc-type-name ::= (&#39;P&#39; protocol-name)? identifier
 assoc-type-name ::= substitution
-</pre></div>
-</div>
+</pre>
 <p>Associated types use an abbreviated mangling when the base generic parameter
 or associated type is constrained by a single protocol requirement. The
 associated type in this case can be referenced unambiguously by name alone.
 If the base has multiple conformance constraints, then the protocol name is
 mangled in to disambiguate.</p>
-<div class="highlight-swift"><div class="highlight"><pre>impl-function-type ::=
+<pre>impl-function-type ::=
   impl-callee-convention impl-function-attribute* generic-signature? &#39;_&#39;
   impl-parameter* &#39;_&#39; impl-result* &#39;_&#39;
 impl-callee-convention ::= &#39;t&#39;              // thin
@@ -1000,8 +1153,7 @@ impl-function-attribute ::= &#39;G&#39;             // generic
 impl-function-attribute ::= &#39;g&#39;             // pseudogeneric
 impl-parameter ::= impl-convention type
 impl-result ::= impl-convention type
-</pre></div>
-</div>
+</pre>
 <p>For the most part, manglings follow the structure of formal language
 types.  However, in some cases it is more useful to encode the exact
 implementation details of a function type.</p>
@@ -1011,22 +1163,18 @@ mangled with <code class="docutils literal"><span class="pre">CcN</span></code>.
 of a generic signature immediately following.</p>
 <p>Note that the convention and function-attribute productions do not
 need to be disambiguated from the start of a <code class="docutils literal"><span class="pre">&lt;type&gt;</span></code>.</p>
-</div>
-<div class="section" id="generics">
 <h3><a class="toc-backref" href="#id35">Generics</a><a class="headerlink" href="#generics" title="Permalink to this headline"></a></h3>
-<div class="highlight-swift"><div class="highlight"><pre>protocol-conformance ::= (&#39;u&#39; generic-signature)? type protocol module
-</pre></div>
-</div>
+<pre>protocol-conformance ::= (&#39;u&#39; generic-signature)? type protocol module
+</pre>
 <p><code class="docutils literal"><span class="pre">&lt;protocol-conformance&gt;</span></code> refers to a type&#8217;s conformance to a protocol. The
 named module is the one containing the extension or type declaration that
 declared the conformance.</p>
-<div class="highlight-swift"><div class="highlight"><pre>// Property behavior conformance
+<pre>// Property behavior conformance
 protocol-conformance ::= (&#39;u&#39; generic-signature)?
                          &#39;b&#39; identifier context identifier protocol
-</pre></div>
-</div>
+</pre>
 <p>Property behaviors are implemented using private protocol conformances.</p>
-<div class="highlight-swift"><div class="highlight"><pre>generic-signature ::= (generic-param-count+)? (&#39;R&#39; requirement*)? &#39;r&#39;
+<pre>generic-signature ::= (generic-param-count+)? (&#39;R&#39; requirement*)? &#39;r&#39;
 generic-param-count ::= &#39;z&#39;       // zero parameters
 generic-param-count ::= index     // N+1 parameters
 requirement ::= type-param protocol-name // protocol requirement
@@ -1039,21 +1187,17 @@ requirement ::= type-param &#39;z&#39; type      // &#39;z&#39;ame-type requirem
 type-param ::= generic-param-index       // generic parameter
 type-param ::= &#39;w&#39; generic-param-index assoc-type-name // associated type
 type-param ::= &#39;W&#39; generic-param-index assoc-type-name+ &#39;_&#39;
-</pre></div>
-</div>
+</pre>
 <p>A generic signature begins by describing the number of generic parameters at
 each depth of the signature, followed by the requirements. As a special case,
 no <code class="docutils literal"><span class="pre">generic-param-count</span></code> values indicates a single generic parameter at
 the outermost depth:</p>
-<div class="highlight-swift"><div class="highlight"><pre><span class="n">urFq_q_</span><span class="w">                           </span><span class="c1">// &lt;T_0_0&gt; T_0_0 -&gt; T_0_0</span>
+<pre><span class="n">urFq_q_</span><span class="w">                           </span><span class="c1">// &lt;T_0_0&gt; T_0_0 -&gt; T_0_0</span>
 <span class="n">u_0_rFq_qd_0_</span><span class="w">                     </span><span class="c1">// &lt;T_0_0&gt;&lt;T_1_0, T_1_1&gt; T_0_0 -&gt; T_1_1</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="value-witnesses">
+</pre>
 <h3><a class="toc-backref" href="#id36">Value Witnesses</a><a class="headerlink" href="#value-witnesses" title="Permalink to this headline"></a></h3>
 <p>TODO: document these</p>
-<div class="highlight-swift"><div class="highlight"><pre>value-witness-kind ::= &#39;al&#39;           // allocateBuffer
+<pre>value-witness-kind ::= &#39;al&#39;           // allocateBuffer
 value-witness-kind ::= &#39;ca&#39;           // assignWithCopy
 value-witness-kind ::= &#39;ta&#39;           // assignWithTake
 value-witness-kind ::= &#39;de&#39;           // deallocateBuffer
@@ -1075,14 +1219,11 @@ value-witness-kind ::= &#39;tT&#39;           // initializeArrayWithTakeBackToFr
 value-witness-kind ::= &#39;ug&#39;           // getEnumTag
 value-witness-kind ::= &#39;up&#39;           // destructiveProjectEnumData
 value-witness-kind ::= &#39;ui&#39;           // destructiveInjectEnumTag
-</pre></div>
-</div>
+</pre>
 <p><code class="docutils literal"><span class="pre">&lt;value-witness-kind&gt;</span></code> differentiates the kinds of value
 witness functions for a type.</p>
-</div>
-<div class="section" id="identifiers">
 <h3><a class="toc-backref" href="#id37">Identifiers</a><a class="headerlink" href="#identifiers" title="Permalink to this headline"></a></h3>
-<div class="highlight-swift"><div class="highlight"><pre>identifier ::= natural identifier-start-char identifier-char*
+<pre>identifier ::= natural identifier-start-char identifier-char*
 identifier ::= &#39;o&#39; operator-fixity natural operator-char+
 
 operator-fixity ::= &#39;p&#39;                    // prefix operator
@@ -1105,16 +1246,14 @@ operator-char ::= &#39;s&#39;                      // - &#39;subtract&#39;
 operator-char ::= &#39;t&#39;                      // ~ &#39;tilde&#39;
 operator-char ::= &#39;x&#39;                      // ^ &#39;xor&#39;
 operator-char ::= &#39;z&#39;                      // . &#39;zperiod&#39;
-</pre></div>
-</div>
+</pre>
 <p><code class="docutils literal"><span class="pre">&lt;identifier&gt;</span></code> is run-length encoded: the natural indicates how many
 characters follow.  Operator characters are mapped to letter characters as
 given. In neither case can an identifier start with a digit, so
 there&#8217;s no ambiguity with the run-length.</p>
-<div class="highlight-swift"><div class="highlight"><pre>identifier ::= &#39;X&#39; natural identifier-start-char identifier-char*
+<pre>identifier ::= &#39;X&#39; natural identifier-start-char identifier-char*
 identifier ::= &#39;X&#39; &#39;o&#39; operator-fixity natural identifier-char*
-</pre></div>
-</div>
+</pre>
 <p>Identifiers that contain non-ASCII characters are encoded using the Punycode
 algorithm specified in RFC 3492, with the modifications that <code class="docutils literal"><span class="pre">_</span></code> is used
 as the encoding delimiter, and uppercase letters A through J are used in place
@@ -1130,12 +1269,9 @@ Punycode-encoding the substituted string. The mangling then consists of
 string itself. For example, the infix operator <code class="docutils literal"><span class="pre">«+»</span></code> is mangled to
 <code class="docutils literal"><span class="pre">Xoi7p_qcaDc</span></code> (<code class="docutils literal"><span class="pre">p_qcaDc</span></code> being the encoding of the substituted
 string <code class="docutils literal"><span class="pre">«p»</span></code>).</p>
-</div>
-<div class="section" id="substitutions">
 <h3><a class="toc-backref" href="#id38">Substitutions</a><a class="headerlink" href="#substitutions" title="Permalink to this headline"></a></h3>
-<div class="highlight-swift"><div class="highlight"><pre>substitution ::= &#39;S&#39; index
-</pre></div>
-</div>
+<pre>substitution ::= &#39;S&#39; index
+</pre>
 <p><code class="docutils literal"><span class="pre">&lt;substitution&gt;</span></code> is a back-reference to a previously mangled entity. The mangling
 algorithm maintains a mapping of entities to substitution indices as it runs.
 When an entity that can be represented by a substitution (a module, nominal
@@ -1159,15 +1295,12 @@ third argument type will mangle using the substitution for <code class="docutils
 if it mangled again.) The result type will mangle using the substitution for
 <code class="docutils literal"><span class="pre">zim.zang</span></code>, <code class="docutils literal"><span class="pre">CS0_3zoo</span></code> (and acquire substitution <code class="docutils literal"><span class="pre">S3_</span></code>). The full
 function type thus mangles as <code class="docutils literal"><span class="pre">fTCC3zim4zang4zungS1_CS_7zippity_CS0_3zoo</span></code>.</p>
-<div class="highlight-swift"><div class="highlight"><pre>substitution ::= &#39;s&#39;
-</pre></div>
-</div>
+<pre>substitution ::= &#39;s&#39;
+</pre>
 <p>The special substitution <code class="docutils literal"><span class="pre">s</span></code> is used for the <code class="docutils literal"><span class="pre">Swift</span></code> standard library
 module.</p>
-</div>
-<div class="section" id="predefined-substitutions">
 <h3><a class="toc-backref" href="#id39">Predefined Substitutions</a><a class="headerlink" href="#predefined-substitutions" title="Permalink to this headline"></a></h3>
-<div class="highlight-swift"><div class="highlight"><pre>known-module ::= &#39;s&#39;                       // Swift
+<pre>known-module ::= &#39;s&#39;                       // Swift
 known-module ::= &#39;SC&#39;                      // C
 known-module ::= &#39;So&#39;                      // Objective-C
 known-nominal-type ::= &#39;Sa&#39;                // Swift.Array
@@ -1184,28 +1317,24 @@ known-nominal-type ::= &#39;SR&#39;                // Swift.UnsafeBufferPointer
 known-nominal-type ::= &#39;Sr&#39;                // Swift.UnsafeMutableBufferPointer
 known-nominal-type ::= &#39;SS&#39;                // Swift.String
 known-nominal-type ::= &#39;Su&#39;                // Swift.UInt
-</pre></div>
-</div>
+</pre>
 <p><code class="docutils literal"><span class="pre">&lt;known-module&gt;</span></code> and <code class="docutils literal"><span class="pre">&lt;known-nominal-type&gt;</span></code> are built-in substitutions for
 certain common entities.  Like any other substitution, they all start
 with &#8216;S&#8217;.</p>
 <p>The Objective-C module is used as the context for mangling Objective-C
 classes as <code class="docutils literal"><span class="pre">&lt;type&gt;</span></code>s.</p>
-</div>
-<div class="section" id="indexes">
 <h3><a class="toc-backref" href="#id40">Indexes</a><a class="headerlink" href="#indexes" title="Permalink to this headline"></a></h3>
-<div class="highlight-swift"><div class="highlight"><pre>index ::= &#39;_&#39;                              // 0
+<pre>index ::= &#39;_&#39;                              // 0
 index ::= natural &#39;_&#39;                      // N+1
 natural ::= [0-9]+
-</pre></div>
-</div>
+</pre>
 <p><code class="docutils literal"><span class="pre">&lt;index&gt;</span></code> is a production for encoding numbers in contexts that can&#8217;t
 end in a digit; it&#8217;s optimized for encoding smaller numbers.</p>
-</div>
+
 <hr />
+
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</div>
 ]]></content>
   </entry>
   
@@ -7286,879 +7415,6 @@ C++11标准已经支持了闭包，这是一种特殊的函数对象，由特殊
 
 <p>最后再总结一下，整个推送流程我觉得是这样子的，先注册推送，然后推送消息，客户端接收推送消息，执行推送行为。如果有错误，还请在文章下面评论，欢迎指正。</p>
 <p><img src="http://ww2.sinaimg.cn/large/626e5d69gw1ehyg8u1o51j21ea0qkmz1.jpg" alt="推送的流程" /></p>
-
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[使用VIPER构建iOS应用]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/"/>
-    <updated>2014-06-20T09:00:36+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong</id>
-    <content type="html"><![CDATA[<script type="text/javascript">
-    var wumiiPermaLink = ""; //请用代码生成文章永久的链接
-    var wumiiTitle = ""; //请用代码生成文章标题
-    var wumiiTags = ""; //请用代码生成文章标签，以英文逗号分隔，如："标签1,标签2"
-    var wumiiCategories = []; //请用代码生成文章分类，分类名放在 JSONArray 中，如: ["分类1", "分类2"]
-    var wumiiSitePrefix = "http://itmonkeylife.github.io/Blog/";
-    var wumiiParams = "&num=5&mode=3&pf=JAVASCRIPT";
-</script>
-
-<script type="text/javascript" src="http://widget.wumii.cn/ext/relatedItemsWidget"></script>
-
-<p><a href="http://www.wumii.com/widget/relatedItems" style="border:0;">
-    <img src="http://static.wumii.cn/images/pixel.png" alt="无觅关联推荐，快速提升流量" style="border:0;padding:0;margin:0;" />
-</a></p>
-
-<p>建筑领域流行这样一句话，“我们虽然在营造建筑，但建筑也会重新塑造我们”。正如所有开发者最终领悟到的，这句话同样适用于构建软件。</p>
-
-<p>编写代码中至关重要的是，需要使每一部分容易被识别，赋有一个特定而明显的目的，并与其他部分在逻辑关系中完美契合。这就是我们所说的软件架构。好的架构不仅让一个产品成功投入使用，还可以让产品具有可维护性，并让人不断头脑清醒的对它进行维护！</p>
-<!-- more -->
-<p>在这篇文章中，我们介绍了一种称之为 <a href="http://mutualmobile.github.io/blog/2013/12/04/viper-introduction/">VIPER</a> 的 iOS 应用架构的方式。VIPER 已经在很多大型的项目上成功实践，但是出于本文的目的我们将通过一个待办事项清单 (to-do app) 来介绍 VIPER 。你可以在 <a href="https://github.com/objcio/issue-13-viper">GitHub</a> 上关注这个项目。</p>
-
-<p><video style="display:block;max-width:316px;height:auto;border:0;" poster="/issue-13/2014-06-07-viper-screenshot.png" controls="1"> <br />
-  <source src="http://img.objccn.io//issue-13/2014-06-07-viper-preview.mp4" />
-</video></p>
-
-<h2 id="viper">什么是 VIPER？</h2>
-
-<p>测试永远不是构建 iOS 应用的主要部分。当我们 (<a href="https://github.com/mutualmobile/">Mutual Mobile</a>) 着手改善我们的测试实践时，我们发现给 iOS 应用写测试代码非常困难。因此如果想要设法改变测试的现状，我们首先需要一个更好的方式来架构应用，我们称之为 VIPER。</p>
-
-<p>VIPER 是一个创建 iOS 应用<a href="http://blog.8thlight.com/uncle-bob/2012/08/13/the-clean-architecture.html">简明构架</a>的程序。VIPER 可以是视图 (View)，交互器 (Interactor)，展示器 (Presenter)，实体 (Entity) 以及路由 (Routing) 的首字母缩写。简明架构将一个应用程序的逻辑结构划分为不同的责任层。这使得它更容易隔离依赖项 (如数据库)，也更容易测试各层间的边界处的交互：</p>
-
-<p><img alt="VIPER stands for View Interactor Presenter Entity Routing." src="http://img.objccn.io/issue-13/2014-06-07-viper-intro.jpg" /></p>
-
-<p>大部分 iOS 应用利用 MVC 构建，使用 MVC 应用程序架构可以引导你将每一个类看做模型，视图或控制器中的一个。但由于大部分应用程序的逻辑不会存在于模型或视图中，所以通常最终总是在控制器里实现。这就导致一个称为<a href="https://twitter.com/Colin_Campbell/status/293167951132098560">重量级视图控制器</a>的问题，在这里，视图控制器做了太多工作。为这些重量级视图控制器<a href="http://www.objc.io/issue-1/lighter-view-controllers.html">瘦身</a>并不是 iOS 开发者寻求提高代码的质量所要面临的唯一挑战，但至少这是一个很好的开端。</p>
-
-<p>VIPER 的不同层提供了明确的程序逻辑以及导航控制代码来应对这个挑战，利用 VIPER ，你会注意到在我们的待办事项示例清单中的视图控制器可以简洁高效，意义明确地控制视图。你也会发现视图控制器中代码和所有的其他类很容易理解，容易测试，理所当然也更易维护。</p>
-
-<h2>基于用例的应用设计</h2>
-
-<p>应用通常是一些用户用例的集合。用例也被称为验收标准，或行为集，它们用来描述应用的用途。清单可以根据时间，类型以及名字排序，这就是一个用例。用例是应用程序中用来负责业务逻辑的一层，应独立于用户界面的实现，同时要足够小，并且有良好的定义。决定如何将一个复杂的应用分解成较小的用例非常具有挑战性，并且需要长期实践，但这对于缩小你解决的问题时所要面临的范围及完成的每个类的所要涉及的内容来说，是很有帮助的。</p>
-
-<p>利用 VIPER 建立一个应用需要实施一组套件来满足所有的用例，应用逻辑是实现用例的主要组成部分，但却不是唯一。用例也会影响用户界面。另一个重要的方面，是要考虑用例如何与其他应用程序的核心组件相互配合，例如网络和数据持久化。组件就好比用例的插件，VIPER 则用来描述这些组件的作用是什么，如何进行交互。</p>
-
-<p>我们其中一个用例，或者说待办事项清单中其中的一个需求是可以基于用户的选择来将待办事项分组。通过分离的逻辑将数据组织成一个用例，我们能够在测试时使用户界面代码保持干净，用例更易组装，从而确保它如我们预期的方式工作。</p>
-
-<h2 id="viper">VIPER 的主要部分</h2>
-
-<p>VIPER 的主要部分是：</p>
-
-<ul>
-<li>视图：根据展示器的要求显示界面，并将用户输入反馈给展示器。</li>
-<li>交互器：包含由用例指定的业务逻辑。</li>
-<li>展示器：包含为显示（从交互器接受的内容）做的准备工作的相关视图逻辑，并对用户输入进行反馈（从交互器获取新数据）。</li>
-<li>实体：包含交互器要使用的基本模型对象。</li>
-<li>路由：包含用来描述屏幕显示和显示顺序的导航逻辑。</li>
-</ul>
-
-<p>这种分隔形式同样遵循<a href="http://www.objectmentor.com/resources/articles/srp.pdf">单一责任原则</a>。交互器负责业务分析的部分，展示器代表交互设计师，而视图相当于视觉设计师。</p>
-
-<p>以下则是不同组件的相关图解，并展示了他们之间是如何关联的：</p>
-
-<p><img alt="VIPER breaks down an app into different components based around use cases, including components that create the user interface and the logic that powers it." src="http://img.objccn.io/issue-13/2014-06-07-viper-wireframe.png" /></p>
-
-<p>虽然在应用中 VIPER 的组件可以以任意顺序实现，我们在这里选择按照我们推荐的顺序来进行介绍。你会注意到这个顺序与构建整个应用的进程大致符合 &#8211; 首先要讨论的是产品需要做什么，以及用户会如何与之交互。</p>
-
-<h3>交互器</h3>
-
-<p>交互器在应用中代表着一个独立的用例。它具有业务逻辑以操纵模型对象（实体）执行特定的任务。交互器中的工作应当独立与任何用户界面，同样的交互器可以同时运用于 iOS 应用或者 OS X 应用中。</p>
-
-<p>由于交互器是一个 PONSO (Plain Old <code>NSObject</code>，普通的 <code>NSObject</code>)，它主要包含了逻辑，因此很容易使用 TDD 进行开发。</p>
-
-<p>示例应用的主要用例是向用户展示所有的待办事项（比如任何截止于下周末的任务）。此类用例的业务逻辑主要是找出今天至下周末之间将要到期的待办事项，然后为它们分配一个相对的截止日期，比如今天，明天，本周以内，或者下周。</p>
-
-<p>以下是来自 VTDListInteractor 的对应方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">findUpcomingItems</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">__weak</span> <span class="n">typeof</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="n">welf</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line">    <span class="n">NSDate</span><span class="o">*</span> <span class="n">today</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">clock</span> <span class="n">today</span><span class="p">];</span>
-</span><span class="line">    <span class="n">NSDate</span><span class="o">*</span> <span class="n">endOfNextWeek</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSCalendar</span> <span class="n">currentCalendar</span><span class="p">]</span> <span class="nl">dateForEndOfFollowingWeekWithDate:</span><span class="n">today</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dataManager</span> <span class="nl">todoItemsBetweenStartDate:</span><span class="n">today</span> <span class="nl">endDate:</span><span class="n">endOfNextWeek</span> <span class="nl">completionBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">NSArray</span><span class="o">*</span> <span class="n">todoItems</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">welf</span><span class="p">.</span><span class="n">output</span> <span class="nl">foundUpcomingItems:</span><span class="p">[</span><span class="n">welf</span> <span class="nl">upcomingItemsFromToDoItems:</span><span class="n">todoItems</span><span class="p">]];</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>实体</h3>
-
-<p>实体是被交互器操作的模型对象，并且它们只被交互器所操作。交互器永远不会传输实体至表现层 (比如说展示器)。</p>
-
-<p>实体也应该是 PONSOs。如果你使用 Core Data，最好是将托管对象保持在你的数据层之后，交互器不应与 NSManageObjects 协同工作。</p>
-
-<p>这里是我们的待办事项服务的实体：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">VTDTodoItem</span> : <span class="nc">NSObject</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span>   <span class="n">NSDate</span><span class="o">*</span>     <span class="n">dueDate</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span>     <span class="n">NSString</span><span class="o">*</span>   <span class="n">name</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">todoItemWithDueDate:</span><span class="p">(</span><span class="n">NSDate</span><span class="o">*</span><span class="p">)</span><span class="nv">dueDate</span> <span class="nf">name:</span><span class="p">(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">name</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>不要诧异于你的实体仅仅是数据结构，任何依赖于应用的逻辑都应该放到交互器中。</p>
-
-<h3>展示器</h3>
-
-<p>展示器是一个主要包含了驱动用户界面的逻辑的 PONSO，它总是知道何时呈现用户界面。基于其收集来自用户交互的输入功能，它可以在合适的时候更新用户界面并向交互器发送请求。</p>
-
-<p>当用户点击 “+” 键新建待办事项时，<code>addNewEntry</code> 被调用。对于此项操作，展示器会要求 <code>wireframe</code> 显示用户界面以增加新项目：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addNewEntry</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">listWireframe</span> <span class="n">presentAddInterface</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>展示器还会从交互器接收结果并将结果转换成能够在视图中有效显示的形式。</p>
-
-<p>下面是如何从交互器接受待办事项的过程，其中包含了处理数据的过程并决定展现给用户哪些内容：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">foundUpcomingItems:</span><span class="p">(</span><span class="n">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nv">upcomingItems</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">upcomingItems</span> <span class="n">count</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class="line">    <span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">userInterface</span> <span class="n">showNoContentMessage</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">else</span>
-</span><span class="line">    <span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">updateUserInterfaceWithUpcomingItems:</span><span class="n">upcomingItems</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>实体永远不会由交互器传输给展示器，取而代之，那些无行为的简单数据结构会从交互器传输到展示器那里。这就防止了那些“真正的工作”在展示器那里进行，展示器只能负责准备那些在视图里显示的数据。</p>
-
-<h3>视图</h3>
-
-<p>视图一般是被动的，它通常等待展示器下发需要显示的内容，而不会向其索取数据。视图（例如登录界面的登录视图控件）所定义的方法应该允许展示器在高度抽象的层次与之交流。展示器通过内容进行表达，而不关心那些内容所显示的样子。展示器不知道 <code>UILabel</code>，<code>UIButton</code> 等的存在，它只知道其中包含的内容以及何时需要显示。内容如何被显示是由视图来进行控制的。</p>
-
-<p>视图是一个抽象的接口 (Interface)，在 Objective-C 中使用协议被定义。一个 <code>UIViewController</code> 或者它的一个子类会实现视图协议。比如我们的示例中 “添加” 界面会有以下接口：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddViewInterface</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">setEntryName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="n">name</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setEntryDueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">date</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>视图和视图控制器同样会操纵用户界面和相关输入。因为通常来说视图控制器是最容易处理这些输入和执行某些操作的地方，所以也就不难理解为什么视图控制器总是这么大了。为了使视图控制器保持苗条，我们需要使它们在用户进行相关操作的时候可以有途径来通知相关部分。视图控制器不应当根据这些行为进行相关决定，但是它应当将发生的事件传递到能够做决定的部分。</p>
-
-<p>在我们的例子中，Add View Controller 有一个事件处理的属性，它实现了如下接口：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddModuleInterface</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">cancelAddAction</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">saveAddActionWithName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">name</span> <span class="nf">dueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">dueDate</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>当用户点击取消键的时候，视图控制器告知这个事件处理程序用户需要其取消这次添加的动作。这样一来，事件处理程序便可以处理关闭 add view controller 并告知列表视图进行更新。</p>
-
-<p>视图和展示器之间边界处是一个使用 <a href="https://github.com/ReactiveCocoa/ReactiveCocoa">ReactiveCocoa</a> 的好地方。在这个示例中，视图控制器可以返回一个代表按钮操作的信号。这将允许展示器在不打破职责分离的前提下轻松地对那些信号进行响应。</p>
-
-<h3>路由</h3>
-
-<p>屏幕间的路径会在交互设计师创建的线框 (wireframes) 里进行定义。在 VIPER 中，路由是由两个部分来负责的：展示器和线框。一个线框对象包括 <code>UIWindow</code>，<code>UINavigationController</code>，<code>UIViewController</code> 等部分，它负责创建视图/视图控制器并将其装配到窗口中。</p>
-
-<p>由于展示器包含了响应用户输入的逻辑，因此它就拥有知晓何时导航至另一个屏幕以及具体是哪一个屏幕的能力。而同时，线框知道如何进行导航。在两者结合起来的情况下，展示器可以使用线框来进行实现导航功能，它们两者一起描述了从一个屏幕至另一个屏幕的路由过程。</p>
-
-<p>线框同时也明显是一个处理导航转场动画的地方。来看看这个 add wireframe 中的例子吧：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">VTDAddWireframe</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">presentAddInterfaceFromViewController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">viewController</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">VTDAddViewController</span> <span class="o">*</span><span class="n">addViewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">addViewController</span><span class="p">];</span>
-</span><span class="line">    <span class="n">addViewController</span><span class="p">.</span><span class="n">eventHandler</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">addPresenter</span><span class="p">;</span>
-</span><span class="line">    <span class="n">addViewController</span><span class="p">.</span><span class="n">modalPresentationStyle</span> <span class="o">=</span> <span class="n">UIModalPresentationCustom</span><span class="p">;</span>
-</span><span class="line">    <span class="n">addViewController</span><span class="p">.</span><span class="n">transitioningDelegate</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="p">[</span><span class="n">viewController</span> <span class="nl">presentViewController:</span><span class="n">addViewController</span> <span class="nl">animated:</span><span class="n">YES</span> <span class="nl">completion:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">presentedViewController</span> <span class="o">=</span> <span class="n">viewController</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="cp">#pragma mark - UIViewControllerTransitioningDelegate Methods</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">UIViewControllerAnimatedTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nf">animationControllerForDismissedController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">dismissed</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">VTDAddDismissalTransition</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">UIViewControllerAnimatedTransitioning</span><span class="o">&gt;</span><span class="p">)</span><span class="nf">animationControllerForPresentedController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">presented</span>
-</span><span class="line">                                                                  <span class="nf">presentingController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">presenting</span>
-</span><span class="line">                                                                      <span class="nf">sourceController:</span><span class="p">(</span><span class="n">UIViewController</span> <span class="o">*</span><span class="p">)</span><span class="nv">source</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">VTDAddPresentationTransition</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>应用使用了自定义的视图控制器转场来呈现 add view controller。因为线框部件负责实施这个转场，所以它成为了 add view controller 转场的委托，并且返回适当的转场动画。</p>
-
-<h2 id="viper">利用 VIPER 组织应用组件</h2>
-
-<p>iOS 应用的构架需要考虑到 UIKit 和 Cocoa Touch 是建立应用的主要工具。架构需要和应用的所有组件都能够和平相处，但又需要为如何使用框架的某些部分以及它们应该在什么位置提供一些指导和建议。</p>
-
-<p>iOS 应用程序的主力是 <code>UIViewController</code>，我们不难想象找一个竞争者来取代 MVC 就可以避免大量使用视图控制器。但是视图控制器现在是这个平台的核心：它们处理设备方向的变化，回应用户的输入，和类似导航控制器之类的系统系统组件集成得很好，而现在在 iOS 7 中又能实现自定义屏幕之间的转换，功能实在是太强大了。</p>
-
-<p>有了 VIPER，视图控制器便就能真正的做它本来应该做的事情了，那就是控制视图。 我们的待办事项应拥有两个视图控制器，一个是列表视图，另一个是新建待办。因为 add view controller 要做的所有事情就是控制视图，所以实现起来非常的简单基础：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">VTDAddViewController</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">animated</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">viewDidAppear:</span><span class="n">animated</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">UITapGestureRecognizer</span> <span class="o">*</span><span class="n">gestureRecognizer</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UITapGestureRecognizer</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithTarget:</span><span class="n">self</span>
-</span><span class="line">                                                                                        <span class="nl">action:</span><span class="k">@selector</span><span class="p">(</span><span class="n">dismiss</span><span class="p">)];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">transitioningBackgroundView</span> <span class="nl">addGestureRecognizer:</span><span class="n">gestureRecognizer</span><span class="p">];</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">transitioningBackgroundView</span><span class="p">.</span><span class="n">userInteractionEnabled</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dismiss</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">eventHandler</span> <span class="n">cancelAddAction</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setEntryName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">name</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">nameTextField</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">name</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setEntryDueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">date</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">datePicker</span> <span class="nl">setDate:</span><span class="n">date</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">save:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">eventHandler</span> <span class="nl">saveAddActionWithName:</span><span class="n">self</span><span class="p">.</span><span class="n">nameTextField</span><span class="p">.</span><span class="n">text</span>
-</span><span class="line">                                     <span class="nl">dueDate:</span><span class="n">self</span><span class="p">.</span><span class="n">datePicker</span><span class="p">.</span><span class="n">date</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">cancel:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">sender</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">eventHandler</span> <span class="n">cancelAddAction</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line">
-</span><span class="line"><span class="cp">#pragma mark - UITextFieldDelegate Methods</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">textFieldShouldReturn:</span><span class="p">(</span><span class="n">UITextField</span> <span class="o">*</span><span class="p">)</span><span class="nv">textField</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">textField</span> <span class="n">resignFirstResponder</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>应用在接入网络以后会变得更有用处，但是究竟该在什么时候联网呢？又由谁来负责启动网络连接呢？典型的情况下，由交互器来启动网络连接操作的项目，但是它不会直接处理网络代码。它会寻找一个像是 network manager 或者 API client 这样的依赖项。交互器可能聚合来自多个源的数据来提供所需的信息，从而完成一个用例。最终，就由展示器来采集交互器反馈的数据，然后组织并进行展示。</p>
-
-<p>数据存储模块负责提供实体给交互器。因为交互器要完成业务逻辑，因此它需要从数据存储中获取实体并操纵它们，然后将更新后的实体再放回数据存储中。数据存储管理实体的持久化，而实体应该对数据库全然不知，正因如此，实体并不知道如何对自己进行持久化。</p>
-
-<p>交互器同样不需要知道如何将实体持久化，有时交互器更希望使用一个 data manager 来使其与数据存储的交互变得容易。Data manager 可以处理更多的针对存储的操作，比如创建获取请求，构建查询等等。这就使交互器能够将更多的注意力放在应用逻辑上，而不必再了解实体是如何被聚集或持久化的。下面我们举一个例子来说明使用 data manager 有意义的，这个例子假设你在使用 Core Data。这是示例应用程序的 data manager 的接口：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">VTDListDataManager</span> : <span class="nc">NSObject</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">VTDCoreDataStore</span> <span class="o">*</span><span class="n">dataStore</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">todoItemsBetweenStartDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">startDate</span> <span class="nf">endDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">endDate</span> <span class="nf">completionBlock:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSArray</span> <span class="o">*</span><span class="n">todoItems</span><span class="p">))</span><span class="nv">completionBlock</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>当使用 TDD 来开发一个交互器时，是可以用一个测试用的模拟存储来代替生产环境的数据存储的。避免与远程服务器通讯（网络服务）以及避免读取磁盘（数据库）可以加快你测试的速度并加强其可重复性。</p>
-
-<p>将数据存储保持为一个界限清晰的特定层的原因之一是，这可以让你延迟选择一个特定的持久化技术。如果你的数据存储是一个独立的类，那你就可以使用一个基础的持久化策略来开始你的应用，然后等到有意义的时候升级至 SQLite 或者 Core Data。而因为数据存储层的存在，你的应用代码库中就不需要改变任何东西。</p>
-
-<p>在 iOS 的项目中使用 Core Data 经常比构架本身还容易引起更多争议。然而，利用 VIPER 来使用 Core Data 将给你带来使用 Core Data 的前所未有的良好体验。在持久化数据的工具层面上，Core Data 可以保持快速存取和低内存占用方面，简直是个神器。但是有个很恼人的地方，它会像触须一样把 <code>NSManagedObjectContext</code>  延伸至你所有的应用实现文件中，特别是那些它们不该待的地方。VIPER 可以使 Core Data 待在正确的地方：数据存储层。</p>
-
-<p>在待办事项示例中，应用仅有的两部分知道使用了 Core Data，其一是数据存储本身，它负责建立 Core Data 堆栈；另一个是 data manager。Data manager 执行了获取请求，将数据存储返回的 NSManagedObject 对象转换为标准的 PONSO 模型对象，并传输回业务逻辑层。这样一来，应用程序核心将不再依赖于 Core Data，附加得到的好处是，你也再也不用担心过期数据 (stale) 和没有良好组织的多线程 NSManagedObjects 来糟蹋你的工作成果了。</p>
-
-<p>在通过请求访问 Core Data 存储时，data manager 中看起来是这样的：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">VTDListDataManager</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">todoItemsBetweenStartDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">startDate</span> <span class="nf">endDate:</span><span class="p">(</span><span class="n">NSDate</span><span class="o">*</span><span class="p">)</span><span class="nv">endDate</span> <span class="nf">completionBlock:</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSArray</span> <span class="o">*</span><span class="n">todoItems</span><span class="p">))</span><span class="nv">completionBlock</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSCalendar</span> <span class="n">autoupdatingCurrentCalendar</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">NSPredicate</span> <span class="o">*</span><span class="n">predicate</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithFormat:</span><span class="s">@&quot;(date &gt;= %@) AND (date &lt;= %@)&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateForBeginningOfDay:</span><span class="n">startDate</span><span class="p">],</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateForEndOfDay:</span><span class="n">endDate</span><span class="p">]];</span>
-</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">sortDescriptors</span> <span class="o">=</span> <span class="err">@</span><span class="p">[];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">__weak</span> <span class="n">typeof</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="n">welf</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dataStore</span>
-</span><span class="line">     <span class="nl">fetchEntriesWithPredicate:</span><span class="n">predicate</span>
-</span><span class="line">     <span class="nl">sortDescriptors:</span><span class="n">sortDescriptors</span>
-</span><span class="line">     <span class="nl">completionBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">NSArray</span><span class="o">*</span> <span class="n">entries</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">         <span class="k">if</span> <span class="p">(</span><span class="n">completionBlock</span><span class="p">)</span>
-</span><span class="line">         <span class="p">{</span>
-</span><span class="line">             <span class="n">completionBlock</span><span class="p">([</span><span class="n">welf</span> <span class="nl">todoItemsFromDataStoreEntries:</span><span class="n">entries</span><span class="p">]);</span>
-</span><span class="line">         <span class="p">}</span>
-</span><span class="line">     <span class="p">}];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nf">todoItemsFromDataStoreEntries:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">entries</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">entries</span> <span class="nl">arrayFromObjectsCollectedWithBlock:</span><span class="o">^</span><span class="kt">id</span><span class="p">(</span><span class="n">VTDManagedTodoItem</span> <span class="o">*</span><span class="n">todo</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="p">[</span><span class="n">VTDTodoItem</span> <span class="nl">todoItemWithDueDate:</span><span class="n">todo</span><span class="p">.</span><span class="n">date</span> <span class="nl">name:</span><span class="n">todo</span><span class="p">.</span><span class="n">name</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>与 Core Data 一样极富争议的恐怕就是 UI 故事板了。故事板具有很多有用的功能，如果完全忽视它将会是一个错误。然而，调用故事版所能提供的所有功能来完成 VIPER 的所有目标仍然是很困难的。</p>
-
-<p>我们所能做出的妥协就是选择不使用 segues 。有时候使用 segues 是有效的，但是使用 segues 的危险性在于它们很难原封不动地保持屏幕之间的分离，以及 UI 和应用逻辑之间的分离。一般来说，如果实现 prepareForSegue 方法是必须的话，我们就尽量不去使用 segues。</p>
-
-<p>除此之外，故事板是一个实现用户界面布局有效方法，特别是在使用自动布局的时候。我们选择在实现待办事项两个界面的实例中使用故事板，并且使用这样的代码来执行自己的导航操作。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">ListViewControllerIdentifier</span> <span class="o">=</span> <span class="s">@&quot;VTDListViewController&quot;</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">VTDListWireframe</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">presentListInterfaceFromWindow:</span><span class="p">(</span><span class="n">UIWindow</span> <span class="o">*</span><span class="p">)</span><span class="nv">window</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">VTDListViewController</span> <span class="o">*</span><span class="n">listViewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">listViewControllerFromStoryboard</span><span class="p">];</span>
-</span><span class="line">    <span class="n">listViewController</span><span class="p">.</span><span class="n">eventHandler</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">listPresenter</span><span class="p">;</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">listPresenter</span><span class="p">.</span><span class="n">userInterface</span> <span class="o">=</span> <span class="n">listViewController</span><span class="p">;</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">listViewController</span> <span class="o">=</span> <span class="n">listViewController</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">rootWireframe</span> <span class="nl">showRootViewController:</span><span class="n">listViewController</span>
-</span><span class="line">                                      <span class="nl">inWindow:</span><span class="n">window</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">VTDListViewController</span> <span class="o">*</span><span class="p">)</span><span class="nf">listViewControllerFromStoryboard</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">UIStoryboard</span> <span class="o">*</span><span class="n">storyboard</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">mainStoryboard</span><span class="p">];</span>
-</span><span class="line">    <span class="n">VTDListViewController</span> <span class="o">*</span><span class="n">viewController</span> <span class="o">=</span> <span class="p">[</span><span class="n">storyboard</span> <span class="nl">instantiateViewControllerWithIdentifier:</span><span class="n">ListViewControllerIdentifier</span><span class="p">];</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">viewController</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIStoryboard</span> <span class="o">*</span><span class="p">)</span><span class="nf">mainStoryboard</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">UIStoryboard</span> <span class="o">*</span><span class="n">storyboard</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIStoryboard</span> <span class="nl">storyboardWithName:</span><span class="s">@&quot;Main&quot;</span>
-</span><span class="line">                                                         <span class="nl">bundle:</span><span class="p">[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]];</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">storyboard</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h2 id="viper">使用 VIPER 构建模块</h2>
-
-<p>一般在使用 VIPER 的时候，你会发现一个屏幕或一组屏幕倾向于聚在一起作为一个模块。模块可以以多种形式体现，但一般最好把它想成是一种特性。在播客应用中，一个模块可能是音频播放器或订阅浏览器。然而在我们的待办事项应用中，列表和添加事项的屏幕都将作为单独的模块被建立。</p>
-
-<p>将你的应用作为一组模块来设计有很多好处，其中之一就是模块可以有非常明确和定义良好的接口，并且独立于其他的模块。这就使增加或者移除特性变得更加简单，也使在界面中向用户展示各种可变模块变得更加简单。</p>
-
-<p>我们希望能将待办事项中各模块之间分隔更加明确，我们为添加模块定义了两个协议。一个是模块接口，它定义了模块可以做什么；另一个则是模块的代理，用来描述该模块做了什么。例如：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddModuleInterface</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">cancelAddAction</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">saveAddActionWithName:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">name</span> <span class="nf">dueDate:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">dueDate</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line">
-</span><span class="line"><span class="k">@protocol</span> <span class="nc">VTDAddModuleDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">addModuleDidCancelAddAction</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addModuleDidSaveAddAction</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>因为模块必须要被展示，才能对用户产生价值，所以模块的展示器通常需要实现模型的接口。当另一个模型想要展现当前模块时，它的展示器就需要实现模型的委托协议，这样它就能在展示时知道当前模块做了些什么。</p>
-
-<p>一个模块可能包括实体，交互器和管理器的通用应用逻辑层，这些通常可用于多个屏幕。当然，这取决于这些屏幕之间的交互及它们的相似度。一个模块可以像在待办事项列表里面一样，简单的只代表一个屏幕。这样一来，应用逻辑层对于它的特定模块的行为来说就非常特有了。</p>
-
-<p>模块同样是组织代码的简便途径。将模块所有的编码都放在它自己的文件夹中并在 Xcode 中建一个 group，这会在你需要寻找和改变更加容易。当你在要寻找一个类时，它恰到好处地就在你所期待的地方，这种感觉真是无法形容的棒。</p>
-
-<p>利用 VIPER 建立模块的另一个好处是它使得扩展到多平台时变得更加简单。独立在交互器层中的所有用例的应用逻辑允许你可以专注于为平板，电话或者 Mac 构建新的用户界面，同时可以重用你的应用层。</p>
-
-<p>进一步来说，iPad 应用的用户界面能够将部分 iPhone 应用的视图，视图控制器及展示器进行再利用。在这种情况下，iPad 屏幕将由 ‘super’ 展示器和线框来代表，这样可以利用 iPhone 使用过的展示器和线框来组成屏幕。建立进而维护一个跨多平台的应用是一个巨大的挑战，但是好的构架可以对整个模型和应用层的再利用有大幅度的提升，并使其实现起来更加容易。</p>
-
-<h2 id="viper">利用 VIPER 进行测试</h2>
-
-<p>VIPER 的出现激发了一个关注点的分离，这使得采用 TDD 变得更加简便。交互器包含独立与任何 UI 的纯粹逻辑，这使测试驱动开发更加简单。同时展示器包含用来为显示准备数据的逻辑，并且它也独立于任何一个 UIKit 部件。对于这个逻辑的开发也很容易用测试来驱动。</p>
-
-<p>我们更倾向于先从交互器下手。用户界面里所有部分都服务于用例，而通过采用 TDD 来测试驱动交互器的 API 可以让你对用户界面和用例之间的关系有一个更好的了解。</p>
-
-<p>作为实例，我们来看一下负责待办事项列表的交互器。寻找待办事项的策略是要找出所有的将在下周末前截止的项目，并将这些项目分别归类至截止于今天，明天，本周或者下周。</p>
-
-<p>我们编写的第一个测试是为了保证交互器能够找到所有的截止于下周末的待办事项：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFindingUpcomingItemsRequestsAllToDoItemsFromTodayThroughEndOfNextWeek</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">dataManager</span> <span class="n">expect</span><span class="p">]</span> <span class="nl">todoItemsBetweenStartDate:</span><span class="n">self</span><span class="p">.</span><span class="n">today</span> <span class="nl">endDate:</span><span class="n">self</span><span class="p">.</span><span class="n">endOfNextWeek</span> <span class="nl">completionBlock:</span><span class="n">OCMOCK_ANY</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">interactor</span> <span class="n">findUpcomingItems</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>一旦知道了交互器找到了正确的待办事项后，我们就需要编写几个小测试用来确认它确实将待办事项分配到了正确的相对日期组内（比如说今天，明天，等等）。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFindingUpcomingItemsWithOneItemDueTodayReturnsOneUpcomingItemsForToday</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">todoItems</span> <span class="o">=</span> <span class="err">@</span><span class="p">[[</span><span class="n">VTDTodoItem</span> <span class="nl">todoItemWithDueDate:</span><span class="n">self</span><span class="p">.</span><span class="n">today</span> <span class="nl">name:</span><span class="s">@&quot;Item 1&quot;</span><span class="p">]];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">dataStoreWillReturnToDoItems:</span><span class="n">todoItems</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">upcomingItems</span> <span class="o">=</span> <span class="err">@</span><span class="p">[[</span><span class="n">VTDUpcomingItem</span> <span class="nl">upcomingItemWithDateRelation:</span><span class="n">VTDNearTermDateRelationToday</span> <span class="nl">dueDate:</span><span class="n">self</span><span class="p">.</span><span class="n">today</span> <span class="nl">title:</span><span class="s">@&quot;Item 1&quot;</span><span class="p">]];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">expectUpcomingItems:</span><span class="n">upcomingItems</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">interactor</span> <span class="n">findUpcomingItems</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>既然我们已经知道了交互器的 API 长什么样，接下来就是开发展示器。一旦展示器接收到了交互器传来的待办事项，我们就需要测试看看我们是否适当的将数据进行格式化并且在用户界面中正确的显示它。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFoundZeroUpcomingItemsDisplaysNoContentMessage</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">ui</span> <span class="n">expect</span><span class="p">]</span> <span class="n">showNoContentMessage</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="nl">foundUpcomingItems:</span><span class="err">@</span><span class="p">[]];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFoundUpcomingItemForTodayDisplaysUpcomingDataWithNoDay</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">VTDUpcomingDisplayData</span> <span class="o">*</span><span class="n">displayData</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">displayDataWithSectionName:</span><span class="s">@&quot;Today&quot;</span>
-</span><span class="line">                                                          <span class="nl">sectionImageName:</span><span class="s">@&quot;check&quot;</span>
-</span><span class="line">                                                                 <span class="nl">itemTitle:</span><span class="s">@&quot;Get a haircut&quot;</span>
-</span><span class="line">                                                                <span class="nl">itemDueDay:</span><span class="s">@&quot;&quot;</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">ui</span> <span class="n">expect</span><span class="p">]</span> <span class="nl">showUpcomingDisplayData:</span><span class="n">displayData</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSCalendar</span> <span class="n">gregorianCalendar</span><span class="p">];</span>
-</span><span class="line">    <span class="n">NSDate</span> <span class="o">*</span><span class="n">dueDate</span> <span class="o">=</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateWithYear:</span><span class="mi">2014</span> <span class="nl">month:</span><span class="mi">5</span> <span class="nl">day:</span><span class="mi">29</span><span class="p">];</span>
-</span><span class="line">    <span class="n">VTDUpcomingItem</span> <span class="o">*</span><span class="n">haircut</span> <span class="o">=</span> <span class="p">[</span><span class="n">VTDUpcomingItem</span> <span class="nl">upcomingItemWithDateRelation:</span><span class="n">VTDNearTermDateRelationToday</span> <span class="nl">dueDate:</span><span class="n">dueDate</span> <span class="nl">title:</span><span class="s">@&quot;Get a haircut&quot;</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="nl">foundUpcomingItems:</span><span class="err">@</span><span class="p">[</span><span class="n">haircut</span><span class="p">]];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testFoundUpcomingItemForTomorrowDisplaysUpcomingDataWithDay</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">VTDUpcomingDisplayData</span> <span class="o">*</span><span class="n">displayData</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">displayDataWithSectionName:</span><span class="s">@&quot;Tomorrow&quot;</span>
-</span><span class="line">                                                          <span class="nl">sectionImageName:</span><span class="s">@&quot;alarm&quot;</span>
-</span><span class="line">                                                                 <span class="nl">itemTitle:</span><span class="s">@&quot;Buy groceries&quot;</span>
-</span><span class="line">                                                                <span class="nl">itemDueDay:</span><span class="s">@&quot;Thursday&quot;</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">ui</span> <span class="n">expect</span><span class="p">]</span> <span class="nl">showUpcomingDisplayData:</span><span class="n">displayData</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSCalendar</span> <span class="n">gregorianCalendar</span><span class="p">];</span>
-</span><span class="line">    <span class="n">NSDate</span> <span class="o">*</span><span class="n">dueDate</span> <span class="o">=</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">dateWithYear:</span><span class="mi">2014</span> <span class="nl">month:</span><span class="mi">5</span> <span class="nl">day:</span><span class="mi">29</span><span class="p">];</span>
-</span><span class="line">    <span class="n">VTDUpcomingItem</span> <span class="o">*</span><span class="n">groceries</span> <span class="o">=</span> <span class="p">[</span><span class="n">VTDUpcomingItem</span> <span class="nl">upcomingItemWithDateRelation:</span><span class="n">VTDNearTermDateRelationTomorrow</span> <span class="nl">dueDate:</span><span class="n">dueDate</span> <span class="nl">title:</span><span class="s">@&quot;Buy groceries&quot;</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="nl">foundUpcomingItems:</span><span class="err">@</span><span class="p">[</span><span class="n">groceries</span><span class="p">]];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>同样需要测试的是应用是否在用户想要新建待办事项时正确启动了相应操作：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testAddNewToDoItemActionPresentsAddToDoUI</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">self</span><span class="p">.</span><span class="n">wireframe</span> <span class="n">expect</span><span class="p">]</span> <span class="n">presentAddInterface</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presenter</span> <span class="n">addNewEntry</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>这时我们可以开发视图功能了，并且在没有待办事项的时候我们想要展示一个特殊的信息。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testShowingNoContentMessageShowsNoContentView</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="n">showNoContentMessage</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">XCTAssertEqualObjects</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">view</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">noContentView</span><span class="p">,</span> <span class="s">@&quot;the no content view should be the view&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>有待办事项出现时，我们要确保列表是显示出来的：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testShowingUpcomingItemsShowsTableView</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">showUpcomingDisplayData:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">XCTAssertEqualObjects</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">view</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">tableView</span><span class="p">,</span> <span class="s">@&quot;the table view should be the view&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>首先建立交互器是一种符合 TDD 的自然规律。如果你首先开发交互器，紧接着是展示器，你就可以首先建立一个位于这些层的套件测试，并且为实现这是实例奠定基础。由于你不需要为了测试它们而去与用户界面进行交互，所以这些类可以进行快速迭代。在你需要开发视图的时候，你会有一个可以工作并测试过的逻辑和表现层来与其进行连接。在快要完成对视图的开发时，你会发现第一次运行程序时所有部件都运行良好，因为你所有已通过的测试已经告诉你它可以工作。</p>
-
-<h2>结论</h2>
-
-<p>我们希望你喜欢这篇对 VIPER 的介绍。或许你们都很好奇接下来应该做什么，如果你希望通过 VIPER 来对你下一个应用进行设计，该从哪里开始呢？</p>
-
-<p>我们竭尽全力使这篇文章和我们利用 VIPER 实现的应用实例足够明确并且进行了很好的定义。我们的待办事项里列表程序相当直接简单，但是它准确地解释了如何利用 VIPER 来建立一个应用。在实际的项目中，你可以根据你自己的挑战和约束条件来决定要如何实践这个例子。根据以往的经验，我们的每个项目在使用 VIPER 时都或多或少地改变了一些策略，但它们无一例外的都从中得益，找到了正确的方向。</p>
-
-<p>很多情况下由于某些原因，你可能会想要偏离 VIPER 所指引的道路。可能你遇到了很多 <a href="http://inessential.com/2014/03/16/smaller_please">&#8216;bunny&#8217;</a> 对象，或者你的应用使用了故事板的 segues。没关系的，在这些情况下，你只需要在做决定时稍微考虑下 VIPER 所代表的精神就好。VIPER 的核心在于它是建立在<a href="http://en.wikipedia.org/wiki/Single_responsibility_principle">单一责任原则</a>上的架构。如果你碰到了些许麻烦，想想这些原则再考虑如何前进。</p>
-
-<p>你一定想知道在现有的应用中能否只用 VIPER 。在这种情况下，你可以考虑使用 VIPER 构建新的特性。我们许多现有项目都使用了这个方法。你可以利用 VIPER 建立一个模块，这能帮助你发现许多建立在单一责任原则基础上造成难以运用架构的现有问题。</p>
-
-<p>软件开发最伟大的事情之一就是每个应用程序都是不同的，而设计每个应用的架构的方式也是不同的。这就意味着每个应用对于我们来说都是一个学习和尝试的机遇，如果你决定开始使用 VIPER，你会受益匪浅。感谢你的阅读。</p>
-
-<h2 id="swifit">Swifit 补充</h2>
-
-<p>苹果上周在 WWDC 介绍了一门称之为 <a href="https://developer.apple.com/swift/">Swift</a> 的编程语言来作为 Cocoa 和 Cocoa Touch 开发的未来。现在发表关于 Swift 的完整意见还为时尚早，但众所周知编程语言对我们如何设计和构建应用有着重大影响。我们决定使用 <a href="https://github.com/objcio/issue-13-viper-swift">Swift 重写我们的待办事项清单</a>，帮助我们学习它对 VIPER 意味着什么。至今为止，收获颇丰。Swift 中的一些特性对于构建应用的体验有着显著的提升。</p>
-
-<h3>结构体</h3>
-
-<p>在 VIPER 中我们使用小型，轻量级的 model 类来在比如从展示器到视图这样不同的层间传递数据。这些 PONSOs 通常是只是简单地带有少量数据，并且通常这些类不会被继承。Swift 的结构体非常适合这个情况。下面的结构体的例子来自 VIPER Swift。这个结构体需要被判断是否相等，所以我们重载了 == 操作符来比较这个类型的两个实例。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">struct</span> <span class="n">UpcomingDisplayItem</span> <span class="o">:</span> <span class="n">Equatable</span><span class="p">,</span> <span class="n">Printable</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">let</span> <span class="n">title</span> <span class="o">:</span> <span class="n">String</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
-</span><span class="line">    <span class="n">let</span> <span class="n">dueDate</span> <span class="o">:</span> <span class="n">String</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">var</span> <span class="n">description</span> <span class="o">:</span> <span class="n">String</span> <span class="p">{</span> <span class="n">get</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="s">&quot;\(title) -- \(dueDate)&quot;</span>
-</span><span class="line">    <span class="p">}}</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">init</span><span class="p">(</span><span class="nl">title:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">dueDate:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">dueDate</span> <span class="o">=</span> <span class="n">dueDate</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="n">func</span> <span class="o">==</span> <span class="p">(</span><span class="nl">leftSide:</span> <span class="n">UpcomingDisplayItem</span><span class="p">,</span> <span class="nl">rightSide:</span> <span class="n">UpcomingDisplayItem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">var</span> <span class="n">hasEqualSections</span> <span class="o">=</span> <span class="n">false</span>
-</span><span class="line">    <span class="n">hasEqualSections</span> <span class="o">=</span> <span class="n">rightSide</span><span class="p">.</span><span class="n">title</span> <span class="o">==</span> <span class="n">leftSide</span><span class="p">.</span><span class="n">title</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="n">hasEqualSections</span> <span class="o">==</span> <span class="n">false</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">false</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">hasEqualSections</span> <span class="o">=</span> <span class="n">rightSide</span><span class="p">.</span><span class="n">dueDate</span> <span class="o">==</span> <span class="n">rightSide</span><span class="p">.</span><span class="n">dueDate</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">return</span> <span class="n">hasEqualSections</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>类型安全</h3>
-
-<p>也许 Objective-C 和 Swift 的最大区别是它们在对于类型处理上的不同。 Objective-C 是动态类型，而 Swift 故意在编译时做了严格的类型检查。对于一个类似 VIPER 的架构， 应用由不同层构成，类型安全是提升程序员效率和设计架构有非常大的好处。编译器帮助你确保正确类型的容器和对象在层的边界传递。如上所示，这是一个使用结构体的好地方。如果一个结构体的被设计为存在于两层之间，那么由于类型安全，你可以保证它将永远无法脱离这些层之间。</p>
-
-<h2>扩展阅读</h2>
-
-<ul>
-<li><a href="https://github.com/objcio/issue-13-viper">VIPER TODO, 文章示例</a></li>
-<li><a href="https://github.com/objcio/issue-13-viper-swift">VIPER SWIFT, 基于 Swift 的文章示例</a></li>
-<li><a href="https://github.com/mutualmobile/Counter">另一个计数器应用</a></li>
-<li><a href="http://mutualmobile.github.io/blog/2013/12/04/viper-introduction/">Mutual Mobile 关于 VIPER 的介绍</a></li>
-<li><a href="http://blog.8thlight.com/uncle-bob/2011/11/22/Clean-Architecture.html">简明架构</a></li>
-<li><a href="http://objccn.io/issue-1-1/">更轻量的 View Controllers</a></li>
-<li><a href="http://objccn.io/issue-1-3/">测试 View Controllers</a></li>
-<li><a href="http://inessential.com/2014/03/16/smaller_please">Bunnies</a></li>
-</ul>
-
-<script type="text/javascript" id="wumiiRelatedItems"></script>
 
 <hr />
 <p class="post-footer">
