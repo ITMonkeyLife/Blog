@@ -7,10 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="目录 北漂的过去
-我所拥有的现在
-展望未来
-工作总结 一、北漂的过去 今年我结束了我长达4年多的北漂生活，也同时结束了我长达4年多的外包工作生涯。有时候和现在的同事聊天，他们问：你当初在北京，为什么想到来上海呢？太多太多的原因，我承认我擅自选择北京，来上海这个决定，非常冲动， &hellip;">
+	<meta name="description" content=" written by Rick&nbsp;posted at http://ITMonkeyLife.github.io/Blog swift Comments ">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -77,6 +74,54 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/03/04/ji-lu-%5B%3F%5D-ci-xiu-gai-swiftde-cuo-wu/">
+		
+			记录一次修改Swift的错误</a>
+	</h2>
+	<div class="entry-content">
+		<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1f1l040x0l2j20xe0sotgc.jpg" alt="screen-shot-0" />
+<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l04x8j0ij20wo0sqdp1.jpg" alt="screen-shot-1" />
+<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f1l056kc5qj20xq0t0aj0.jpg" alt="screen-shot-2" />
+<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l05da3cmj20xi0ti78x.jpg" alt="screen-shot-3" />
+<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f1l05jk9etj20xs0taq8a.jpg" alt="screen-shot-4" />
+<img src="http://ww4.sinaimg.cn/large/626e5d69gw1f1l05oxgsfj20y00ss0zu.jpg" alt="screen-shot-5" />
+<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l05usxv8j20xw0su0y9.jpg" alt="screen-shot-6" />
+<img src="http://ww3.sinaimg.cn/large/626e5d69gw1f1l060hn0sj20yc0t6474.jpg" alt="screen-shot-7" /></p>
+
+<hr />
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/swift/'>swift</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/03/04/ji-lu-%5B%3F%5D-ci-xiu-gai-swiftde-cuo-wu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -547,65 +592,6 @@ ABI涵盖了各个细节：
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/">
-		
-			闭包，你了解多少？</a>
-	</h2>
-	<div class="entry-content">
-		<p>在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例，不同的引用环境和相同的函数组合可以产生不同的实例。
-闭包的概念出现于60年代，最早实现闭包的程序语言是Scheme。之后，闭包被广泛使用于函数式编程语言如ML语言和LISP。很多命令式程序语言也开始支持闭包。
-在一些语言中，在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可能产生闭包。运行时，一旦外部的 函数被执行，一个闭包就形成了，闭包中包含了内部函数的代码，以及所需外部函数中的变量的引用。其中所引用的变量称作上值(upvalue)。
-闭包一词经常和匿名函数混淆。这可能是因为两者经常同时使用，但是它们是不同的概念。</p>
-
-<p>闭包和状态表达闭包可以用来在一个函数与一组“私有”变量之间创建关联关系。在给定函数被多次调用的过程中，这些私有变量能够保持其持久性。变量的作用域仅限于包含它们的函数，因此无法从其它程序代码部分进行访问。不过，变量的生存期是可以很长，在一次函数调用期间所创建所生成的值在下次函数调用时仍然存在。正因为这一特点，闭包可以用来完成信息隐藏，并进而应用于需要状态表达的某些编程范型中。
-不过，用这种方式来使用闭包时，闭包不再具有引用透明性，因此也不再是纯函数。即便如此，在某些“近似于函数式编程语言”的语言，例如Scheme中，闭包还是得到了广泛的使用。</p>
-
-<p>闭包和第一类函数</p>
-
-<p>典型的支持闭包的语言中，通常将函数当作第一类对象——在这些语言中，函数可以被当作参数传递、也可以作为函数返回值、绑定到变量名、就像字符串、整数等简单类型。例如以下Scheme代码：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="scheme"><span class="line"><span class="c1">; Return a list  of all books with at least THRESHOLD copies sold.</span>
-</span><span class="line"><span class="p">(</span><span class="k">define </span> <span class="p">(</span><span class="nf">best-selling-books</span>  <span class="nv">threshold</span><span class="p">)</span>
-</span><span class="line">   <span class="p">(</span><span class="nf">filter</span>
-</span><span class="line">    <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">book</span><span class="p">)</span> <span class="p">(</span><span class="nb">&gt;= </span><span class="p">(</span><span class="nf">book-sales</span> <span class="nv">book</span><span class="p">)</span>  <span class="nv">threshold</span><span class="p">))</span>
-</span><span class="line">    <span class="nv">book-list</span><span class="p">))</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>在这个例子中，lambda表达式(lambda (book) (&gt;= (book-sales book) threshold))出现在函数best-selling-books中。当这个lambda表达式被执行时，Scheme创造了一个包含此表达式以及对threshold变量的引用的闭包，其中threshold变量在lambda表达式中是自由变量。
-这个闭包接着被传递到filter函数。这个函数的功能是重复调用这个闭包以判断哪些书需要增加到列表那些需要丢弃。因为闭包中引用了变量threshold，所以它在每次被filter调用时都可以使用这个变量，虽然filter可能定义在另一个文件中。
-
-		
-		<a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

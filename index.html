@@ -7,12 +7,12 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="1
-2
-3
-4
-5
-@weakify(self); return [RACSignal createSignal:^RACDisposable * (id&lt;RACSubscriber&gt; subscriber) { @strongify(self); return nil; }]; 在 &hellip;">
+	<meta name="description" content="1 Hack 必备的命令与工具 常用的命令和工具 ps ——显示进程状态，CPU 使用率，内存使用情况等
+sysctl ——检查设定 Kernel 配置
+netstat ——显示网络连接，路由表，接口状态等
+route ——路由修改
+renice ——调整程序运行的优先级
+ifconfig —— &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -79,6 +79,185 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/19/ioshei-ke-gong-ju/">
+		
+			iOS黑客工具</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">1</span> <span class="title">Hack 必备的命令与工具</span></h1>
+    <h3>常用的命令和工具</h3>
+
+<p>ps              ——显示进程状态，CPU 使用率，内存使用情况等<br />
+sysctl       ——检查设定 Kernel 配置<br />
+netstat     ——显示网络连接，路由表，接口状态等<br />
+route        ——路由修改<br />
+renice       ——调整程序运行的优先级<br />
+ifconfig    ——查看网络配置<br />
+tcpdump   ——截获分析网络数据包<br />
+lsof           ——列出当前系统打开的文件列表，别忘记一切皆文件，包括网络连接、硬件等<br />
+otool ①     ——查看程序依赖哪些动态库信息，反编代码段……等等等等<br />
+nm ②        ——显示符号表<br />
+ldid ③      ——签名工具<br />
+gdb          ——调试工具
+patch       ——补丁工具<br />
+SSH         ——远程控制</p>
+
+<p>备注：
+① otool，可查看可执行程序都链接了那些库：
+ <code>otool  -L WQAlbum</code></p>
+
+<p>可以得到：</p>
+
+<div class="code code">
+<pre class="code">WQAlbum:
+    /System/Library/Frameworks/StoreKit.framework/StoreKit (compatibility version 1.0.0, current version 1.0.0)
+    /System/Library/Frameworks/AdSupport.framework/AdSupport (compatibility version 1.0.0, current version 1.0.0)
+    /usr/lib/libz.1.dylib (compatibility version 1.0.0, current version 1.2.5)
+    /System/Library/Frameworks//MediaPlayer.framework/MediaPlayer (compatibility version 1.0.0, current version 1.0.0)
+    /System/Library/Frameworks/MobileCoreServices.framework/MobileCoreServices (compatibility version 1.0.0, current version 40.0.0)
+    /System/Library/Frameworks/CoreMedia.framework/CoreMedia (compatibility version 1.0.0, current version 1.0.0)
+……</pre>
+</div>
+
+<p>可以反编译 WQAlbum 的 <code>__TEXT__</code> 段内容, 截前 10 行：
+<code>otool -tV WQAlbum |head -n 10</code></p>
+
+<p>可以得到：</p>
+
+<div class="code code">
+<pre class="code">WQAlbum:
+(__TEXT,__text) section
+start:
+00002de0    pushl    $0x00
+00002de2    movl    %esp,%ebp
+00002de4    andl    $0xf0,%esp
+00002de7    subl    $0x10,%esp
+00002dea    movl    0x04(%ebp),%ebx
+……</pre>
+</div>
+
+<p>② nm，显示程序符号表，用我自己的应用程序私人相册现身说法一下：
+<code>nm -g WQAlbum  （ -g 代表 global ）</code></p>
+
+<p>可以得到：</p>
+
+<div class="code code">
+<pre class="code">001e5eec S _OBJC_IVAR_$_WQPhotoViewController.albumObject
+001e5efc S _OBJC_IVAR_$_WQPhotoViewController.int_current
+001e5f00 S _OBJC_IVAR_$_WQPhotoViewController.int_total</pre>
+</div>
+
+<p>其中，WQPhotoViewController 为类名，albumObject 为该类的成员</p>
+
+<p>③ ldid，是 iPhoneOS.platform 提供的签名工具，我们自己编译的程序需要签上名才能跑在 iPhone/iPad 上，使用方法</p>
+
+<div class="code code">
+<pre class="code">export CODESIGN_ALLOCATE=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate
+ldid -S helloworld</pre>
+</div>
+
+<h3>编译 Hello World</h3>
+
+<h4>首先找到编译器：</h4>
+
+<div class="figure" id="figure-1-1">
+    &lt;img src=&#8221;http://ww3.sinaimg.cn/large/626e5d69gw1f6z8vi0nwej20sg04rjuo.jpg&#8221;/ alt=&#8221;hacktools1&#8221;&gt;
+
+    <p class="caption"><strong>图片 1.1</strong> hacktools1</p>
+</div>
+
+
+<p><code>arm-apple-darwin10-llvm-gcc-4.2</code> 就是了。
+为了方便起见，可以在 <code>.bashrc</code> 或者 <code>profile</code> 配置下环境变量，方便编译。</p>
+
+<h4>找到 SDK</h4>
+
+<p>编译我们自己的程序的时候需要指定该目录下的 SDK 。</p>
+
+<h4>来个经典 Hello World ：</h4>
+
+<div class="code code">
+<pre class="code"> #include &lt;stdio.h&gt;                                                                                            
+int main(){  
+       printf(&quot;Hello world !!!\n&quot;);  
+       return 0;  
+}</pre>
+</div>
+
+<h4>编译</h4>
+
+<div class="figure" id="figure-1-2">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69jw1f6z8wxuoppj20p202b3zt.jpg" alt="hacktools2" />
+
+    <p class="caption"><strong>图片 1.2</strong> hacktools2</p>
+</div>
+
+
+<p>其中 -isysroot 用来指定 build 时的 SDK</p>
+
+<h4>校验</h4>
+
+<div class="figure" id="figure-1-3">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69jw1f6z8y87hmhj20sg026759.jpg" alt="hacktools3" />
+
+    <p class="caption"><strong>图片 1.3</strong> hacktools3</p>
+</div>
+
+
+<p>file 查看一下类型，没问题。</p>
+
+<h4>SCP 给 iPhone、iPad</h4>
+
+<p>前提是，设备已经越狱并且安装了 SSH ,且必须在同一网段。
+<code>$scp helloworld root@x.x.x.x:hello world</code></p>
+
+<h4>登录设备签名</h4>
+
+<p><code>$ssh -l root x.x.x.x</code></p>
+
+<p><code>#ldid -S helloworld</code></p>
+
+<h4>执行程序</h4>
+
+<div class="code code">
+<pre class="code"> #./helloworld
+Hello world !!!</pre>
+</div>
+
+<p>运行成功，这就完成了最简单的手动执行自己的应用程序。</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/19/ioshei-ke-gong-ju/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -907,54 +1086,6 @@ React-Native 帮助在原生平台打造世界一流的应用体验，使用基�
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/03/23/react-native/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/03/04/ji-lu-%5B%3F%5D-ci-xiu-gai-swiftde-cuo-wu/">
-		
-			记录一次修改Swift的错误</a>
-	</h2>
-	<div class="entry-content">
-		<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1f1l040x0l2j20xe0sotgc.jpg" alt="screen-shot-0" />
-<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l04x8j0ij20wo0sqdp1.jpg" alt="screen-shot-1" />
-<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f1l056kc5qj20xq0t0aj0.jpg" alt="screen-shot-2" />
-<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l05da3cmj20xi0ti78x.jpg" alt="screen-shot-3" />
-<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f1l05jk9etj20xs0taq8a.jpg" alt="screen-shot-4" />
-<img src="http://ww4.sinaimg.cn/large/626e5d69gw1f1l05oxgsfj20y00ss0zu.jpg" alt="screen-shot-5" />
-<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l05usxv8j20xw0su0y9.jpg" alt="screen-shot-6" />
-<img src="http://ww3.sinaimg.cn/large/626e5d69gw1f1l060hn0sj20yc0t6474.jpg" alt="screen-shot-7" /></p>
-
-<hr />
-
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>swift</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/03/04/ji-lu-%5B%3F%5D-ci-xiu-gai-swiftde-cuo-wu/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

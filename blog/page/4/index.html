@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="UICollectionView 和相关类的设置非常灵活和强大。但是灵活性一旦增强，某种程度上也增加了其复杂性： UICollectionView 比老式的 UITableView 更有深度，适用性也更强。 Collection View 深入太多了，事实上，Ole Begeman 和 Ash &hellip;">
+	<meta name="description" content="在 iOS 中，所有的 view 都是由一个底层的 layer 来驱动的。view 和它的 layer 之间有着紧密的联系，view 其实直接从 layer 对象中获取了绝大多数它所需要的数据。在 iOS 中也有一些单独的 layer，比如 AVCaptureVideoPreviewLayer &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +74,66 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/14/view-layerxie-zuo/">
+		
+			View-Layer协作</a>
+	</h2>
+	<div class="entry-content">
+		<p>在 iOS 中，所有的 view 都是由一个底层的 layer 来驱动的。view 和它的 layer 之间有着紧密的联系，view 其实直接从 layer 对象中获取了绝大多数它所需要的数据。在 iOS 中也有一些单独的 layer，比如 <code>AVCaptureVideoPreviewLayer</code> 和 <code>CAShapeLayer</code>，它们不需要附加到 view 上就可以在屏幕上显示内容。两种情况下其实都是 layer 在起决定作用。当然了，附加到 view 上的 layer 和单独的 layer 在行为上还是稍有不同的。</p>
+
+<p>基本上你改变一个单独的 layer 的任何属性的时候，都会触发一个从旧的值过渡到新值的简单动画（这就是所谓的可动画 <code>animatable</code>）。然而，如果你改变的是 view 中 layer 的同一个属性，它只会从这一帧直接跳变到下一帧。尽管两种情况中都有 layer，但是当 layer 附加在 view 上时，它的默认的隐式动画的 layer 行为就不起作用了。</p>
+
+<blockquote>
+  <p>animatable；几乎所有的层的属性都是隐性可动画的。你可以在文档中看到它们的简介是以 &#8216;animatable&#8217; 结尾的。这不仅包括了比如位置，尺寸，颜色或者透明度这样的绝大多数的数值属性，甚至也囊括了像 isHidden 和 doubleSided 这样的布尔值。 像 paths 这样的属性也是 animatable 的，但是它不支持隐式动画。</p>
+</blockquote>
+
+<p>在 Core Animation 编程指南的 “How to Animate Layer-Backed Views” 中，对<em>为什么</em>会这样做出了一个解释：</p>
+
+<blockquote>
+  <p>UIView 默认情况下禁止了 layer 动画，但是在 animation block 中又重新启用了它们</p>
+</blockquote>
+
+<p>这正是我们所看到的行为；当一个属性在动画 block 之外被改变时，没有动画，但是当属性在动画 block 内被改变时，就带上了动画。对于这是<em>如何</em>发生的这一问题的答案十分简单和优雅，它优美地阐明和揭示了 view 和 layer 之间是如何协同工作和被精心设计的。</p>
+
+<p>无论何时一个可动画的 layer 属性改变时，layer 都会寻找并运行合适的 &#8216;action&#8217; 来实行这个改变。在 Core Animation 的专业术语中就把这样的动画统称为动作 (action，或者 <code>CAAction</code>)。</p>
+
+<blockquote>
+  <p>CAAction：技术上来说，这是一个接口，并可以用来做各种事情。但是实际中，某种程度上你可以只把它理解为用来处理动画。</p>
+</blockquote>
+
+<p>layer 将像文档中所写的的那样去寻找动作，整个过程分为五个步骤。第一步中的在 view 和 layer 中交互的部分是最有意思的：</p>
+
+<p>layer 通过向它的 delegate 发送 <code>actionForLayer:forKey:</code> 消息来询问提供一个对应属性变化的 action。delegate 可以通过返回以下三者之一来进行响应：</p>
+
+		
+		<a href="/Blog/blog/2014/05/14/view-layerxie-zuo/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/14/view-layerxie-zuo/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -735,79 +795,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/21/macke-zhi-xing-wen-jian/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/21/http/">
-		
-			Http,Tcp,IP协议</a>
-	</h2>
-	<div class="entry-content">
-		<p>当 app 和服务器进行通信的时候，大多数情况下，都是采用 HTTP 协议。HTTP 最初是为 web 浏览器而定制的，如果在浏览器里输入 <a href="http://www.objc.io">http://www.objc.io</a> ，浏览器会通过 HTTP 协议和 www.objc.io 所对应的服务器进行通信。</p>
-
-<p>HTTP是运行在应用层上的应用协议，而不同的层级上都有相应的协议在运行。层级的堆栈关系一般可以这么描述：</p>
-
-<pre><code>Application Layer -- e.g. HTTP
-----
-Transport Layer -- e.g. TCP
-----
-Internet Layer -- e.g. IP
-----
-Link Layer -- e.g. IEEE 802.2
-</code></pre>
-
-<p>所谓的 <a href="https://en.wikipedia.org/wiki/OSI_model">OSI（Open Systems Interconnection，开放式系统互联）</a>模型定义了七层结构。本文会关注应用层 (application layer)、传输层 (transport layer) 和网络层 (internet layer)，它们分别代表了典型的 HTTP 的应用的 HTTP，TCP 以及 IP。在 IP 之下的是数据连接和物理层级，比如像 Ethernet 的实现之类的东西（Ethernet 拥有一个数据连接部分以及一个物理部分）。</p>
-
-<p>如上文所述，我们只关注应用层，传输层和互联网层的部分，更确切的说，着重探讨一种特殊的混合模式：基于 IP 的 TCP，以及基于 TCP 实现的 HTTP。这就是我们每天使用的 app 的基本网络配置。</p>
-
-<p>通过本文，希望大家能够对HTTP工作原理有一个细致的了解，知道一些常见的 HTTP 问题的产生原因，从而能在实践中尽量避免这些问题的发生。</p>
-
-<p>其实在互联网上传递数据的方式并不只 HTTP 一种。HTTP 之所以被广泛使用的原因是其非常稳定、易用，即便是防火墙一般也是允许 HTTP 协议穿透的。</p>
-
-<p>接下来我们从最低的一层谈起，说说 IP 网络协议。</p>
-
-<h2 id="ipipinternetproctocol">IP网络协议 (IP-Internet Proctocol)</h2>
-
-<p>TCP/IP 中的 IP 是<a href="https://en.wikipedia.org/wiki/Internet_Protocol">网络协议 (Internet Protocol)</a> 的缩写。从字面意思便知，它是互联网众多协议的基础。</p>
-
-<p>IP 实现了<a href="https://en.wikipedia.org/wiki/Packet_switching">分组交换网络</a>。在协议下，机器被叫做 <em>主机 (host)</em>，IP 协议明确了 host 之间的资料包（数据包）的传输方式。</p>
-
-<p>所谓数据包是指一段二进制数据，其中包含了发送源主机和目标主机的信息。IP 网络负责源主机与目标主机之间的数据包传输。IP 协议的特点是 <em>best effort</em>（尽力服务，其目标是提供有效服务并尽力传输）。这意味着，在传输过程中，数据包可能会丢失，也有可能被重复传送导致目标主机收到多个同样的数据包。</p>
-
-<p>IP 网络中的主机都配有自己的地址，被称为 <em>IP 地址</em>。每个数据包中都包含了源主机和目标主机的 IP 地址。IP 协议负责路径计算，即 IP 数据包在网络中的传输传输时，数据包所经过的每一个主机节点都会读取数据包中的目标主机地址信息，以便选择朝什么地方传送数据包。</p>
-
-<p>今天，绝大多数的数据包仍旧是 IPv4（Internet Protocol version 4 网际协议版本 4）的，每一个 IPv4 地址是长度为 32 位。常见采用 <a href="https://en.wikipedia.org/wiki/Dotted_decimal">dotted-decimal</a>（点分十进制）表示法，具体形式如：198.51.100.42。</p>
-
-<p>新的 IPv6 标准也正在逐渐推广中。它有更大的地址空间：长度为 128 位，这使得数据包在网络中传输时的寻址更容易一些。另外，由于有更多的地址可以分配，诸如<a href="https://en.wikipedia.org/wiki/Network_address_translation">网络地址转换</a>等问题也迎刃而解。IPv6 的表示形式为：八组十六进制数以冒号分割，比如：2001:0db8:85a3:0042:1000:8a2e:0370:7334。</p>
-
-<h2 id="iphearder">IP Hearder</h2>
-
-		
-		<a href="/Blog/blog/2014/04/21/http/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/http/'>Http</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/21/http/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
