@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="当 iOS 7 刚发布的时候，全世界的苹果开发人员都立马尝试着去编译他们的 app，接着再花上数月的时间来修复任何出现的错误，甚至从头开始重建这个 app。这样的结果，使得人们根本无暇去探究 iOS 7 所带来的新思想。除开一些明显而细微的更新，比如说 NSArray 的 firstObject &hellip;">
+	<meta name="description" content="在2007年，乔布斯在第一次介绍 iPhone 的时候，iPhone 的触摸屏交互简直就像是一种魔法。最好的例子就是在他第一次滑动 TableView 的展示上。你可以感受到当时观众的反应是多么惊讶，但是对于现在的我们来说早已习以为常。在展示的后面一部分，他特别指出当他给别人看了这个滑动例子， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -79,47 +79,59 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/">
+		<a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/">
 		
-			iOS7.0:隐藏技巧和变通之道</a>
+			交互式动画</a>
 	</h2>
 	<div class="entry-content">
-		<p>当 iOS 7 刚发布的时候，全世界的苹果开发人员都立马尝试着去编译他们的 app，接着再花上数月的时间来修复任何出现的错误，甚至从头开始重建这个 app。这样的结果，使得人们根本无暇去探究 iOS 7 所带来的新思想。除开一些明显而细微的更新，比如说 NSArray 的 <code>firstObject</code> 方法——这个方法可追溯到 iOS 4 时代，现在被提为公有 API——还有很多隐藏的技巧等着我们去挖掘。</p>
+		<p>在2007年，乔布斯在第一次介绍 iPhone 的时候，iPhone 的触摸屏交互简直就像是一种魔法。最好的例子就是在他<a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">第一次滑动 TableView 的展示上</a>。你可以感受到当时观众的反应是多么惊讶，但是对于现在的我们来说早已习以为常。在展示的后面一部分，他特别指出当他给别人看了这个滑动例子，别人说的一句话: <a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">“当这个界面滑动的时候我就已经被征服了”</a>.</p>
 
-<h2>平滑淡入淡出动画</h2>
+<p>是什么样的滑动能让人有‘哇哦’的效果呢？</p>
 
-<p>我在这里要讨论的并非新的弹性动画 API 或者 UIDynamics，而是一些更细微的东西。CALayer 增加了两个新方法：<code>allowsGroupOpacity</code> 和 <code>allowsEdgeAntialiasing</code>。现在，组不透明度（group opacity）不再是什么新鲜的东西了。iOS 会多次使用存在于 Info.plist 中的键 <code>UIViewGroupOpacity</code> 并可在应用程序范围内启用或禁用它。对于大多数 app 而言，这（译注：启用）并非所期望的，因为它会降低整体性能。在 iOS 7 中，用 SDK 7 所链接的程序，这项属性默认是启用的。当它被启用时，一些动画将会变得不流畅，它也可以在 layer 层上被控制。</p>
+<p>滑动是最完美地展示了通过触摸屏直接操作的例子。滚动视图遵从于你的手指，当你的手指离开屏幕的时，视图会自然地继续滑动直到该停止的时候停止。它用自然的方式减速，甚至在快到界限的时候也能表现出细腻的弹力效果。滑动在任何时候都保持相应，并且看上去非常真实。</p>
 
-<p>一个有趣的细节，如果 <code>allowsGroupOpacity</code> 启用的话，<code>_UIBackdropView</code>（被用作 <code>UIToolbar</code> 或者 <code>UIPopoverView</code> 的背景视图）不能对其模糊进行动画处理，所以当你做一个 alpha 转换时，你可能会临时禁用这项属性。因为这会降低动画体验，你可以回到旧的方式然后在动画期间临时启用 <code>shouldRasterize</code>。别忘了设置适当的 <code>rasterizationScale</code>，否则在 retina 的设备上这些视图会成锯齿状（pixelerated）。</p>
+<h2>动画的状态</h2>
 
-<p>如果你想要复制 Safari 显示所有选项卡时的动画，那么边缘抗锯齿属性将变得非常有用。</p>
+<p>在 iOS 中的大部分动画仍然没有按照最初 iPhone 指定的滑动标准实现。这里有很多动画一旦它们运行就不能交互（比如说解锁动画，主界面中打开文件夹和关闭文件夹的动画，和导航栏切换的动画，还有很多）。</p>
 
-<h2>阻塞动画</h2>
+<p>然而现在有一些应用给我一种始终在控制动画的体验，我们可以直接操作那些我在用的动画。当我们将这些应用和其他的应用相比较之后，我们就能感觉到明显的区别。这些应用中最优秀的有最初的 Twitter iPad app， 和现在的 Facebook Paper。但目前，使用直接操作为主并且可以中断动画的应用仍然很少。这就给我们做出更好的应用提供了机会，让我们的应用有更不同的，更高质量的体验。</p>
 
-<p>有一个小但是非常有用的新方法 <code>[UIView performWithoutAnimation:]</code>。它是一个简单的封装，先检查动画当前是否启用，如果是则停用动画，执行块语句，然后重新启用动画。一个需要说明的地方是，它并 <em>不会</em> 阻塞基于 CoreAnimation 的动画。因此，不用急于将你的方法调用从：</p>
+<h2>真实交互式动画的挑战</h2>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">CATransaction</span> <span class="n">begin</span><span class="p">];</span>
-</span><span class="line"><span class="p">[</span><span class="n">CATransaction</span> <span class="nl">setDisableActions:</span><span class="n">YES</span><span class="p">];</span>
-</span><span class="line"><span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(...);</span>
-</span><span class="line"><span class="p">[</span><span class="n">CATransaction</span> <span class="n">commit</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>当我们用 UIView 或者 CAAnimation 来实现交互式动画时会有两个大问题: 这些动画会将你在屏幕上的内容和 layer 上的实际的特定属性分离开来，并且他们直接操作这些特定属性。</p>
 
-<p>替换成:</p>
+<h3 id="modelpresentation">模型 (Model) 和显示 (Presentation) 的分离</h3>
+
+<p>Core Animation 是通过分离 layer 的模型属性和你在屏幕上看到的界面 (显示层) 的方式来设计的，这就导致我们很难去创建一个可以在任何时候能交互的动画，因为在动画时，模型和界面已经不能匹配了。这时，我们不得不通过手动的方式来同步这两个的状态，来达到改变动画的效果：</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">UIView</span> <span class="nl">performWithoutAnimation:</span><span class="o">^</span><span class="p">{</span>
-</span><span class="line">    <span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(...);</span>
-</span><span class="line"><span class="p">}];</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">presentationLayer</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
+</span><span class="line"><span class="p">[</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">removeAnimationForKey:</span><span class="s">@&quot;animation&quot;</span><span class="p">];</span>
+</span><span class="line"><span class="c1">// 添加新动画</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3 id="vs">直接控制 vs 间接控制</h3>
+
+<p><code>CAAnimation</code> 动画的更大的问题是它们是直接在 layer 上对属性进行操作的。这意味着什么呢？比如我们想指定一个 layer 从坐标为 (100, 100) 的位置运动到 (300, 300) 的位置，但是在它运动到中间的时候，我们想它停下来并且让它回到它原来的位置，事情就变得非常复杂了。如果你只是简单地删除当前的动画然后再添加一个新的，那么这个 layer 的速率就会不连续。</p>
+
+<p><img src="http://img.objccn.io/issue-12/abrupt.png" width="600" /></p>
+
+<p>然而，我们想要的是一个漂亮的，流畅地减速和加速的动画。</p>
+
+<p><img src="http://img.objccn.io/issue-12/smooth.png" width="600" /></p>
+
+<p>只有通过<em>间接</em>操作动画才能达到上面的效果，比如通过模拟力在界面上的表现。新的动画需要用 layer 的当前<em>速度矢量</em>作为参数传入来达到流畅的效果。</p>
+
+<p>看一下 UIView 中关于弹簧动画的 API </p>
+<p>animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:</p>
+<p>，你会注意到速率是个 CGFloat。所以当我们给一个移动 view 的动画在其运动的方向上加一个初始的速率时，你没法告知动画这个 view 现在的运动状态，比如我们不知道要添加的动画的方向是不是和原来的 view 的速度方向垂直。为了使其成为可能，这个速度需要用向量来表示。</p>
+
+<h2>解决方案</h2>
 
 		
-		<a href="/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/" class="more-link">Read on &rarr;</a>
+		<a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/" class="more-link">Read on &rarr;</a>
 	</div>
 
 
@@ -138,7 +150,7 @@
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -147,105 +159,52 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/">
+		<a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/">
 		
-			ScrollView的前世今生</a>
+			iOS动画解释</a>
 	</h2>
 	<div class="entry-content">
-		<p>可能你很难相信 <a href="http://developer.apple.com/library/ios/#documentation/uikit/reference/UIScrollView_Class/Reference/UIScrollView.html">UIScrollView</a> 和一个标准的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html">UIView</a> 差异并不大，scroll view 确实会多出一些方法，但这些方法只是和 UIView 的属性很好的结合到一起了。因此，在要想弄懂 UIScrollView 是怎么工作之前，你需要先了解一下 UIView，特别是视图渲染的两步过程。</p>
+		<p>我们写的应用程序往往都不是静态的，因为它们需要适应用户的需求以及为执行各种任务而改变状态。</p>
 
-<h2>光栅化和组合</h2>
+<p>在这些状态之间转换时，清晰的揭示正在发生什么是非常重要的。而不是在页面之间跳跃，动画帮助我们解释用户从哪里来，要到哪里去。</p>
 
-<p>渲染过程的第一部分是众所周知的光栅化(<code>rasterization</code>)，光栅化简单的说就是产生一组绘图指令并且生成一张图片。比如绘制一个圆角矩形、带图片、标题居中的 UIButtons。这些图片并没有被绘制到屏幕上去；取而代之的是，他们被自己的视图保持着留到下一个步骤使用。</p>
+<p>键盘在 view 中滑进滑出给了我们一个错觉，让我们以为它是简单的被隐藏在屏幕下方的，并且是手机很自然的一个部分。View controller 转场加强了我们的应用程序的导航结构，并且给了用户正在移向哪个方向的提示。微妙的反弹和碰撞使界面栩栩如生，并且激发出了物理的质感。要是没有这些的话，我们就只有一个没有视觉修饰的干巴巴环境了。</p>
 
-<p>一旦每个视图都产生了自己的光栅化图片，这些图片便被一个接一个的绘制，并产生一个屏幕大小的图片，这便是上文所说的组合。视图层级(view hierarchy)对于组合如何进行扮演了很重要的角色：一个视图的图片被组合在它父视图的图片上面。然后，组合好的图片被组合到父视图的父视图图片上面。视图层级最顶端是窗口(window)，它组合好的图片便是我们看到的东西了。</p>
+<p>动画是叙述你的应用的故事的绝佳方式，在了解动画背后的基本原理之后，设计它们会轻松很多。</p>
 
-<p>概念上，依次在每个视图上放置独立分层的图片并最终产生一个图片，单调的图像更容易被理解，特别是如果你以前使用过像 Photoshop 这样的工具。我们还有另外一篇文章详细解释了<a href="http://objccn.io/issue-3-1/">像素是如何绘制到屏幕上去的</a>。</p>
+<h2>首要任务</h2>
 
-<p>现在，回想一下，每个视图都有一个 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/bounds">bounds</a> 和 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/frame">frame</a>。当布局一个界面时，我们需要处理视图的 frame。这允许我们放置并设置视图的大小。视图的 frame 和 bounds 的大小总是一样的，但是他们的 origin 有可能不同。弄懂这两个工作原理是理解 UIScrollView 的关键。</p>
+<p>在这篇文章 (以及这个话题中其余大多数文章) 中，我们将特别地针对 Core Animation 进行探讨。虽然你将看到的很多东西也可以用更高层级的 UIKit 的方法来完成，但是 Core Animation 将会让你更好的理解正在发生什么。它以一种更明确的方式来描述动画，这对这篇文章读者以及你自己的代码的读者来说都非常有用。</p>
 
-<p>在光栅化步骤中，视图并不关心即将发生的组合步骤。也就是说，它并不关心自己的 frame (这是用来放置视图的图像)或自己在视图层级中的位置(这是决定组合的顺序)。这时视图只关心一件事就是绘制它自己的 content。这个绘制发生在每个视图的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instm/UIView/drawRect:"><code>drawRect:</code></a> 方法中。</p>
+<p>在看动画如何与我们在屏幕上看到的内容交互之前，我们需要快速浏览一下 Core Animation 的 <code>CALayer</code>，这是动画产生作用的地方。</p>
 
-<p>在 <code>drawRect:</code> 方法被调用前，会为视图创建一个空白的图片来绘制 content。这个图片的坐标系统是视图的 bounds。几乎每个视图 bounds 的 origin 都是 {0，0}。因此，当在光栅化图片左上角绘制一些东西的时候，你都会在 bounds 的 origin {x:0, y:0} 处绘制。在一个图片右下角的地方绘制东西的时候，你都会绘制在 {x:width, y:height} 处。如果你的绘制超出了视图的 bounds，那么超出的部分就不属于光栅化图片的部分了，并且会被丢弃。</p>
+<p>你大概知道 <code>UIView</code> 实例，以及 layer-backed 的 <code>NSView</code>，修改它们的 <code>layer</code> 来委托强大的 Core Graphics 框架来进行渲染。然而，你务必要理解，当把动画添加到一个 layer 时，是不直接修改它的属性的。</p>
 
-<p><img src="http://img.objccn.io/issue-3/SV2.png" alt="" title="" /></p>
+<p>取而代之，Core Animation 维护了两个平行 layer 层次结构： <em>model layer tree（模型层树）</em> 和 <em>presentation layer tree（表示层树）</em>。前者中的 layers 反映了我们能直接看到的 layers 的状态，而后者的 layers 则是动画正在表现的值的近似。</p>
 
-<p>在组合的步骤中，每个视图将自己光栅化图片组合到自己父视图的光栅化图片上面。视图的 frame 决定了自己在父视图中绘制的位置，frame 的 origin 表明了视图光栅化图片左上角相对父视图光栅化图片左上角的偏移量。所以，一个 origin 为 {x:20, y:15} 的 frame 所绘制的图片左边距其父视图 20 点，上边距父视图 15 点。因为视图的 frame 和 bounds 矩形的大小总是一样的，所以光栅化图片组合的时候是像素对齐的。这确保了光栅化图片不会被拉伸或缩小。</p>
+<blockquote>
+  <p>实际上还有所谓的第三个 layer 树，叫做 <em>rendering tree（渲染树）</em>。因为它对 Core Animation 而言是私有的，所以我们在这里不讨论它。</p>
+</blockquote>
 
-<p><img src="http://img.objccn.io/issue-3/SV1.png" alt="" title="" /></p>
+<p>考虑在 view 上增加一个渐出动画。如果在动画中的任意时刻，查看 layer 的 <code>opacity</code> 值，你是得不到与屏幕内容对应的透明度的。取而代之，你需要查看 presentation layer 以获得正确的结果。</p>
 
-<p>记住，我们才仅仅讨论了一个视图和它父视图之间的组合操作。一旦这两个视图被组合到一起，组合的结果图片将会和父视图的父视图进行组合，这是一个雪球效应。</p>
+<p>虽然你可能不会去直接设置 presentation layer 的属性，但是使用它的当前值来创建新的动画或者在动画发生时与 layers 交互是非常有用的。</p>
 
-<p>考虑一下组合图片背后的公式。视图图片的左上角会根据它 frame 的 origin 进行偏移，并绘制到父视图的图片上：</p>
+<p>通过使用 <code>-[CALayer presentationLayer]</code> 和 <code>-[CALayer modelLayer]</code>，你可以在两个 layer 之间轻松切换。</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">Superview</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">Superview</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+<h2>基本动画</h2>
 
-<p>正如之前所说的，如果一个视图 bounds 的 origin 是 {0,0}。那么，我们得到这个公式：</p>
+<p>可能最常见的情况是将一个 view 的属性从一个值改变为另一个值，考虑下面这个例子：</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p><center><img src="http://img.objccn.io/issue-12/rocket-linear.gif" width="400px" /></center></p>
 
-		
-		<a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/" class="more-link">Read on &rarr;</a>
-	</div>
+<p>在这里，我们让红色小火箭的 x-position 从 <code>77.0</code> 变为 <code>455.0</code>，刚好超过它的 parent view 的边。为了填充所有路径，我们需要确定我们的火箭在任意时刻所到达的位置。这通常使用线性插值法来完成：</p>
 
+<p><center><img src="http://img.objccn.io/issue-12/lerp.png" width="135" /></center></p>
 
-<div class="meta">
-	<div class="date">
+<p>也就是说，对于动画给定的一个分数 <code>t</code>，火箭的 x 坐标就是起始点的 x 坐标 <code>77</code>，加上一个到终点的距离 <code>∆x = 378</code> 乘以该分数的值。</p>
 
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/">
-		
-			iOS之玩转字符串</a>
-	</h2>
-	<div class="entry-content">
-		<p>在每个应用里我们都大量使用字符串。下面我们将快速看看一些常见的操作字符串的方法，过一遍常见操作的最佳实践。</p>
-
-<h2>字符串的比较、搜索和排序</h2>
-
-<p>排序和比较字符串比第一眼看上去要复杂得多。不只是因为字符串可以包含<strong>代理对（surrogate pairs ）</strong>(详见 <a href="http://objccn.io/issue-9-1/#peculiar-unicode-features">Ole 写的这篇关于 Unicode 的文章</a>) ，而且比较还与字符串的本地化相关。在某些极端情况下相当棘手。</p>
-
-<p>苹果文档中 <em>String Programming Guide</em> 里有一节叫做 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/Strings/Articles/stringsClusters.html"><strong>“字符与字形集群（Characters and Grapheme Clusters）”</strong></a>，里面提到一些陷阱。例如对于排序来说，一些欧洲语言将序列“ch”当作单个字母。在一些语言里，“ä”被认为等同于 ‘a’ ，而在其它语言里它却被排在 ‘z’ 后面。</p>
-
-<p>而 <code>NSString</code> 有一些方法来帮助我们处理这种复杂性。首先看下面的方法：</p>
-
-<pre><code>- (NSComparisonResult)compare:(NSString *)aString options:(NSStringCompareOptions)mask range:(NSRange)range locale:(id)locale
-</code></pre>
-
-<p>它带给我们充分的灵活性。另外，还有很多<strong>便捷函数（convenience functions）</strong>都使用了这个方法。</p>
-
-<p>与比较有关的可用参数如下：</p>
+<p>使用 <code>CABasicAnimation</code>，我们可以如下实现这个动画：</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -253,40 +212,90 @@
 <span class="line-number">4</span>
 <span class="line-number">5</span>
 <span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSCaseInsensitiveSearch</span>
-</span><span class="line"><span class="n">NSLiteralSearch</span>
-</span><span class="line"><span class="n">NSNumericSearch</span>
-</span><span class="line"><span class="n">NSDiacriticInsensitiveSearch</span>
-</span><span class="line"><span class="n">NSWidthInsensitiveSearch</span>
-</span><span class="line"><span class="n">NSForcedOrderingSearch</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>它们都可以用逻辑“或”运算符组合在一起。</p>
-
-<p><code>NSCaseInsensitiveSearch</code>：“A”等同于“a”，然而在某些地方还有更复杂的情况。例如，在德国，“ß” 和 “SS”是等价的。</p>
-
-<p><code>NSLiteralSearch</code>：Unicode 的点对点比较。它只在所有字符都用相同的方式组成的情况下才会返回相等（即 <code>NSOrderedSame</code>）。LATIN CAPITAL LETTER A 加上 COMBINING RING ABOVE 并不等同于 LATIN CAPITAL LETTER A WITH RING ABOVE.</p>
-
-<blockquote>
-  <p><span class="secondary radius label">编者注</span> 这里要解释一下，首先，每一个Unicode都是有官方名字的！LATIN CAPITAL LETTER A是一个大写“A”，COMBINING RING ABOVE是一个  ̊，LATIN CAPITAL LETTER A WITH RING ABOVE，这是Å。前两者的组合不等同于后者。</p>
-</blockquote>
-
-<p><code>NSNumericSearch</code>：它对字符串里的数字排序，所以 “Section 9” &lt; “Section 20” &lt; “Section 100.”</p>
-
-<p><code>NSDiacriticInsensitiveSearch</code>：“A” 等同于 “Å” 等同于 “Ä.”</p>
-
-<p><code>NSWidthInsensitiveSearch</code>：一些东亚文字（平假名和片假名）有全宽与半宽两种形式。</p>
-
-<p>很值得一提的是<code>-localizedStandardCompare:</code>，它排序的方式和 Finder 一样。它对应的选项是 <code>NSCaseInsensitiveSearch</code>、<code>NSNumericSearch</code>、<code>NSWidthInsensitiveSearch</code> 以及 <code>NSForcedOrderingSearch</code>。如果我们要在 UI 上显示一个文件列表，用它就最合适不过了。</p>
-
-<p>大小写不敏感的比较和音调符号不敏感的比较都是相对复杂和昂贵的操作。如果我们需要比较很多次字符串那这就会成为一个性能上的瓶颈（例如对一个大的数据集进行排序），一个常见的解决方法是同时存储原始字符串和折叠字符串。例如，我们的 <code>Contact</code> 类有一个正常的 <code>name</code> 属性，在内部它还有一个 <code>foldedName</code> 属性，它将自动在 name 变化时更新。那么我们就可以使用 <code>NSLiteralSearch</code> 来比较 name 的折叠版本。 <code>NSString</code> 有一个方法来创建折叠版本：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringByFoldingWithOptions:</span><span class="p">(</span><span class="n">NSStringCompareOptions</span><span class="p">)</span><span class="nv">options</span> <span class="nf">locale:</span><span class="p">(</span><span class="n">NSLocale</span> <span class="o">*</span><span class="p">)</span><span class="nv">locale</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
+</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
+</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">77</span><span class="p">;</span>
+</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">455</span><span class="p">;</span>
+</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="p">[</span><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 		
-		<a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/" class="more-link">Read on &rarr;</a>
+		<a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/">
+		
+			自定义Formatters</a>
+	</h2>
+	<div class="entry-content">
+		<p>我们希望有一种快速的一次性的解决方案，可以把数据格式化为一种易读的格式。Foundation 框架中的就有 <code>NSFormatter</code> 可以很好地胜任这个工作。另外，在 Mac 上，Appkit 已经内建了 <code>NSFormatter</code> 的支持。</p>
+
+<h2>内建格式器</h2>
+
+<p>Foundation 框架中的 <code>NSFormatter</code> 是一个抽象类，它有两个已经实现的子类：<code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code>。现在我们先跳过这些，来实现我们自己的子类。</p>
+
+<p>如果你想了解更多的相关知识，我推荐阅读 <a href="http://nshipster.com/nsformatter/">NSHipster</a>。</p>
+
+<h2>介绍</h2>
+
+<p><code>NSFormatter</code> 除了抛出错误，其它什么事也不做。我还不知道有人想要用这个，当然如果它对你有用，就去用它吧。</p>
+
+<p>因为我们不喜欢错误，我们在此实现一个 <code>NSFormatter</code> 的子类，它可以把 <code>UIColor</code> 实例转换成可读的名字。例如，以下代码可以返回字符串“Blue”:</p>
+
+<pre><code>KPAColorFormatter *colorFormatter = [[KPAColorFormatter alloc] init];
+[colorFormatter stringForObjectValue:[UIColor blueColor]] // Blue
+</code></pre>
+
+<p><code>NSFormatter</code> 的子类化有两个方法需要实现：<code>stringForObjectValue:</code> 与 <code>getObjectValue:ForString:errorDescription:</code>。我们先开始介绍第一个方法，因为这个方法更常用。第二个方法，就我所知，经常用于 OS X 上，并且通常不是很有用，我们将稍后介绍。</p>
+
+<h2>初始化</h2>
+
+<p>首先，我们需要做些初始化的工作。由于没有事先定义好的字典可以把颜色映射至名字，这些工作将由我们来完成。为了简化，这些工作将在初始化方法中完成：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span><span class="p">;</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span> <span class="nl">initWithColors:</span><span class="err">@</span><span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Red&quot;</span><span class="p">,</span>
+</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Blue&quot;</span><span class="p">,</span>
+</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">greenColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Green&quot;</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/" class="more-link">Read on &rarr;</a>
 	</div>
 
 
@@ -305,7 +314,7 @@
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -314,39 +323,319 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/">
+		<a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/">
 		
-			整洁的TableView代码</a>
+			消息传递机制</a>
 	</h2>
 	<div class="entry-content">
-		<p>Table view 是 iOS 应用程序中非常通用的组件。许多代码和 table view 都有直接或间接的关系，随便举几个例子，比如提供数据、更新 table view，控制它的行为以及响应选择事件。在这篇文章中，我们将会展示保持 table view 相关代码的整洁和良好组织的技术。</p>
+		<p>每个应用或多或少都由一些需要相互传递消息的对象结合起来以完成任务。在这篇文章里，我们将介绍所有可用的消息传递机制，并通过例子来介绍怎样在苹果的框架里使用。我们还会选择一些最佳范例来介绍什么时候该用什么机制。</p>
 
-<h2 id="uitableviewcontrollervsuiviewcontroller">UITableViewController vs. UIViewController</h2>
+<p>虽然这一期的主题是关于 Foundation 框架的，但是我们会超出 Foundation 的消息传递机制 (KVO 和 通知) 来讲一讲 delegation，block 和 target-action 几种机制。</p>
 
-<p>Apple 提供了 <code>UITableViewController</code> 作为 table views 专属的 view controller 类。Table view controllers 实现了一些非常有用的特性，来帮你避免一遍又一遍地写那些死板的代码！但是话又说回来，table view controller 只限于管理一个全屏展示的 table view。大多数情况下，这就是你想要的，但如果不是，还有其他方法来解决这个问题，就像下面我们展示的那样。</p>
+<p>当然，有些情况下该使用什么机制没有唯一的答案，所以应该按照自己的喜好去试试。另外大多数情况下该使用什么机制应该是很清楚的。</p>
 
-<h3 id="tableviewcontrollers">Table View Controllers 的特性</h3>
+<p>本文中，我们会常常提及“接收者”和“发送者”。它们在消息传递中的意思可以通过以下的例子解释：一个 table view 是发送者，它的 delegate 就是接收者。Core Data managed object context 是它所发出的 notification 的发送者，获取 notification 的就是接收者。一个滑块 (slider) 是 action 消息的发送者，而实现这个 action （方法）的是它的接收者。任何修改一个支持 KVO 的对象的对象是发送者，这个 KVO 对象的观察者就是接收者。明白精髓了吗？</p>
 
-<p>Table view controllers 会在第一次显示 table view 的时候帮你加载其数据。另外，它还会帮你切换 table view 的编辑模式、响应键盘通知、以及一些小任务，比如闪现侧边的滑动提示条和清除选中时的背景色。为了让这些特性生效，当你在子类中覆写类似 <code>viewWillAppear:</code> 或者 <code>viewDidAppear:</code> 等事件方法时，需要调用 super 版本。</p>
+<h2>几种消息传递机制</h2>
 
-<p>Table view controllers 相对于标准 view controllers 的一个特别的好处是它支持 Apple 实现的“下拉刷新”。目前，文档中唯一的使用 <code>UIRefreshControl</code> 的方式就是通过 table view controller ，虽然通过努力在其他地方也能让它工作（<a href="http://stackoverflow.com/questions/12805003/uirefreshcontrol-issues">见此处</a>），但很可能在下一次 iOS 更新的时候就不行了。</p>
+<p>首先我们来看看每种机制的具体特点。在这个基础上，下一节我们会画一个流程图来帮我们在具体情况下正确选择应该使用的机制。最后，我们会介绍一些苹果框架里的例子并且解释为什么在那些用例中会选择这样的机制。</p>
 
-<p>这些要素加一起，为我们提供了大部分 Apple 所定义的标准 table view 交互行为，如果你的应用恰好符合这些标准，那么直接使用 table view controllers 来避免写那些死板的代码是个很好的方法。</p>
+<h3 id="kvo">KVO</h3>
 
-<h3 id="tableviewcontrollers">Table View Controllers 的限制</h3>
+<p>KVO 是提供对象属性被改变时的通知的机制。KVO 的实现在 Foundation 中，很多基于 Foundation 的框架都依赖它。想要了解更多有关 KVO 的最佳实践，请阅读本期 Daniel 写的 <a href="http://objccn.io/issue-7-3">KVO 和 KVC 文章</a>。</p>
 
-<p>Table view controllers 的 view 属性永远都是一个 table view。如果你稍后决定在 table view 旁边显示一些东西（比如一个地图），如果不依赖于那些奇怪的 hacks，估计就没什么办法了。</p>
+<p>如果只对某个对象的值的改变感兴趣的话，就可以使用 KVO 消息传递。不过有一些前提：第一，接收者（接收对象改变的通知的对象）需要知道发送者 （值会改变的对象）；第二，接收者需要知道发送者的生命周期，因为它需要在发送者被销毁前注销观察者身份。如果这两个要去符合的话，这个消息传递机制可以一对多（多个观察者可以注册观察同一个对象的变化）</p>
 
-<p>如果你是用代码或 .xib 文件来定义的界面，那么迁移到一个标准 view controller 将会非常简单。但是如果你使用了 storyboards，那么这个过程要多包含几个步骤。除非重新创建，否则你并不能在 storyboards 中将 table view controller 改成一个标准的 view controller。这意味着你必须将所有内容拷贝到新的 view controller，然后再重新连接一遍。</p>
+<p>If you plan to use KVO on Core Data objects, you have to know that things work a bit differently here. This has to do with Core Data&#8217;s faulting mechanism. Once a managed object turns into a fault, it will fire the observers on its properties although their values haven&#8217;t changed.</p>
 
-<p>最后，你需要把迁移后丢失的 table view controller 的特性给补回来。大多数都是 <code>viewWillAppear:</code> 或 <code>viewDidAppear:</code> 中简单的一条语句。切换编辑模式需要实现一个 action 方法，用来切换 table view 的 <code>editing</code> 属性。大多数工作来自重新创建对键盘的支持。</p>
+<p>如果要在 Core Data 上使用 KVO 的话，方法会有些许差别。这和 Core Data 的 faulting 机制有关。一旦一个 managed object 被 faulting 处理的话，即使它的属性没有被改变，它还是会触发相应的观察者。</p>
 
-<p>在选择条路之前，其实还有一个更轻松的选择，它可以通过分离我们需要关心的功能（关注点分离），让你获得额外的好处：</p>
+<blockquote>
+  <span class="secondary radius label">编者注</span> 把属性值先取入缓存中，在对象需要的时候再进行一次访问，这在 Core Data 中是默认行为，这种技术称为 Faulting。这么做可以避免降低内存开销，但是如果你确定将访问结果对象的具体属性值时，可以禁用 Faults 以提高获取性能。关于这个技术更多的情况，请移步<a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreData/Articles/cdFaultingUniquing.html">官方文档</a>
+</blockquote>
 
-<h3 id="childviewcontrollers">使用Child View Controllers</h3>
+<h3>通知</h3>
 
-<p>和完全抛弃 table view controller 不同，你还可以将它作为 child view controller 添加到其他 view controller 中（<a href="http://objccn.io/issue-1-4">关于此话题的文章</a>）。这样，parent view controller 在管理其他的你需要的新加的界面元素的同时，table view controller 还可以继续管理它的 table view。</p>
+		
+		<a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/" class="more-link">Read on &rarr;</a>
+	</div>
 
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/">
+		
+			语言标签</a>
+	</h2>
+	<div class="entry-content">
+		<p>当我们处理自然语言（相对于程序语言而言）的时候会遇到一项挑战，即涵义模棱两可。程序语言是被设计成为有且只有一个可能解释的语言，而人类语言可能由于模糊性和不确定性衍生出很多问题。这是由于有时候你并不想确切地告诉别人你对某事物的想法。在社交场合这完全没有问题，但是当你试图使用计算机来处理人类语言的话，就会非常痛苦。</p>
+
+<p>词法标识（token）就是一个简单的例子。程序语言的词法分析对于标识表示什么，它是什么类型（语句分隔符，标识符，保留关键字等等）是什么有着明确的规则。而自然语言则远不能如此清晰可辩。<em>can’t</em> 是一个还是两个标识？并且根据你做出的判断，<em>cannot</em> 或者 <em>can not</em> 这两个应该是相同意思的词又各是几个标识呢？很多复合词都可以写成一个词（比如：<em>bookshelf</em>），或者两个词（比如：<em>lawn mower</em>），甚至还可以用连字符来连接（比如：<em>life-cycle</em>）。有些字符 （比如说连字符或者右肩单撇号），可以有很多种解释，而如何选择正确字符往往取决于上下文语言环境（撇号在一个单词的最后是表示所有格符号还是后单引号？）</p>
+
+<p>句子的情况同样不怎么好：如果简单认为句号是用来结束一个句子的话，在我们使用缩写或是序数的时候就悲剧了。虽然通常情况下，我们是可以解决这个问题的，但是对有些句子而言，除非将整个段落彻底分析，否则无法真正确定这些句子的意思。我们人类甚至也无法有意识地考虑这些问题。</p>
+
+<p>不过我们希望能够处理人类语言，因为在跟软件交流的时候，使用人类语言对用户更加友好。我们更愿意直接告诉计算机要做什么，让计算机为我们分析报纸文章，并对我们感兴趣的新闻做个总结，而不是通过敲击键盘或者点击小小的按钮（或者在小小的虚拟键盘上打字）来让计算机为我们做这些事。其中有些还在我们的能力范围之外（至少在苹果为我们提供与 Siri 交互的  API 之前）。但是有些已经成为可能，那就是 <code>NSLinguisticTagger</code>。</p>
+
+<p><code>NSLinguisticTagger</code> 是 Foundation 框架中命名极为不当的类之一，这是因为它远远不止是一个小小的词性 tagger，而是集词法分析，分词器，命名实体识别及词性标注为一体的类。换句话说，它几乎可以满足你处理某些计算机语言处理的全部要求。</p>
+
+<p>为了展示 <code>NSLinguisticTagger</code> 类的用法，我们会开发一个灵活的工具用来搜索。我们有一个充满了文本（比如新闻，电邮，或者其他的任意文本）的集合，然后我们输入一个单词，这个单词将返回所有包含这个单词的句子。我们会忽略功能词（比如 <em>the</em>，<em>of</em> 或者 <em>and</em>），因为它们在这个语言环境中太过于常见，没有什么用处。我们目前要实现的是第一步：从一个单独文件中提取相关单词。由此可以迅速地扩展到提供完整功能。</p>
+
+<p><a href="https://github.com/objcio/issue-7-linguistic-tagging">GitHub</a> 上有源代码和样本文本。这是《卫报》上一篇关于中英贸易的文章。当用软件分析这份文本时，你会发现，它并不是总是运行良好，不过，出现运行故障完全正常：人类语言和任何正式语言都不同，人类语言凌乱复杂，无法简单划归到整齐划一的规则系统。很多理论问题（哪怕就像词性一样基础的问题）在某种程度上是无法解决的，这是由于我们仍然对如何才能最好地描述语言还所知甚少。比如说，词的分类是以拉丁语为依据的，但这并不意味着就必定适合英语。它们充其量只是大概近似而已。不过从很多实际的目的来看，这样就已经足够了，不需要让人怎么担心了。</p>
+
+		
+		<a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/14/view-layerxie-zuo/">
+		
+			View-Layer协作</a>
+	</h2>
+	<div class="entry-content">
+		<p>在 iOS 中，所有的 view 都是由一个底层的 layer 来驱动的。view 和它的 layer 之间有着紧密的联系，view 其实直接从 layer 对象中获取了绝大多数它所需要的数据。在 iOS 中也有一些单独的 layer，比如 <code>AVCaptureVideoPreviewLayer</code> 和 <code>CAShapeLayer</code>，它们不需要附加到 view 上就可以在屏幕上显示内容。两种情况下其实都是 layer 在起决定作用。当然了，附加到 view 上的 layer 和单独的 layer 在行为上还是稍有不同的。</p>
+
+<p>基本上你改变一个单独的 layer 的任何属性的时候，都会触发一个从旧的值过渡到新值的简单动画（这就是所谓的可动画 <code>animatable</code>）。然而，如果你改变的是 view 中 layer 的同一个属性，它只会从这一帧直接跳变到下一帧。尽管两种情况中都有 layer，但是当 layer 附加在 view 上时，它的默认的隐式动画的 layer 行为就不起作用了。</p>
+
+<blockquote>
+  <p>animatable；几乎所有的层的属性都是隐性可动画的。你可以在文档中看到它们的简介是以 &#8216;animatable&#8217; 结尾的。这不仅包括了比如位置，尺寸，颜色或者透明度这样的绝大多数的数值属性，甚至也囊括了像 isHidden 和 doubleSided 这样的布尔值。 像 paths 这样的属性也是 animatable 的，但是它不支持隐式动画。</p>
+</blockquote>
+
+<p>在 Core Animation 编程指南的 “How to Animate Layer-Backed Views” 中，对<em>为什么</em>会这样做出了一个解释：</p>
+
+<blockquote>
+  <p>UIView 默认情况下禁止了 layer 动画，但是在 animation block 中又重新启用了它们</p>
+</blockquote>
+
+<p>这正是我们所看到的行为；当一个属性在动画 block 之外被改变时，没有动画，但是当属性在动画 block 内被改变时，就带上了动画。对于这是<em>如何</em>发生的这一问题的答案十分简单和优雅，它优美地阐明和揭示了 view 和 layer 之间是如何协同工作和被精心设计的。</p>
+
+<p>无论何时一个可动画的 layer 属性改变时，layer 都会寻找并运行合适的 &#8216;action&#8217; 来实行这个改变。在 Core Animation 的专业术语中就把这样的动画统称为动作 (action，或者 <code>CAAction</code>)。</p>
+
+<blockquote>
+  <p>CAAction：技术上来说，这是一个接口，并可以用来做各种事情。但是实际中，某种程度上你可以只把它理解为用来处理动画。</p>
+</blockquote>
+
+<p>layer 将像文档中所写的的那样去寻找动作，整个过程分为五个步骤。第一步中的在 view 和 layer 中交互的部分是最有意思的：</p>
+
+<p>layer 通过向它的 delegate 发送 <code>actionForLayer:forKey:</code> 消息来询问提供一个对应属性变化的 action。delegate 可以通过返回以下三者之一来进行响应：</p>
+
+		
+		<a href="/Blog/blog/2014/05/14/view-layerxie-zuo/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/14/view-layerxie-zuo/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/">
+		
+			CollectionView布局动画</a>
+	</h2>
+	<div class="entry-content">
+		<p><code>UICollectionView</code> 和相关类的设置非常灵活和强大。但是灵活性一旦增强，某种程度上也增加了其复杂性： <code>UICollectionView</code> 比老式的 <code>UITableView</code> 更有深度，适用性也更强。</p>
+
+<p>Collection View 深入太多了，事实上，<a href="http://oleb.net">Ole Begeman</a> 和 <a href="https://twitter.com/ashfurrow">Ash Furrow</a> 之前曾在 objc.io 上发表过 <a href="http://objccn.io/issue-3-3/">自定义 Collection View 布局</a> 和 <a href="http://objccn.io/issue-5-2/">UICollectionView + UIKit 力学</a>，但是我依然有一些他们没有提及的内容可以写。在这篇文章中，我假设你已经非常熟悉 <code>UICollectionView</code> 的基本布局，并且至少阅读了苹果精彩的<a href="https://developer.apple.com/library/ios/documentation/WindowsViews/Conceptual/CollectionViewPGforIOS/Introduction/Introduction.html#//apple_ref/doc/uid/TP40012334">编程指南</a>以及 Ole 之前的<a href="http://objccn.io/issue-3-3/">文章</a>。</p>
+
+<p>本文的第一部分将集中讨论并举例说明如何用不同的类和方法来共同帮助实现一些常见的 <code>UICollectionView</code> 动画。在第二部分，我们将看一下带有 collection views 的 view controller 转场动画以及在 <code>useLayoutToLayoutNavigationTransitions</code> 可用时使用其进行转场，如果不可用时，我们会实现一个自定义转场动画。</p>
+
+<p>你可以在 GitHub 中找到本文提到的两个示例工程:</p>
+
+<ul>
+<li><a href="https://github.com/objcio/issue-12-CollectionViewAnimations">布局动画</a></li>
+<li><a href="https://github.com/objcio/issue-12-CustomCollectionViewTransition">自定义 collection view 转场动画</a></li>
+</ul>
+
+<h2 id="collectionview">Collection View 布局动画</h2>
+
+<p>标准 <code>UICollectionViewFlowLayout</code> 除了动画是非常容易自定义的，苹果选择了一种安全的途径去实现一个简单的淡入淡出动画作为所有布局的默认动画。如果你想实现自定义动画，最好的办法是子类化 <code>UICollectionViewFlowLayout</code> 并且在适当的地方实现你的动画。让我们通过一些例子来了解 <code>UICollectionViewFlowLayout</code> 子类中的一些方法如何协助完成自定义动画。</p>
+
+<h3>插入删除元素</h3>
+
+		
+		<a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/">
+		
+			自定义ViewController动画</a>
+	</h2>
+	<div class="entry-content">
+		<p>在<a href="http://objccn.io/issue-5/">话题 #5</a> 中，<a href="http://twitter.com/chriseidhof">Chris Eidhof</a> 向我们介绍了 iOS7 引入的新特性自定义 <a href="http://objccn.io/issue-5-3">View Controller 转场</a>. 他给出了一个 <a href="http://objccn.io/issue-5-3/#conclusion">结论</a>：</p>
+
+<blockquote>
+  <p>我们在本文只探讨了在 navigation controller 中的两个 view controller 之间的转场动画，但是这些做法在 tab bar controller 或者<strong>任何你自己定义的 view controller 容器</strong>中<strong>也是通用的</strong>… </p>
+</blockquote>
+
+<p>尽管从技术角度来讲，使用 iOS 7 的 API，你可以对自定义容器中的 view controllers 做自定义转场，但是这不是能直接使用的，实现这种效果非常不容易。</p>
+
+<p>请注意我正在讨论的自定义视图控制器容器 (custom container view controllers) 都是 <code>UIViewController</code> 的直接子类，而不是 <code>UITabBarController</code> 或者 <code>UINavigationController</code> 的子类。</p>
+
+<p>对于你自定义的继承于 <code>UIViewController</code> 的容器子类，并没有现成可用的 API 允许一个任意的<em>动画控制器 (animation controller)</em> 将一个子视图控制器自动转场到另外一个，不管是可交互式的转场还是不可交互式的转场。 我甚至都觉着苹果根本就不想支持这种方式。苹果支持下面的这几种转场方式:</p>
+
+<ul>
+<li>Navigation controller 推入和推出页面</li>
+<li>Tab bar controller 选择的改变</li>
+<li>Modal 页面的展示和消失</li>
+</ul>
+
+<p>在本文中，我将向你展示如何自定义视图控制器容器，并且使其支持第三方的动画控制器。</p>
+
+<p>如果你需要复习一下 iOS 5 引入的视图控制器容器，请阅读<a href="http://objccn.io/issue-1/">话题＃1</a> 中 <a href="https://twitter.com/rickigregersen">Ricky Gregersen</a> 写的文章 “<a href="http://objccn.io/issue-1-4/">View Controller 容器</a>”。</p>
+
+<h2>预热准备</h2>
+
+<p>看到这里，你可能对上文我们说到的一些问题犯嘀咕，让我来告诉你答案吧:</p>
+
+<p><em>为什么我们不直接继承 <code>UINavigationController</code> 或 <code>UITabBarController</code>，并且使用它们提供的功能的？</em></p>
+
+		
+		<a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/">
+		
+			Layer中动画概述</a>
+	</h2>
+	<div class="entry-content">
+		<p>默认情况下，<code>CALayer</code> 及其子类的绝大部分标准属性都可以执行动画，无论是添加一个 <code>CAAnimation</code> 到 Layer（显式动画），亦或是为属性指定一个动作然后修改它（隐式动画）。</p>
+
+<p>但有时候我们希望能同时为好几个属性添加动画，使它们看起来像是一个动画一样；或者，我们需要执行的动画不能通过使用标准 Layer 属性动画来实现。</p>
+
+<p>在本文中，我们将讨论如何子类化 <code>CALayer</code> 并添加我们自己的属性，以便比较容易地创建那些如果以其他方式实现起来会很麻烦的动画效果。</p>
+
+<p>一般说来，我们希望添加到 <code>CALayer</code> 的子类上的可动画属性有三种类型：</p>
+
+<ul>
+<li>能间接动画 Layer （或其子类）的一个或多个标准属性的属性。</li>
+<li>能触发 Layer 背后的图像（即 <code>contents</code> 属性）重绘的属性。</li>
+<li>不涉及 Layer 重绘或对任何已有属性执行动画的属性。</li>
+</ul>
+
+<h2>间接属性动画</h2>
+
+<p>能间接修改其它标准 Layer 属性的自定义属性是这些选项中最简单的。它们仅仅只是自定义 setter 方法。然后将它们的输入转换为适用于创建动画的一个或多个不同的值。</p>
+
+<p>如果被我们设置的属性已经预设好标准动画，那我们完全不需要编写任何实际的动画代码，因为我们修改这些属性后，它们就会继承任何被配置在当前 <code>CATransaction</code> 上的动画设置，并且自动执行动画。</p>
+
+<p>换句话说，即使 <code>CALayer</code> 不知道如何对我们自定义的属性进行动画，它依然能对因自定义属性被改变而引起的其它可见副作用进行动画，而这恰好就是我们所需要的。</p>
+
+<p>为了演示这种方法，让我们来创建一个简单的模拟时钟，之后我们可以使用被声明为 <code>NSDate</code> 类型 <code>time</code> 属性来设置它的时间。我会将从创建一个静态的时钟面盘开始。这个时钟包含三个 <code>CAShapeLayer</code> 实例 —— 一个用于时钟面盘的圆形 Layer 和两个用于时针和分针的长方形 Sublayer。</p>
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
@@ -359,22 +648,82 @@
 <span class="line-number">10</span>
 <span class="line-number">11</span>
 <span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addPhotoDetailsTableView</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span>: <span class="nc">CAShapeLayer</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">NSDate</span> <span class="o">*</span><span class="n">time</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// 私有属性</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">CAShapeLayer</span> <span class="o">*</span><span class="n">hourHand</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">CAShapeLayer</span> <span class="o">*</span><span class="n">minuteHand</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ClockFace</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
 </span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">DetailsViewController</span> <span class="o">*</span><span class="n">details</span> <span class="o">=</span> <span class="p">[[</span><span class="n">DetailsViewController</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">photo</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">photo</span><span class="p">;</span>
-</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">delegate</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">addChildViewController:</span><span class="n">details</span><span class="p">];</span>
-</span><span class="line">    <span class="n">CGRect</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">bounds</span><span class="p">;</span>
-</span><span class="line">    <span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">110</span><span class="p">;</span>
-</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">addSubview:</span><span class="n">details</span><span class="p">.</span><span class="n">view</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">details</span> <span class="nl">didMoveToParentViewController:</span><span class="n">self</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">((</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">]))</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithOvalInRect:</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">].</span><span class="n">CGPath</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">whiteColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">strokeColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">lineWidth</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAShapeLayer</span> <span class="n">layer</span><span class="p">];</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">70</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">70</span><span class="p">)].</span><span class="n">CGPath</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAShapeLayer</span> <span class="n">layer</span><span class="p">];</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">90</span><span class="p">)].</span><span class="n">CGPath</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
 </span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
 		
-		<a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/" class="more-link">Read on &rarr;</a>
+		<a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/" class="more-link">Read on &rarr;</a>
 	</div>
 
 
@@ -393,7 +742,7 @@
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -402,156 +751,27 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/">
+		<a href="/Blog/blog/2014/05/08/li-jie-framezai-bu-ju-de-zuo-yong/">
 		
-			并发程序开发测试</a>
+			理解Frame在布局的作用</a>
 	</h2>
 	<div class="entry-content">
-		<p>在开发高质量应用程序的过程中，测试是一个很重要的工具。在过去，当并发并不是应用程序架构中重要组成部分的时候，测试就相对简单。随着这几年的发展，使用并发设计模式已愈发重要了，想要测试好并发应用程序，已成了一个不小的挑战。</p>
-
-<p>测试并发代码最主要的困难在于程序或信息流不是反映在调用堆栈上。函数并不会立即返回结果给调用者，而是通过回调函数，Block，通知或者一些类似的机制，这些使得测试变得更加困难。</p>
-
-<p>然而，测试异步代码也会带来一些好处，比如可以揭露较差的程序设计，让最终的实现变得更加清晰。</p>
-
-<h2>异步测试的问题</h2>
-
-<p>首先，我们来看一个简单的同步单元测试例子。两个数求和的方法：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">add:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">a</span> <span class="nf">to:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">b</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>测试这个方法很简单，只需要比较该方法返回的值是否与期望的值相同，如果不相同，则测试失败。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testAddition</span> <span class="p">{</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">Calculator</span> <span class="nl">add:</span><span class="mi">2</span> <span class="nl">to:</span><span class="mi">2</span><span class="p">];</span>
-</span><span class="line">    <span class="n">STAssertEquals</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="nb">nil</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/">
-		
-			线程安全</a>
-	</h2>
-	<div class="entry-content">
-		<p>这篇文章将专注于实用技巧，设计模式，以及对于写出线程安全类和使用 GCD 来说所特别需要注意的一些<a href="http://zh.wikipedia.org/wiki/反面模式">反面模式</a>。</p>
-
-<h2>线程安全</h2>
-
-<h3 id="apple">Apple 的框架</h3>
-
-<p>首先让我们来看看 Apple 的框架。一般来说除非特别声明，大多数的类默认都不是线程安全的。对于其中的一些类来说，这是很合理的，但是对于另外一些来说就很有趣了。</p>
-
-<p>就算是在经验丰富的 iOS/Mac 开发者，也难免会犯从后台线程去访问 UIKit/AppKit 这种错误。比如因为图片的内容本身就是从后台的网络请求中获取的话，顺手就在后台线程中设置了 <code>image</code> 之类的属性，这样的错误其实是屡见不鲜的。Apple 的代码都经过了性能的优化，所以即使你从别的线程设置了属性的时候，也不会产生什么警告。</p>
-
-<p>在设置图片这个例子中，症结其实是你的改变通常要过一会儿才能生效。但是如果有两个线程在同时对图片进行了设定，那么很可能因为当前的图片被释放两次，而导致应用崩溃。这种行为是和时机有关系的，所以很可能在开发阶段没有崩溃，但是你的用户使用时却不断 crash。</p>
-
-<p>现在没有<strong>官方</strong>的用来寻找类似错误的工具，但我们确实有一些技巧来避免这个问题。<a href="https://gist.github.com/steipete/5664345">UIKit Main Thread Guard</a> 是一段用来监视每一次对 <code>setNeedsLayout</code> 和 <code>setNeedsDisplay</code> 的调用代码，并检查它们是否是在主线程被调用的。因为这两个方法在 UIKit 的 setter （包括 image 属性）中广泛使用，所以它可以捕获到很多线程相关的错误。虽然这个小技巧并不包含任何私有 API， 但我们还是不建议将它是用在发布产品中，不过在开发过程中使用的话还是相当赞的。</p>
-
-<p>Apple没有把 UIKit 设计为线程安全的类是有意为之的，将其打造为线程安全的话会使很多操作变慢。而事实上 UIKit 是和主线程绑定的，这一特点使得编写并发程序以及使用 UIKit 十分容易的，你唯一需要确保的就是对于 UIKit 的调用总是在主线程中来进行。</p>
-
-<h4 id="uikit">为什么 UIKit 不是线程安全的？</h4>
-
-<p>对于一个像 UIKit 这样的大型框架，确保它的线程安全将会带来巨大的工作量和成本。将 non-atomic 的属性变为 atomic 的属性只不过是需要做的变化里的微不足道的一小部分。通常来说，你需要同时改变若干个属性，才能看到它所带来的结果。为了解决这个问题，苹果可能不得不提供像 Core Data 中的 <code>performBlock:</code> 和 <code>performBlockAndWait:</code> 那样类似的方法来同步变更。另外你想想看，绝大多数对 UIKit 类的调用其实都是以<strong>配置</strong>为目的的，这使得将 UIKit 改为线程安全这件事情更显得毫无意义了。</p>
-
-<p>然而即使是那些与配置共享的内部状态之类事情无关的调用，其实也不是线程安全的。如果你做过 iOS 3.2 或之前的黑暗年代的 app 开发的话，你肯定有过一边在后台准备图像时一边使用 NSString 的 <code>drawInRect:withFont:</code> 时的随机崩溃的经历。值得庆幸的事，在 iOS 4 中 <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniOS/Articles/iPhoneOS4.html">苹果将大部分绘图的方法和诸如 <code>UIColor</code> 和 <code>UIFont</code> 这样的类改写为了后台线程可用</a>。</p>
-
-<p>但不幸的是 Apple 在线程安全方面的文档是极度匮乏的。他们推荐只访问主线程，并且甚至是绘图方法他们都没有明确地表示保证线程安全。因此在阅读文档的同时，去读读 <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniOS/Articles/iPhoneOS4.html">iOS 版本更新说明</a>会是一个很好的选择。</p>
-
-<p>对于大多数情况来说，UIKit 类确实只应该用在应用的主线程中。这对于那些继承自 UIResponder 的类以及那些操作你的应用的用户界面的类来说，不管如何都是很正确的。</p>
-
-<h4 id="deallocation">内存回收 (deallocation) 问题</h4>
-
-<p>另一个在后台使用 UIKit 对象的的危险之处在于“内存回收问题”。Apple 在技术笔记 <a href="ttp://developer.apple.com/library/ios/#technotes/tn2109/_index.html">TN2109</a> 中概述了这个问题，并提供了多种解决方案。这个问题其实是要求 UI 对象应该在主线程中被回收，因为在它们的 <code>dealloc</code> 方法被调用回收的时候，可能会去改变 view 的结构关系，而如我们所知，这种操作应该放在主线程来进行。</p>
-
-<p>因为调用者被其他线程持有是非常常见的（不管是由于 operation 还是 block 所导致的），这也是很容易犯错并且难以被修正的问题。在 <a href="https://github.com/AFNetworking/AFNetworking/issues/56">AFNetworking 中也一直长久存在这样的 bug</a>，但是由于其自身的隐蔽性而鲜为人知，也很难重现其所造成的崩溃。在异步的 block 或者操作中一致使用 <code>__weak</code>，并且不去直接访问局部变量会对避开这类问题有所帮助。</p>
-
-<h4 id="collection">Collection 类</h4>
-
-		
-		<a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/">
-		
-			底层并发API</a>
-	</h2>
-	<div class="entry-content">
-		<p>这篇文章里，我们将会讨论一些 iOS 和 OS X 都可以使用的底层 API。除了 <code>dispatch_once</code> ，我们一般不鼓励使用其中的任何一种技术。</p>
-
-<p>但是我们想要揭示出表面之下深层次的一些可利用的方面。这些底层的 API 提供了大量的灵活性，随之而来的是大量的复杂度和更多的责任。在我们的文章<a href="http:/objccn.io/issue-2-2/">常见的后台实践</a>中提到的高层的 API 和模式能够让你专注于手头的任务并且免于大量的问题。通常来说，高层的 API 会提供更好的性能，除非你能承受起使用底层 API 带来的纠结于调试代码的时间和努力。</p>
-
-<p>尽管如此，了解深层次下的软件堆栈工作原理还是有很有帮助的。我们希望这篇文章能够让你更好的了解这个平台，同时，让你更加感谢这些高层的 API。</p>
-
-<p>首先，我们将会分析大多数组成 <em>Grand Central Dispatch</em> 的部分。它已经存在了好几年，并且苹果公司持续添加功能并且改善它。现在苹果已经将其开源，这意味着它对其他平台也是可用的了。最后，我们将会看一下<a href="#atomic_operations">原子操作</a>——另外的一种底层代码块的集合。</p>
-
-<p>或许关于并发编程最好的书是 <em>M. Ben-Ari</em> 写的《Principles of Concurrent Programming》,<a href="https://en.wikipedia.org/wiki/Special:BookSources/0-13-701078-8">ISBN 0-13-701078-8</a>。如果你正在做任何与并发编程有关的事情，你需要读一下这本书。这本书已经30多年了，仍然非常卓越。书中简洁的写法，优秀的例子和练习，带你领略并发编程中代码块的基本原理。这本书现在已经绝版了，但是它的一些复印版依然广为流传。有一个新版书，名字叫《Principles of Concurrent and Distributed Programming》,<a href="https://en.wikipedia.org/wiki/Special:BookSources/0-321-31283-X">ISBN 0-321-31283-X</a>,好像有很多相同的地方，不过我还没有读过。</p>
-
-<h2>从前&#8230;</h2>
-
-<p>或许GCD中使用最多并且被滥用功能的就是 <code>dispatch_once</code> 了。正确的用法看起来是这样的：</p>
+		<p>Frame是布局的核心。每个开发者都使用frame定位和改变<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">UIView</code>和<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">CALayer</code>的大小。在本文中我将把焦点集中在<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">CALayer</code>上，因为它是<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">UIView</code>的底层实现，<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">view.frame</code>简单的返回了<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">view.layer.frame</code>。此外，我不会讨论<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">setFrame:</code>方法。虽然看起来范围十分有限，但实际上有许多有趣的事情在平凡又古老的<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">frame</code>getter方法中发生。</p>
+<h3>Frame依赖于什么</h3>
+<p>众所周知，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>是一个派生属性，实际上它基于一些其他的属性。实际上在计算frame值的时候会参考4个(!)属性:<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">transform</code>，和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>。</p>
+<p>我们从<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>开始。bounds很棘手，它混合了层的内部和外部。<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.size</code>定义了层本身的面积，声明了它所存在的区域。设置<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">masksToBounds</code>为<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">YES</code>会把所有子层超出bounds范围的部分裁掉。另一方面，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">origin</code>属性并不影响层本身的布局；然而它会影响它内部的子层的布局方式。<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>定义了层内部坐标系的原点。</p>
+<p>这里有一个例子展示了<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>如何工作。例如我们定义<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>为<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGPointMake (20.0f, 30.0f)</code></p>
+<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350011152-0.png" title="bounds.origin" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350011152-0.png" title="bounds.origin" alt="bounds.origin" /></a>bounds.origin</p>
+<p>如何定义本地坐标系？只要把层的左上角放到<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>上就行了。</p>
+<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350015c5-1.png" title="bounds.origin" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350015c5-1.png" title="bounds.origin" alt="bounds.origin" /></a>bounds.origin</p>
+<p><code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>是一个稍微有点不同的讨厌鬼。首先，它的值标准化为0.0-1.0的范围内。获得以&rdquo;点&rdquo;为单位的值需要用<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.size</code>乘以标准化的值。更重要的是，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>定义了应用变换的坐标系的原点。</p>
+<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350012607-2.png" title="anchorPoint" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350012607-2.png" title="anchorPoint" alt="anchorPoint" /></a>anchorPoint</p>
+<p>变换具有相同<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>但有不同<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>的层(蓝色)会有很大区别(灰色)。</p>
+<p><code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>是最简单的一个概念。它定义了经过<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.size</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">transform</code>的混合后，添加到层中的最终位置。</p>
+<h3>精度的快速讨论</h3>
+<p>在写这篇博客的时候，我留意到有时我的计算结果和CoreAnimation返回的计算结果相比有所出入。有可能是我计算错误或者有精度问题。我理所当然的首先检查了精度问题。幸运的是我的直觉是正确的。<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGFloat</code>在32位架构上是一个<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">float</code>的类型定义(在64位架构上是<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>)，而似乎CoreAnimation并没有理会<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGFloat</code>的实际类型而在内部直接使用了<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>。</p>
+<p>要证实这个猜测并不困难。使用<a href="http://www.hopperapp.com/">Hooper</a>工具检查<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CALayer</code>的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>getter方法的执行内容，我发现了一个叫做<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">mat4_apply_to_rect</code>的函数。然后我在这里设置了一个符号断点，实际上也就是在<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CA::Mat4Impl::mat4_apply_to_rect(double const*, double*)</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CA::Mat4Impl::mat4_apply_to_rect(float const*, float*)</code>上分别设置了一个断点，以确定哪一个函数被执行。当在设备上运行代码的时候，断点停在了参数是<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>的函数中，即使使用的是32位ARM架构的iPhone。</p>
+<p>在一些极端情况下，使用<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">float</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>的差异是显而易见的。然而因为我们的目标是对CoreAnimation进行逆向工程并得到完全相同的结果，所以我们也使用<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>。我们定义一些和CoreGraphics中相同的非常简单的结构体。</p>
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
@@ -561,27 +781,23 @@
 <span class="line-number">7</span>
 <span class="line-number">8</span>
 <span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">UIColor</span> <span class="o">*</span><span class="p">)</span><span class="nf">boringColor</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">static</span> <span class="n">UIColor</span> <span class="o">*</span><span class="n">color</span><span class="p">;</span>
-</span><span class="line">    <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
-</span><span class="line">    <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">        <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="nl">colorWithRed:</span><span class="mf">0.380f</span> <span class="nl">green:</span><span class="mf">0.376f</span> <span class="nl">blue:</span><span class="mf">0.376f</span> <span class="nl">alpha:</span><span class="mf">1.000f</span><span class="p">];</span>
-</span><span class="line">    <span class="p">});</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">color</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">MCSDoublePoint</span> <span class="p">{</span>
+</span><span class="line">	<span class="kt">double</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span> <span class="n">MCSDoublePoint</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">MCSDoubleSize</span> <span class="p">{</span>
+</span><span class="line">	<span class="kt">double</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span> <span class="n">MCSDoubleSize</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">MCSDoubleRect</span> <span class="p">{</span>
+</span><span class="line">	<span class="n">MCSDoublePoint</span> <span class="n">origin</span><span class="p">;</span>   <span class="n">MCSDoubleSize</span> <span class="n">size</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span> <span class="n">MCSDoubleRect</span><span class="p">;</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>上面的 block 只会运行一次。并且在连续的调用中，这种检查是很高效的。你能使用它来初始化全局数据比如单例。要注意的是，使用 <code>dispatch_once_t</code> 会使得测试变得非常困难（单例和测试不是很好配合）。</p>
-
-<p>要确保 <code>onceToken</code> 被声明为 <code>static</code> ，或者有全局作用域。任何其他的情况都会导致无法预知的行为。换句话说，<strong>不要</strong>把 <code>dispatch_once_t</code> 作为一个对象的成员变量，或者类似的情形。</p>
-
-<p>退回到远古时代（其实也就是几年前），人们会使用 <code>pthread_once</code> ，因为 <code>dispatch_once_t</code> 更容易使用并且不易出错，所以你永远都不会再用到 <code>pthread_once</code> 了。</p>
-
-<h2>延后执行</h2>
-
 		
-		<a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/" class="more-link">Read on &rarr;</a>
+		<a href="/Blog/blog/2014/05/08/li-jie-framezai-bu-ju-de-zuo-yong/" class="more-link">Read on &rarr;</a>
 	</div>
 
 
@@ -600,180 +816,7 @@
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/">
-		
-			常见iOS后台技术</a>
-	</h2>
-	<div class="entry-content">
-		<p>本文主要探讨一些常用后台任务的最佳实践。我们将会看看如何并发地使用 Core Data ，如何并行绘制 UI ，如何做异步网络请求等。最后我们将研究如何异步处理大型文件，以保持较低的内存占用。  因为在异步编程中非常容易犯错误，所以，本文中的例子都将使用很简单的方式。因为使用简单的结构可以帮助我们看透代码，抓住问题本质。如果你最后把代码写成了复杂的嵌套回调的话，那么你很可能应该重新考虑自己当初的设计选择了。</p>
-
-<h2 id="operationqueuesgcd">操作队列 (Operation Queues) 还是 GCD ?</h2>
-
-<p>目前在 iOS 和 OS X 中有两套先进的同步 API 可供我们使用：<a href="http://developer.apple.com/library/ios/#documentation/Cocoa/Reference/NSOperationQueue_class/Reference/Reference.html">操作队列</a>和 <a href="https://developer.apple.com/library/ios/#documentation/Performance/Reference/GCD_libdispatch_Ref/Reference/reference.html">GCD</a> 。其中 GCD 是基于 C 的底层的 API ，而操作队列则是 GCD 实现的 Objective-C API。关于我们可以使用的并行 API 的更加全面的总览，可以参见 <a href="http://www.objc.io/issue-2-1/">并发编程：API 及挑战</a>。</p>
-
-<p>操作队列提供了在 GCD 中不那么容易复制的有用特性。其中最重要的一个就是可以取消在任务处理队列中的任务，在稍后的例子中我们会看到这个。而且操作队列在管理操作间的依赖关系方面也容易一些。另一面，GCD 给予你更多的控制权力以及操作队列中所不能使用的底层函数。详细介绍可以参考<a href="http://www.objc.io/issue-2-3/">底层并发 API</a> 这篇文章。</p>
-
-<p>扩展阅读：</p>
-
-<ul>
-<li><a href="http://stackoverflow.com/questions/10373331/nsoperation-vs-grand-central-dispatch">StackOverflow: NSOperation vs. Grand Central Dispatch</a></li>
-<li><a href="http://eschatologist.net/blog/?p=232">Blog: When to use NSOperation vs. GCD</a></li>
-</ul>
-
-<h3 id="coredata">后台的 Core Data</h3>
-
-<p>在着手 Core Data 的并行处理之前，最好先打一些基础。我们强烈建议通读苹果的官方文档 <a href="https://developer.apple.com/library/mac/#documentation/cocoa/conceptual/CoreData/Articles/cdConcurrency.html">Concurrency with Core Data guide</a> 。这个文档中罗列了基本规则，比如绝对不要在线程间传递 managed objects等。这并不单是说你绝不应该在另一个线程中去更改某个其他线程的 managed object ，甚至是读取其中的属性都是不能做的。要想传递这样的对象，正确做法是通过传递它的 object ID ，然后从其他对应线程所绑定的 context 中去获取这个对象。</p>
-
-<p>其实只要你遵循那些规则，并使用这篇文章里所描述的方法的话，处理 Core Data 的并行编程还是比较容易的。</p>
-
-<p>Xcode 所提供的 Core Data 标准模版中，所设立的是运行在主线程中的一个存储调度 (persistent store coordinator)和一个托管对象上下文 (managed object context) 的方式。在很多情况下，这种模式可以运行良好。创建新的对象和修改已存在的对象开销都非常小，也都能在主线程中没有困难滴完成。然后，如果你想要做大量的处理，那么把它放到一个后台上下文来做会比较好。一个典型的应用场景是将大量数据导入到 Core Data 中。</p>
-
-<p>我们的方式非常简单，并且可以被很好地描述：</p>
-
-		
-		<a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/">
-		
-			并发编程：API以及挑战</a>
-	</h2>
-	<div class="entry-content">
-		<p><a href="http://en.wikipedia.org/wiki/Concurrency_%28computer_science%29">并发</a>所描述的概念就是同时运行多个任务。这些任务可能是以在单核 CPU 上<a href="http://en.wikipedia.org/wiki/Preemption_%28computing%29">分时（时间共享）</a>的形式同时运行，也可能是在多核 CPU 上以真正的并行方式来运行。</p>
-
-<p>OS X 和 iOS 提供了几种不同的 API 来支持并发编程。每一个 API 都具有不同的功能和使用限制，这使它们适合不同的任务。同时，这些 API 处在不同的抽象层级上。我们有可能用其进行非常深入底层的操作，但是这也意味着背负起将任务进行良好处理的巨大责任。</p>
-
-<p>实际上，并发编程是一个很有挑战的主题，它有许多错综复杂的问题和陷阱。当开发者在使用类似 <code>Grand Central Dispatch</code>（GCD）或 <code>NSOperationQueue</code> 的 API 时，很容易遗忘这些问题和陷阱。本文首先对 OS X 和 iOS 中不同的并发编程 API 进行一些介绍，然后再深入了解并发编程中独立于与你所使用的特定 API 的一些内在挑战。</p>
-
-<h2 id="osxios">OS X 和 iOS 中的并发编程</h2>
-
-<p>苹果的移动和桌面操作系统中提供了相同的并发编程API。 本文会介绍 <code>pthread</code> 、 <code>NSThread</code> 、<code>GCD</code> 、<code>NSOperationQueue</code>，以及 <code>NSRunLoop</code>。实际上把 run loop 也列在其中是有点奇怪，因为它并不能实现真正的并行，不过因为它与并发编程有莫大的关系，因此值得我们进行一些深入了解。</p>
-
-<p>由于高层 API 是基于底层 API 构建的，所以我们首先将从底层的 API 开始介绍，然后逐步扩展到高层 API。不过在具体编程中，选择 API 的顺序刚好相反：因为大多数情况下，选择高层的 API 不仅可以完成底层 API 能完成的任务，而且能够让并发模型变得简单。</p>
-
-<p>如果你对我们为何坚持推荐使用高抽象层级以及简单的并行代码有所疑问的话，那么你可以看看这篇文章的第二部分<a href="#challenges">并发编程中面临的挑战</a>，以及 Peter Steinberger 写的关于<a href="http://objccn.io/issue-2-4/">线程安全</a>的文章。</p>
-
-<h3>线程</h3>
-
-<p><a href="http://zh.wikipedia.org/wiki/线程">线程</a>（thread）是组成进程的子单元，操作系统的调度器可以对线程进行单独的调度。实际上，所有的并发编程 API 都是构建于线程之上的 —— 包括 GCD 和操作队列（operation queues）。</p>
-
-<p>多线程可以在单核 CPU 上同时（或者至少看作同时）运行。操作系统将小的时间片分配给每一个线程，这样就能够让用户感觉到有多个任务在同时进行。如果 CPU 是多核的，那么线程就可以真正的以并发方式被执行，从而减少了完成某项操作所需要的总时间。</p>
-
-		
-		<a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/">
-		
-			绘制像素到屏幕</a>
-	</h2>
-	<div class="entry-content">
-		<p>一个像素是如何绘制到屏幕上去的？有很多种方式将一些东西映射到显示屏上，他们需要调用不同的框架、许多功能和方法的结合体。这里我们大概的看一下屏幕之后发生的事情。当你想要弄清楚什么时候、怎么去查明并解决问题时，我希望这篇文章能帮助你理解哪一个 API 可以更好的帮你解决问题。我们将聚焦于 iOS，然而我讨论的大多数问题也同样适用于 OS X。</p>
-
-<h2>图形堆栈</h2>
-
-<p>当像素映射到屏幕上的时候，后台发生了很多事情。但一旦他们显示到屏幕上，每一个像素均由三个颜色组件构成：红，绿，蓝。三个独立的颜色单元会根据给定的颜色显示到一个像素上。在 iPhone5 的<a href="https://zh.wikipedia.org/wiki/%E6%A9%AB%E5%90%91%E9%9B%BB%E5%A0%B4%E6%95%88%E6%87%89%E9%A1%AF%E7%A4%BA%E6%8A%80%E8%A1%93">液晶显示器</a>上有1,136×640=727,040个像素，因此有2,181,120个颜色单元。在15寸视网膜屏的 MacBook Pro 上，这一数字达到15.5百万以上。所有的图形堆栈一起工作以确保每次正确的显示。当你滚动整个屏幕的时候，数以百万计的颜色单元必须以每秒60次的速度刷新，这是一个很大的工作量。</p>
-
-<h2>软件组成</h2>
-
-<p>从简单的角度来看，软件堆栈看起来有点像这样：</p>
-
-<p><img src="http://img.objccn.io/issue-3/pixels-software-stack.png" alt="软件堆栈" title="" /></p>
-
-<p>Display 的上一层便是图形处理单元 GPU，GPU 是一个专门为图形高迸发计算而量身定做的处理单元。这也是为什么它能同时更新所有的像素，并呈现到显示器上。它迸发的本性让它能高效的将不同纹理合成起来。我们将有一小块内容来更详细的讨论图形合成。关键的是，GPU 是非常专业的，因此在某些工作上非常高效。比如，GPU 非常快，并且比 CPU 使用更少的电来完成工作。通常 CPU 都有一个普遍的目的，它可以做很多不同的事情，但是合成图像在 CPU 上却显得比较慢。</p>
-
-<p>GPU Driver 是直接和 GPU 交流的代码块。不同的GPU是不同的性能怪兽，但是驱动使他们在下一个层级上显示的更为统一，典型的驱动有 OpenGL/OpenGL ES.</p>
-
-<p>OpenGL(<a href="http://zh.wikipedia.org/wiki/OpenGL">Open Graphics Library</a>) 是一个提供了 2D 和 3D 图形渲染的 API。GPU 是一块非常特殊的硬件，OpenGL  和 GPU 密切的工作以提高GPU的能力，并实现硬件加速渲染。对大多数人来说，OpenGL 看起来非常底层，但是当它在1992年第一次发布的时候(20多年前的事了)是第一个和图形硬件(GPU)交流的标准化方式，这是一个重大的飞跃，程序员不再需要为每个GPU重写他们的应用了。</p>
-
-<p>OpenGL 之上扩展出很多东西。在 iOS 上，几乎所有的东西都是通过 Core Animation 绘制出来，然而在 OS X 上，绕过 Core Animation 直接使用 Core Graphics 绘制的情况并不少见。对于一些专门的应用，尤其是游戏，程序可能直接和 OpenGL/OpenGL ES 交流。事情变得使人更加困惑，因为 Core Animation 使用 Core Graphics 来做一些渲染。像 AVFoundation，Core Image 框架，和其他一些混合的入口。</p>
-
-<p>要记住一件事情，GPU 是一个非常强大的图形硬件，并且在显示像素方面起着核心作用。它连接到 CPU。从硬件上讲两者之间存在某种类型的<a href="https://zh.wikipedia.org/wiki/I/O%E6%80%BB%E7%BA%BF">总线</a>，并且有像 OpenGL，Core Animation 和 Core Graphics 这样的框架来在 GPU 和 CPU 之间精心安排数据的传输。为了将像素显示到屏幕上，一些处理将在 CPU 上进行。然后数据将会传送到 GPU，这也需要做一些相应的操作，最终像素显示到屏幕上。</p>
-
-<p>这个过程的每一部分都有各自的挑战，并且许多时候需要做出折中的选择。</p>
-
-<h2>硬件参与者</h2>
-
-		
-		<a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2014/05/08/li-jie-framezai-bu-ju-de-zuo-yong/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

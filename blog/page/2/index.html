@@ -7,7 +7,8 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="React-Native 帮助在原生平台打造世界一流的应用体验，使用基于JavaSript和React的结合的开发经验。React-Native的宗旨是更有效的开发全平台的应用。 Native Components 在React-Native你能使用标准平台组件如： &hellip;">
+	<meta name="description" content="15 使用 iNalyzer 分析应用程序 好想用 doxygen 画 iOS app 的 class 继承关系。 有没有比 class-dump-z 更直观的分析工具？
+利器 iNalyzer 隆重登场～ iNalyzer 的安装 在 iPhone 端： 1）进入 cydia 添加源 http &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -79,20 +80,50 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2016/03/23/react-native/">
+		<a href="/Blog/blog/2016/08/25/shi-yong-inalyzer-fen-xi-ying-yong-cheng-xu/">
 		
-			React Native</a>
+			使用 iNalyzer 分析应用程序</a>
 	</h2>
 	<div class="entry-content">
-		<p>
-React-Native 帮助在原生平台打造世界一流的应用体验，使用基于<code>JavaSript</code>和React的结合的开发经验。React-Native的宗旨是更有效的开发全平台的应用。
-</p>
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">15</span> <span class="title">使用 iNalyzer 分析应用程序</span></h1>
+    <p>好想用<code> doxygen </code>画 iOS app 的<code> class </code>继承关系。</p>
 
-<h2>Native Components</h2>
-<p>
-在React-Native你能使用标准平台组件如：iOS的<code>UITabBar</code>以及<code>Android</code>的<code>Drawer</code>。这个给了你APP标准统一的外观，使用这个平台的生态系统，去保持高质量。这些组件能轻易的嵌入到你的APP中使用，和React组件是差不多的，例如:<code>TabBariOS</code>和<code>DrawerLayoutAndroid</code>
+<p>有没有比 class-dump-z 更直观的分析工具？
+利器<code> iNalyzer </code>隆重登场～</p>
 
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<h3>iNalyzer 的安装</h3>
+
+<p>在 iPhone 端：</p>
+
+<p>1）进入<code> cydia </code>添加源 http://appsec-labs.com/cydia/</p>
+
+<p>2）搜索<code> iNalyzer </code>并安装</p>
+
+<h3>Doxygen 和 Graphviz 的安装</h3>
+
+<p>在 Mac 端：<br />
+<code>brew install oxygen graphviz</code></p>
+
+<h3>解密支付宝 App</h3>
+
+<h4>查看可解密的 App</h4>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">cd /Applications/iNalyzer5.app  
+</span><span class="line">./iNalyzer5   
+</span><span class="line">
+</span><span class="line">usage: ./iNalyzer5 [application name] [...]  
+</span><span class="line">Applications available: Portal Tenpay</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h4>解密支付宝 App</h4>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
 <span class="line-number">4</span>
@@ -105,109 +136,70 @@ React-Native 帮助在原生平台打造世界一流的应用体验，使用基�
 <span class="line-number">11</span>
 <span class="line-number">12</span>
 <span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// iOS</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">./iNalyzer5 Portal  
 </span><span class="line">
-</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
-</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">TabBarIOS</span><span class="p">,</span> <span class="nx">NavigatorIOS</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
-</span><span class="line">      <span class="o">&lt;</span><span class="nx">TabBarIOS</span><span class="o">&gt;</span>
-</span><span class="line">        <span class="o">&lt;</span><span class="nx">TabBarIOS</span><span class="p">.</span><span class="nx">Item</span> <span class="nx">title</span><span class="o">=</span><span class="s2">&quot;React Native&quot;</span> <span class="nx">selected</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span><span class="o">&gt;</span>
-</span><span class="line">          <span class="o">&lt;</span><span class="nx">NavigatorIOS</span> <span class="nx">initialRoute</span><span class="o">=</span><span class="p"></span> <span class="o">/&gt;</span>
-</span><span class="line">        <span class="o">&lt;</span><span class="err">/TabBarIOS.Item&gt;</span>
-</span><span class="line">      <span class="o">&lt;</span><span class="err">/TabBarIOS&gt;</span>
-</span><span class="line">    <span class="p">);</span>
-</span><span class="line">  <span class="p">},</span>
-</span><span class="line"><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</span><span class="line">got params /var/mobile/Applications/4763A8A5-2E1D-4DC2-8376-6CB7A8B98728/Portal.app/ Portal.app 800 iNalyzer is iNalyzing Portal...  
+</span><span class="line">iNalyzer:crack_binary got /var/mobile/Applications/4763A8A5-2E1D-4DC2-8376-6CB7A8B98728/Portal.app/Portal /tmp/iNalyzer5_3f0d8773/Payload/Portal.app/Portal Dumping binary...helloooo polis?  
+</span><span class="line">helloooo polis?  
+</span><span class="line">iNalyzer:Creating SnapShot into ClientFiles  
+</span><span class="line">iNalyzer:SnapShot Done  
+</span><span class="line">iNalyzer:Population Done  
+</span><span class="line">iNalyzer:Dumping Headers  
+</span><span class="line">iNalyzer:Patching Headers  
+</span><span class="line">/bin/sh: /bin/ls: Argument list too long  
+</span><span class="line">ls: cannot access *_fixed: No such file or directory  
+</span><span class="line">    /var/root/Documents/iNalyzer/支付宝钱包-v8.0.0.ipa</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>将解密后的 ipa 拷贝到本地</p>
+
+<h3>修改 doxMe.sh 脚本</h3>
+
+<p>解压 ipa, cd 到 <code>/支付宝钱包-v8.0.0/Payload/Doxygen</code> 下找到<code> doxMe.sh</code></p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// Android</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">#!/bin/sh  
 </span><span class="line">
-</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
-</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">DrawerLayoutAndroid</span><span class="p">,</span> <span class="nx">ProgressBarAndroid</span><span class="p">,</span> <span class="nx">Text</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">/Applications/Doxygen.app/Contents/Resources/doxygen dox.template &amp;&amp; open ./html/index.html</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们是通过<code> brew </code>安装的<code> doxygen </code>，所以修改脚本为：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">#!/bin/sh  
 </span><span class="line">
-</span><span class="line"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
-</span><span class="line">      <span class="o">&lt;</span><span class="nx">DrawerLayoutAndroid</span>
-</span><span class="line">        <span class="nx">renderNavigationView</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="nx">React</span> <span class="nx">Native</span><span class="o">&lt;</span><span class="err">/Text&gt;}&gt;</span>
-</span><span class="line">        <span class="o">&lt;</span><span class="nx">ProgressBarAndroid</span> <span class="o">/&gt;</span>
-</span><span class="line">      <span class="o">&lt;</span><span class="err">/DrawerLayoutAndroid&gt;</span>
-</span><span class="line">    <span class="p">);</span>
-</span><span class="line">  <span class="p">},</span>
-</span><span class="line"><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-</p>
+</span><span class="line">doxygen dox.template &amp;&amp; open ./html/index.html</span></code></pre></td></tr></table></div></figure></notextile></div>
+<h3>执行 doxMe.sh 脚本</h3>
 
-<h2>异步执行</h2>
-<p>
-所有的<code>Javascript</code>应用程序代码以及原生平台的操作都是异步的，并且原生模块也能够使用额外的线程。这意味着我们能关闭主线程的图像解码，后台把图片保存到磁盘，渲染文字和计算布局而不会阻塞UI。这样一来，React-Native应用自然流畅性和响应。通信也完全序列化，这使我们能够充分利用<code>Chrome</code>开发者工具来调试<code>Javascript</code>的运行时完整的应用程序，无论是模拟器还是真实设备。
-</p>
+<p><code>./doxMe.sh</code></p>
 
-		
-		<a href="/Blog/blog/2016/03/23/react-native/" class="more-link">Read on &rarr;</a>
-	</div>
+<p>完成后浏览器会自动 open 生成的<code>html</code>文件</p>
+
+<h3>查看信息</h3>
+
+<p>通过 index.html 我们可以直观的查看到<code> Strings analysis </code>，<code> ViewControllers </code>，<code>Classes </code>等几大类的信息。</p>
+
+<div class="figure" id="figure-15-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75uwh8b9kj218u126al5.jpg" />
+
+    <p class="caption"><strong>图片 15.1</strong> inalyzer1</p>
+</div>
 
 
-<div class="meta">
-	<div class="date">
+<p>在 Classes-&gt;Class Hierarchy 可以查看到类继承图示。
+支付宝 app<code> class Hierarchy </code>结果冰山一角：</p>
 
+<div class="figure" id="figure-15-2">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75uxns81yj20nm0ke0uo.jpg" />
 
+    <p class="caption"><strong>图片 15.2</strong> inalyzer2</p>
+</div>
 
 
 </div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/react-native/'>React-Native</a>
-
-
 </div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/03/23/react-native/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/03/04/ji-lu-%5B%3F%5D-ci-xiu-gai-swiftde-cuo-wu/">
-		
-			记录一次修改Swift的错误</a>
-	</h2>
-	<div class="entry-content">
-		<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1f1l040x0l2j20xe0sotgc.jpg" alt="screen-shot-0" />
-<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l04x8j0ij20wo0sqdp1.jpg" alt="screen-shot-1" />
-<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f1l056kc5qj20xq0t0aj0.jpg" alt="screen-shot-2" />
-<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l05da3cmj20xi0ti78x.jpg" alt="screen-shot-3" />
-<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f1l05jk9etj20xs0taq8a.jpg" alt="screen-shot-4" />
-<img src="http://ww4.sinaimg.cn/large/626e5d69gw1f1l05oxgsfj20y00ss0zu.jpg" alt="screen-shot-5" />
-<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l05usxv8j20xw0su0y9.jpg" alt="screen-shot-6" />
-<img src="http://ww3.sinaimg.cn/large/626e5d69gw1f1l060hn0sj20yc0t6474.jpg" alt="screen-shot-7" /></p>
-
-<hr />
-
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
@@ -226,63 +218,12 @@ React-Native 帮助在原生平台打造世界一流的应用体验，使用基�
 	<div class="tags">
 
 
-	<a class='category' href='/Blog/blog/categories/swift/'>swift</a>
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2016/03/04/ji-lu-%5B%3F%5D-ci-xiu-gai-swiftde-cuo-wu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2015/12/26/2015nian-du-zong-jie/">
-		
-			2015年度总结</a>
-	</h2>
-	<div class="entry-content">
-		<h2 id="目录"><a name="summaryIntroducton">目录</a></h2>
-<ol>
-<li><a href="#summaryHistory"><strong>北漂的过去</strong></a></li>
-<li><a href="#summary-now"><strong>我所拥有的现在</strong></a></li>
-<li><a href="#summary-future"><strong>展望未来</strong></a></li>
-<li><a href="#summary-work"><strong>工作总结</strong></a></li>
-</ol>
-<h2 id="一、北漂的过去"><a name="summaryHistory">一、北漂的过去</a></h2>
-<p>
-今年我结束了我长达4年多的北漂生活，也同时结束了我长达4年多的外包工作生涯。有时候和现在的同事聊天，他们问：你当初在北京，为什么想到来上海呢？太多太多的原因，我承认我擅自选择北京，来上海这个决定，非常冲动，但是现在看来这个决定并不是多么愚蠢。<br />
-我就按照时间展开回忆吧！
-</p>
-<p>
-那是2011年的4月15日，我们一行5人从学校踏上了北漂的列车。这是我北漂的开始，那晚的我在火车座位上度过，当时怀揣着对未来的命运，心底对北京很兴奋也很迷茫。第二天，我的初中同学一大早就来车站接我，我特感恩是我念了这么多年书，唯一的用处就是现在走到任何城市都有小伙伴陪我。
-那是我北漂的开始。我开始工作了，终于不用家里每月寄钱给我了，我可以自己养活自己了。我其实一开始是很没有工作责任感的人，我刚加入的团队，由于我们团队boss即将离职，于是我作为一个刚进来的新人，没有安排导师，也没有分配任务，完全放养。我当时乐在其中，和另外2个同学一起在这个公司实习。他们没有我这么幸运，他们分在了A组每天分配了很多活，我没有活可干。转眼在公司待了2月，我B组Leader 终于离职了，而且公司也到了淡季，7月份公司不裁人以给员工放2月假不发薪水的方式逼很多人跳槽，我另外2个同学所在的B组老大决定不要他们，于是他们两个人失业了，而我却不知道为什么被留了下来。但是我想他们都走了，我留下来多没意思啊。（我很重感情 = =|）于是我和当时的团队负责人说我也不想做测试了，申请辞职。不顾Leader强烈挽留毅然决然的和小伙伴们一起失业。我当时真的没有想到这个决定导致的后果非常严重。
-</p>
-
-		
-		<a href="/Blog/blog/2015/12/26/2015nian-du-zong-jie/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/gan-wu/'>感悟</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2015/12/26/2015nian-du-zong-jie/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/08/25/shi-yong-inalyzer-fen-xi-ying-yong-cheng-xu/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -291,343 +232,191 @@ React-Native 帮助在原生平台打造世界一流的应用体验，使用基�
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/">
+		<a href="/Blog/blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian/">
 		
-			JSPatch用法剖析</a>
+			Hack 实战——支付宝 App 手势密码校验欺骗</a>
 	</h2>
 	<div class="entry-content">
-		<h2 id="目录"><a name="jspatchIntroducton">目录</a></h2>
-<ol>
-<li><a href="#jspatchIntroducton"><strong>JSPatch介绍</strong></a></li>
-<li><a href="#jspatch-wax"><strong>JSPatch VS Wax lua</strong></a></li>
-<li><a href="#jspatch-core"><strong>JSPatch的原理和核心</strong></a></li>
-<li><a href="#jspatch-Extension"><strong>JSPatch Extension机制</strong></a></li>
-<li><a href="#jspatch-Tech"><strong>JSPatch中的实现技巧总结</strong></a> </li>
-<li><a href="#jspatch-problem"><strong>遇到的问题与解决方法</strong></a></li>
-</ol>
-<h2 id="一、JSPatch介绍"><a name="jspatchIntroducton">一、JSPatch介绍</a></h2>
-<h3 id="用途">用途</h3>
-<p>iOS产品开发之中常常会遇到这种情况: 新版本上线后发现有个严重的bug，可能会导致crash率激增，可能会使网络请求无法发出，这时能做的只是赶紧修复bug然后提交等待漫长的AppStore审核，再盼望用户快点升级，付出巨大的人力和时间成本，才能完成此次bug的修复。</p>
-<p>JSPatch的出现解决了这样的问题，只需要在项目中引入极小的JSPatch引擎，就可以使用JavaScript语言调用Objective-C的原生接口，获得脚本语言的能力：动态更新iOS APP，替换项目原生代码、快速修复bug。      </p>
-<h3 id="技术核心">技术核心</h3>
-<p>JSPatch核心主要是JSBinding和Objective-C中的runtime技术。一方面，它采用Apple在iOS7中发布的JavaScriptCore.framework作为Javascript引擎解析JavaScript脚本，执行JavaSript代码并与Objective-C端的代码进行桥接。另一方面则是使用Objective-C runtime中的method swizzling的方式达到使用JavaScript脚本动态替换原有Objective-C方法的目的，并利用ForwardInvocation标准消息转发机制使得在JavaScript脚本中调用Objective-C的方法成为可能。</p>
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">14</span> <span class="title">Hack 实战——支付宝 App 手势密码校验欺骗</span></h1>
+    <p>在 <a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">iOS 安全攻防（十一）：Hack实战——探究支付宝 app 手势密码</a>中，介绍了如何利用 gdb 分析 app ，确定了支付宝 app 的手势密码格式为字符串，9 个点分别对应 123456789。在 <a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/">iOS 安全攻防（十二）：iOS7 的动态库注入</a>中，介绍了如果利用越狱大神们为我们开辟的 iOS7 动态库注入方法。</p>
 
-		
-		<a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/" class="more-link">Read on &rarr;</a>
-	</div>
+<p>本文将继续深入 hack 实战，hook 支付宝手势密码校验操作，欺骗其通过任意手势输入。</p>
 
+<p>那么到现在为止，我们已经掌握了什么信息呢？</p>
 
-<div class="meta">
-	<div class="date">
+<p>1）一个名叫<code> GestureUnlockViewController </code>的类，含有<code> gestureInputView:didFinishWithPassword:  </code>方法，来处理输入的手势</p>
 
+<p>2）正确的手势密码通过一个名叫<code> GestureUtil </code>的类读取，方法是<code> getPassword</code></p>
 
+<p>思路马上清晰了，我们需要做 2 步：</p>
 
+<p>1）hook <code>getPassword </code>存下正确的密码</p>
 
-</div>
-	<div class="tags">
+<p>2）hook <code>gestureInputView:didFinishWithPassword: </code> 替换当前输入为正确的密码</p>
 
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
+<p>一个关键点，我们是用<code> Method Swizzling </code>来 hook，那么就意味操作不能过早，因为我们要保证在取到  <code>GestureUnlockViewController </code>和<code> GestureUtil class </code>后，才能进行 imp 替换。</p>
 
+<p>所以， 我采用<code> NSNotificationCenter </code>通知机制协助完成任务。</p>
 
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2015/12/16/bian-xie-gao-zhi-liang-de-swiftdai-ma/">
-		
-			编写高性能的Swift代码</a>
-	</h2>
-	<div class="entry-content">
-		<p>
-下面这篇文档收集了一系列编写高性能 Swift 代码的要诀和技巧。文档的目标读者是编译器和标准库开发人员。
-
-文档中的一些技巧可以帮助提升您的 Swift 程序质量，使您的代码不容易出错且可读性更好。显式地标记最终类和类协议是两个显而易见的例子。 然而文档中还有一些技巧是不符合规矩的，扭曲的，仅仅解决一些比编译器或语言的特殊的临时性需求。文档中的很多建议来自于多方面的权衡，例如：运行时、字节大小、代码可读性等等。
-</p>
-<h2>启用优化</h2>
-<p>第一个应该做的事情就是启用优化。Swift 提供了三种不同的优化级别：<br />
-<ul>
-<li>-Onone: 这意味着正常的开发。它执行最小优化和保存所有调试信息。</li>
-<li>-O: 这意味着对于大多数生产代码。编译器执行积极地优化，可以大大改变提交代码的类型和数量。调试信息将被省略但还是会有损害的。</li>
-<li>-Ounchecked: 这是一个特殊的优化模式，它意味着特定的库或应用程序，这是以安全性来交换的。编译器将删除所有溢出检查以及一些隐式类型检查。这不是在通常情况下使用的，因为它可能会导致内存安全问题和整数溢出。如果你仔细审查你的代码，那么对整数溢出和类型转换来说是安全的。</li>
-
-		
-		<a href="/Blog/blog/2015/12/16/bian-xie-gao-zhi-liang-de-swiftdai-ma/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2015/12/16/bian-xie-gao-zhi-liang-de-swiftdai-ma/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/">
-		
-			Swift 的 ABI</a>
-	</h2>
-	<div class="entry-content">
-		<p>
-随着Swift的开源，苹果开发者迎来了新的开端。其实这个是我一直想要表达的，随着对Swift这个语言的深入了解，越发感觉到Swift的魅力。Swift是系统编程语言，现在C语言之所以能统治底层开发的最重要原因是C规范统一的ABI，使其能做到与汇编程序无缝衔接。而Swift的ABI兼容C（并不包括name mangling部分）。基于强大的llvm生成具体平台代码。不仅仅作为Objective-C的翻译。
-</p>
-<p>
-通过开发Swift，了解到Swift文件的中间编译结果（介于Swift代码合llvm ir）是SIL。SIL我下一章着重介绍。这张暂时把焦点放在Swift的ABI。那么什么是ABI，你一定很陌生吧，那么对于API呢，你是不是明白了什么？
-</p>
-<p>
-ABI的全称是Application Binary Interface。翻译过来就是应用二进制接口，描述了应用程序和操作系统或其他应用程序之间的低级接口。
-</p>
-<p>
-ABI涵盖了各个细节：
-
-		
-		<a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/">
-		
-			这些年我的不足</a>
-	</h2>
-	<div class="entry-content">
-		<p>如果把人生比作跑步的话，我们都在用自己的节奏和姿势在完成比赛。这些跑步的技巧可能是小时候从老师，朋友，家人那得来的。随着时间的流逝，我们习惯了这种跑步的技能，看见那些跑得快的，会羡慕；跑得慢的，会不屑；跑得别扭的，会当作笑料。但是自己跑得怎么样，却很少关心。为什么要跑这条道？为什么这么慢？为什么这么累？</p>
-<p>我们很难做到客观，尤其是面对自己的时候，那些缺点、曾经犯的错会自动进入盲区，躲避意识的雷达。尽管如此，我还是找到了数量可观的不足，才发现，原来这么些年，我一直在以这么别扭、丑陋的姿势在跑步。</p>
-<h3>不够专注</h3>
-
-		
-		<a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/gan-wu/'>感悟</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/">
-		
-			Swift的强大之处</a>
-	</h2>
-	<div class="entry-content">
-		<p>在写任何东西之前我需要承认我是带有偏见的：我爱 Swift。我认为这是从我开始接触 Cocoa 生态系统以来这个平台上发生的最好的事情。我想通过分享我在 Swift，Objective-C 和 Haskell 上的经验让大家知道我为何这样认为。写这篇文章并不是为了介绍一些最好的实践 (写这些的时候 Swift 还太年轻，还没最好实践被总结出来)，而是举几个关于 Swift 强大之处的例子。</p>
-
-<p>给大家一些我的个人背景：在成为全职 iOS/Mac 工程师之前我花了几年的时间做 Haskell (包括一些其他函数式编程语言) 开发。我仍然认为 Haskell 是我所有使用过的语言中最棒的之一。然而我转战到了 Objective-C，是因为我相信 iOS 是最令人激动的平台。刚开始接触 Objective-C 的时候我有些许沮丧，但我慢慢地学会了欣赏它。</p>
-
-<p>当苹果在 WWDC 发布 Swift 的时候我非常的激动。我已经很久没有对新技术的发布感的如此兴奋了。在看过文档之后我意识到 Swift 使我们能够将现有的函数式编程知识和 Cocoa API 无缝地整合到一起。我觉得这两者的组合非常独特：没有任何其他的语言将它们融合地如此完美。就拿 Haskell 来说，想要用它来使用 Objective-C API 相当的困难。同样，想用 Objective-C 去做函数式编程也是十分困难的。</p>
-
-<p>在 Utrecht 大学期间我学会了函数式编程。因为是在很学术的环境下学习所以并没有觉得很多复杂的术语 (moands，applicative functors 以及很多其他的东西) 有多么难懂。我觉得对很多想学习函数式编程的人来说这些名称是一个很大的阻碍。</p>
-
-<p>不仅仅名称很不同，风格也不一样。作为 Objective-C 程序员，我们很习惯于面向对象编程。而且因为大多数语言不是面对对象编程就是与之类似，我们可以看懂很多不同语言的代码。阅读函数式编程语言的时候则大不相同 &#8211; 如果你没有习惯的话看起来简直莫名其妙。</p>
-
-<p>那么，为什么你要使用函数式编程呢？它很奇怪，很多人都不习惯而且学习它要花费大量的时间。并且对于大多数问题面向对象编程都能解决，所以没有必要去学习任何新的东西对吧？</p>
-
-<p>对于我来说，函数式编程只是工具箱中的一件工具。它是一个改变了我对编程的理解的强大工具。在解决问题的时候它非常强大。对于大多数问题面向对象编程都很棒，但是对于其他一些问题应用函数式编程会给你带来巨大的时间/精力的节省。</p>
-
-<p>开始学习函数式编程或许有些痛苦。第一，你必须放手一些老的模式。而因为我们很多人常年用面对对象的方式去思考，做到这一点是很困难的。在函数式编程当中你想的是不变的数据结构以及那些转换它们的函数。在面对对象编程当中你考虑的是互相发送信息的对象。如果你没有马上理解函数式编程，这是一个好的信号。你的大脑很可能已经完全适应了用面对对象的方法来解决问题。</p>
-
-<h2>例子</h2>
-
-		
-		<a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/">
-		
-			Swift的函数式API</a>
-	</h2>
-	<div class="entry-content">
-		<p>在过去的时间里，人们对于设计 API 总结了很多通用的模式和最佳实践方案。一般情况下，我们总是可以从苹果的 Foundation、Cocoa、Cocoa Touch 和很多其他框架中总结出一些开发中的范例。毫无疑问，对于“特定情境下的 API 应该如何设计”这个问题，不同的人总是有着不同的意见，对于这个问题有很大的讨论空间。不过对于很多 Objective-C 的开发者来说，对于那些常用的模式早已习以为常。</p>
-
-<p>随着 Swift 的出现，设计 API 引起了更多的问题。绝大多数情况下，我们只能继续做着手头的工作，然后把现有的方法翻译成 Swift 版本。不过，这对于 Swift 来说并不公平，因为和 Objective-C 相比，Swift 添加了很多新的特性。引用 Swift 创始人 <a href="https://twitter.com/clattner_llvm">Chris Lattner</a> 的一段话：</p>
-
-<blockquote>
-  <p>Swift 引入了泛型和函数式编程的思想，极大地扩展了设计的空间。</p>
-</blockquote>
-
-<p>在这篇文章里，我们将会围绕 <code>Core Image</code> 进行 API 封装，以此为例，探索如何在 API 设计中使用这些新的工具。 <code>Core Image</code> 是一个功能强大的图像处理框架，但是它的 API 有时有点笨重。 <code>Core Image</code> 的 API 是弱类型的 - 它通过键值对 (key-value) 设置图像滤镜。这样在设置参数的类型和名字时很容易失误，会导致运行时错误。新的 API 将会十分的安全和模块化，通过使用类型而不是键值对来规避这样的运行时错误。</p>
-
-<h2>目标</h2>
-
-<p>我们的目标是构建一个 API ，让我们可以简单安全的组装自定义滤镜。举个例子，在文章的结尾，我们可以这样写：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">let</span> <span class="n">myFilter</span> <span class="o">=</span> <span class="n">blur</span><span class="p">(</span><span class="n">blurRadius</span><span class="p">)</span> <span class="o">&gt;|&gt;</span> <span class="n">colorOverlay</span><span class="p">(</span><span class="n">overlayColor</span><span class="p">)</span>
-</span><span class="line"><span class="n">let</span> <span class="n">result</span> <span class="o">=</span> <span class="n">myFilter</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>上面构建了一个自定义的滤镜，先模糊图像，然后再添加一个颜色蒙版。为了达到这个目标，我们将充分利用 Swift 函数是一等公民这一特性。项目源码可以在 Github 上的这个<a href="https://github.com/objcio/issue-16-functional-apis">示例项目</a>中下载。</p>
-
-<h2 id="filter">Filter 类型</h2>
-
-<p><code>CIFilter</code> 是 <code>Core Image</code> 中的一个核心类，用来创建图像滤镜。当实例化一个 <code>CIFilter</code> 对象之后，你 (几乎) 总是通过 <code>kCIInputImageKey</code> 来输入图像，然后通过 <code>kCIOutputImageKey</code> 获取返回的图像，返回的结果可以作为下一个滤镜的参数输入。</p>
-
-<p>在我们即将开发的 API 里，我们会把这些键值对 (key-value) 对应的真实内容抽离出来，为用户提供一个安全的强类型 API。我们定义了自己的滤镜类型 <code>Filter</code>，它是一个可以传入图片作为参数的函数，并且返回一个新的图片。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">typealias</span> <span class="n">Filter</span> <span class="o">=</span> <span class="n">CIImage</span> <span class="o">-&gt;</span> <span class="n">CIImage</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/">
-		
-			iOS绘图详细解析</a>
-	</h2>
-	<div class="entry-content">
-		<div id="cnblogs_post_body"><p><span style="font-family: 'comic sans ms', sans-serif;">　　本文是《<a href="http://www.amazon.com/Programming-iOS-Fundamentals-iPhone-Development/dp/1449319343/ref=sr_1_3?ie=UTF8&amp;qid=1357784362&amp;sr=8-3&amp;keywords=ios" target="_blank">Programming iOS5</a>》中Drawing一章的翻译，考虑到主题完整性，翻译版本中加入了一些书中未涉及到的内容。希望本文能够对你有所帮助。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; Core Graphics Framework是一套基于C的API框架，使用了Quartz作为绘图引擎。它提供了低级别、轻量级、高保真度的2D渲染。该框架可以用于基于路径的绘图、变换、颜色管理、脱屏渲染，模板、渐变、遮蔽、图像数据管理、图像的创建、遮罩以及PDF文档的创建、显示和分析。为了从感官上对这些概念做一个入门的认识，你可以运行一下官方的<a href="http://developer.apple.com/library/ios/samplecode/QuartzDemo/Introduction/Intro.html#//apple_ref/doc/uid/DTS40007531">example code</a>。<span><br />
-</span></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp;iOS支持两套图形API族：Core Graphics/QuartZ 2D 和OpenGL ES。OpenGL ES是跨平台的图形API，属于OpenGL的一个简化版本。QuartZ 2D是苹果公司开发的一套API，它是Core Graphics Framework的一部分。需要注意的是：OpenGL ES是应用程序编程接口，该接口描述了方法、结构、函数应具有的行为以及应该如何被使用的语义。也就是说它只定义了一套规范，具体的实现由设备制造商根据规范去做。而往往很多人对接口和实现存在误解。举一个不恰当的比喻：上发条的时钟和装电池的时钟都有相同的可视行为，但两者的内部<strong>实现</strong>截然不同。因为制造商可以自由的实现Open GL ES，所以不同系统实现的OpenGL ES也存在着巨大的性能差异。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; &nbsp;Core Graphics API所有的操作都在上下文中进行。所以在绘图之前需要获取该上下文并传入执行渲染的函数内。如果你正在渲染一副在内存中的图片，此时就需要传入图片所属的上下文。获得一个图形上下文是我们完成绘图任务的第一步，你可以将图形上下文理解为一块画布。如果你没有得到这块画布，那么你就无法完成任何绘图操作。有许多方式获得一个图形上下文，这里我介绍两种最为常用的获取方法。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　第一种方法就是创建一个图片类型的上下文。调用<strong>UIGraphicsBeginImageContextWithOptions</strong>函数就可获得用来处理图片的图形上下文。利用该上下文，你就可以在其上进行绘图，并生成图片。调用<strong>UIGraphicsGetImageFromCurrentImageContext</strong>函数可从当前上下文中获取一个UIImage对象。记住在你所有的绘图操作后别忘了调用<strong>UIGraphicsEndImageContext</strong>函数关闭图形上下文。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　第二种方法是利用cocoa为你生成的图形上下文。当你子类化了一个UIView并实现了自己的<strong>drawRect：</strong>方法后，一旦<strong>drawRect</strong>：方法被调用，Cocoa就会为你创建一个图形上下文，此时你对图形上下文的所有绘图操作都会显示在UIView上。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　判断一个上下文是否为当前图形上下文需要注意的几点：</span></p>
-<ul>
-     <li><span style="font-family: 'comic sans ms', sans-serif;"><strong>UIGraphicsBeginImageContextWithOptions</strong>函数不仅仅是创建了一个适用于图形操作的上下文，并且该上下文也属于当前上下文。</span></li>
-     <li><span style="font-family: 'comic sans ms', sans-serif;">当<strong>drawRect</strong>方法被调用时，UIView的绘图上下文属于当前图形上下文。</span></li>
-     <li><span style="font-family: 'comic sans ms', sans-serif;">回调方法所持有的context：参数并不会让任何上下文成为当前图形上下文。此参数仅仅是对一个图形上下文的引用罢了。</span></li>
-</ul>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　作为初学者，很容易被UIKit和Core Graphics两个支持绘图的框架迷惑。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　UIKit</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　像UIImage、NSString（绘制文本）、UIBezierPath（绘制形状）、UIColor都知道如何绘制自己。这些类提供了功能有限但使用方便的方法来让我们完成绘图任务。一般情况下，UIKit就是我们所需要的。</span></p>
-<p>使用UiKit，<span style="color: #ff0000;">你只能在当前上下文中绘图</span>，所以如果你当前处于</p>
-<p><strong>UIGraphicsBeginImageContextWithOptions</strong>函数或<strong>drawRect</strong>：方法中，你就可以直接使用UIKit提供的方法进行绘图。如果你持有一个context：参数，那么使用UIKit提供的方法之前，必须将该上下文参数转化为当前上下文。幸运的是，调用<strong>UIGraphicsPushContext</strong> 函数可以方便的将context：参数转化为当前上下文，记住最后别忘了调用<strong>UIGraphicsPopContext函数</strong>恢复上下文环境。</p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　Core Graphics</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　这是一个绘图专用的API族，它经常被称为QuartZ或QuartZ 2D。Core Graphics是iOS上所有绘图功能的基石，包括UIKit。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　使用Core Graphics之前需要指定一个用于绘图的图形上下文（CGContextRef），这个图形上下文会在每个绘图函数中都会被用到。如果你持有一个图形上下文context：参数，那么你等同于有了一个图形上下文，这个上下文也许就是你需要用来绘图的那个。如果你当前处于<strong>UIGraphicsBeginImageContextWithOptions函数</strong>或<strong>drawRect：</strong>方法中，并没有引用一个上下文。为了使用Core Graphics，你可以调用<strong>UIGraphicsGetCurrentContext</strong>函数获得当前的图形上下文。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　至此，我们有了两大绘图框架的支持以及三种获得图形上下文的方法（<strong>drawRect:</strong><strong>、drawRect: inContext:、</strong><strong>UIGraphicsBeginImageContextWithOptions</strong><strong>）</strong>。那么我们就有6种绘图的形式。如果你有些困惑了，不用怕，我接下来将说明这6种情况。无需担心还没有具体的绘图命令，你只需关注上下文如何被创建以及我们是在使用UIKit还是Core Graphics。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　第一种绘图形式：在UIView的子类方法drawRect：中绘制一个蓝色圆，使用<strong>UIKit</strong>在Cocoa为我们提供的当前上下文中完成绘图任务。</span></p>
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
 <span class="line-number">4</span>
 <span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">drawRect:</span> <span class="p">(</span><span class="n">CGRect</span><span class="p">)</span> <span class="n">rect</span> <span class="p">{</span>
-</span><span class="line">	<span class="n">UIBezierPath</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="nl">UIBezierPathbezierPathWithOvalInRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">)];</span>
-</span><span class="line">	<span class="p">[[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span> <span class="n">setFill</span><span class="p">];</span>
-</span><span class="line">	<span class="p">[</span><span class="n">p</span> <span class="n">fill</span><span class="p">];</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+<span class="line-number">59</span>
+<span class="line-number">60</span>
+<span class="line-number">61</span>
+<span class="line-number">62</span>
+<span class="line-number">63</span>
+<span class="line-number">64</span>
+<span class="line-number">65</span>
+<span class="line-number">66</span>
+<span class="line-number">67</span>
+<span class="line-number">68</span>
+<span class="line-number">69</span>
+<span class="line-number">70</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;objc/runtime.h&gt;  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">UIKit</span><span class="o">/</span><span class="n">UIKit</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">IMP</span> <span class="n">ori_getPasswd_IMP</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class="line"><span class="n">IMP</span> <span class="n">ori_gesture_IMP</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">NSObject</span> <span class="nl">(HackPortal)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">NSObject</span> <span class="nl">(HackPortal)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">getPassword</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">passwd</span> <span class="o">=</span> <span class="n">ori_getPasswd_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">passwd</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">password</span> <span class="o">=</span> <span class="n">ori_getPasswd_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="n">ori_gesture_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">),</span> <span class="n">view</span><span class="p">,</span> <span class="n">password</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">PortalListener</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">addObserver:</span><span class="n">self</span>
+</span><span class="line">                                                <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">appLaunched:</span><span class="p">)</span>
+</span><span class="line">                                                    <span class="nl">name:</span><span class="n">UIApplicationDidBecomeActiveNotification</span>
+</span><span class="line">                                                  <span class="nl">object:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">appLaunched:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="nv">notification</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">Class</span> <span class="n">class_GestureUtil</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;GestureUtil&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Class</span> <span class="n">class_PortalListener</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;PortalListener&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method</span> <span class="o">=</span> <span class="n">class_getClassMethod</span><span class="p">(</span><span class="n">class_GestureUtil</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="n">ori_getPasswd_IMP</span> <span class="o">=</span> <span class="n">method_getImplementation</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method</span> <span class="o">=</span> <span class="n">class_getClassMethod</span><span class="p">(</span><span class="n">class_PortalListener</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">,</span> <span class="n">my_Method</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Class</span> <span class="n">class_Gesture</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;GestureUnlockViewController&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method1</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class_Gesture</span><span class="p">,</span>
+</span><span class="line">                                                 <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">));</span>
+</span><span class="line">    <span class="n">ori_gesture_IMP</span> <span class="o">=</span> <span class="n">method_getImplementation</span><span class="p">(</span><span class="n">ori_Method1</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method1</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class_PortalListener</span><span class="p">,</span>
+</span><span class="line">                                                <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">));</span>
+</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method1</span><span class="p">,</span> <span class="n">my_Method1</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dealloc</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">removeObserver:</span><span class="n">self</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="nf">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span> <span class="n">initialize</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">static</span> <span class="n">PortalListener</span> <span class="o">*</span><span class="n">entrance</span><span class="p">;</span>
+</span><span class="line">    <span class="n">entrance</span> <span class="o">=</span> <span class="p">[[</span><span class="n">PortalListener</span> <span class="n">alloc</span><span class="p">]</span><span class="n">init</span><span class="p">];</span>
 </span><span class="line"><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
+<p>OK！编译好动态库，塞进 iPhone 试试效果吧～</p>
+
+<p>不管我们输入什么手势，都会被替换为正确的密码去给<code>     gestureInputView:didFinishWithPassword: </code>验证，然后顺利解锁。</p>
+
+<p>这意味着什么呢？</p>
+
+<p>意味着，我们可以通过正规的渠道让用户下载这个动态库，然后悄悄放进越狱的 iPhone 的 <code>/Library/MobileSubstrate/DynamicLibraries/</code> 目录下……然后……然后去给妹纸帅锅变魔术吧：“你看，我和你多心有灵犀，你改什么密码我都猜的到!”</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
 		
-		<a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/" class="more-link">Read on &rarr;</a>
+		
 	</div>
 
 
@@ -646,7 +435,1501 @@ ABI涵盖了各个细节：
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/shu-ju-ca-chu/">
+		
+			数据擦除</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">13</span> <span class="title">数据擦除</span></h1>
+    <p>对于敏感数据，我们不希望长时间放在内存中，而希望使用完后立即就被释放掉。</p>
+
+<p>但是不管是<code> ARC </code>还是<code> MRC</code>，自动释放池也有轮循工作周期，我们都无法控制内存数据被擦除的准确时间，让 hackers 们有机可乘。
+本文介绍一个小技巧——及时数据擦除。</p>
+
+<p>假如一个 View Controller A的一个数据被绑在一个 property 上，</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">WipingMemoryViewController</span> : <span class="nc">UIViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span><span class="n">copy</span><span class="p">)</span> <span class="n">NSString</span><span class="o">*</span> <span class="n">text</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>当 A push 到另外一个 View Controller B 时，该数据还是有可能被读到的</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">WipingMemoryViewController</span> <span class="o">*</span><span class="n">lastController</span> <span class="o">=</span> <span class="p">(</span><span class="n">WipingMemoryViewController</span> <span class="o">*</span><span class="p">)</span><span class="n">self</span><span class="p">.</span><span class="n">navigationController</span><span class="p">.</span><span class="n">viewControllers</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;text = %@&quot;</span><span class="p">,</span><span class="n">lastController</span><span class="p">.</span><span class="n">text</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>于是，“用后即擦”变得十分必要：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">_text</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSString</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithFormat:</span><span class="s">@&quot;information&quot;</span><span class="p">];</span>
+</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Origal string = %@&quot;</span><span class="p">,</span><span class="n">_text</span><span class="p">);</span>
+</span><span class="line"><span class="c1">//do something...  </span>
+</span><span class="line"><span class="n">charchar</span> <span class="o">*</span><span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="n">charchar</span> <span class="o">*</span><span class="p">)</span><span class="n">CFStringGetCStringPtr</span><span class="p">((</span><span class="n">CFStringRef</span><span class="p">)</span><span class="n">_text</span><span class="p">,</span> <span class="n">CFStringGetSystemEncoding</span><span class="p">());</span>
+</span><span class="line"><span class="n">memset</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">_text</span> <span class="n">length</span><span class="p">]);</span>
+</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;final text = %@&quot;</span><span class="p">,</span><span class="n">_text</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Log 输出如下：</p>
+
+<div class="code code">
+<pre class="code">WipingMemory[2518:70b] Origal string = information  
+WipingMemory[2518:70b] final text =</pre>
+</div>
+
+<p>可以看到，我们想要保护的数据，被有效的擦除了。</p>
+
+<p>还有提个醒，如果是这样</p>
+
+<p><code>_text = @"information";</code></p>
+
+<p>创建的字符串，是会被分配到 data 区，而是无法修改的。</p>
+
+<p>如果有兴趣也有闲心，可以试试运行下面的代码，有彩蛋哦：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">_text</span> <span class="o">=</span> <span class="s">@&quot;information&quot;</span><span class="p">;</span>
+</span><span class="line"><span class="n">memset</span><span class="p">((</span><span class="n">__bridge</span> <span class="n">voidvoid</span> <span class="o">*</span><span class="p">)(</span><span class="n">_text</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">_text</span><span class="p">.</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">myString</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSString</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithFormat:</span><span class="s">@&quot;information&quot;</span><span class="p">];</span>
+</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Origal text : %@ </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">myString</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>编译器把两个 information 的省略到一个地址了～</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/shu-ju-ca-chu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/">
+		
+			iOS7 的动态库注入</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">12</span> <span class="title">iOS7 的动态库注入</span></h1>
+    <p>iOS 系统不断升级，结构不断调整，所以我们可以利用的动态库注入方法也根据系统版本的不同而不同。</p>
+
+<p>在此之前，我们可以利用环境变量 <code>DYLD_INSERT_LIBRARY</code> 来添加动态库，iOS7 被成功越狱后，我们需要自己去探索实践 iOS7 动态库注入的方式。</p>
+
+<p>本文将在 iOS7.0.4 环境下，以 hook 支付宝 app 程序中 <code> ALPLauncherController </code>的视图加载方法为例，介绍在 iOS7 下，如何实现动态库注入攻击。</p>
+
+<h3>相关工具位置信息</h3>
+
+<p>先总结罗列一下相关编译、链接工具的位置路径信息，在各位自行下载的 iOS SDK中</p>
+
+<div class="code code">
+<pre class="code">clang :    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
+gcc :    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2
+ld :   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ld
+                /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld
+sdk  :   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/</pre>
+</div>
+
+<h3>动态库源程序</h3>
+
+<p>我们编写一个 hook 支付宝 app 程序中 ALPLauncherController  的 viewDidLoad 方法，具体方法是利用 Method Swizzling 。</p>
+
+<p>不熟悉 Method Swizzling 的话，可以参看我的这篇文章：<a href="/Blog/blog/2016/08/26/method-swizzling/">Method Swizzling</a></p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;UIKit/UIKit.h&gt;  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">objc</span><span class="o">/</span><span class="n">runtime</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">UIViewController</span> <span class="nl">(HookPortal)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">myViewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;----------------------- myViewDidLoad ----------------------&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="nf">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span> <span class="n">initialize</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;======================= initialize ========================&quot;</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Class</span> <span class="n">class</span> <span class="o">=</span> <span class="n">objc_getClass</span><span class="p">(</span><span class="s">&quot;ALPLauncherController&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method</span> <span class="o">=</span>  <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">viewDidLoad</span><span class="p">));</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">myViewDidLoad</span><span class="p">));</span>
+</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">,</span> <span class="n">my_Method</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>编译 dylib</h3>
+
+<p>我们可以利用 xcode 直接帮忙编译 .o，或者自己手动使用 clang 编译，然后手动 ld ：</p>
+
+<div class="code code">
+<pre class="code">ld -dylib -lsystem -lobjc  -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/ -o libwq.dylib xxx.o</pre>
+</div>
+
+<h3>安置、验证 dylib</h3>
+
+<p>将编译好的 libwq.dylib 拷贝到 iPhone 文件系统中 <code>/Library/MobileSubstrate/DynamicLibraries/</code> 下</p>
+
+<p>如果不放心库是否能正常工作，可以加一步验证操作，写一个 demo 尝试打开自己的库：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">voidvoid</span> <span class="o">*</span><span class="n">handle</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="n">dlopen</span><span class="p">(</span><span class="s">&quot;/Library/MobileSubstrate/DynamicLibraries/libwq.dylib&quot;</span><span class="p">,</span> <span class="mh">0x2</span><span class="p">);</span>
+</span><span class="line"><span class="n">handle</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s">&quot;myViewDidLoad&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;++++&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;----&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>运行检验效果</h3>
+
+<p>到了验证效果的时候，重启设备后者执行：
+<code>killall SpringBoard</code></p>
+
+<p>启动支付宝 app，然后观察 log 信息：</p>
+
+<div class="code code">
+<pre class="code">Portal[3631] &lt;Notice&gt;: MS:Notice: Injecting: com.alipay.iphoneclient `[Portal] (847.21)`  
+Portal[3631] &lt;Notice&gt;: MS:Notice: Loading: /Library/MobileSubstrate/DynamicLibraries/libwq.dylib  
+Portal[3631] &lt;Warning&gt;: ======================= initialize ========================  
+Portal[3631] &lt;Warning&gt;: ----------------------- myViewDidLoad ----------------------</pre>
+</div>
+
+<p>证明我们的动态库已经被加载， 我们的 Hook 也成功了。
+剩下的就要自己去思考了，除了加句无聊的 Log，我们还可以做点什么呢？</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">
+		
+			Hack实战——探究支付宝 App 手势密码</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">11</span> <span class="title">Hack 实战——探究支付宝 App 手势密码</span></h1>
+    <p>在之前的 <a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/">iOS安全攻防（七）：Hack实战——解除支付宝app手势解锁错误次数限制</a>中，留了一个问题，就是如何破解手势密码。</p>
+
+<p>方法不唯一，本文介绍如何利用 gdb 分析破解 App 。</p>
+
+<p>当没有程序源代码的情况下，我们如何利用 gdb 呢？</p>
+
+<p>为了确定应该如何设置断点，不得不反汇编程序来作为参考了。</p>
+
+<p>在前面的文章提到过，支付宝 app 的手势密码校验处理非常严谨，没有抛出 BOOL 判断的方法让我们可以直接修改返回值跳过验证，而是将全部操作封在了</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>于是，我反汇编了支付宝 app ，找到手势密码解锁的相关代码片段：</p>
+
+<div class="figure" id="figure-11-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75unaa1pzj20l90jyjw5.jpg" />
+
+    <p class="caption"><strong>图片 11.1</strong> guesture-password</p>
+</div>
+
+
+<p>红色箭头标注的地方，让人欣喜，这将是我们断点位置的最好选择。</p>
+
+<p>首先，查看一下相关程序段符号表：</p>
+
+<p><code>nm Portal | grep -i gestureinputview</code></p>
+
+<p>得到结果：</p>
+
+<p>nm Portal | grep -i getpassword</p>
+
+<p>得到结果：</p>
+
+<div class="figure" id="figure-11-2">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75unyvcgaj20fg04hwg4.jpg" />
+
+    <p class="caption"><strong>图片 11.2</strong> guesture-password2</p>
+</div>
+
+
+<p>确定了了关键函数的输出符号。</p>
+
+<p>启动支付宝 app ，并 gdb 该进程：
+<code>gdb -q -p 671</code></p>
+
+<p>在上述两个函数位置设置断点：
+<div class="figure" id="figure-11-3">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75up0u087j20hp02bgmb.jpg" />
+
+    <p class="caption"><strong>图片 11.3</strong> guesture-password3</p>
+</div>
+
+
+<p>可以通过 info breakpoints 查看断点：
+<div class="figure" id="figure-11-4">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75uppyzbzj20pj034my3.jpg" />
+
+    <p class="caption"><strong>图片 11.4</strong> guesture-password4</p>
+</div>
+
+
+<p>continue 到 getPassword 位置，打印函数栈：
+<div class="figure" id="figure-11-5">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75uq86ydyj20kn09en0w.jpg" />
+
+    <p class="caption"><strong>图片 11.5</strong> guesture-password5</p>
+</div>
+
+
+<p>我们可以确定了 getPassword 的返回地址是 0x00becb36 ,  对该地址加断点：</p>
+
+<p><code>b * 0xbecb36</code></p>
+
+<p>然后继续 continue ，程序将卡在上面的断点上。</p>
+
+<p>从上面的反汇编代码，我们可以知道，用户输入的密码为存在 r8 上，原始密码为存在 r0 上，我们直接打印出这两个寄存器的值：</p>
+
+<div class="figure" id="figure-11-6">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f75ur9u2hlj20mm07pmxu.jpg" />
+
+    <p class="caption"><strong>图片 11.6</strong> guesture-password6</p>
+</div>
+
+
+<p>正确密码是个 “Z” 手势图画，而当前输入为 “一” 手势图画。
+可以得出结论，支付宝 app 的手势密码和大多数 app 一样，手势密码格式是字符串，9 个点分别对应字符 123456789 。</p>
+
+
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</p></p></p></div></div>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/er-jin-zhi-he-zi-yuan-wen-jian-zi-jian/">
+		
+			二进制和资源文件自检</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">10</span> <span class="title">二进制和资源文件自检</span></h1>
+    <p>我们把自己的程序发布到 app store，但是不能保证每一个用户都是从 app store 下载官方 app，也不能保证每一个用户都不越狱。
+换句话说，我们无法保证程序运行环境在 MAC 管控策略下就绝对的安全。
+所以，在有些情况下，尤其是和钱有关系的 app ，我们有必要在和服务器通信时，让服务器知道客户端到底是不是官方正版的 app 。</p>
+
+<p>何以判断自己是不是正版 app 呢？ hackers 们破解你的 app ，无非就 2 个地方可以动，1 个是二进制，1 个是资源文件。</p>
+
+<p>二进制都重新编译过了自然肯定是盗版……</p>
+
+<p>有些低级的 hackers 喜欢修改人家的资源文件然后贴上自己的广告，或者给用户错误的指引……修改资源文件是不需要重新编译二进制的。</p>
+
+<p>因此，我们有必要在敏感的请求报文中，增加正版应用的二进制和资源文件的标识，让服务器知道，此请求是否来自正版的未经修改的 app 。
+在沙盒中，我们可以读到自己程序的二进制，也可以读到资源文件签名文件，这两个文件都不算大，我们可以对其取 md5 值然后以某种组合算法得到一个标记字符串，然后发给服务器。</p>
+
+<p>我封装了相关文件的读取地址</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">WQPathUtilities</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">directory:</span><span class="p">(</span><span class="n">NSSearchPathDirectory</span><span class="p">)</span><span class="nv">dir</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">paths</span> <span class="o">=</span> <span class="n">NSSearchPathForDirectoriesInDomains</span><span class="p">(</span><span class="n">dir</span><span class="p">,</span> <span class="n">NSUserDomainMask</span><span class="p">,</span> <span class="n">YES</span><span class="p">);</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">dirStr</span> <span class="o">=</span> <span class="p">[</span><span class="n">paths</span> <span class="nl">objectAtIndex:</span><span class="mi">0</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">dirStr</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">documentsDirectory</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">WQPathUtilities</span> <span class="nl">directory:</span><span class="n">NSDocumentDirectory</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">cachesDirectory</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">WQPathUtilities</span> <span class="nl">directory:</span><span class="n">NSCachesDirectory</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">tmpDirectory</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">NSTemporaryDirectory</span><span class="p">();</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">homeDirectory</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">NSHomeDirectory</span><span class="p">();</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">codeResourcesPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">excutableName</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="n">infoDictionary</span><span class="p">][</span><span class="s">@&quot;CFBundleExecutable&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">tmpPath</span> <span class="o">=</span> <span class="p">[[</span><span class="n">WQPathUtilities</span> <span class="n">documentsDirectory</span><span class="p">]</span> <span class="n">stringByDeletingLastPathComponent</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">appPath</span> <span class="o">=</span> <span class="p">[[</span><span class="n">tmpPath</span> <span class="nl">stringByAppendingPathComponent:</span><span class="n">excutableName</span><span class="p">]</span>
+</span><span class="line">                         <span class="nl">stringByAppendingPathExtension:</span><span class="s">@&quot;app&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">sigPath</span> <span class="o">=</span> <span class="p">[[</span><span class="n">appPath</span> <span class="nl">stringByAppendingPathComponent:</span><span class="s">@&quot;_CodeSignature&quot;</span><span class="p">]</span>
+</span><span class="line">                         <span class="nl">stringByAppendingPathComponent:</span><span class="s">@&quot;CodeResources&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">sigPath</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">binaryPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">excutableName</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="n">infoDictionary</span><span class="p">][</span><span class="s">@&quot;CFBundleExecutable&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">tmpPath</span> <span class="o">=</span> <span class="p">[[</span><span class="n">WQPathUtilities</span> <span class="n">documentsDirectory</span><span class="p">]</span> <span class="n">stringByDeletingLastPathComponent</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">appPath</span> <span class="o">=</span> <span class="p">[[</span><span class="n">tmpPath</span> <span class="nl">stringByAppendingPathComponent:</span><span class="n">excutableName</span><span class="p">]</span>
+</span><span class="line">                         <span class="nl">stringByAppendingPathExtension:</span><span class="s">@&quot;app&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">binaryPath</span> <span class="o">=</span> <span class="p">[</span><span class="n">appPath</span> <span class="nl">stringByAppendingPathComponent:</span><span class="n">excutableName</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">binaryPath</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h4>md5方法：</h4>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &quot;CommonCrypto/CommonDigest.h&quot;  </span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">md5WithString:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">string</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">const</span> <span class="n">charchar</span> <span class="o">*</span><span class="n">cStr</span> <span class="o">=</span> <span class="p">[</span><span class="n">string</span> <span class="n">UTF8String</span><span class="p">];</span>
+</span><span class="line">    <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">result</span><span class="p">[</span><span class="n">CC_MD5_DIGEST_LENGTH</span><span class="p">];</span>
+</span><span class="line">    <span class="n">CC_MD5</span><span class="p">(</span><span class="n">cStr</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">cStr</span><span class="p">),</span> <span class="n">result</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X&quot;</span><span class="p">,</span>
+</span><span class="line">             <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+</span><span class="line">             <span class="n">result</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span>
+</span><span class="line">             <span class="n">result</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">11</span><span class="p">],</span>
+</span><span class="line">             <span class="n">result</span><span class="p">[</span><span class="mi">12</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">13</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">14</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span>
+</span><span class="line">             <span class="p">]</span> <span class="n">lowercaseString</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这样做就 100% 安全了吗？<br />
+答案是：不……<br />
+所谓魔高一尺，道高一丈，不过也能阻止一些低级的 hack 手段了～</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/er-jin-zhi-he-zi-yuan-wen-jian-zi-jian/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/shi-yong-keychain-dumper-dao-chu-keychain-shu-ju/">
+		
+			使用Keychain-Dumper 导出 Keychain 数据</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">9</span> <span class="title">使用 Keychain-Dumper 导出 keychain 数据</span></h1>
+    <p>iOS 系统及第三方应用都会使用 Keychain 来作为数据持久化存储媒介，或者应用间数据共享的渠道。</p>
+
+<p>所以 Keychain 数据库是 hacker 们最关注的数据源头之一。
+不知道是算幸运还是不幸，导出 Keychain 数据库数据的工具早已非常完善，下载地址：<a href="https://github.com/ptoomey3/Keychain-Dumper">Keychain-Dumper传送门</a></p>
+
+<h4>操作步骤极其简单：</h4>
+
+<p>1）赋予 Keychain 数据库可读权限</p>
+
+<div class="code code">
+<pre class="code">Primer:~ root# cd /private/var/Keychains/
+&nbsp;
+Primer:/private/var/Keychains root# ls  
+TrustStore.sqlite3  accountStatus.plist  caissuercache.sqlite3  keychain-2.db  keychain-2.db-shm  keychain-2.db-wal  ocspcache.sqlite3  ocspcache.sqlite3-shm  ocspcache.sqlite3-wal  
+&nbsp;
+Primer:/private/var/Keychains root# chmod +r keychain-2.db</pre>
+</div>
+
+<p>2）使用 Keychain-Dumper 导出 Keychain</p>
+
+<div class="code code">
+<pre class="code">Primer:/private/var/Keychains root# /your_path/keychain_dumper &gt; keychain-export.txt</pre>
+</div>
+
+<p>然后拷贝到本地查看，到底 iOS 系统和第三方应用都存放了哪些信息，就一览无余了。</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/shi-yong-keychain-dumper-dao-chu-keychain-shu-ju/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/jian-pan-huan-cun-yu-an-quan-jian-pan/">
+		
+			键盘缓存与安全键盘</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">8</span> <span class="title">键盘缓存与安全键盘</span></h1>
+    <p>大部分中文应用弹出的默认键盘是简体中文输入法键盘，在输入用户名和密码的时候，如果使用简体中文输入法键盘，输入英文字符和数字字符的用户名和密码时，会自动启动系统输入法自动更正提示，然后用户的输入记录会被缓存下来。</p>
+
+<p>系统键盘缓存最方便拿到的就是利用系统输入法自动更正的字符串输入记录。
+缓存文件的地址是：<br />
+<code>/private/var/mobile/Library/Keyboard/dynamic-text.dat</code></p>
+
+<p>导出该缓存文件，查看内容，欣喜的发现一切输入记录都是明文存储的。因为系统不会把所有的用户输入记录都当作密码等敏感信息来处理。
+一般情况下，一个常规 iPhone 用户的 dynamic-text.dat 文件，高频率出现的字符串就是用户名和密码。</p>
+
+<p>所以，一般银行客户端 app 输入密码时都不使用系统键盘，而使用自己定制的键盘，原因主要有 2 个：</p>
+
+<p>1）避免第三方读取系统键盘缓存</p>
+
+<p>2）防止屏幕录制 （自己定制的键盘按键不加按下效果）</p>
+
+<p>那么，如何实现自定义安全键盘呢？大致思路如下：</p>
+
+<p>1）首先捕获系统键盘的弹出、收回通知<br />
+2）创建一个更高级别的 window 挡住系统键盘<br />
+3）需要抛出一个 id<uitextinput>textInput 的弱引用切换焦点
+
+<p>下面给出一个简单的安全键盘模型：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+<span class="line-number">59</span>
+<span class="line-number">60</span>
+<span class="line-number">61</span>
+<span class="line-number">62</span>
+<span class="line-number">63</span>
+<span class="line-number">64</span>
+<span class="line-number">65</span>
+<span class="line-number">66</span>
+<span class="line-number">67</span>
+<span class="line-number">68</span>
+<span class="line-number">69</span>
+<span class="line-number">70</span>
+<span class="line-number">71</span>
+<span class="line-number">72</span>
+<span class="line-number">73</span>
+<span class="line-number">74</span>
+<span class="line-number">75</span>
+<span class="line-number">76</span>
+<span class="line-number">77</span>
+<span class="line-number">78</span>
+<span class="line-number">79</span>
+<span class="line-number">80</span>
+<span class="line-number">81</span>
+<span class="line-number">82</span>
+<span class="line-number">83</span>
+<span class="line-number">84</span>
+<span class="line-number">85</span>
+<span class="line-number">86</span>
+<span class="line-number">87</span>
+<span class="line-number">88</span>
+<span class="line-number">89</span>
+<span class="line-number">90</span>
+<span class="line-number">91</span>
+<span class="line-number">92</span>
+<span class="line-number">93</span>
+<span class="line-number">94</span>
+<span class="line-number">95</span>
+<span class="line-number">96</span>
+<span class="line-number">97</span>
+<span class="line-number">98</span>
+<span class="line-number">99</span>
+<span class="line-number">100</span>
+<span class="line-number">101</span>
+<span class="line-number">102</span>
+<span class="line-number">103</span>
+<span class="line-number">104</span>
+<span class="line-number">105</span>
+<span class="line-number">106</span>
+<span class="line-number">107</span>
+<span class="line-number">108</span>
+<span class="line-number">109</span>
+<span class="line-number">110</span>
+<span class="line-number">111</span>
+<span class="line-number">112</span>
+<span class="line-number">113</span>
+<span class="line-number">114</span>
+<span class="line-number">115</span>
+<span class="line-number">116</span>
+<span class="line-number">117</span>
+<span class="line-number">118</span>
+<span class="line-number">119</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">WQSafeKeyboard</span> : <span class="nc">UIWindow</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">weak</span><span class="p">,</span> <span class="n">setter</span> <span class="o">=</span> <span class="nl">focusOnTextFiled:</span><span class="p">)</span> <span class="n">UITextField</span> <span class="o">*</span><span class="n">textFiled</span><span class="p">;</span>
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">WQSafeKeyboard</span> <span class="o">*</span><span class="p">)</span><span class="nf">deploySafeKeyboard</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">WQSafeKeyboard</span><span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span><span class="n">WQInterKeyboard</span> <span class="o">*</span><span class="n">keyboard</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">WQSafeKeyboard</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">WQSafeKeyboard</span> <span class="o">*</span><span class="p">)</span><span class="nf">deploySafeKeyboard</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">WQSafeKeyboard</span> <span class="o">*</span><span class="n">kb</span> <span class="o">=</span> <span class="p">[[</span><span class="n">WQSafeKeyboard</span> <span class="n">alloc</span><span class="p">]</span><span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">kb</span> <span class="n">addObserver</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">kb</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">windowLevel</span> <span class="o">=</span> <span class="n">UIWindowLevelAlert</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectZero</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">rootViewController</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">keyboard</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dealloc</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span> <span class="nl">removeObserver:</span><span class="n">self</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">WQInterKeyboard</span> <span class="o">*</span><span class="p">)</span><span class="nf">keyboard</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">_keyboard</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">_keyboard</span> <span class="o">=</span> <span class="p">[[</span><span class="n">WQInterKeyboard</span> <span class="n">alloc</span><span class="p">]</span><span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">_keyboard</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">focusOnTextFiled:</span><span class="p">(</span><span class="n">UITextField</span> <span class="o">*</span><span class="p">)</span><span class="nv">textFiled</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">_textFiled</span> <span class="o">=</span> <span class="n">textFiled</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">keyboard</span><span class="p">.</span><span class="n">textField</span> <span class="o">=</span> <span class="n">_textFiled</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addObserver</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">addObserver:</span><span class="n">self</span>
+</span><span class="line">                                            <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">keyboardWillShow:</span><span class="p">)</span>
+</span><span class="line">                                                <span class="nl">name:</span><span class="n">UIKeyboardWillShowNotification</span>
+</span><span class="line">                                              <span class="nl">object:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">addObserver:</span><span class="n">self</span>
+</span><span class="line">                                            <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">keyboardWillHide:</span><span class="p">)</span>
+</span><span class="line">                                                <span class="nl">name:</span><span class="n">UIKeyboardWillHideNotification</span>
+</span><span class="line">                                              <span class="nl">object:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">keyboardWillShow:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="nv">notification</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">textFiled</span> <span class="n">isFirstResponder</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">keyboardAnimationWithNotification:</span><span class="n">notification</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">keyboardWillHide:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="nv">notification</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">textFiled</span> <span class="n">isFirstResponder</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">keyboardAnimationWithNotification:</span><span class="n">notification</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">keyboardAnimationWithNotification:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="nv">notification</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">makeKeyAndVisible</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSDictionary</span> <span class="o">*</span><span class="n">userInfo</span> <span class="o">=</span> <span class="p">[</span><span class="n">notification</span> <span class="n">userInfo</span><span class="p">];</span>
+</span><span class="line">    <span class="n">CGRect</span> <span class="n">kbFrame_end</span><span class="p">,</span><span class="n">kbFrame_begin</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSTimeInterval</span> <span class="n">animationDuration</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIViewAnimationCurve</span> <span class="n">animationCurve</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">userInfo</span><span class="p">[</span><span class="n">UIKeyboardFrameEndUserInfoKey</span><span class="p">]</span> <span class="nl">getValue:</span><span class="o">&amp;</span><span class="n">kbFrame_end</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">userInfo</span><span class="p">[</span><span class="n">UIKeyboardFrameBeginUserInfoKey</span><span class="p">]</span> <span class="nl">getValue:</span><span class="o">&amp;</span><span class="n">kbFrame_begin</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">userInfo</span><span class="p">[</span><span class="n">UIKeyboardAnimationCurveUserInfoKey</span><span class="p">]</span> <span class="nl">getValue:</span><span class="o">&amp;</span><span class="n">animationCurve</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">userInfo</span><span class="p">[</span><span class="n">UIKeyboardAnimationDurationUserInfoKey</span><span class="p">]</span> <span class="nl">getValue:</span><span class="o">&amp;</span><span class="n">animationDuration</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">resizeFrameToAdjust:</span><span class="n">kbFrame_begin</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">UIView</span> <span class="nl">animateWithDuration:</span><span class="n">animationDuration</span>
+</span><span class="line">                          <span class="nl">delay:</span><span class="mi">0</span>
+</span><span class="line">                        <span class="nl">options:</span><span class="p">(</span><span class="n">animationCurve</span><span class="o">&lt;&lt;</span><span class="mi">16</span><span class="p">)</span>
+</span><span class="line">                     <span class="nl">animations:</span><span class="o">^</span><span class="p">{</span>
+</span><span class="line">                         <span class="n">self</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">resizeFrameToAdjust:</span><span class="n">kbFrame_end</span><span class="p">];</span>
+</span><span class="line">                     <span class="p">}</span><span class="nl">completion:</span><span class="o">^</span><span class="p">(</span><span class="kt">BOOL</span> <span class="n">finished</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">
+</span><span class="line">                     <span class="p">}];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">notification</span><span class="p">.</span><span class="n">name</span> <span class="nl">isEqualToString:</span><span class="n">UIKeyboardWillHideNotification</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="n">resignKeyWindow</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nf">resizeFrameToAdjust:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">frame</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="n">isStatusBarHidden</span><span class="p">]</span> <span class="p">)</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">frame</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">SYSTEM_VERSION_LESS_THAN</span><span class="p">(</span><span class="s">@&quot;7.0&quot;</span><span class="p">))</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">,</span>
+</span><span class="line">                           <span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">STATUSBAR_HEIGHT</span><span class="p">,</span>
+</span><span class="line">                           <span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span>
+</span><span class="line">                           <span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">frame</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</uitextinput></p></div></div>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/jian-pan-huan-cun-yu-an-quan-jian-pan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/">
+		
+			Hack 实战——解除支付宝手势解锁次数限制</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">7</span> <span class="title">Hack 实战——解除支付宝 App 手势解锁错误次数限制</span></h1>
+    <p>之前仅仅介绍了工具的使用，本文将实践一下如何利用 cycript 结合 class-dump 结果 hack，还要牺牲一下支付宝 App 。</p>
+
+<p>首先，老套路，取到手势解锁界面的 View Controller:</p>
+
+<div class="code code">
+<pre class="code">cy# var app = [UIApplication sharedApplication]  
+@&quot;&lt;DFApplication: 0x1666c960&gt;&quot;  
+cy# var keyWindow = app.keyWindow  
+@&quot;&lt;UIWindow: 0x16591bd0; frame = (0 0; 320 568); gestureRecognizers = &lt;NSArray: 0x1b047000&gt;; layer = &lt;UIWindowLayer: 0x165d0650&gt;&gt;&quot;  
+cy# var root = keyWindow.rootViewController  
+@&quot;&lt;UINavigationController: 0x179779a0&gt;&quot;  
+cy# var visible = root.visibleViewController  
+@&quot;&lt;GestureUnlockViewController: 0x165de090&gt;&quot;</pre>
+</div>
+
+<p>然后，对照 class-dump-z 结果，来分析 GestureUnlockViewController 有什么利用价值 ：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">GestureUnlockViewController</span> : <span class="nc">DTViewController</span> <span class="o">&lt;</span><span class="n">UIAlertViewDelegate</span><span class="p">,</span> <span class="n">GestureHeadImageViewDelegate</span><span class="o">&gt;</span> <span class="p">{</span>
+</span><span class="line"><span class="k">@private</span>
+</span><span class="line">    <span class="n">GestureHeadImageView</span><span class="o">*</span> <span class="n">_headImageView</span><span class="p">;</span>
+</span><span class="line">    <span class="n">GestureTipLabel</span><span class="o">*</span> <span class="n">_tipLabel</span><span class="p">;</span>
+</span><span class="line">    <span class="n">GestureInputView</span><span class="o">*</span> <span class="n">_inputView</span><span class="p">;</span>
+</span><span class="line">    <span class="n">DTButton</span><span class="o">*</span> <span class="n">_forgetButton</span><span class="p">;</span>
+</span><span class="line">    <span class="n">DTButton</span><span class="o">*</span> <span class="n">_changeAccountButton</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">_retryCount</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIView</span><span class="o">*</span> <span class="n">_guideView</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">id</span><span class="o">&lt;</span><span class="n">GestrueViewControllerDelegate</span><span class="o">&gt;</span> <span class="n">_delegate</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">__weak</span> <span class="kt">id</span><span class="o">&lt;</span><span class="n">GestrueViewControllerDelegate</span><span class="o">&gt;</span> <span class="n">delegate</span><span class="p">;</span>
+</span><span class="line"><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">).</span><span class="n">cxx_destruct</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">shouldAutorotateToInterfaceOrientation:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">interfaceOrientation</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">headClicked</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputViewFirstEffectiveTouch:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">touch</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">alertView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">clickedButtonAtIndex:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">index</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">actionChangeAccountToLogin</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">actionResetPswBtnClick</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">resetCurrentUser</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">resetPsw</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewWillDisappear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">view</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">notifyFaceToFacePayReceivedData:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">facePayReceivedData</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewWillAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">view</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">breakFirstRun</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isFirstRun</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">guideViewClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">clicked</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewWillLayoutSubviews</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>目测 <code>_tipLabel</code> 是写账户名和提示操作的 label ，上篇文章我提到过：@private 限制不了 keyPath ，现在我们来修改一下支付宝登录页的用户名信息：</p>
+
+<div class="code code">
+<pre class="code">cy# [visible setValue:@&quot;Test By yiyaaixuexi&quot; forKeyPath:@&quot;_tipLabel.text&quot;]</pre>
+</div>
+
+<div class="figure" id="figure-7-1">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f75ua3yb6aj208w0fsmys.jpg" />
+
+    <p class="caption"><strong>图片 7.1</strong> hack-practice</p>
+</div>
+
+
+<p>支付宝手势密码解锁有尝试次数限制，连续错 5 次就要重新登录。
+我想解除重试解锁次数的限制，发现了记录解锁次数的类型是 int ，<code>int _retryCount</code> ，这一点让我很不开心，因为我无法通过 KVC 来修改其值了。</p>
+
+<p>但是没有关系，我可以通过指针访问：</p>
+
+<div class="code code">
+<pre class="code">cy# visible-&gt;_retryCount = 0  
+0</pre>
+</div>
+
+<p>这样我就能无限制的用程序暴力破解手势密码了，来计算一下有多少种可能呢？</p>
+
+<div class="figure" id="figure-7-2">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75uaz3e83j20lk01aaam.jpg" />
+
+    <p class="caption"><strong>图片 7.2</strong> hack-practice2</p>
+</div>
+
+
+<p>这个数字对我来说有点大，可是对 iPhone5 的 CPU 来说就是小菜一碟了～</p>
+
+<p>等一下，密码格式是什么呢？</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>id 类型的密码，很严谨，又给 hack 带来不少麻烦呀～
+不过没关系，我们可以利用 Method Swizzling 来打出 password 到底是什么，不过呢，貌似可以再写一篇新文章去介绍了……</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/shi-yong-class-dump-z-fen-xi-zhi-fu-bao/">
+		
+			使用class-dump-z 分析支付宝</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">6</span> <span class="title">使用 class-dump-z 分析支付宝 App</span></h1>
+    <p>为了了解支付宝 app 的源码结构，我们可以使用 class-dump-z 工具来分析支付宝二进制。</p>
+
+<h3>下载配置 <code>class_dump_z</code></h3>
+
+<p>前往 <a href="https://code.google.com/p/networkpx/wiki/class_dump_z">https://code.google.com/p/networkpx/wiki/class_dump_z</a> ，下载 tar 包，然后解压配置到本地环境</p>
+
+<div class="code code">
+<pre class="code">$ tar -zxvf class-dump-z_0.2a.tar.gz  
+$ sudo cp mac_x86/class-dump-z /usr/bin/</pre>
+</div>
+
+<h3>class_dump 支付宝 App</h3>
+
+<div class="code code">
+<pre class="code">$ class-dump-z Portal &gt; Portal-dump.txt  
+&nbsp;
+@protocol XXEncryptedProtocol_10764b0  
+-(?)XXEncryptedMethod_d109df;  
+-(?)XXEncryptedMethod_d109d3;  
+-(?)XXEncryptedMethod_d109c7;  
+-(?)XXEncryptedMethod_d109bf;  
+-(?)XXEncryptedMethod_d109b8;  
+-(?)XXEncryptedMethod_d109a4;  
+-(?)XXEncryptedMethod_d10990;  
+-(?)XXEncryptedMethod_d1097f;  
+-(?)XXEncryptedMethod_d10970;  
+-(?)XXEncryptedMethod_d10968;  
+-(?)XXEncryptedMethod_d10941;  
+-(?)XXEncryptedMethod_d10925;  
+-(?)XXEncryptedMethod_d10914;  
+-(?)XXEncryptedMethod_d1090f;  
+-(?)XXEncryptedMethod_d1090a;  
+-(?)XXEncryptedMethod_d10904;  
+-(?)XXEncryptedMethod_d108f9;  
+-(?)XXEncryptedMethod_d108f4;  
+-(?)XXEncryptedMethod_d108eb;  
+@optional  
+-(?)XXEncryptedMethod_d109eb;  
+@end</pre>
+</div>
+
+<p>查看得到的信息是加过密的，这个加密操作是苹果在部署到 app store时做的，所以我们还需要做一步解密操作。</p>
+
+<h3>使用 Clutch 解密支付宝 App</h3>
+
+<h4>下载 Clutch</h4>
+
+<p>iOS7 越狱后的 Cydia 源里已经下载不到 Clutch 了，但是我们可以从网上下载好推进 iPhone</p>
+
+<p>地址：<a href="https://github.com/KJCracks/Clutch-dl/releases">Clutch 传送门</a></p>
+
+<h4>查看可解密的应用列表</h4>
+
+<div class="code code">
+<pre class="code">root# ./Clutch   
+&nbsp;
+Clutch-1.3.2  
+usage: ./Clutch [flags] [application name] [...]  
+Applications available: 9P_RetinaWallpapers breadtrip Chiizu CodecademyiPhone FisheyeFree food GirlsCamera IMDb InstaDaily InstaTextFree iOne ItsMe3 linecamera Moldiv MPCamera MYXJ NewsBoard Photo Blur Photo Editor PhotoWonder POCO 相机 Portal QQPicShow smashbandits Spark tripcamera Tuding_vITC_01 wantu WaterMarkCamera WeiBo Weibo</pre>
+</div>
+
+<h4>解密支付宝 App</h4>
+
+<div class="code code">
+<pre class="code">root# ./Clutch Portal  
+&nbsp;
+Clutch-1.3.2  
+Cracking Portal...  
+Creating working directory...  
+Performing initial analysis...  
+Performing cracking preflight...  
+dumping binary: analyzing load commands  
+dumping binary: obtaining ptrace handle  
+dumping binary: forking to begin tracing  
+dumping binary: successfully forked  
+dumping binary: obtaining mach port  
+dumping binary: preparing code resign  
+dumping binary: preparing to dump  
+dumping binary: ASLR enabled, identifying dump location dynamically  
+dumping binary: performing dump  
+dumping binary: patched cryptid  
+dumping binary: writing new checksum  
+Censoring iTunesMetadata.plist...  
+Packaging IPA file...  
+&nbsp;
+compression level: 0  
+    /var/root/Documents/Cracked/支付宝钱包-v8.0.0-(Clutch-1.3.2).ipa  
+&nbsp;
+elapsed time: 7473ms  
+&nbsp;
+Applications Cracked:   
+Portal  
+&nbsp;
+Applications that Failed:  
+&nbsp;
+Total Success: 1 Total Failed: 0</pre>
+</div>
+
+<h4>导出已解密的支付宝 App</h4>
+
+<p>从上一步骤得知，已解密的 ipa 位置为：<code>/var/root/Documents/Cracked/支付宝钱包-v8.0.0-(Clutch-1.3.2).ipa</code>
+将其拷贝到本地去分析</p>
+
+<h3><code>class_dump</code> 已解密的支付宝 App</h3>
+
+<p>解压 .ipa 后，到支付宝钱包-<code>v8.0.0-(Clutch-1.3.2)/Payload/Portal.app</code> 目录下，class_dump 已解密的二进制文件
+<code>$ class-dump-z Portal &gt; ~/Portal-classdump.txt</code></p>
+
+<p>这回就可以得到对应的信息了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+<span class="line-number">59</span>
+<span class="line-number">60</span>
+<span class="line-number">61</span>
+<span class="line-number">62</span>
+<span class="line-number">63</span>
+<span class="line-number">64</span>
+<span class="line-number">65</span>
+<span class="line-number">66</span>
+<span class="line-number">67</span>
+<span class="line-number">68</span>
+<span class="line-number">69</span>
+<span class="line-number">70</span>
+<span class="line-number">71</span>
+<span class="line-number">72</span>
+<span class="line-number">73</span>
+<span class="line-number">74</span>
+<span class="line-number">75</span>
+<span class="line-number">76</span>
+<span class="line-number">77</span>
+<span class="line-number">78</span>
+<span class="line-number">79</span>
+<span class="line-number">80</span>
+<span class="line-number">81</span>
+<span class="line-number">82</span>
+<span class="line-number">83</span>
+<span class="line-number">84</span>
+<span class="line-number">85</span>
+<span class="line-number">86</span>
+<span class="line-number">87</span>
+<span class="line-number">88</span>
+<span class="line-number">89</span>
+<span class="line-number">90</span>
+<span class="line-number">91</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">ALPNumPwdInputViewDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line"><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">onPasswordDidChange:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">onPassword</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@protocol</span> <span class="nc">ALPContactBaseTableViewCellDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
+</span><span class="line"><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">shareClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">clicked</span> <span class="nl">sender:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">sender</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">MMPPayWayViewController</span> : <span class="nc">XXUnknownSuperclass</span> <span class="o">&lt;</span><span class="n">SubChannelSelectDelegate</span><span class="p">,</span> <span class="n">UITableViewDataSource</span><span class="p">,</span> <span class="n">UITableViewDelegate</span><span class="p">,</span> <span class="n">CellDelegate</span><span class="p">,</span> <span class="n">UIAlertViewDelegate</span><span class="o">&gt;</span> <span class="p">{</span>
+</span><span class="line"><span class="k">@private</span>
+</span><span class="line">    <span class="n">Item</span><span class="o">*</span> <span class="n">channelSelected</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bCheck</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bOpenMiniPay</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bNeedPwd</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bSimplePwd</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bAutopayon</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bHasSub</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bFirstChannel</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bChangeSub</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bClickBack</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UITableView</span><span class="o">*</span> <span class="n">_channelListTableView</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">_channelListArray</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">_subChanneSelectedlList</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">_unCheckArray</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIButton</span><span class="o">*</span> <span class="n">_saveButton</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UILabel</span><span class="o">*</span> <span class="n">_tipLabel</span><span class="p">;</span>
+</span><span class="line">    <span class="n">MMPPasswordSwichView</span><span class="o">*</span> <span class="n">_payWaySwitch</span><span class="p">;</span>
+</span><span class="line">    <span class="n">MMPPopupAlertView</span><span class="o">*</span> <span class="n">_alertView</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIView</span><span class="o">*</span> <span class="n">_setView</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">_originalSelectedRow</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">_currentSelectedRow</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSString</span><span class="o">*</span> <span class="n">_statusCode</span><span class="p">;</span>
+</span><span class="line">    <span class="n">ChannelListModel</span><span class="o">*</span> <span class="n">_defaultChannelList</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bClickBack</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">ChannelListModel</span><span class="o">*</span> <span class="n">defaultChannelList</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span><span class="o">*</span> <span class="n">statusCode</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">int</span> <span class="n">currentSelectedRow</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">int</span> <span class="n">originalSelectedRow</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">UIView</span><span class="o">*</span> <span class="n">setView</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">MMPPopupAlertView</span><span class="o">*</span> <span class="n">alertView</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">MMPPasswordSwichView</span><span class="o">*</span> <span class="n">payWaySwitch</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">,</span> <span class="n">getter</span><span class="o">=</span><span class="n">isSubChannelChanged</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bChangeSub</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bFirstChannel</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bHasSub</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bAutopayon</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bSimplePwd</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bNeedPwd</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bOpenMiniPay</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bCheck</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">UILabel</span><span class="o">*</span> <span class="n">tipLabel</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">UIButton</span><span class="o">*</span> <span class="n">saveButton</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">unCheckArray</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">subChanneSelectedlList</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">channelListArray</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">UITableView</span><span class="o">*</span> <span class="n">channelListTableView</span><span class="p">;</span>
+</span><span class="line"><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">).</span><span class="n">cxx_destruct</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">subChannelDidSelected:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">subChannel</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">switchCheckButtonClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">clicked</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">checkboxButtonClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">clicked</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">onCellClick:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">click</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">showSubChannels</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didSelectRowAtIndexPath:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">indexPath</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">cellForRowAtIndexPath:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">indexPath</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">numberOfRowsInSection:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">section</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">heightForRowAtIndexPath:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">indexPath</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">numberOfSectionsInTableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">tableView</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setTableViewFootView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setTableViewHeaderView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">viewForHeaderInSection:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">section</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">viewForFooterInSection:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">section</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">heightForHeaderInSection:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">section</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">heightForFooterInSection:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">section</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">alertView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">clickedButtonAtIndex:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">index</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">clickSave</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">netWorkRequestWithPwd:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">pwd</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setPayWaySwitchStates:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">states</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">changePayWaySwitch:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">aSwitch</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">scrollToSelectedRow</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">didReceiveMemoryWarning</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">applicationEnterBackground:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">background</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dealloc</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">goBack</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isChannelsSetChanged</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">subChannelCode:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">code</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">subChannelDesc:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">desc</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithDefaultData:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">defaultData</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithNibName:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">nibName</span> <span class="nf">bundle:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">bundle</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">commonInit:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">init</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>分析支付宝源码片段</h3>
+
+<h4>使用了 @private 关键字限制成员访问权限</h4>
+
+<p>但是实际上，在 Objective-C 编程中，使用 @private 连 Keypath 访问都拦不住的</p>
+
+<h4>抛出了冗长的成员对象</h4>
+
+<p>这非常有利分析程序结构</p>
+
+<h3>进一步思考</h3>
+
+<p>1）如何利用 class-dump 结果，结合 cycript 进行攻击呢？</p>
+
+<p>2）class-dump-z 如此强大，有什么方法可以减少暴露的信息吗？</p>
+
+<p>接下来的博文将针对上面的思考，继续总结～</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/shi-yong-class-dump-z-fen-xi-zhi-fu-bao/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

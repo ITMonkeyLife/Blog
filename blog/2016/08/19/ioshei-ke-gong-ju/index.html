@@ -106,60 +106,74 @@ SSH         ——远程控制</p>
 
 <p>可以得到：</p>
 
-<div class="code code">
-<pre class="code">WQAlbum:
-    /System/Library/Frameworks/StoreKit.framework/StoreKit (compatibility version 1.0.0, current version 1.0.0)
-    /System/Library/Frameworks/AdSupport.framework/AdSupport (compatibility version 1.0.0, current version 1.0.0)
-    /usr/lib/libz.1.dylib (compatibility version 1.0.0, current version 1.2.5)
-    /System/Library/Frameworks//MediaPlayer.framework/MediaPlayer (compatibility version 1.0.0, current version 1.0.0)
-    /System/Library/Frameworks/MobileCoreServices.framework/MobileCoreServices (compatibility version 1.0.0, current version 40.0.0)
-    /System/Library/Frameworks/CoreMedia.framework/CoreMedia (compatibility version 1.0.0, current version 1.0.0)
-……</pre>
-</div>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">WQAlbum:
+</span><span class="line">    /System/Library/Frameworks/StoreKit.framework/StoreKit (compatibility version 1.0.0, current version 1.0.0)
+</span><span class="line">    /System/Library/Frameworks/AdSupport.framework/AdSupport (compatibility version 1.0.0, current version 1.0.0)
+</span><span class="line">    /usr/lib/libz.1.dylib (compatibility version 1.0.0, current version 1.2.5)
+</span><span class="line">    /System/Library/Frameworks//MediaPlayer.framework/MediaPlayer (compatibility version 1.0.0, current version 1.0.0)
+</span><span class="line">    /System/Library/Frameworks/MobileCoreServices.framework/MobileCoreServices (compatibility version 1.0.0, current version 40.0.0)
+</span><span class="line">    /System/Library/Frameworks/CoreMedia.framework/CoreMedia (compatibility version 1.0.0, current version 1.0.0)
+</span><span class="line">……</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>可以反编译 WQAlbum 的 <code>__TEXT__</code> 段内容, 截前 10 行：
 <code>otool -tV WQAlbum |head -n 10</code></p>
 
 <p>可以得到：</p>
 
-<div class="code code">
-<pre class="code">WQAlbum:
-(__TEXT,__text) section
-start:
-00002de0    pushl    $0x00
-00002de2    movl    %esp,%ebp
-00002de4    andl    $0xf0,%esp
-00002de7    subl    $0x10,%esp
-00002dea    movl    0x04(%ebp),%ebx
-……</pre>
-</div>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">WQAlbum:
+</span><span class="line">(__TEXT,__text) section
+</span><span class="line">start:
+</span><span class="line">00002de0    pushl    $0x00
+</span><span class="line">00002de2    movl    %esp,%ebp
+</span><span class="line">00002de4    andl    $0xf0,%esp
+</span><span class="line">00002de7    subl    $0x10,%esp
+</span><span class="line">00002dea    movl    0x04(%ebp),%ebx
+</span><span class="line">……</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>② nm，显示程序符号表，用我自己的应用程序私人相册现身说法一下：
 <code>nm -g WQAlbum  （ -g 代表 global ）</code></p>
 
 <p>可以得到：</p>
 
-<div class="code code">
-<pre class="code">001e5eec S _OBJC_IVAR_$_WQPhotoViewController.albumObject
-001e5efc S _OBJC_IVAR_$_WQPhotoViewController.int_current
-001e5f00 S _OBJC_IVAR_$_WQPhotoViewController.int_total</pre>
-</div>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">001e5eec S _OBJC_IVAR_$_WQPhotoViewController.albumObject
+</span><span class="line">001e5efc S _OBJC_IVAR_$_WQPhotoViewController.int_current
+</span><span class="line">001e5f00 S _OBJC_IVAR_$_WQPhotoViewController.int_total</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>其中，WQPhotoViewController 为类名，albumObject 为该类的成员</p>
 
 <p>③ ldid，是 iPhoneOS.platform 提供的签名工具，我们自己编译的程序需要签上名才能跑在 iPhone/iPad 上，使用方法</p>
 
-<div class="code code">
-<pre class="code">export CODESIGN_ALLOCATE=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate
-ldid -S helloworld</pre>
-</div>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">export CODESIGN_ALLOCATE=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate
+</span><span class="line">ldid -S helloworld</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <h3>编译 Hello World</h3>
 
 <h4>首先找到编译器：</h4>
 
 <div class="figure" id="figure-1-1">
-    &lt;img src=&#8221;http://ww3.sinaimg.cn/large/626e5d69gw1f6z8vi0nwej20sg04rjuo.jpg&#8221;/ alt=&#8221;hacktools1&#8221;&gt;
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f6z8vi0nwej20sg04rjuo.jpg" />
 
     <p class="caption"><strong>图片 1.1</strong> hacktools1</p>
 </div>
@@ -174,13 +188,17 @@ ldid -S helloworld</pre>
 
 <h4>来个经典 Hello World ：</h4>
 
-<div class="code code">
-<pre class="code"> #include &lt;stdio.h&gt;                                                                                            
-int main(){  
-       printf(&quot;Hello world !!!\n&quot;);  
-       return 0;  
-}</pre>
-</div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#include &lt;stdio.h&gt;                                                                                            </span>
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span><span class="line">       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello world !!!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class="line">       <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <h4>编译</h4>
 
@@ -239,6 +257,10 @@ Hello world !!!</pre>
 
 </div>
 	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
 
 </div>
 	

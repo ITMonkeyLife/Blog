@@ -1,0 +1,953 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="近些日子我们被宠坏了 &#8211; 我们只需要单击 Xcode 中的一个按钮（这个按钮看起来有点像是在播放一些音乐的动作），过几秒钟之后，我们的程序就会运行起来了，直到遇到一些错误，这非常的神奇。 在本文中，我们将从更高级别的角度来解读 Build 过程，并探索一下在 Xcode &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/Blog/favicon.png" rel="shortcut icon">
+	<link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/Blog/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+	</form>
+</nav>
+
+</header>
+	
+		
+	
+	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/">
+		
+			Xcode编译你所不知道的细节</a>
+	</h2>
+	<div class="entry-content">
+		<p>近些日子我们被宠坏了 &#8211; 我们只需要单击 Xcode 中的一个按钮（这个按钮看起来有点像是在播放一些音乐的动作），过几秒钟之后，我们的程序就会运行起来了，直到遇到一些错误，这非常的神奇。</p>
+
+<p>在本文中，我们将从更高级别的角度来解读 Build 过程，并探索一下在 Xcode 界面中暴露出的 project setting 信息与 Build 过程有什么关系。为了更加深入的探索 Build 过程中，每一步实际执行的工作，我都会在本文中引入一些别的文章。</p>
+
+<h2 id="build">解密 Build 日志</h2>
+
+<p>为了了解 Xcode build 过程的内部工作原理，我们首先把突破口瞄准完整的 log 文件上。打开 Log Navigator ，从列表中选择一个 Build ，Xcode 会将 log 文件很完美的展现出来。</p>
+
+<p><img src="http://img.objccn.io/issue-6/build-log.png" alt="Xcode build log navigator" /></p>
+
+<p>默认情况下，上面的 Xcode 界面中隐藏了大量的信息，我们通过选择任务，然后点击右边的展开按钮，就能看到每个任务的详细信息。另外一种可选的方案就是选中列表中的一个或者多个任务，然后选择组合键 Cmd-C，这将会把所有的纯文本信息拷贝至粘贴板。最后，我们还可以选择 Editor 菜单中的 &#8220;Copy transcript for shown results&#8221;，以此将所有的 log 信息拷贝到粘贴板中。</p>
+
+<p>本文给出的示例中，log 信息将近有 10,000 行（其实大多数的 log 信息是编译 OpenSSL 时生成的，并不是我们自己所写的代码生成的）。下面我们就开始吧！</p>
+
+<p>注意观察输出的 log 信息，首先会发现 log 信息被分为不同的几大块，它们与我们工程中的targets相互对应着：</p>
+
+<pre><code>Build target Pods-SSZipArchive
+...
+Build target Makefile-openssl
+...
+Build target Pods-AFNetworking
+...
+Build target crypto
+...
+Build target Pods
+...
+Build target ssl
+...
+Build target objcio
+</code></pre>
+
+<p>本文涉及到的工程有几个依赖项：其中 AFNetworking 和 SSZipArchive 包含在 Pods 中，而 OpenSSL 则以子工程的形式包含在工程中。</p>
+
+<p>针对工程中的每个 target，Xcode 都会执行一系列的操作，将相关的源码，根据所选定的平台，转换为机器可读的二进制文件。下面我们详细的了解一下第一个 target：SSZipArchive。</p>
+
+<p>在针对这个 target 输出的 log 信息中，我们可以看到每个任务被执行的详细情况。例如第一个任务是处理一个预编译头文件（为了增强 log 信息的可读性，我省略了许多细节）：</p>
+<pre><code>(1) ProcessPCH /.../Pods-SSZipArchive-prefix.pch.pch Pods-SSZipArchive-prefix.pch normal armv7 objective-c com.apple.compilers.llvm.clang.1_0.compiler
+(2) cd /.../Dev/objcio/Pods
+	setenv LANG en_US.US-ASCII
+	setenv PATH "..."
+(3) /.../Xcode.app/.../clang 
+(4) -x objective-c-header 
+(5) -arch armv7 
+... configuration and warning flags ...
+(6) -DDEBUG=1 -DCOCOAPODS=1 
+... include paths and more ...
+(7) -c 
+(8) /.../Pods-SSZipArchive-prefix.pch 
+(9) -o /.../Pods-SSZipArchive-prefix.pch.pch
+</code></pre>
+
+		
+		<a href="/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/10/dang-wo-zhen-zheng-kai-shi-ai-zi-ji/">
+		
+			当我真正开始爱自己</a>
+	</h2>
+	<div class="entry-content">
+		<p><img src="http://ww1.sinaimg.cn/large/626e5d69gw1efahu2mtk8j20e60aadh6.jpg" alt="" /></p>
+<p>当我真正开始爱自己，</p>
+
+<p>我才认识到，所有的痛苦和情感的折磨，</p>
+
+<p>都只是提醒我：活着，不要违背自己的本心。</p>
+
+<p>今天我明白了，这叫做</p>
+
+<p>『真实』。</p>
+
+<p>当我真正开始爱自己，</p>
+
+<p>我才懂得，把自己的愿望强加于人，</p>
+
+<p>是多么的无礼，就算我知道，时机并不成熟，</p>
+
+<p>那人也还没有做好准备，</p>
+
+<p>就算那个人就是我自己，</p>
+
+<p>今天我明白了，这叫做</p>
+
+<p>『尊重』。</p>
+
+
+		
+		<a href="/Blog/blog/2014/04/10/dang-wo-zhen-zheng-kai-shi-ai-zi-ji/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/shi-ge/'>诗歌</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/10/dang-wo-zhen-zheng-kai-shi-ai-zi-ji/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/">
+		
+			UIKit-Dynamics基于物理引擎新特性</a>
+	</h2>
+	<div class="entry-content">
+		<p>UIKit Dynamics 是 iOS 7 中基于物理动画引擎的一个新功能&#8211;它被特别设计使其能很好地与 collection views 配合工作，而后者是在 iOS 6 中才被引入的新特性。接下来，我们要好好看看如何将这两个特性结合在一起。 </p>
+
+<p>这篇文章将讨论两个结合使用 UIkit Dynamics 和 collection view 的例子。第一个例子展示了如何去实现像 iOS 7 里信息 app 中的消息泡泡的弹簧动效，然后再进一步结合平铺机制来实现布局的可伸缩性。第二个例子展现了如何用 UIKit Dynamics 来模拟<a href="http://zh.wikipedia.org/wiki/牛顿摆">牛顿摆</a>，这个例子中物体可以一个个地加入到 collection view 中，并和其他物体发生相互作用。</p>
+
+<p>在我们开始之前，我假定你们对 <code>UICollectionView</code> 是如何工作是有基本的了解——查看<a href="http://www.objccn.io/issue-3-3/">这篇 objc.io 文章</a>会有你想要的所有细节。我也假定你已经理解了 <code>UIKit Dynamics</code> 的工作原理&#8211;阅读这篇<a href="http://www.teehanlax.com/blog/introduction-to-uikit-dynamics/">博客</a>，可以了解更多 UIKit Dynamics 的知识。</p>
+
+<blockquote>
+  <p><span class="secondary radius label">编者注</span> 如果您阅读本篇文章感觉有点吃力的话，可以先来看看 <a href="http://im.onevcat.com">@onevcat</a> 的<a href="http://onevcat.com/2012/06/introducing-collection-views/">《UICollectionView 入门》</a> 和<a href="http://onevcat.com/2013/06/uikit-dynamics-started/">《UIKit Dynamics 入门》</a>这两篇入门文章，帮助您快速补充相关知识。</p>
+</blockquote>
+
+<p>文章中的两个例子项目都已经在 GitHub 中:</p>
+
+<ul>
+<li><a href="https://github.com/objcio/issue-5-springy-collection-view">ASHSpringyCollectionView</a>（基于 <a href="https://github.com/TeehanLax/UICollectionView-Spring-Demo">UICollectionView Spring Demo</a>）</li>
+<li><a href="https://github.com/objcio/issue-5-newtonian-collection-view">Newtownian UICollectionView</a></li>
+</ul>
+
+<h2 id="uidynamicanimator">关于 UIDynamicAnimator</h2>
+
+<p>支持 <code>UICollectionView</code> 实现 UIKit Dynamics 的最关键部分就是 <code>UIDynamicAnimator</code>。要实现这样的 UIKit Dynamics 的效果，我们需要自己自定义一个继承于 <code>UICollectionViewFlowLayout</code> 的子类，并且在这个子类对象里面持有一个 UIDynamicAnimator 的对象。</p>
+
+<p>当我们创建自定义的 dynamic animator 时，我们不会使用常用的初始化方法 <code>-initWithReferenceView:</code> ，因为我们不需要把这个 dynamic animator 关联一个 view ，而是给它关联一个 collection view layout。所以我们使用 <code>-initWithCollectionViewLayout:</code> 这个初始化方法，并把 collection view layout 作为参数传入。这很关键，当的 animator 的 behavior item 的属性应该被更新的时候，它必须能够确保 collection view 的 layout 失效。换句话说，dynamic animator 将会经常使旧的 layout 失效。</p>
+
+<p>我们很快就能看到这些事情是怎么连接起来的，但是在概念上理解 collection view 如何与 dynamic animator 相互作用是很重要的。</p>
+
+<p>Collection view layout 将会为 collection view 中的每个 <code>UICollectionViewLayoutAttributes</code> 添加 behavior（稍后我们会讨论平铺它们）。在将这些 behaviors 添加到 dynamic animator 之后，UIKit 将会向 collection view layout 询问 atrribute 的状态。我们此时可以直接将由 dynamic animator 所提供的 items 返回，而不需要自己做任何计算。Animator 将在模拟时禁用 layout。这会导致 UIKit 再次查询 layout，这个过程会一直持续到模拟满足设定条件而结束。</p>
+
+<p>所以重申一下，layout 创建了 dynamic animator，并且为其中每个 item 的 layout attribute 添加对应的 behaviors。当 collection view 需要 layout 信息时，由 dynamic animator 来提供需要的信息。</p>
+
+<h2 id="uicollectionviewflowlayout">继承 UICollectionViewFlowLayout</h2>
+
+<p>我们将要创建一个简单的例子来展示如何使用一个带 UIkit Dynamic 的 collection view layout。当然，我们需要做的第一件事就是，创建一个数据源去驱动我们的 collection view。我知道以你的能力完全可以独立实现一个数据源，但是为了完整性，我还是提供了一个给你:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">ASHCollectionViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span> <span class="n">CellIdentifier</span> <span class="o">=</span> <span class="s">@&quot;CellIdentifier&quot;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">viewDidLoad</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span> <span class="nl">registerClass:</span><span class="p">[</span><span class="n">UICollectionViewCell</span> <span class="n">class</span><span class="p">]</span>
+</span><span class="line">            <span class="nl">forCellWithReuseIdentifier:</span><span class="n">CellIdentifier</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">UIStatusBarStyle</span><span class="p">)</span><span class="nf">preferredStatusBarStyle</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">UIStatusBarStyleLightContent</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">animated</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">viewDidAppear:</span><span class="n">animated</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionViewLayout</span> <span class="n">invalidateLayout</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="cp">#pragma mark - UICollectionView Methods</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nf">collectionView:</span><span class="p">(</span><span class="n">UICollectionView</span> <span class="o">*</span><span class="p">)</span><span class="nv">collectionView</span>
+</span><span class="line">    <span class="nf">numberOfItemsInSection:</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">section</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="mi">120</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">UICollectionViewCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">collectionView:</span><span class="p">(</span><span class="n">UICollectionView</span> <span class="o">*</span><span class="p">)</span><span class="nv">collectionView</span>
+</span><span class="line">                 <span class="nf">cellForItemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UICollectionViewCell</span> <span class="o">*</span><span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">collectionView</span>
+</span><span class="line">        <span class="nl">dequeueReusableCellWithReuseIdentifier:</span><span class="n">CellIdentifier</span>
+</span><span class="line">                                  <span class="nl">forIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">backgroundColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">orangeColor</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/10/textviewde-zhuan-you-ku-textkit/">
+		
+			TextView的专有库TextKit</a>
+	</h2>
+	<div class="entry-content">
+		<p>iOS 7 的发布给开发者的案头带来了很多新工具。其中一个就是 <em>TextKit</em>。TextKit 由许多新的 UIKit 类组成，顾名思义，这些类就是用来处理文本的。在这里，我们将介绍 TextKit 的来由、它的组成，以及通过几个例子解释开发者怎样将它派上大用场。</p>
+
+<p>但是首先我们得先阐明一个观点：TextKit 可能是近期对 UIKit <em>最重要</em>的补充了。iOS 7 的新界面用纯文本按钮替换了大量的图标和边框。总的来说，文本和文本布局在新 OS 系统的视觉效果中所占有的重要性大大提高了。iOS7 的重新设计完全是被文本驱动，这样说也许并不夸张——而文本全部是 TextKit 来处理的。</p>
+
+<p>告诉你这个变动到底有多大吧：iOS7 之前的所有版本，（几乎）所有的文本都是 WebKit 来处理的。对：WebKit，web 浏览器引擎。所有 <code>UILabel</code>、<code>UITextField</code>，以及 <code>UITextView</code> 都在后台以某种方式使用 web views 来进行文本布局和渲染。为了新的界面风格，它们全都被重新设计以使用 TextKit。</p>
+
+<h2 id="ios">iOS 上文本的简短历史</h2>
+
+<p>这些新类并不是用来替换开发者以前使用的类。对 SDK 来说，TextKit 提供的是全新的功能。iOS 7 之前，TextKit 提供的功能必须都手动完成。这是现有框架缺失的功能。</p>
+
+<p>长期以来，只有一个基本的文本布局和渲染框架：<em>CoreText</em>。同样也只有一个途径读取用户的键盘输入：<code>UITextInput</code> 协议。在 iOS6 中，为了简单地获取系统的文本选择，也只有一个选择：继承 <code>UITextView</code>。</p>
+
+<p>（这可能就是为什么我要公开自己十年开发文本编辑器的经验的原因了）在渲染文本和读取键盘输入之间存在着巨大（跟我读：巨大）的缺口。这个缺口可能也是导致很少有富文本或者语法高亮编辑器的原因了——毫无疑问，开发一个好用的文本编辑器得耗费几个月的时间。</p>
+
+<p>就这样——如下是 iOS 文本（不那么）简短历史的简短概要：</p>
+
+<p><strong>iOS 2</strong>：这是第一个公开的 SDK，包括一个简单的文本显示组件（<code>UILabel</code>），一个简单的文本输入组件（<code>UITextField</code>），以及一个简单的、可滚动、可编辑的并且支持更大量文本的组件：<code>UITextView</code>。这些组件都只支持纯文本，没有文本选择支持（仅支持插入点），除了设置字体和文本颜色外几乎没有其他可定制功能。</p>
+
+<p><strong>iOS 3</strong>：新特性有复制和粘贴，以及复制粘贴所需要的文本选择功能。数据探测器（Data Detector）为文本视图提供了一个高亮电话号码和链接的方法。然而，除了打开或关闭这些特性外，开发者基本上没有什么别的事情可以做。</p>
+
+<p><strong>iOS 3.2</strong>：iPad 的出现带来了 CoreText，也就是前面提到的低级文本布局和渲染引擎（从Mac OS X 10.5 移植过来的），以及 <code>UITextInput</code>，就是前面也提到的键盘存取协议。Apple 将 Pages 作为移动设备上文本编辑功能的样板工程[^1]。然而，由于我前面提到的框架缺口，只有很少的应用使用它们。</p>
+
+<p><strong>iOS 4</strong>：iOS 3.2 发布仅仅几个月后就发布了，文本方面没有一丁点新功能。<em>（个人经历：在 WWDC，我走近工程师们，告诉他们我想要一个完善的 iOS 文本布局系统。回答是：“哦…提交个请求。”不出所料…）</em></p>
+
+<p><strong>iOS 5</strong>：文本方面没啥变化。<em>（个人经历：在 WWDC，我和工程师们谈及 iOS 上文本系统。回答是：“我们没有看到太多这方面的请求…” 靠！）</em></p>
+
+<p><strong>iOS 6</strong>：有些动作了：属性文本编辑被加入了 <code>UITextView</code>。很不幸的是，它很难定制。默认的 UI 有粗体、斜体和下划线。用户可以设置字体大小和颜色。粗看起来相当不错，但还是没法控制布局或者提供一个便利的途径来定制文本属性。然而对于（文本编辑）开发者，有一个大的新功能：可以继承 <code>UITextView</code> 了，这样的话，除了以前版本提供的键盘输入外，开发者可以“免费”获得文本选择功能。而在这以前，开发者必须实现一个完全自定义的文本选择功能，这可能是很多非纯文本工具的开发半途而废的原因。<em>（个人经历：我，WWDC，工程师们。我想要一个 iOS 的文本系统。回答：“嗯。吖。是的。也许？看，它只是不执行…” 所以毕竟还是有希望，对吧？）</em></p>
+
+<p><strong>iOS 7</strong>：终于来了，TextKit。</p>
+
+<h2>功能</h2>
+
+		
+		<a href="/Blog/blog/2014/04/10/textviewde-zhuan-you-ku-textkit/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/10/textviewde-zhuan-you-ku-textkit/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/">
+		
+			iOS7.0:隐藏技巧和变通之道</a>
+	</h2>
+	<div class="entry-content">
+		<p>当 iOS 7 刚发布的时候，全世界的苹果开发人员都立马尝试着去编译他们的 app，接着再花上数月的时间来修复任何出现的错误，甚至从头开始重建这个 app。这样的结果，使得人们根本无暇去探究 iOS 7 所带来的新思想。除开一些明显而细微的更新，比如说 NSArray 的 <code>firstObject</code> 方法——这个方法可追溯到 iOS 4 时代，现在被提为公有 API——还有很多隐藏的技巧等着我们去挖掘。</p>
+
+<h2>平滑淡入淡出动画</h2>
+
+<p>我在这里要讨论的并非新的弹性动画 API 或者 UIDynamics，而是一些更细微的东西。CALayer 增加了两个新方法：<code>allowsGroupOpacity</code> 和 <code>allowsEdgeAntialiasing</code>。现在，组不透明度（group opacity）不再是什么新鲜的东西了。iOS 会多次使用存在于 Info.plist 中的键 <code>UIViewGroupOpacity</code> 并可在应用程序范围内启用或禁用它。对于大多数 app 而言，这（译注：启用）并非所期望的，因为它会降低整体性能。在 iOS 7 中，用 SDK 7 所链接的程序，这项属性默认是启用的。当它被启用时，一些动画将会变得不流畅，它也可以在 layer 层上被控制。</p>
+
+<p>一个有趣的细节，如果 <code>allowsGroupOpacity</code> 启用的话，<code>_UIBackdropView</code>（被用作 <code>UIToolbar</code> 或者 <code>UIPopoverView</code> 的背景视图）不能对其模糊进行动画处理，所以当你做一个 alpha 转换时，你可能会临时禁用这项属性。因为这会降低动画体验，你可以回到旧的方式然后在动画期间临时启用 <code>shouldRasterize</code>。别忘了设置适当的 <code>rasterizationScale</code>，否则在 retina 的设备上这些视图会成锯齿状（pixelerated）。</p>
+
+<p>如果你想要复制 Safari 显示所有选项卡时的动画，那么边缘抗锯齿属性将变得非常有用。</p>
+
+<h2>阻塞动画</h2>
+
+<p>有一个小但是非常有用的新方法 <code>[UIView performWithoutAnimation:]</code>。它是一个简单的封装，先检查动画当前是否启用，如果是则停用动画，执行块语句，然后重新启用动画。一个需要说明的地方是，它并 <em>不会</em> 阻塞基于 CoreAnimation 的动画。因此，不用急于将你的方法调用从：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">CATransaction</span> <span class="n">begin</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">CATransaction</span> <span class="nl">setDisableActions:</span><span class="n">YES</span><span class="p">];</span>
+</span><span class="line"><span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(...);</span>
+</span><span class="line"><span class="p">[</span><span class="n">CATransaction</span> <span class="n">commit</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>替换成:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">UIView</span> <span class="nl">performWithoutAnimation:</span><span class="o">^</span><span class="p">{</span>
+</span><span class="line">    <span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(...);</span>
+</span><span class="line"><span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/ios7-dot-0-yin-cang-ji-qiao-he-bian-tong-zhi-dao/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/">
+		
+			ScrollView的前世今生</a>
+	</h2>
+	<div class="entry-content">
+		<p>可能你很难相信 <a href="http://developer.apple.com/library/ios/#documentation/uikit/reference/UIScrollView_Class/Reference/UIScrollView.html">UIScrollView</a> 和一个标准的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html">UIView</a> 差异并不大，scroll view 确实会多出一些方法，但这些方法只是和 UIView 的属性很好的结合到一起了。因此，在要想弄懂 UIScrollView 是怎么工作之前，你需要先了解一下 UIView，特别是视图渲染的两步过程。</p>
+
+<h2>光栅化和组合</h2>
+
+<p>渲染过程的第一部分是众所周知的光栅化(<code>rasterization</code>)，光栅化简单的说就是产生一组绘图指令并且生成一张图片。比如绘制一个圆角矩形、带图片、标题居中的 UIButtons。这些图片并没有被绘制到屏幕上去；取而代之的是，他们被自己的视图保持着留到下一个步骤使用。</p>
+
+<p>一旦每个视图都产生了自己的光栅化图片，这些图片便被一个接一个的绘制，并产生一个屏幕大小的图片，这便是上文所说的组合。视图层级(view hierarchy)对于组合如何进行扮演了很重要的角色：一个视图的图片被组合在它父视图的图片上面。然后，组合好的图片被组合到父视图的父视图图片上面。视图层级最顶端是窗口(window)，它组合好的图片便是我们看到的东西了。</p>
+
+<p>概念上，依次在每个视图上放置独立分层的图片并最终产生一个图片，单调的图像更容易被理解，特别是如果你以前使用过像 Photoshop 这样的工具。我们还有另外一篇文章详细解释了<a href="http://objccn.io/issue-3-1/">像素是如何绘制到屏幕上去的</a>。</p>
+
+<p>现在，回想一下，每个视图都有一个 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/bounds">bounds</a> 和 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/frame">frame</a>。当布局一个界面时，我们需要处理视图的 frame。这允许我们放置并设置视图的大小。视图的 frame 和 bounds 的大小总是一样的，但是他们的 origin 有可能不同。弄懂这两个工作原理是理解 UIScrollView 的关键。</p>
+
+<p>在光栅化步骤中，视图并不关心即将发生的组合步骤。也就是说，它并不关心自己的 frame (这是用来放置视图的图像)或自己在视图层级中的位置(这是决定组合的顺序)。这时视图只关心一件事就是绘制它自己的 content。这个绘制发生在每个视图的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instm/UIView/drawRect:"><code>drawRect:</code></a> 方法中。</p>
+
+<p>在 <code>drawRect:</code> 方法被调用前，会为视图创建一个空白的图片来绘制 content。这个图片的坐标系统是视图的 bounds。几乎每个视图 bounds 的 origin 都是 {0，0}。因此，当在光栅化图片左上角绘制一些东西的时候，你都会在 bounds 的 origin {x:0, y:0} 处绘制。在一个图片右下角的地方绘制东西的时候，你都会绘制在 {x:width, y:height} 处。如果你的绘制超出了视图的 bounds，那么超出的部分就不属于光栅化图片的部分了，并且会被丢弃。</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV2.png" alt="" title="" /></p>
+
+<p>在组合的步骤中，每个视图将自己光栅化图片组合到自己父视图的光栅化图片上面。视图的 frame 决定了自己在父视图中绘制的位置，frame 的 origin 表明了视图光栅化图片左上角相对父视图光栅化图片左上角的偏移量。所以，一个 origin 为 {x:20, y:15} 的 frame 所绘制的图片左边距其父视图 20 点，上边距父视图 15 点。因为视图的 frame 和 bounds 矩形的大小总是一样的，所以光栅化图片组合的时候是像素对齐的。这确保了光栅化图片不会被拉伸或缩小。</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV1.png" alt="" title="" /></p>
+
+<p>记住，我们才仅仅讨论了一个视图和它父视图之间的组合操作。一旦这两个视图被组合到一起，组合的结果图片将会和父视图的父视图进行组合，这是一个雪球效应。</p>
+
+<p>考虑一下组合图片背后的公式。视图图片的左上角会根据它 frame 的 origin 进行偏移，并绘制到父视图的图片上：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">Superview</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">Superview</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>正如之前所说的，如果一个视图 bounds 的 origin 是 {0,0}。那么，我们得到这个公式：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/">
+		
+			iOS之玩转字符串</a>
+	</h2>
+	<div class="entry-content">
+		<p>在每个应用里我们都大量使用字符串。下面我们将快速看看一些常见的操作字符串的方法，过一遍常见操作的最佳实践。</p>
+
+<h2>字符串的比较、搜索和排序</h2>
+
+<p>排序和比较字符串比第一眼看上去要复杂得多。不只是因为字符串可以包含<strong>代理对（surrogate pairs ）</strong>(详见 <a href="http://objccn.io/issue-9-1/#peculiar-unicode-features">Ole 写的这篇关于 Unicode 的文章</a>) ，而且比较还与字符串的本地化相关。在某些极端情况下相当棘手。</p>
+
+<p>苹果文档中 <em>String Programming Guide</em> 里有一节叫做 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/Strings/Articles/stringsClusters.html"><strong>“字符与字形集群（Characters and Grapheme Clusters）”</strong></a>，里面提到一些陷阱。例如对于排序来说，一些欧洲语言将序列“ch”当作单个字母。在一些语言里，“ä”被认为等同于 ‘a’ ，而在其它语言里它却被排在 ‘z’ 后面。</p>
+
+<p>而 <code>NSString</code> 有一些方法来帮助我们处理这种复杂性。首先看下面的方法：</p>
+
+<pre><code>- (NSComparisonResult)compare:(NSString *)aString options:(NSStringCompareOptions)mask range:(NSRange)range locale:(id)locale
+</code></pre>
+
+<p>它带给我们充分的灵活性。另外，还有很多<strong>便捷函数（convenience functions）</strong>都使用了这个方法。</p>
+
+<p>与比较有关的可用参数如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSCaseInsensitiveSearch</span>
+</span><span class="line"><span class="n">NSLiteralSearch</span>
+</span><span class="line"><span class="n">NSNumericSearch</span>
+</span><span class="line"><span class="n">NSDiacriticInsensitiveSearch</span>
+</span><span class="line"><span class="n">NSWidthInsensitiveSearch</span>
+</span><span class="line"><span class="n">NSForcedOrderingSearch</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>它们都可以用逻辑“或”运算符组合在一起。</p>
+
+<p><code>NSCaseInsensitiveSearch</code>：“A”等同于“a”，然而在某些地方还有更复杂的情况。例如，在德国，“ß” 和 “SS”是等价的。</p>
+
+<p><code>NSLiteralSearch</code>：Unicode 的点对点比较。它只在所有字符都用相同的方式组成的情况下才会返回相等（即 <code>NSOrderedSame</code>）。LATIN CAPITAL LETTER A 加上 COMBINING RING ABOVE 并不等同于 LATIN CAPITAL LETTER A WITH RING ABOVE.</p>
+
+<blockquote>
+  <p><span class="secondary radius label">编者注</span> 这里要解释一下，首先，每一个Unicode都是有官方名字的！LATIN CAPITAL LETTER A是一个大写“A”，COMBINING RING ABOVE是一个  ̊，LATIN CAPITAL LETTER A WITH RING ABOVE，这是Å。前两者的组合不等同于后者。</p>
+</blockquote>
+
+<p><code>NSNumericSearch</code>：它对字符串里的数字排序，所以 “Section 9” &lt; “Section 20” &lt; “Section 100.”</p>
+
+<p><code>NSDiacriticInsensitiveSearch</code>：“A” 等同于 “Å” 等同于 “Ä.”</p>
+
+<p><code>NSWidthInsensitiveSearch</code>：一些东亚文字（平假名和片假名）有全宽与半宽两种形式。</p>
+
+<p>很值得一提的是<code>-localizedStandardCompare:</code>，它排序的方式和 Finder 一样。它对应的选项是 <code>NSCaseInsensitiveSearch</code>、<code>NSNumericSearch</code>、<code>NSWidthInsensitiveSearch</code> 以及 <code>NSForcedOrderingSearch</code>。如果我们要在 UI 上显示一个文件列表，用它就最合适不过了。</p>
+
+<p>大小写不敏感的比较和音调符号不敏感的比较都是相对复杂和昂贵的操作。如果我们需要比较很多次字符串那这就会成为一个性能上的瓶颈（例如对一个大的数据集进行排序），一个常见的解决方法是同时存储原始字符串和折叠字符串。例如，我们的 <code>Contact</code> 类有一个正常的 <code>name</code> 属性，在内部它还有一个 <code>foldedName</code> 属性，它将自动在 name 变化时更新。那么我们就可以使用 <code>NSLiteralSearch</code> 来比较 name 的折叠版本。 <code>NSString</code> 有一个方法来创建折叠版本：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringByFoldingWithOptions:</span><span class="p">(</span><span class="n">NSStringCompareOptions</span><span class="p">)</span><span class="nv">options</span> <span class="nf">locale:</span><span class="p">(</span><span class="n">NSLocale</span> <span class="o">*</span><span class="p">)</span><span class="nv">locale</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/ioszhi-wan-zhuan-zi-fu-chuan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/">
+		
+			整洁的TableView代码</a>
+	</h2>
+	<div class="entry-content">
+		<p>Table view 是 iOS 应用程序中非常通用的组件。许多代码和 table view 都有直接或间接的关系，随便举几个例子，比如提供数据、更新 table view，控制它的行为以及响应选择事件。在这篇文章中，我们将会展示保持 table view 相关代码的整洁和良好组织的技术。</p>
+
+<h2 id="uitableviewcontrollervsuiviewcontroller">UITableViewController vs. UIViewController</h2>
+
+<p>Apple 提供了 <code>UITableViewController</code> 作为 table views 专属的 view controller 类。Table view controllers 实现了一些非常有用的特性，来帮你避免一遍又一遍地写那些死板的代码！但是话又说回来，table view controller 只限于管理一个全屏展示的 table view。大多数情况下，这就是你想要的，但如果不是，还有其他方法来解决这个问题，就像下面我们展示的那样。</p>
+
+<h3 id="tableviewcontrollers">Table View Controllers 的特性</h3>
+
+<p>Table view controllers 会在第一次显示 table view 的时候帮你加载其数据。另外，它还会帮你切换 table view 的编辑模式、响应键盘通知、以及一些小任务，比如闪现侧边的滑动提示条和清除选中时的背景色。为了让这些特性生效，当你在子类中覆写类似 <code>viewWillAppear:</code> 或者 <code>viewDidAppear:</code> 等事件方法时，需要调用 super 版本。</p>
+
+<p>Table view controllers 相对于标准 view controllers 的一个特别的好处是它支持 Apple 实现的“下拉刷新”。目前，文档中唯一的使用 <code>UIRefreshControl</code> 的方式就是通过 table view controller ，虽然通过努力在其他地方也能让它工作（<a href="http://stackoverflow.com/questions/12805003/uirefreshcontrol-issues">见此处</a>），但很可能在下一次 iOS 更新的时候就不行了。</p>
+
+<p>这些要素加一起，为我们提供了大部分 Apple 所定义的标准 table view 交互行为，如果你的应用恰好符合这些标准，那么直接使用 table view controllers 来避免写那些死板的代码是个很好的方法。</p>
+
+<h3 id="tableviewcontrollers">Table View Controllers 的限制</h3>
+
+<p>Table view controllers 的 view 属性永远都是一个 table view。如果你稍后决定在 table view 旁边显示一些东西（比如一个地图），如果不依赖于那些奇怪的 hacks，估计就没什么办法了。</p>
+
+<p>如果你是用代码或 .xib 文件来定义的界面，那么迁移到一个标准 view controller 将会非常简单。但是如果你使用了 storyboards，那么这个过程要多包含几个步骤。除非重新创建，否则你并不能在 storyboards 中将 table view controller 改成一个标准的 view controller。这意味着你必须将所有内容拷贝到新的 view controller，然后再重新连接一遍。</p>
+
+<p>最后，你需要把迁移后丢失的 table view controller 的特性给补回来。大多数都是 <code>viewWillAppear:</code> 或 <code>viewDidAppear:</code> 中简单的一条语句。切换编辑模式需要实现一个 action 方法，用来切换 table view 的 <code>editing</code> 属性。大多数工作来自重新创建对键盘的支持。</p>
+
+<p>在选择条路之前，其实还有一个更轻松的选择，它可以通过分离我们需要关心的功能（关注点分离），让你获得额外的好处：</p>
+
+<h3 id="childviewcontrollers">使用Child View Controllers</h3>
+
+<p>和完全抛弃 table view controller 不同，你还可以将它作为 child view controller 添加到其他 view controller 中（<a href="http://objccn.io/issue-1-4">关于此话题的文章</a>）。这样，parent view controller 在管理其他的你需要的新加的界面元素的同时，table view controller 还可以继续管理它的 table view。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addPhotoDetailsTableView</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">DetailsViewController</span> <span class="o">*</span><span class="n">details</span> <span class="o">=</span> <span class="p">[[</span><span class="n">DetailsViewController</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">photo</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">photo</span><span class="p">;</span>
+</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">delegate</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">addChildViewController:</span><span class="n">details</span><span class="p">];</span>
+</span><span class="line">    <span class="n">CGRect</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">bounds</span><span class="p">;</span>
+</span><span class="line">    <span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">110</span><span class="p">;</span>
+</span><span class="line">    <span class="n">details</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nl">addSubview:</span><span class="n">details</span><span class="p">.</span><span class="n">view</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">details</span> <span class="nl">didMoveToParentViewController:</span><span class="n">self</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/zheng-ji-de-tableviewdai-ma/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/">
+		
+			并发程序开发测试</a>
+	</h2>
+	<div class="entry-content">
+		<p>在开发高质量应用程序的过程中，测试是一个很重要的工具。在过去，当并发并不是应用程序架构中重要组成部分的时候，测试就相对简单。随着这几年的发展，使用并发设计模式已愈发重要了，想要测试好并发应用程序，已成了一个不小的挑战。</p>
+
+<p>测试并发代码最主要的困难在于程序或信息流不是反映在调用堆栈上。函数并不会立即返回结果给调用者，而是通过回调函数，Block，通知或者一些类似的机制，这些使得测试变得更加困难。</p>
+
+<p>然而，测试异步代码也会带来一些好处，比如可以揭露较差的程序设计，让最终的实现变得更加清晰。</p>
+
+<h2>异步测试的问题</h2>
+
+<p>首先，我们来看一个简单的同步单元测试例子。两个数求和的方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">add:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">a</span> <span class="nf">to:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">b</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>测试这个方法很简单，只需要比较该方法返回的值是否与期望的值相同，如果不相同，则测试失败。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testAddition</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">Calculator</span> <span class="nl">add:</span><span class="mi">2</span> <span class="nl">to:</span><span class="mi">2</span><span class="p">];</span>
+</span><span class="line">    <span class="n">STAssertEquals</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="nb">nil</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/">
+		
+			线程安全</a>
+	</h2>
+	<div class="entry-content">
+		<p>这篇文章将专注于实用技巧，设计模式，以及对于写出线程安全类和使用 GCD 来说所特别需要注意的一些<a href="http://zh.wikipedia.org/wiki/反面模式">反面模式</a>。</p>
+
+<h2>线程安全</h2>
+
+<h3 id="apple">Apple 的框架</h3>
+
+<p>首先让我们来看看 Apple 的框架。一般来说除非特别声明，大多数的类默认都不是线程安全的。对于其中的一些类来说，这是很合理的，但是对于另外一些来说就很有趣了。</p>
+
+<p>就算是在经验丰富的 iOS/Mac 开发者，也难免会犯从后台线程去访问 UIKit/AppKit 这种错误。比如因为图片的内容本身就是从后台的网络请求中获取的话，顺手就在后台线程中设置了 <code>image</code> 之类的属性，这样的错误其实是屡见不鲜的。Apple 的代码都经过了性能的优化，所以即使你从别的线程设置了属性的时候，也不会产生什么警告。</p>
+
+<p>在设置图片这个例子中，症结其实是你的改变通常要过一会儿才能生效。但是如果有两个线程在同时对图片进行了设定，那么很可能因为当前的图片被释放两次，而导致应用崩溃。这种行为是和时机有关系的，所以很可能在开发阶段没有崩溃，但是你的用户使用时却不断 crash。</p>
+
+<p>现在没有<strong>官方</strong>的用来寻找类似错误的工具，但我们确实有一些技巧来避免这个问题。<a href="https://gist.github.com/steipete/5664345">UIKit Main Thread Guard</a> 是一段用来监视每一次对 <code>setNeedsLayout</code> 和 <code>setNeedsDisplay</code> 的调用代码，并检查它们是否是在主线程被调用的。因为这两个方法在 UIKit 的 setter （包括 image 属性）中广泛使用，所以它可以捕获到很多线程相关的错误。虽然这个小技巧并不包含任何私有 API， 但我们还是不建议将它是用在发布产品中，不过在开发过程中使用的话还是相当赞的。</p>
+
+<p>Apple没有把 UIKit 设计为线程安全的类是有意为之的，将其打造为线程安全的话会使很多操作变慢。而事实上 UIKit 是和主线程绑定的，这一特点使得编写并发程序以及使用 UIKit 十分容易的，你唯一需要确保的就是对于 UIKit 的调用总是在主线程中来进行。</p>
+
+<h4 id="uikit">为什么 UIKit 不是线程安全的？</h4>
+
+<p>对于一个像 UIKit 这样的大型框架，确保它的线程安全将会带来巨大的工作量和成本。将 non-atomic 的属性变为 atomic 的属性只不过是需要做的变化里的微不足道的一小部分。通常来说，你需要同时改变若干个属性，才能看到它所带来的结果。为了解决这个问题，苹果可能不得不提供像 Core Data 中的 <code>performBlock:</code> 和 <code>performBlockAndWait:</code> 那样类似的方法来同步变更。另外你想想看，绝大多数对 UIKit 类的调用其实都是以<strong>配置</strong>为目的的，这使得将 UIKit 改为线程安全这件事情更显得毫无意义了。</p>
+
+<p>然而即使是那些与配置共享的内部状态之类事情无关的调用，其实也不是线程安全的。如果你做过 iOS 3.2 或之前的黑暗年代的 app 开发的话，你肯定有过一边在后台准备图像时一边使用 NSString 的 <code>drawInRect:withFont:</code> 时的随机崩溃的经历。值得庆幸的事，在 iOS 4 中 <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniOS/Articles/iPhoneOS4.html">苹果将大部分绘图的方法和诸如 <code>UIColor</code> 和 <code>UIFont</code> 这样的类改写为了后台线程可用</a>。</p>
+
+<p>但不幸的是 Apple 在线程安全方面的文档是极度匮乏的。他们推荐只访问主线程，并且甚至是绘图方法他们都没有明确地表示保证线程安全。因此在阅读文档的同时，去读读 <a href="http://developer.apple.com/library/ios/#releasenotes/General/WhatsNewIniOS/Articles/iPhoneOS4.html">iOS 版本更新说明</a>会是一个很好的选择。</p>
+
+<p>对于大多数情况来说，UIKit 类确实只应该用在应用的主线程中。这对于那些继承自 UIResponder 的类以及那些操作你的应用的用户界面的类来说，不管如何都是很正确的。</p>
+
+<h4 id="deallocation">内存回收 (deallocation) 问题</h4>
+
+<p>另一个在后台使用 UIKit 对象的的危险之处在于“内存回收问题”。Apple 在技术笔记 <a href="ttp://developer.apple.com/library/ios/#technotes/tn2109/_index.html">TN2109</a> 中概述了这个问题，并提供了多种解决方案。这个问题其实是要求 UI 对象应该在主线程中被回收，因为在它们的 <code>dealloc</code> 方法被调用回收的时候，可能会去改变 view 的结构关系，而如我们所知，这种操作应该放在主线程来进行。</p>
+
+<p>因为调用者被其他线程持有是非常常见的（不管是由于 operation 还是 block 所导致的），这也是很容易犯错并且难以被修正的问题。在 <a href="https://github.com/AFNetworking/AFNetworking/issues/56">AFNetworking 中也一直长久存在这样的 bug</a>，但是由于其自身的隐蔽性而鲜为人知，也很难重现其所造成的崩溃。在异步的 block 或者操作中一致使用 <code>__weak</code>，并且不去直接访问局部变量会对避开这类问题有所帮助。</p>
+
+<h4 id="collection">Collection 类</h4>
+
+		
+		<a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+<nav id="pagenavi">
+    
+        
+            <a href="/Blog/blog/page/7/" class="prev">Prev</a>
+        
+    
+    
+        <a href="/Blog/blog/page/9/" class="next">Next</a>
+    
+    <div class="center"><a href="/Blog/blog/archives">Blog Archives</a></div>
+</nav>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/Blog/javascripts/slash.js"></script>
+<script src="/Blog/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>

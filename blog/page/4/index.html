@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="当我们处理自然语言（相对于程序语言而言）的时候会遇到一项挑战，即涵义模棱两可。程序语言是被设计成为有且只有一个可能解释的语言，而人类语言可能由于模糊性和不确定性衍生出很多问题。这是由于有时候你并不想确切地告诉别人你对某事物的想法。在社交场合这完全没有问题，但是当你试图使用计算机来处理人类语言的话 &hellip;">
+	<meta name="description" content="最近在学习React-Native过程中整理了一些学习的资源。 教程 react-native 官方api文档. Awesome React-Native. react-native 中文api文档 (翻译中). react.js中文文档. react.js入门教程(gitbook). &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -79,27 +79,35 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/">
+		<a href="/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/">
 		
-			语言标签</a>
+			React-Native 资源整理</a>
 	</h2>
 	<div class="entry-content">
-		<p>当我们处理自然语言（相对于程序语言而言）的时候会遇到一项挑战，即涵义模棱两可。程序语言是被设计成为有且只有一个可能解释的语言，而人类语言可能由于模糊性和不确定性衍生出很多问题。这是由于有时候你并不想确切地告诉别人你对某事物的想法。在社交场合这完全没有问题，但是当你试图使用计算机来处理人类语言的话，就会非常痛苦。</p>
+		<p>
+最近在学习React-Native过程中整理了一些学习的资源。
+</p>
 
-<p>词法标识（token）就是一个简单的例子。程序语言的词法分析对于标识表示什么，它是什么类型（语句分隔符，标识符，保留关键字等等）是什么有着明确的规则。而自然语言则远不能如此清晰可辩。<em>can’t</em> 是一个还是两个标识？并且根据你做出的判断，<em>cannot</em> 或者 <em>can not</em> 这两个应该是相同意思的词又各是几个标识呢？很多复合词都可以写成一个词（比如：<em>bookshelf</em>），或者两个词（比如：<em>lawn mower</em>），甚至还可以用连字符来连接（比如：<em>life-cycle</em>）。有些字符 （比如说连字符或者右肩单撇号），可以有很多种解释，而如何选择正确字符往往取决于上下文语言环境（撇号在一个单词的最后是表示所有格符号还是后单引号？）</p>
+<h2 id="section">教程</h2>
 
-<p>句子的情况同样不怎么好：如果简单认为句号是用来结束一个句子的话，在我们使用缩写或是序数的时候就悲剧了。虽然通常情况下，我们是可以解决这个问题的，但是对有些句子而言，除非将整个段落彻底分析，否则无法真正确定这些句子的意思。我们人类甚至也无法有意识地考虑这些问题。</p>
+<p><a href="http://facebook.github.io/react-native/docs/getting-started.html">react-native 官方api文档</a>.</p>
 
-<p>不过我们希望能够处理人类语言，因为在跟软件交流的时候，使用人类语言对用户更加友好。我们更愿意直接告诉计算机要做什么，让计算机为我们分析报纸文章，并对我们感兴趣的新闻做个总结，而不是通过敲击键盘或者点击小小的按钮（或者在小小的虚拟键盘上打字）来让计算机为我们做这些事。其中有些还在我们的能力范围之外（至少在苹果为我们提供与 Siri 交互的  API 之前）。但是有些已经成为可能，那就是 <code>NSLinguisticTagger</code>。</p>
+<p><a href="https://github.com/jondot/awesome-react-native">Awesome React-Native</a>.</p>
 
-<p><code>NSLinguisticTagger</code> 是 Foundation 框架中命名极为不当的类之一，这是因为它远远不止是一个小小的词性 tagger，而是集词法分析，分词器，命名实体识别及词性标注为一体的类。换句话说，它几乎可以满足你处理某些计算机语言处理的全部要求。</p>
+<p><a href="https://github.com/ecomfe/react-native-cn">react-native 中文api文档 (翻译中)</a>.</p>
 
-<p>为了展示 <code>NSLinguisticTagger</code> 类的用法，我们会开发一个灵活的工具用来搜索。我们有一个充满了文本（比如新闻，电邮，或者其他的任意文本）的集合，然后我们输入一个单词，这个单词将返回所有包含这个单词的句子。我们会忽略功能词（比如 <em>the</em>，<em>of</em> 或者 <em>and</em>），因为它们在这个语言环境中太过于常见，没有什么用处。我们目前要实现的是第一步：从一个单独文件中提取相关单词。由此可以迅速地扩展到提供完整功能。</p>
+<p><a href="http://reactjs.cn/">react.js中文文档</a>.</p>
 
-<p><a href="https://github.com/objcio/issue-7-linguistic-tagging">GitHub</a> 上有源代码和样本文本。这是《卫报》上一篇关于中英贸易的文章。当用软件分析这份文本时，你会发现，它并不是总是运行良好，不过，出现运行故障完全正常：人类语言和任何正式语言都不同，人类语言凌乱复杂，无法简单划归到整齐划一的规则系统。很多理论问题（哪怕就像词性一样基础的问题）在某种程度上是无法解决的，这是由于我们仍然对如何才能最好地描述语言还所知甚少。比如说，词的分类是以拉丁语为依据的，但这并不意味着就必定适合英语。它们充其量只是大概近似而已。不过从很多实际的目的来看，这样就已经足够了，不需要让人怎么担心了。</p>
+<p><a href="http://hulufei.gitbooks.io/react-tutorial/content/introduction.html">react.js入门教程(gitbook)</a>.</p>
+
+<p><a href="http://www.ruanyifeng.com/blog/2015/03/react.html">react.js快速入门教程</a>.</p>
+
+<p><a href="http://react.nodejs-china.org/t/reactjszhong-wen-shi-pin-jiao-cheng-bai-du-wang-pan/584">react.js视频教程</a>.</p>
+
+<p><a href="http://html-js.com/article/2783">react-native第一课</a>.
 
 		
-		<a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/" class="more-link">Read on &rarr;</a>
+		<a href="/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/" class="more-link">Read on &rarr;</a>
 	</div>
 
 
@@ -113,72 +121,12 @@
 	<div class="tags">
 
 
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+	<a class='category' href='/Blog/blog/categories/react-native/'>React-Native</a>
 
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/14/view-layerxie-zuo/">
-		
-			View-Layer协作</a>
-	</h2>
-	<div class="entry-content">
-		<p>在 iOS 中，所有的 view 都是由一个底层的 layer 来驱动的。view 和它的 layer 之间有着紧密的联系，view 其实直接从 layer 对象中获取了绝大多数它所需要的数据。在 iOS 中也有一些单独的 layer，比如 <code>AVCaptureVideoPreviewLayer</code> 和 <code>CAShapeLayer</code>，它们不需要附加到 view 上就可以在屏幕上显示内容。两种情况下其实都是 layer 在起决定作用。当然了，附加到 view 上的 layer 和单独的 layer 在行为上还是稍有不同的。</p>
-
-<p>基本上你改变一个单独的 layer 的任何属性的时候，都会触发一个从旧的值过渡到新值的简单动画（这就是所谓的可动画 <code>animatable</code>）。然而，如果你改变的是 view 中 layer 的同一个属性，它只会从这一帧直接跳变到下一帧。尽管两种情况中都有 layer，但是当 layer 附加在 view 上时，它的默认的隐式动画的 layer 行为就不起作用了。</p>
-
-<blockquote>
-  <p>animatable；几乎所有的层的属性都是隐性可动画的。你可以在文档中看到它们的简介是以 &#8216;animatable&#8217; 结尾的。这不仅包括了比如位置，尺寸，颜色或者透明度这样的绝大多数的数值属性，甚至也囊括了像 isHidden 和 doubleSided 这样的布尔值。 像 paths 这样的属性也是 animatable 的，但是它不支持隐式动画。</p>
-</blockquote>
-
-<p>在 Core Animation 编程指南的 “How to Animate Layer-Backed Views” 中，对<em>为什么</em>会这样做出了一个解释：</p>
-
-<blockquote>
-  <p>UIView 默认情况下禁止了 layer 动画，但是在 animation block 中又重新启用了它们</p>
-</blockquote>
-
-<p>这正是我们所看到的行为；当一个属性在动画 block 之外被改变时，没有动画，但是当属性在动画 block 内被改变时，就带上了动画。对于这是<em>如何</em>发生的这一问题的答案十分简单和优雅，它优美地阐明和揭示了 view 和 layer 之间是如何协同工作和被精心设计的。</p>
-
-<p>无论何时一个可动画的 layer 属性改变时，layer 都会寻找并运行合适的 &#8216;action&#8217; 来实行这个改变。在 Core Animation 的专业术语中就把这样的动画统称为动作 (action，或者 <code>CAAction</code>)。</p>
-
-<blockquote>
-  <p>CAAction：技术上来说，这是一个接口，并可以用来做各种事情。但是实际中，某种程度上你可以只把它理解为用来处理动画。</p>
-</blockquote>
-
-<p>layer 将像文档中所写的的那样去寻找动作，整个过程分为五个步骤。第一步中的在 view 和 layer 中交互的部分是最有意思的：</p>
-
-<p>layer 通过向它的 delegate 发送 <code>actionForLayer:forKey:</code> 消息来询问提供一个对应属性变化的 action。delegate 可以通过返回以下三者之一来进行响应：</p>
-
-		
-		<a href="/Blog/blog/2014/05/14/view-layerxie-zuo/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/14/view-layerxie-zuo/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -187,149 +135,14 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/">
+		<a href="/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu/">
 		
-			CollectionView布局动画</a>
+			iOS小技巧</a>
 	</h2>
 	<div class="entry-content">
-		<p><code>UICollectionView</code> 和相关类的设置非常灵活和强大。但是灵活性一旦增强，某种程度上也增加了其复杂性： <code>UICollectionView</code> 比老式的 <code>UITableView</code> 更有深度，适用性也更强。</p>
-
-<p>Collection View 深入太多了，事实上，<a href="http://oleb.net">Ole Begeman</a> 和 <a href="https://twitter.com/ashfurrow">Ash Furrow</a> 之前曾在 objc.io 上发表过 <a href="http://objccn.io/issue-3-3/">自定义 Collection View 布局</a> 和 <a href="http://objccn.io/issue-5-2/">UICollectionView + UIKit 力学</a>，但是我依然有一些他们没有提及的内容可以写。在这篇文章中，我假设你已经非常熟悉 <code>UICollectionView</code> 的基本布局，并且至少阅读了苹果精彩的<a href="https://developer.apple.com/library/ios/documentation/WindowsViews/Conceptual/CollectionViewPGforIOS/Introduction/Introduction.html#//apple_ref/doc/uid/TP40012334">编程指南</a>以及 Ole 之前的<a href="http://objccn.io/issue-3-3/">文章</a>。</p>
-
-<p>本文的第一部分将集中讨论并举例说明如何用不同的类和方法来共同帮助实现一些常见的 <code>UICollectionView</code> 动画。在第二部分，我们将看一下带有 collection views 的 view controller 转场动画以及在 <code>useLayoutToLayoutNavigationTransitions</code> 可用时使用其进行转场，如果不可用时，我们会实现一个自定义转场动画。</p>
-
-<p>你可以在 GitHub 中找到本文提到的两个示例工程:</p>
-
-<ul>
-<li><a href="https://github.com/objcio/issue-12-CollectionViewAnimations">布局动画</a></li>
-<li><a href="https://github.com/objcio/issue-12-CustomCollectionViewTransition">自定义 collection view 转场动画</a></li>
-</ul>
-
-<h2 id="collectionview">Collection View 布局动画</h2>
-
-<p>标准 <code>UICollectionViewFlowLayout</code> 除了动画是非常容易自定义的，苹果选择了一种安全的途径去实现一个简单的淡入淡出动画作为所有布局的默认动画。如果你想实现自定义动画，最好的办法是子类化 <code>UICollectionViewFlowLayout</code> 并且在适当的地方实现你的动画。让我们通过一些例子来了解 <code>UICollectionViewFlowLayout</code> 子类中的一些方法如何协助完成自定义动画。</p>
-
-<h3>插入删除元素</h3>
-
-		
-		<a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/">
-		
-			自定义ViewController动画</a>
-	</h2>
-	<div class="entry-content">
-		<p>在<a href="http://objccn.io/issue-5/">话题 #5</a> 中，<a href="http://twitter.com/chriseidhof">Chris Eidhof</a> 向我们介绍了 iOS7 引入的新特性自定义 <a href="http://objccn.io/issue-5-3">View Controller 转场</a>. 他给出了一个 <a href="http://objccn.io/issue-5-3/#conclusion">结论</a>：</p>
-
-<blockquote>
-  <p>我们在本文只探讨了在 navigation controller 中的两个 view controller 之间的转场动画，但是这些做法在 tab bar controller 或者<strong>任何你自己定义的 view controller 容器</strong>中<strong>也是通用的</strong>… </p>
-</blockquote>
-
-<p>尽管从技术角度来讲，使用 iOS 7 的 API，你可以对自定义容器中的 view controllers 做自定义转场，但是这不是能直接使用的，实现这种效果非常不容易。</p>
-
-<p>请注意我正在讨论的自定义视图控制器容器 (custom container view controllers) 都是 <code>UIViewController</code> 的直接子类，而不是 <code>UITabBarController</code> 或者 <code>UINavigationController</code> 的子类。</p>
-
-<p>对于你自定义的继承于 <code>UIViewController</code> 的容器子类，并没有现成可用的 API 允许一个任意的<em>动画控制器 (animation controller)</em> 将一个子视图控制器自动转场到另外一个，不管是可交互式的转场还是不可交互式的转场。 我甚至都觉着苹果根本就不想支持这种方式。苹果支持下面的这几种转场方式:</p>
-
-<ul>
-<li>Navigation controller 推入和推出页面</li>
-<li>Tab bar controller 选择的改变</li>
-<li>Modal 页面的展示和消失</li>
-</ul>
-
-<p>在本文中，我将向你展示如何自定义视图控制器容器，并且使其支持第三方的动画控制器。</p>
-
-<p>如果你需要复习一下 iOS 5 引入的视图控制器容器，请阅读<a href="http://objccn.io/issue-1/">话题＃1</a> 中 <a href="https://twitter.com/rickigregersen">Ricky Gregersen</a> 写的文章 “<a href="http://objccn.io/issue-1-4/">View Controller 容器</a>”。</p>
-
-<h2>预热准备</h2>
-
-<p>看到这里，你可能对上文我们说到的一些问题犯嘀咕，让我来告诉你答案吧:</p>
-
-<p><em>为什么我们不直接继承 <code>UINavigationController</code> 或 <code>UITabBarController</code>，并且使用它们提供的功能的？</em></p>
-
-		
-		<a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/13/zi-ding-yi-viewcontrollerdong-hua/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/">
-		
-			Layer中动画概述</a>
-	</h2>
-	<div class="entry-content">
-		<p>默认情况下，<code>CALayer</code> 及其子类的绝大部分标准属性都可以执行动画，无论是添加一个 <code>CAAnimation</code> 到 Layer（显式动画），亦或是为属性指定一个动作然后修改它（隐式动画）。</p>
-
-<p>但有时候我们希望能同时为好几个属性添加动画，使它们看起来像是一个动画一样；或者，我们需要执行的动画不能通过使用标准 Layer 属性动画来实现。</p>
-
-<p>在本文中，我们将讨论如何子类化 <code>CALayer</code> 并添加我们自己的属性，以便比较容易地创建那些如果以其他方式实现起来会很麻烦的动画效果。</p>
-
-<p>一般说来，我们希望添加到 <code>CALayer</code> 的子类上的可动画属性有三种类型：</p>
-
-<ul>
-<li>能间接动画 Layer （或其子类）的一个或多个标准属性的属性。</li>
-<li>能触发 Layer 背后的图像（即 <code>contents</code> 属性）重绘的属性。</li>
-<li>不涉及 Layer 重绘或对任何已有属性执行动画的属性。</li>
-</ul>
-
-<h2>间接属性动画</h2>
-
-<p>能间接修改其它标准 Layer 属性的自定义属性是这些选项中最简单的。它们仅仅只是自定义 setter 方法。然后将它们的输入转换为适用于创建动画的一个或多个不同的值。</p>
-
-<p>如果被我们设置的属性已经预设好标准动画，那我们完全不需要编写任何实际的动画代码，因为我们修改这些属性后，它们就会继承任何被配置在当前 <code>CATransaction</code> 上的动画设置，并且自动执行动画。</p>
-
-<p>换句话说，即使 <code>CALayer</code> 不知道如何对我们自定义的属性进行动画，它依然能对因自定义属性被改变而引起的其它可见副作用进行动画，而这恰好就是我们所需要的。</p>
-
-<p>为了演示这种方法，让我们来创建一个简单的模拟时钟，之后我们可以使用被声明为 <code>NSDate</code> 类型 <code>time</code> 属性来设置它的时间。我会将从创建一个静态的时钟面盘开始。这个时钟包含三个 <code>CAShapeLayer</code> 实例 —— 一个用于时钟面盘的圆形 Layer 和两个用于时针和分针的长方形 Sublayer。</p>
+		<p>最近开始记录下自己开发遇到的问题，如果解决了就会记录下来，以便自己日后回顾工作。
+</p>
+<p>测试妹子给我提了一个问题是视图遮挡了，我一看，确实会遮挡，我就加了下面的这段代码
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
@@ -356,242 +169,35 @@
 <span class="line-number">24</span>
 <span class="line-number">25</span>
 <span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span>: <span class="nc">CAShapeLayer</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">NSDate</span> <span class="o">*</span><span class="n">time</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span> <span class="p">()</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">// 私有属性</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">CAShapeLayer</span> <span class="o">*</span><span class="n">hourHand</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">CAShapeLayer</span> <span class="o">*</span><span class="n">minuteHand</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">ClockFace</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIView</span><span class="o">*</span><span class="p">)</span><span class="nf">keyboardView</span>
 </span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">((</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">]))</span>
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span> <span class="n">windows</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="n">windows</span><span class="p">];</span>
+</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">UIWindow</span> <span class="o">*</span> <span class="n">window</span> <span class="k">in</span> <span class="p">[</span><span class="n">windows</span> <span class="n">reverseObjectEnumerator</span><span class="p">])</span>
 </span><span class="line">    <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithOvalInRect:</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">].</span><span class="n">CGPath</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">whiteColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">strokeColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">lineWidth</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAShapeLayer</span> <span class="n">layer</span><span class="p">];</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">70</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">70</span><span class="p">)].</span><span class="n">CGPath</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAShapeLayer</span> <span class="n">layer</span><span class="p">];</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">90</span><span class="p">)].</span><span class="n">CGPath</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">];</span>
+</span><span class="line">        <span class="k">for</span> <span class="p">(</span><span class="n">UIView</span> <span class="o">*</span> <span class="n">view</span> <span class="k">in</span> <span class="p">[</span><span class="n">window</span> <span class="n">subviews</span><span class="p">])</span>
+</span><span class="line">        <span class="p">{</span>
+</span><span class="line">            <span class="c1">// UIPeripheralHostView is used from iOS 4.0, UIKeyboard was used in previous versions,UIInputSetContainerView was used iOS 8.0</span>
+</span><span class="line">            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIPeripheralHostView&quot;</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIKeyboard&quot;</span><span class="p">)</span> <span class="o">||</span>
+</span><span class="line">                <span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIInputSetContainerView&quot;</span><span class="p">))</span>
+</span><span class="line">            <span class="p">{</span>
+</span><span class="line">                <span class="k">return</span> <span class="n">view</span><span class="p">;</span>
+</span><span class="line">            <span class="p">}</span>
+</span><span class="line">        <span class="p">}</span>
 </span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
 </span><span class="line"><span class="p">}</span>
 </span><span class="line">
-</span><span class="line"><span class="k">@end</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIView</span><span class="o">*</span><span class="p">)</span><span class="nf">keyboardViewForView:</span><span class="p">(</span><span class="n">UIView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIView</span> <span class="o">*</span> <span class="n">keyboardView</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">keyboardView</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">keyboardView</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">view</span> <span class="o">=</span> <span class="n">keyboardView</span><span class="p">.</span><span class="n">superview</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">view</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/08/li-jie-framezai-bu-ju-de-zuo-yong/">
-		
-			理解Frame在布局的作用</a>
-	</h2>
-	<div class="entry-content">
-		<p>Frame是布局的核心。每个开发者都使用frame定位和改变<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">UIView</code>和<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">CALayer</code>的大小。在本文中我将把焦点集中在<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">CALayer</code>上，因为它是<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">UIView</code>的底层实现，<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">view.frame</code>简单的返回了<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">view.layer.frame</code>。此外，我不会讨论<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">setFrame:</code>方法。虽然看起来范围十分有限，但实际上有许多有趣的事情在平凡又古老的<code style="color: rgb(102, 102, 102); line-height: 28px; text-align: justify; margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; ">frame</code>getter方法中发生。</p>
-<h3>Frame依赖于什么</h3>
-<p>众所周知，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>是一个派生属性，实际上它基于一些其他的属性。实际上在计算frame值的时候会参考4个(!)属性:<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">transform</code>，和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>。</p>
-<p>我们从<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>开始。bounds很棘手，它混合了层的内部和外部。<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.size</code>定义了层本身的面积，声明了它所存在的区域。设置<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">masksToBounds</code>为<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">YES</code>会把所有子层超出bounds范围的部分裁掉。另一方面，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">origin</code>属性并不影响层本身的布局；然而它会影响它内部的子层的布局方式。<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>定义了层内部坐标系的原点。</p>
-<p>这里有一个例子展示了<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>如何工作。例如我们定义<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>为<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGPointMake (20.0f, 30.0f)</code></p>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350011152-0.png" title="bounds.origin" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350011152-0.png" title="bounds.origin" alt="bounds.origin" /></a>bounds.origin</p>
-<p>如何定义本地坐标系？只要把层的左上角放到<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.origin</code>上就行了。</p>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350015c5-1.png" title="bounds.origin" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350015c5-1.png" title="bounds.origin" alt="bounds.origin" /></a>bounds.origin</p>
-<p><code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>是一个稍微有点不同的讨厌鬼。首先，它的值标准化为0.0-1.0的范围内。获得以&rdquo;点&rdquo;为单位的值需要用<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.size</code>乘以标准化的值。更重要的是，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>定义了应用变换的坐标系的原点。</p>
-<p><a href="http://img.kuqin.com/upimg/allimg/140504/2350012607-2.png" title="anchorPoint" class="fancybox" rel="gallery0"><img src="http://img.kuqin.com/upimg/allimg/140504/2350012607-2.png" title="anchorPoint" alt="anchorPoint" /></a>anchorPoint</p>
-<p>变换具有相同<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds</code>但有不同<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>的层(蓝色)会有很大区别(灰色)。</p>
-<p><code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">position</code>是最简单的一个概念。它定义了经过<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">bounds.size</code>，<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">anchorPoint</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">transform</code>的混合后，添加到层中的最终位置。</p>
-<h3>精度的快速讨论</h3>
-<p>在写这篇博客的时候，我留意到有时我的计算结果和CoreAnimation返回的计算结果相比有所出入。有可能是我计算错误或者有精度问题。我理所当然的首先检查了精度问题。幸运的是我的直觉是正确的。<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGFloat</code>在32位架构上是一个<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">float</code>的类型定义(在64位架构上是<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>)，而似乎CoreAnimation并没有理会<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CGFloat</code>的实际类型而在内部直接使用了<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>。</p>
-<p>要证实这个猜测并不困难。使用<a href="http://www.hopperapp.com/">Hooper</a>工具检查<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CALayer</code>的<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">frame</code>getter方法的执行内容，我发现了一个叫做<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">mat4_apply_to_rect</code>的函数。然后我在这里设置了一个符号断点，实际上也就是在<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CA::Mat4Impl::mat4_apply_to_rect(double const*, double*)</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">CA::Mat4Impl::mat4_apply_to_rect(float const*, float*)</code>上分别设置了一个断点，以确定哪一个函数被执行。当在设备上运行代码的时候，断点停在了参数是<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>的函数中，即使使用的是32位ARM架构的iPhone。</p>
-<p>在一些极端情况下，使用<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">float</code>和<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>的差异是显而易见的。然而因为我们的目标是对CoreAnimation进行逆向工程并得到完全相同的结果，所以我们也使用<code style="margin: 0px 3px; padding: 1px 3px; background-color: rgb(221, 221, 221); border: 1px solid rgb(204, 204, 204); font-family: Menlo, Monaco, 'Andale Mono', 'lucida console', 'Courier New', monospace; font-size: 0.9em; border-top-left-radius: 5px; border-top-right-radius: 5px; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; background-position: initial initial; background-repeat: initial initial; ">double</code>。我们定义一些和CoreGraphics中相同的非常简单的结构体。</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">MCSDoublePoint</span> <span class="p">{</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span> <span class="n">MCSDoublePoint</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">MCSDoubleSize</span> <span class="p">{</span>
-</span><span class="line">	<span class="kt">double</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span> <span class="n">MCSDoubleSize</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">MCSDoubleRect</span> <span class="p">{</span>
-</span><span class="line">	<span class="n">MCSDoublePoint</span> <span class="n">origin</span><span class="p">;</span>   <span class="n">MCSDoubleSize</span> <span class="n">size</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span> <span class="n">MCSDoubleRect</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/05/08/li-jie-framezai-bu-ju-de-zuo-yong/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/08/li-jie-framezai-bu-ju-de-zuo-yong/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/">
-		
-			CocoaPods安装和使用教程</a>
-	</h2>
-	<div class="entry-content">
-		<h2>目录</h2>
-
-<ul>
-<li><a href="#cocoapods">CocoaPods是什么？</a></li>
-<li><a href="#install">如何下载和安装CocoaPods？</a></li>
-<li><a href="#usage">如何使用CocoaPods？</a>
-
-    <ul>
-        <li><a href="#usage1">场景1：利用CocoaPods，在项目中导入AFNetworking类库</a></li>
-        <li><a href="#usage2">场景2：如何正确编译运行一个包含CocoPods类库的项目</a></li>
-    </ul>
-</li>
-</ul>
-
-<h2 id="cocoapods">CocoaPods是什么？</h2>
-
-<p>当你开发iOS应用时，会经常使用到很多第三方开源类库，比如JSONKit，AFNetWorking等等。可能某个类库又用到其他类库，所以要使用它，必须得另外下载其他类库，而其他类库又用到其他类库，“子子孙孙无穷尽也”，这也许是比较特殊的情况。总之小编的意思就是，手动一个个去下载所需类库十分麻烦。另外一种常见情况是，你项目中用到的类库有更新，你必须得重新下载新版本，重新加入到项目中，十分麻烦。如果能有什么工具能解决这些恼人的问题，那将“善莫大焉”。所以，你需要 CocoaPods。</p>
-
-<p>CocoaPods应该是iOS最常用最有名的类库管理工具了，上述两个烦人的问题，通过cocoaPods，只需要一行命令就可以完全解决，当然前提是你必须正确设置它。重要的是，绝大部分有名的开源类库，都支持CocoaPods。所以，作为iOS程序员的我们，掌握CocoaPods的使用是必不可少的基本技能了。</p>
-
-<h2 id="install">如何下载和安装CocoaPods？</h2>
-
-<p>在安装CocoaPods之前，首先要在本地安装好Ruby环境。至于如何在Mac中安装好Ruby环境，请google一下，本文不再涉及。</p>
-
-<p>假如你在本地已经安装好Ruby环境，那么下载和安装CocoaPods将十分简单，只需要一行命令。在Terminator（也就是终端）中输入以下命令（注意，本文所有命令都是在终端中输入并运行的。什么，你不知道什么是终端？那请小编吃饭，小编告诉你）：</p>
-
-		
-		<a href="/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/25/si-yue-yue-du-zong-jie-da-hui/">
-		
-			四月月度总结大会</a>
-	</h2>
-	<div class="entry-content">
-		<p>整体而言，这月份算是历经风波的一个月份，心中有着很沉重的感觉，然而焦虑急躁却又同时伴随着。这段日子和他人产生摩擦而有纷争，尽量控制自己的脾气，以避免伤了和气！</p>
-
-<p>有关事业工作方面的话：接踵而至的事项太多了，自己又有很多酝酿已久的想法和计划，缓慢脚步中时而被催促，略显无奈的敷衍过去，又要配合东配合西的，真是使人感到烦透了。本身很坚持的点，如今都要配合别人，妥协的滋味却必须吞不下去，心里觉得百般不愿意。</p>
-
-<p>个人问题：抱憾原本的机缘过去了和对方是互相喜欢的，怎无奈就会感到很多牵制，要配合对方使得积怨产生，时常想要爆发开来，或者感情就这样越来越淡了。</p>
-
-<p>想太多而要配合天时地利人和，是有困难的，会因为这样延迟而拖过去了，遇到沟通的机会好好把握，一小步一小步的慢慢来。收入方面有一定数量了，那么用钱方面在做些规划，省下些钱和基金都没问题的。</p>
-<hr />
+这样我们在调用下面的方法keyboardViewForView就能显示出来了。问题得到了解决。
+</p>
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
@@ -610,12 +216,12 @@
 	<div class="tags">
 
 
-	<a class='category' href='/Blog/blog/categories/za-wen/'>杂文</a>
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
 
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/04/25/si-yue-yue-du-zong-jie-da-hui/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -624,43 +230,18 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/04/23/wei-ios7zhong-xin-she-ji-app/">
+		<a href="/Blog/blog/2016/04/07/git-control-version/">
 		
-			为 iOS7重新设计App</a>
+			Git Control Version</a>
 	</h2>
 	<div class="entry-content">
-		<p>在 WWDC 上看到 iOS 7 系统的发布后，我们重新审视了自己的应用 <a href="http://appstore.com/grocerylistpx">Grocery List</a>，并且意识到：iOS 7 对于开发者来说是一个全新的开始，就像七年前 iPhone 首次发布一样。现在仅仅简单地改变设计是不够的，我们不得不重新思考并重构整个 app，从而让它适合 iOS 7 全新的环境。我们也的确是这么做的。</p>
+		<hr />
 
-<p>根据用户的反馈和我们自己的使用情况，我们意识到，虽然不能改变 app 基本的操作，但是应该对软件的操作流程进行一些优化。比如在旧版本中，添加产品的数量和单位是一个多步骤的操作过程，需要在多个 controller 之间进行导航。在 <em>Grocery List 2</em> 中，用户不用离开当前屏幕就能在恰当的位置设置数值。</p>
-
-<p>在实现这个目标的过程中，遇到了一些我们觉得值得分享的问题。我们将会从动画和手势开始讲起，然后是界面、色彩以及字体等问题。接下来，为了吸引用户打开 app，我们将不得不思考如何针对 iOS 7 重新设计 app 的图标。最后，我们将分享在我们看来，苹果这次更新的意义何在。</p>
-
-<h2>动画</h2>
-
-<p>现在随着更新换代，移动设备的性能正变得越来越强大。与此同时，由于可以实时计算物品的物理属性，动画效果也变得愈加真实。在 iOS 7 中，我们不需要在界面中使用阴影和渐变这些效果了，而是应该更关注用户的感觉、手势以及交互的影响。凭借 iOS 7，你可以创建一个新世界而不是模仿旧有的世界。</p>
-
-<p>新 SDK 可以让你简单地创建并使用自定义的动画效果。在 iOS 7 之前，开发者需要做大量额外的工作才能改变 view controller 之间的转场效果。iOS 7 可以让你简单地添加自己的动画，以帮助用户在不同屏幕之间切换的同时还不会丢失关注焦点。</p>
-
-<p>在 <em>Grocery List</em> 中，我们在显示一个 modal view controller 时使用了轻度定制的转场动画。但是大部分的动画和转场效果都是使用系统默认的。我们本可以使用新的 API 来给 <em>Grocery List 2</em> 添加更多自定义的动画，但其实苹果提供的默认转场动画对于大多数情况来说已经是个不错的解决方案了，这也是为什么我们 app 中的不同 view controller 之间的转场效果和苹果官方的 app 是一样的。正如前边提到的那样，我们 app 的部分操作流程已经明显地发生了改变。所以，我们将会使用自定义动画从而更好地保持用户的关注焦点。</p>
-
-<p><img alt="Comparison of the Grocery List and the default view controller push" src="http://img.objccn.io/issue-5/redesign-animations.gif" /></p>
-
-<p>大多数用户对于 iOS 7 上默认的动画的感觉，是既新鲜又自然，你不需要做很多工作就可以使用这些动画来取悦用户。但是在合适的地方添加一些自定义动画将会提高整个 app 的用户体验。只是请小心不要使用过度。</p>
-
-<h2>手势</h2>
-
-<p>在拥有了数年的触屏设备的经验后，苹果发现大量使用手势对于用户来说正变得愈加自然。所以在 iOS 7 中，对手势的广泛使用比以前有了更多的可能性。比如在 table view cell 上滑动来显示隐藏的菜单，或者从左向右滑动来返回先前的 view controller，这些手势操作我们已经非常熟悉了，以至于如果一款应用不支持这些手势的话，我们马上就会非常想念它们。在合适的地方，这些直接的手势操作可以帮助用户更高效地完成任务而不会失去关注焦点。</p>
-
-<p>在 <em>Grocery List</em> 中，我们并没有使用任何自定义手势，但是为了在下个版本中改进用户的操作流程，我们支持在 cell 上进行左右两个方向的滑动来分别展示产品的不同选项。你可以简单地从屏幕的右边缘向左滑动来快速访问菜单以进行列表或者模版的相关设置，而不用在导航栏一层层地返回。</p>
-
-<p><img alt="Grocery List 2 gestures" src="http://img.objccn.io/issue-5/redesign-gestures.png" /></p>
-
-<p>按钮和链接对于用户来说是可见的，也是可识别的，但手势不是。如果你打算用手势来实现某个功能，很好！但是如果 app 中那些依赖手势的功能没有一个等效的可见的控件，那要为用户提供一个好的方法来发现这些手势。一个好的用户界面通常应当是不言自明的。如果你需要一个类似使用说明一样的界面或者视频来描述 app 中的基本功能，那这里面很可能就有问题了。</p>
-
-<h2>界面</h2>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
 		
-		<a href="/Blog/blog/2014/04/23/wei-ios7zhong-xin-she-ji-app/" class="more-link">Read on &rarr;</a>
+		
 	</div>
 
 
@@ -673,13 +254,9 @@
 </div>
 	<div class="tags">
 
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/04/23/wei-ios7zhong-xin-she-ji-app/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/04/07/git-control-version/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -688,48 +265,33 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/04/21/shen-ru-li-jie-cocoapods/">
+		<a href="/Blog/blog/2016/03/23/javascriptxue-xi-zhi-ji-ben-gai-nian/">
 		
-			深入理解CocoaPods</a>
+			Javascript学习之基本概念</a>
 	</h2>
 	<div class="entry-content">
-		<p>CocoaPods 是开发 OS X 和 iOS 应用程序的一个第三方库的依赖管理工具。利用 CocoaPods，可以定义自己的依赖关系 (称作 <code>pods</code>)，并且随着时间的变化，以及在整个开发环境中对第三方库的版本管理非常方便。</p>
+		<p>
+任何语言的核心都会描述这门语言的最基本的工作原理。而描述的内容又涉及到这门语言的语法、操作符、数据类型、内置功能等用于构建复杂解决方案的基本概念。
+</p>
 
-<p>CocoaPods 背后的理念主要体现在两个方面。首先，在工程中引入第三方代码会涉及到许多内容。针对 Objective-C 初级开发者来说，工程文件的配置会让人很沮丧。在配置 build phases 和 linker flags 过程中，会引起许多人为因素的错误。CocoaPods 简化了这一切，它能够自动配置编译选项。</p>
+<h2>语法</h2>
+<p>
+</p>
 
-<p>其次，通过 CocoaPods，可以很方便的查找到新的第三方库。当然，这并不是说你可以简单的将别人提供的库拿来拼凑成一个应用程序。它的真正作用是让你能够找到真正好用的库，以此来缩短我们的开发周期和提升软件的质量。</p>
+<h3>区分大小写</h3>
+<p>
+</p>
 
-<p>本文中，我们将通过分析 <code>pod 安装 (</code>pod install<code>)</code> 的过程，一步一步揭示 CocoaPods 背后的技术。</p>
-
-<h2>核心组件</h2>
-
-<p>CocoaPods是用 Ruby 写的，并由若干个 Ruby 包 (gems) 构成的。在解析整合过程中，最重要的几个 gems 分别是： <a href="https://github.com/CocoaPods/CocoaPods/">CocoaPods/CocoaPods</a>, <a href="https://github.com/CocoaPods/Core">CocoaPods/Core</a>, 和 <a href="https://github.com/CocoaPods/Xcodeproj">CocoaPods/Xcodeproj</a> (是的，CocoaPods 是一个依赖管理工具 &#8211; 利用依赖管理进行构建的！)。</p>
-
-<blockquote>
-	<p><span class="secondary radius label">编者注</span> CocoaPods 是一个 objc 的依赖管理工具，而其本身是利用 ruby 的依赖管理 gem 进行构建的</p>
-</blockquote>
+<h3>标识符</h3>
+<p>
+</p>
 <hr />
 
-<h3 id="cocoapodscocoapod">CocoaPods/CocoaPod</h3>
-
-<p>这是是一个面向用户的组件，每当执行一个 <code>pod</code> 命令时，这个组件都将被激活。该组件包括了所有使用 CocoaPods 涉及到的功能，并且还能通过调用所有其它的 gems 来执行任务。</p>
-
-<h3 id="cocoapodscore">CocoaPods/Core</h3>
-
-<p>Core 组件提供支持与 CocoaPods 相关文件的处理，文件主要是 Podfile 和 podspecs。</p>
-
-<h5 id="podfile">Podfile</h5>
-
-<p>Podfile 是一个文件，用于定义项目锁需要使用的第三方库。该文件支持高度定制，你可以根据个人喜好对其做出定制。更多相关信息，请查阅 <a href="http://guides.cocoapods.org/syntax/podfile.html">Podfile 指南</a>。</p>
-
-<h4 id="podspec">Podspec</h4>
-
-<p><code>.podspec</code> 也是一个文件，该文件描述了一个库是怎样被添加到工程中的。它支持的功能有：列出源文件、framework、编译选项和某个库所需要的依赖等。</p>
-
-<h3 id="cocoapodsxcodeproj">CocoaPods/Xcodeproj</h3>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
 		
-		<a href="/Blog/blog/2014/04/21/shen-ru-li-jie-cocoapods/" class="more-link">Read on &rarr;</a>
+		
 	</div>
 
 
@@ -743,12 +305,362 @@
 	<div class="tags">
 
 
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+	<a class='category' href='/Blog/blog/categories/javascript/'>Javascript</a>
 
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/04/21/shen-ru-li-jie-cocoapods/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/03/23/javascriptxue-xi-zhi-ji-ben-gai-nian/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/03/23/react-native/">
+		
+			React Native</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+React-Native 帮助在原生平台打造世界一流的应用体验，使用基于<code>JavaSript</code>和React的结合的开发经验。React-Native的宗旨是更有效的开发全平台的应用。
+</p>
+
+<h2>Native Components</h2>
+<p>
+在React-Native你能使用标准平台组件如：iOS的<code>UITabBar</code>以及<code>Android</code>的<code>Drawer</code>。这个给了你APP标准统一的外观，使用这个平台的生态系统，去保持高质量。这些组件能轻易的嵌入到你的APP中使用，和React组件是差不多的，例如:<code>TabBariOS</code>和<code>DrawerLayoutAndroid</code>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// iOS</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">TabBarIOS</span><span class="p">,</span> <span class="nx">NavigatorIOS</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">TabBarIOS</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">TabBarIOS</span><span class="p">.</span><span class="nx">Item</span> <span class="nx">title</span><span class="o">=</span><span class="s2">&quot;React Native&quot;</span> <span class="nx">selected</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="nx">NavigatorIOS</span> <span class="nx">initialRoute</span><span class="o">=</span><span class="p"></span> <span class="o">/&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="err">/TabBarIOS.Item&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/TabBarIOS&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// Android</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">DrawerLayoutAndroid</span><span class="p">,</span> <span class="nx">ProgressBarAndroid</span><span class="p">,</span> <span class="nx">Text</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">DrawerLayoutAndroid</span>
+</span><span class="line">        <span class="nx">renderNavigationView</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="nx">React</span> <span class="nx">Native</span><span class="o">&lt;</span><span class="err">/Text&gt;}&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">ProgressBarAndroid</span> <span class="o">/&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/DrawerLayoutAndroid&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<h2>异步执行</h2>
+<p>
+所有的<code>Javascript</code>应用程序代码以及原生平台的操作都是异步的，并且原生模块也能够使用额外的线程。这意味着我们能关闭主线程的图像解码，后台把图片保存到磁盘，渲染文字和计算布局而不会阻塞UI。这样一来，React-Native应用自然流畅性和响应。通信也完全序列化，这使我们能够充分利用<code>Chrome</code>开发者工具来调试<code>Javascript</code>的运行时完整的应用程序，无论是模拟器还是真实设备。
+</p>
+
+		
+		<a href="/Blog/blog/2016/03/23/react-native/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React-Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/03/23/react-native/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/03/04/ji-lu-%5B%3F%5D-ci-xiu-gai-swiftde-cuo-wu/">
+		
+			记录一次修改Swift的错误</a>
+	</h2>
+	<div class="entry-content">
+		<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1f1l040x0l2j20xe0sotgc.jpg" alt="screen-shot-0" />
+<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l04x8j0ij20wo0sqdp1.jpg" alt="screen-shot-1" />
+<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f1l056kc5qj20xq0t0aj0.jpg" alt="screen-shot-2" />
+<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l05da3cmj20xi0ti78x.jpg" alt="screen-shot-3" />
+<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f1l05jk9etj20xs0taq8a.jpg" alt="screen-shot-4" />
+<img src="http://ww4.sinaimg.cn/large/626e5d69gw1f1l05oxgsfj20y00ss0zu.jpg" alt="screen-shot-5" />
+<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f1l05usxv8j20xw0su0y9.jpg" alt="screen-shot-6" />
+<img src="http://ww3.sinaimg.cn/large/626e5d69gw1f1l060hn0sj20yc0t6474.jpg" alt="screen-shot-7" /></p>
+
+<hr />
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/swift/'>swift</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/03/04/ji-lu-%5B%3F%5D-ci-xiu-gai-swiftde-cuo-wu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2015/12/26/2015nian-du-zong-jie/">
+		
+			2015年度总结</a>
+	</h2>
+	<div class="entry-content">
+		<h2 id="目录"><a name="summaryIntroducton">目录</a></h2>
+<ol>
+<li><a href="#summaryHistory"><strong>北漂的过去</strong></a></li>
+<li><a href="#summary-now"><strong>我所拥有的现在</strong></a></li>
+<li><a href="#summary-future"><strong>展望未来</strong></a></li>
+<li><a href="#summary-work"><strong>工作总结</strong></a></li>
+</ol>
+<h2 id="一、北漂的过去"><a name="summaryHistory">一、北漂的过去</a></h2>
+<p>
+今年我结束了我长达4年多的北漂生活，也同时结束了我长达4年多的外包工作生涯。有时候和现在的同事聊天，他们问：你当初在北京，为什么想到来上海呢？太多太多的原因，我承认我擅自选择北京，来上海这个决定，非常冲动，但是现在看来这个决定并不是多么愚蠢。<br />
+我就按照时间展开回忆吧！
+</p>
+<p>
+那是2011年的4月15日，我们一行5人从学校踏上了北漂的列车。这是我北漂的开始，那晚的我在火车座位上度过，当时怀揣着对未来的命运，心底对北京很兴奋也很迷茫。第二天，我的初中同学一大早就来车站接我，我特感恩是我念了这么多年书，唯一的用处就是现在走到任何城市都有小伙伴陪我。
+那是我北漂的开始。我开始工作了，终于不用家里每月寄钱给我了，我可以自己养活自己了。我其实一开始是很没有工作责任感的人，我刚加入的团队，由于我们团队boss即将离职，于是我作为一个刚进来的新人，没有安排导师，也没有分配任务，完全放养。我当时乐在其中，和另外2个同学一起在这个公司实习。他们没有我这么幸运，他们分在了A组每天分配了很多活，我没有活可干。转眼在公司待了2月，我B组Leader 终于离职了，而且公司也到了淡季，7月份公司不裁人以给员工放2月假不发薪水的方式逼很多人跳槽，我另外2个同学所在的B组老大决定不要他们，于是他们两个人失业了，而我却不知道为什么被留了下来。但是我想他们都走了，我留下来多没意思啊。（我很重感情 = =|）于是我和当时的团队负责人说我也不想做测试了，申请辞职。不顾Leader强烈挽留毅然决然的和小伙伴们一起失业。我当时真的没有想到这个决定导致的后果非常严重。
+</p>
+
+		
+		<a href="/Blog/blog/2015/12/26/2015nian-du-zong-jie/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/gan-wu/'>感悟</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2015/12/26/2015nian-du-zong-jie/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/">
+		
+			JSPatch用法剖析</a>
+	</h2>
+	<div class="entry-content">
+		<h2 id="目录"><a name="jspatchIntroducton">目录</a></h2>
+<ol>
+<li><a href="#jspatchIntroducton"><strong>JSPatch介绍</strong></a></li>
+<li><a href="#jspatch-wax"><strong>JSPatch VS Wax lua</strong></a></li>
+<li><a href="#jspatch-core"><strong>JSPatch的原理和核心</strong></a></li>
+<li><a href="#jspatch-Extension"><strong>JSPatch Extension机制</strong></a></li>
+<li><a href="#jspatch-Tech"><strong>JSPatch中的实现技巧总结</strong></a> </li>
+<li><a href="#jspatch-problem"><strong>遇到的问题与解决方法</strong></a></li>
+</ol>
+<h2 id="一、JSPatch介绍"><a name="jspatchIntroducton">一、JSPatch介绍</a></h2>
+<h3 id="用途">用途</h3>
+<p>iOS产品开发之中常常会遇到这种情况: 新版本上线后发现有个严重的bug，可能会导致crash率激增，可能会使网络请求无法发出，这时能做的只是赶紧修复bug然后提交等待漫长的AppStore审核，再盼望用户快点升级，付出巨大的人力和时间成本，才能完成此次bug的修复。</p>
+<p>JSPatch的出现解决了这样的问题，只需要在项目中引入极小的JSPatch引擎，就可以使用JavaScript语言调用Objective-C的原生接口，获得脚本语言的能力：动态更新iOS APP，替换项目原生代码、快速修复bug。      </p>
+<h3 id="技术核心">技术核心</h3>
+<p>JSPatch核心主要是JSBinding和Objective-C中的runtime技术。一方面，它采用Apple在iOS7中发布的JavaScriptCore.framework作为Javascript引擎解析JavaScript脚本，执行JavaSript代码并与Objective-C端的代码进行桥接。另一方面则是使用Objective-C runtime中的method swizzling的方式达到使用JavaScript脚本动态替换原有Objective-C方法的目的，并利用ForwardInvocation标准消息转发机制使得在JavaScript脚本中调用Objective-C的方法成为可能。</p>
+
+		
+		<a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2015/12/16/bian-xie-gao-zhi-liang-de-swiftdai-ma/">
+		
+			编写高性能的Swift代码</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+下面这篇文档收集了一系列编写高性能 Swift 代码的要诀和技巧。文档的目标读者是编译器和标准库开发人员。
+
+文档中的一些技巧可以帮助提升您的 Swift 程序质量，使您的代码不容易出错且可读性更好。显式地标记最终类和类协议是两个显而易见的例子。 然而文档中还有一些技巧是不符合规矩的，扭曲的，仅仅解决一些比编译器或语言的特殊的临时性需求。文档中的很多建议来自于多方面的权衡，例如：运行时、字节大小、代码可读性等等。
+</p>
+<h2>启用优化</h2>
+<p>第一个应该做的事情就是启用优化。Swift 提供了三种不同的优化级别：<br />
+<ul>
+<li>-Onone: 这意味着正常的开发。它执行最小优化和保存所有调试信息。</li>
+<li>-O: 这意味着对于大多数生产代码。编译器执行积极地优化，可以大大改变提交代码的类型和数量。调试信息将被省略但还是会有损害的。</li>
+<li>-Ounchecked: 这是一个特殊的优化模式，它意味着特定的库或应用程序，这是以安全性来交换的。编译器将删除所有溢出检查以及一些隐式类型检查。这不是在通常情况下使用的，因为它可能会导致内存安全问题和整数溢出。如果你仔细审查你的代码，那么对整数溢出和类型转换来说是安全的。</li>
+
+		
+		<a href="/Blog/blog/2015/12/16/bian-xie-gao-zhi-liang-de-swiftdai-ma/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2015/12/16/bian-xie-gao-zhi-liang-de-swiftdai-ma/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/">
+		
+			Swift 的 ABI</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+随着Swift的开源，苹果开发者迎来了新的开端。其实这个是我一直想要表达的，随着对Swift这个语言的深入了解，越发感觉到Swift的魅力。Swift是系统编程语言，现在C语言之所以能统治底层开发的最重要原因是C规范统一的ABI，使其能做到与汇编程序无缝衔接。而Swift的ABI兼容C（并不包括name mangling部分）。基于强大的llvm生成具体平台代码。不仅仅作为Objective-C的翻译。
+</p>
+<p>
+通过开发Swift，了解到Swift文件的中间编译结果（介于Swift代码合llvm ir）是SIL。SIL我下一章着重介绍。这张暂时把焦点放在Swift的ABI。那么什么是ABI，你一定很陌生吧，那么对于API呢，你是不是明白了什么？
+</p>
+<p>
+ABI的全称是Application Binary Interface。翻译过来就是应用二进制接口，描述了应用程序和操作系统或其他应用程序之间的低级接口。
+</p>
+<p>
+ABI涵盖了各个细节：
+
+		
+		<a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

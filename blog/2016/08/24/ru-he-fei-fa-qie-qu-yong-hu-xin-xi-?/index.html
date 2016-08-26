@@ -95,37 +95,65 @@
 
 <p>其中要注意一下通信服务名，我定为 55 。用编辑器打开，即为：</p>
 
-<div class="code code">
-<pre class="code">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;  
-&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;  
-&lt;plist version=&quot;1.0&quot;&gt;  
-&lt;dict&gt;  
-    &lt;key&gt;Program&lt;/key&gt;  
-    &lt;string&gt;/usr/bin/ncdemo&lt;/string&gt;  
-    &lt;key&gt;StandardErrorPath&lt;/key&gt;  
-    &lt;string&gt;/dev/null&lt;/string&gt;  
-    &lt;key&gt;SessionCreate&lt;/key&gt;  
-    &lt;true/&gt;  
-    &lt;key&gt;ProgramArguments&lt;/key&gt;  
-    &lt;array&gt;  
-        &lt;string&gt;/usr/bin/ncdemo&lt;/string&gt;  
-    &lt;/array&gt;  
-    &lt;key&gt;inetdCompatibility&lt;/key&gt;  
-    &lt;dict&gt;  
-        &lt;key&gt;Wait&lt;/key&gt;  
-        &lt;false/&gt;  
-    &lt;/dict&gt;  
-    &lt;key&gt;Sockets&lt;/key&gt;  
-    &lt;dict&gt;  
-        &lt;key&gt;Listeners&lt;/key&gt;  
-        &lt;dict&gt;  
-            &lt;key&gt;SockServiceName&lt;/key&gt;  
-            &lt;string&gt;55&lt;/string&gt;  
-        &lt;/dict&gt;  
-    &lt;/dict&gt;  
-&lt;/dict&gt;  
-&lt;/plist&gt;</pre>
-</div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+</span><span class="line"><span class="cp">&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;</span>
+</span><span class="line"><span class="nt">&lt;plist</span> <span class="na">version=</span><span class="s">&quot;1.0&quot;</span><span class="nt">&gt;</span>
+</span><span class="line"><span class="nt">&lt;dict&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>Program<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;string&gt;</span>/usr/bin/ncdemo<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>StandardErrorPath<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;string&gt;</span>/dev/null<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>SessionCreate<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;true/&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>ProgramArguments<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;array&gt;</span>
+</span><span class="line">        <span class="nt">&lt;string&gt;</span>/usr/bin/ncdemo<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">    <span class="nt">&lt;/array&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>inetdCompatibility<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;dict&gt;</span>
+</span><span class="line">        <span class="nt">&lt;key&gt;</span>Wait<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">        <span class="nt">&lt;false/&gt;</span>
+</span><span class="line">    <span class="nt">&lt;/dict&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>Sockets<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;dict&gt;</span>
+</span><span class="line">        <span class="nt">&lt;key&gt;</span>Listeners<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">        <span class="nt">&lt;dict&gt;</span>
+</span><span class="line">            <span class="nt">&lt;key&gt;</span>SockServiceName<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">            <span class="nt">&lt;string&gt;</span>55<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">        <span class="nt">&lt;/dict&gt;</span>
+</span><span class="line">    <span class="nt">&lt;/dict&gt;</span>
+</span><span class="line"><span class="nt">&lt;/dict&gt;</span>
+</span><span class="line"><span class="nt">&lt;/plist&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <p>最后，将 plist 文件 scp 至 <code>root@192.168.1.114:/System/Library/LaunchDaemons/</code>下 。</p>
 
@@ -133,27 +161,45 @@
 
 <p>读取 itunesstored2.sqlitedb 信息，并输出到 stdout 中，便于我们读取。</p>
 
-<div class="code C">
-<pre class="c"> <span class="co2">#include &lt;stdio.h&gt;  </span>
- <span class="co2">#include &lt;fcntl.h&gt;  </span>
- <span class="co2">#include &lt;stdlib.h&gt;  </span>
-&nbsp;
- <span class="co2">#define FILE &quot;/var/mobile/Library/com.apple.itunesstored/itunesstored2.sqlitedb&quot;  </span>
-&nbsp;
-<span class="kw4">int</span> main<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#123;</span>  
-    <span class="kw4">int</span> fd <span class="sy0">=</span> open<span class="br0">&#40;</span>FILE<span class="sy0">,</span> O_RDONLY<span class="br0">&#41;</span><span class="sy0">;</span>  
-    <span class="kw4">char</span> buf<span class="br0">&#91;</span><span class="nu0">128</span><span class="br0">&#93;</span><span class="sy0">;</span>  
-    <span class="kw4">int</span> ret <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span>  
-&nbsp;
-    <span class="kw1">if</span><span class="br0">&#40;</span>fd <span class="sy0">&lt;</span> <span class="nu0">0</span><span class="br0">&#41;</span>  
-        <span class="kw1">return</span> <span class="sy0">-</span><span class="nu0">1</span><span class="sy0">;</span>  
-    <span class="kw1">while</span> <span class="br0">&#40;</span><span class="br0">&#40;</span> ret <span class="sy0">=</span> read<span class="br0">&#40;</span>fd<span class="sy0">,</span> buf<span class="sy0">,</span> <span class="kw4">sizeof</span><span class="br0">&#40;</span>buf<span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span> <span class="sy0">&gt;</span> <span class="nu0">0</span><span class="br0">&#41;</span><span class="br0">&#123;</span>  
-        write<span class="br0">&#40;</span> fileno<span class="br0">&#40;</span>stdout<span class="br0">&#41;</span><span class="sy0">,</span> buf<span class="sy0">,</span> ret<span class="br0">&#41;</span><span class="sy0">;</span>  
-    <span class="br0">&#125;</span>  
-    close<span class="br0">&#40;</span>fd<span class="br0">&#41;</span><span class="sy0">;</span>  
-    <span class="kw1">return</span> <span class="nu0">0</span><span class="sy0">;</span>  
-<span class="br0">&#125;</span></pre>
-</div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#include &lt;stdio.h&gt;  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">fcntl</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line"> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">stdlib</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"> <span class="err">#</span><span class="n">define</span> <span class="n">FILE</span> <span class="s">&quot;/var/mobile/Library/com.apple.itunesstored/itunesstored2.sqlitedb&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="n">main</span><span class="p">(){</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+</span><span class="line">    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span><span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class="line">        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span><span class="line">    <span class="k">while</span> <span class="p">((</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
+</span><span class="line">        <span class="n">write</span><span class="p">(</span> <span class="n">fileno</span><span class="p">(</span><span class="n">stdout</span><span class="p">),</span> <span class="n">buf</span><span class="p">,</span> <span class="n">ret</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span><span class="line">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
 
 <h3>编译、拷贝、签名</h3>
 
@@ -209,6 +255,10 @@ $ ssh root@192.168.1.114</pre>
 
 </div>
 	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
 
 </div>
 	

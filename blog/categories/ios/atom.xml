@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-08-24T11:42:17+08:00</updated>
+  <updated>2016-08-26T14:34:00+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -14,999 +14,283 @@
 
   
   <entry>
-    <title type="html"><![CDATA[iOS小技巧]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu/"/>
-    <updated>2016-05-04T14:08:52+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu</id>
-    <content type="html"><![CDATA[<p>最近开始记录下自己开发遇到的问题，如果解决了就会记录下来，以便自己日后回顾工作。
+    <title type="html"><![CDATA[Method Swizzling]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/26/method-swizzling/"/>
+    <updated>2016-08-26T09:43:31+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/26/method-swizzling</id>
+    <content type="html"><![CDATA[<p>
+在没有一个类的实现源码的情况下，想改变其中一个方法的实现，除了继承它重写、和借助类别重名方法暴力抢先之外，还有更加灵活的方法吗？在Objective-C编程中，如何实现hook呢？标题有点大，计划分几篇来总结。
+
+本文主要介绍针对selector的hook，主角被标题剧透了———— Method Swizzling
 </p>
-<p>测试妹子给我提了一个问题是视图遮挡了，我一看，确实会遮挡，我就加了下面的这段代码
-```objc
-- (UIView*)keyboardView
-{
-    NSArray * windows = [[UIApplication sharedApplication] windows];
-    for (UIWindow * window in [windows reverseObjectEnumerator])
-    {
-        for (UIView * view in [window subviews])
-        {
-            // UIPeripheralHostView is used from iOS 4.0, UIKeyboard was used in previous versions,UIInputSetContainerView was used iOS 8.0
-            if (!strcmp(object_getClassName(view), "UIPeripheralHostView") || !strcmp(object_getClassName(view), "UIKeyboard") ||
-                !strcmp(object_getClassName(view), "UIInputSetContainerView"))
-            {
-                return view;
-            }
-        }
-    }
-    return nil;
-}
+<h2>Method Swizzling 原理</h2>
+<p>在Objective-C中调用一个方法，其实是向一个对象发送消息，查找消息的唯一依据是selector的名字。利用Objective-C的动态特性，可以实现在运行时偷换selector对应的方法实现，达到给方法挂钩的目的。</p>
+<p>每个类都有一个方法列表，存放着selector的名字和方法实现的映射关系。IMP有点类似函数指针，指向具体的Method实现。</p>
+<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1f76wrdzvssj214y0dcmxy.jpg" /></p>
+<p>
+我们可以利用 method_exchangeImplementations 来交换2个方法中的IMP，
 
-- (UIView*)keyboardViewForView:(UIView *)view
-{
-    UIView * keyboardView = [self keyboardView];
-    if (keyboardView) {
-        view = keyboardView.superview;
-    }
-    return view;
-}
-```
-这样我们在调用下面的方法keyboardViewForView就能显示出来了。问题得到了解决。
+我们可以利用 class_replaceMethod 来修改类，
+
+我们可以利用 method_setImplementation 来直接设置某个方法的IMP，
+……
+归根结底，都是偷换了selector的IMP，如下图所示：
 </p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[iOS绘图详细解析]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/"/>
-    <updated>2014-08-04T15:05:26+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi</id>
-    <content type="html"><![CDATA[<div id="cnblogs_post_body"><p><span style="font-family: 'comic sans ms', sans-serif;">　　本文是《<a href="http://www.amazon.com/Programming-iOS-Fundamentals-iPhone-Development/dp/1449319343/ref=sr_1_3?ie=UTF8&amp;qid=1357784362&amp;sr=8-3&amp;keywords=ios" target="_blank">Programming iOS5</a>》中Drawing一章的翻译，考虑到主题完整性，翻译版本中加入了一些书中未涉及到的内容。希望本文能够对你有所帮助。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; Core Graphics Framework是一套基于C的API框架，使用了Quartz作为绘图引擎。它提供了低级别、轻量级、高保真度的2D渲染。该框架可以用于基于路径的绘图、变换、颜色管理、脱屏渲染，模板、渐变、遮蔽、图像数据管理、图像的创建、遮罩以及PDF文档的创建、显示和分析。为了从感官上对这些概念做一个入门的认识，你可以运行一下官方的<a href="http://developer.apple.com/library/ios/samplecode/QuartzDemo/Introduction/Intro.html#//apple_ref/doc/uid/DTS40007531">example code</a>。<span><br />
-</span></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp;iOS支持两套图形API族：Core Graphics/QuartZ 2D 和OpenGL ES。OpenGL ES是跨平台的图形API，属于OpenGL的一个简化版本。QuartZ 2D是苹果公司开发的一套API，它是Core Graphics Framework的一部分。需要注意的是：OpenGL ES是应用程序编程接口，该接口描述了方法、结构、函数应具有的行为以及应该如何被使用的语义。也就是说它只定义了一套规范，具体的实现由设备制造商根据规范去做。而往往很多人对接口和实现存在误解。举一个不恰当的比喻：上发条的时钟和装电池的时钟都有相同的可视行为，但两者的内部<strong>实现</strong>截然不同。因为制造商可以自由的实现Open GL ES，所以不同系统实现的OpenGL ES也存在着巨大的性能差异。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; &nbsp;Core Graphics API所有的操作都在上下文中进行。所以在绘图之前需要获取该上下文并传入执行渲染的函数内。如果你正在渲染一副在内存中的图片，此时就需要传入图片所属的上下文。获得一个图形上下文是我们完成绘图任务的第一步，你可以将图形上下文理解为一块画布。如果你没有得到这块画布，那么你就无法完成任何绘图操作。有许多方式获得一个图形上下文，这里我介绍两种最为常用的获取方法。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　第一种方法就是创建一个图片类型的上下文。调用<strong>UIGraphicsBeginImageContextWithOptions</strong>函数就可获得用来处理图片的图形上下文。利用该上下文，你就可以在其上进行绘图，并生成图片。调用<strong>UIGraphicsGetImageFromCurrentImageContext</strong>函数可从当前上下文中获取一个UIImage对象。记住在你所有的绘图操作后别忘了调用<strong>UIGraphicsEndImageContext</strong>函数关闭图形上下文。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　第二种方法是利用cocoa为你生成的图形上下文。当你子类化了一个UIView并实现了自己的<strong>drawRect：</strong>方法后，一旦<strong>drawRect</strong>：方法被调用，Cocoa就会为你创建一个图形上下文，此时你对图形上下文的所有绘图操作都会显示在UIView上。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　判断一个上下文是否为当前图形上下文需要注意的几点：</span></p>
-<ul>
-     <li><span style="font-family: 'comic sans ms', sans-serif;"><strong>UIGraphicsBeginImageContextWithOptions</strong>函数不仅仅是创建了一个适用于图形操作的上下文，并且该上下文也属于当前上下文。</span></li>
-     <li><span style="font-family: 'comic sans ms', sans-serif;">当<strong>drawRect</strong>方法被调用时，UIView的绘图上下文属于当前图形上下文。</span></li>
-     <li><span style="font-family: 'comic sans ms', sans-serif;">回调方法所持有的context：参数并不会让任何上下文成为当前图形上下文。此参数仅仅是对一个图形上下文的引用罢了。</span></li>
-</ul>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　作为初学者，很容易被UIKit和Core Graphics两个支持绘图的框架迷惑。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　UIKit</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　像UIImage、NSString（绘制文本）、UIBezierPath（绘制形状）、UIColor都知道如何绘制自己。这些类提供了功能有限但使用方便的方法来让我们完成绘图任务。一般情况下，UIKit就是我们所需要的。</span></p>
-<p>使用UiKit，<span style="color: #ff0000;">你只能在当前上下文中绘图</span>，所以如果你当前处于</p>
-<p><strong>UIGraphicsBeginImageContextWithOptions</strong>函数或<strong>drawRect</strong>：方法中，你就可以直接使用UIKit提供的方法进行绘图。如果你持有一个context：参数，那么使用UIKit提供的方法之前，必须将该上下文参数转化为当前上下文。幸运的是，调用<strong>UIGraphicsPushContext</strong> 函数可以方便的将context：参数转化为当前上下文，记住最后别忘了调用<strong>UIGraphicsPopContext函数</strong>恢复上下文环境。</p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　Core Graphics</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　这是一个绘图专用的API族，它经常被称为QuartZ或QuartZ 2D。Core Graphics是iOS上所有绘图功能的基石，包括UIKit。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　使用Core Graphics之前需要指定一个用于绘图的图形上下文（CGContextRef），这个图形上下文会在每个绘图函数中都会被用到。如果你持有一个图形上下文context：参数，那么你等同于有了一个图形上下文，这个上下文也许就是你需要用来绘图的那个。如果你当前处于<strong>UIGraphicsBeginImageContextWithOptions函数</strong>或<strong>drawRect：</strong>方法中，并没有引用一个上下文。为了使用Core Graphics，你可以调用<strong>UIGraphicsGetCurrentContext</strong>函数获得当前的图形上下文。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　至此，我们有了两大绘图框架的支持以及三种获得图形上下文的方法（<strong>drawRect:</strong><strong>、drawRect: inContext:、</strong><strong>UIGraphicsBeginImageContextWithOptions</strong><strong>）</strong>。那么我们就有6种绘图的形式。如果你有些困惑了，不用怕，我接下来将说明这6种情况。无需担心还没有具体的绘图命令，你只需关注上下文如何被创建以及我们是在使用UIKit还是Core Graphics。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　第一种绘图形式：在UIView的子类方法drawRect：中绘制一个蓝色圆，使用<strong>UIKit</strong>在Cocoa为我们提供的当前上下文中完成绘图任务。</span></p>
-```objc
-- (void) drawRect: (CGRect) rect {
-	UIBezierPath* p = [UIBezierPathbezierPathWithOvalInRect:CGRectMake(0,0,100,100)];
-	[[UIColor blueColor] setFill];
-	[p fill];
-}
-```
-<!-- more-->
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;　 &nbsp;第二种绘图形式：使用Core Graphics实现绘制蓝色圆。</span></p>
-```objc
-- (void) drawRect: (CGRect) rect {
-CGContextRef con = UIGraphicsGetCurrentContext();
-CGContextAddEllipseInRect(con, CGRectMake(0,0,100,100));
-CGContextSetFillColorWithColor(con, [UIColor blueColor].CGColor);
-CGContextFillPath(con);
-}
-```
+<p><img src="http://ww2.sinaimg.cn/large/626e5d69gw1f76wshrop2j20kf09mt95.jpg" /></p>
+<h2>Method Swizzling 实践</h2>
+<p>
 
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; &nbsp;第三种绘图形式：我将在UIView子类的<strong>drawLayer:inContext</strong><strong>：</strong>方法中实现绘图任务。<strong>drawLayer:inContext</strong><strong>：</strong>方法是一个绘制图层内容的代理方法。为了能够调用<strong>drawLayer:inContext</strong><strong>：</strong>方法，我们需要设定图层的代理对象。但要注意，不应该将UIView对象设置为显示层的委托对象，这是因为UIView对象已经是隐式层的代理对象，再将它设置为另一个层的委托对象就会出问题。轻量级的做法是：编写负责绘图形的代理类。在MyView.h文件中声明如下代码：</span></p>
+举个例子好了，我想钩一下NSArray的lastObject 方法，只需两个步骤。
+第一步：给NSArray加一个我自己的lastObject
 ```objc
-@interface MyLayerDelegate : NSObject
-@end
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; &nbsp; 然后MyView.m文件中实现接口代码：</span></p>
-```objc
-@implementation MyLayerDelegate
-- (void)drawLayer:(CALayer*)layer inContext:(CGContextRef)ctx {
-  UIGraphicsPushContext(ctx);
-  UIBezierPath* p = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0,0,100,100)];
-  [[UIColor blueColor] setFill];
-  [p fill];
-  UIGraphicsPopContext();
-}
-@end
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">直接将代理类的实现代码放在MyView.m文件的#import代码的下面，这样感觉好像在使用私有类完成绘图任务（虽然这不是私有类）。需要注意的是，我们所引用的上下文并不是当前上下文，所以为了能够使用UIKit，我们需要将引用的上下文转变成当前上下文。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">因为图层的代理是assign内存管理策略，那么这里就不能以局部变量的形式创建MyLayerDelegate实例对象赋值给图层代理。这里选择在MyView.m中增加一个实例变量，因为实例变量默认是strong:</span></p>
-```objc
-@interface MyView () {
-MyLayerDelegate* _layerDeleagete;
-}
-@end
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;"><span style="line-height: 18px;">&nbsp; &nbsp; 使用该图层代理：</span></span></p>
-```objc
-MyView *myView = [[MyView alloc] initWithFrame: CGRectMake(0, 0, 320, 480)];
-CALayer *myLayer = [CALayer layer];
-_layerDelegate = [[MyLayerDelegate alloc] init];
-myLayer.delegate = _layerDelegate;
-[myView.layer addSublayer:myLayer];
-[myView setNeedsDisplay]; // 调用此方法，drawLayer: inContext:方法才会被调用。
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">　第四种绘图形式： 使用Core Graphics在<strong>drawLayer:inContext</strong><strong>：</strong>方法中实现同样操作，代码如下：</span></p>
-```objc
-- (void)drawLayer:(CALayer*)lay inContext:(CGContextRef)con {
-	CGContextAddEllipseInRect(con, CGRectMake(0,0,100,100));
-	CGContextSetFillColorWithColor(con, [UIColor blueColor].CGColor);
-	CGContextFillPath(con);
-}
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　最后，演示<strong>UIGraphicsBeginImageContextWithOptions</strong>的用法，并从上下文中生成一个UIImage对象。生成UIImage对象的代码可以在任何地方被使用，它没有上述绘图方法那样的限制。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　第五种绘图形式： 使用UIKit实现：</span></p>
-```objc
-UIGraphicsBeginImageContextWithOptions(CGSizeMake(100,100), NO, 0);
-UIBezierPath* p = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0,0,100,100)];
-[[UIColor blueColor] setFill];
-[p fill];
-UIImage* im = UIGraphicsGetImageFromCurrentImageContext();
-UIGraphicsEndImageContext();
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　解释一下<strong>UIGraphicsBeginImageContextWithOptions</strong>函数参数的含义：第一个参数表示所要创建的图片的尺寸；第二个参数用来指定所生成图片的背景是否为不透明，如上我们使用YES而不是NO，则我们得到的图片背景将会是黑色，显然这不是我想要的；第三个参数指定生成图片的缩放因子，这个缩放因子与UIImage的scale属性所指的含义是一致的。传入0则表示让图片的缩放因子根据屏幕的分辨率而变化，所以我们得到的图片不管是在单分辨率还是视网膜屏上看起来都会很好。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　 第六种绘图形式： 使用Core Graphics实现：</span></p>
-```objc
-UIGraphicsBeginImageContextWithOptions(CGSizeMake(100,100), NO, 0);
-CGContextRef con = UIGraphicsGetCurrentContext();
-CGContextAddEllipseInRect(con, CGRectMake(0,0,100,100));
-CGContextSetFillColorWithColor(con, [UIColor blueColor].CGColor);
-CGContextFillPath(con);
-UIImage* im = UIGraphicsGetImageFromCurrentImageContext();
-UIGraphicsEndImageContext();
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　UIKit和Core Graphics可以在相同的图形上下文中混合使用。在iOS 4.0之前，使用UIKit和UIGraphicsGetCurrentContext被认为是线程不安全的。而在iOS4.0以后苹果让绘图操作在第二个线程中执行解决了此问题。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　UIImage</strong><strong>常用的绘图操作</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　一个UIImage对象提供了向当前上下文绘制自身的方法。我们现在已经知道如何获取一个图片类型的上下文并将它转变成当前上下文。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif; line-height: 1.5;">　　<strong>平移操作</strong>：下面的代码展示了如何将UIImage绘制在当前的上下文中。</span></p>
-```objc
-	UIImage* mars = [UIImage imageNamed:@”Mars.png”];
-	CGSize sz = [mars size];
-	UIGraphicsBeginImageContextWithOptions(CGSizeMake(sz.width*2, sz.height), NO, 0);
-	[mars drawAtPoint:CGPointMake(0,0)];
-	[mars drawAtPoint:CGPointMake(sz.width,0)];
-	UIImage* im = UIGraphicsGetImageFromCurrentImageContext();
-	UIGraphicsEndImageContext();
-	UIImageView* iv = [[UIImageView alloc] initWithImage:im];
-	[self.window.rootViewController.view addSubview: iv];
-    iv.center = self.window.center;
-```
-<p style="text-align: center;"><span style="font-family: 'comic sans ms', sans-serif;"><img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201212/23211637-5f8e8f19af4b47d49e43fe82084ff701.png" alt="" /></span></p>
-<p align="center"><span style="font-family: 'comic sans ms', sans-serif;">图1 UIImage平移处理</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　<strong>缩放操作：</strong>下面代码展示了如何对UIImage进行缩放操作：</span></p>
-```objc
-UIImage* mars = [UIImage imageNamed:@”Mars.png”];
-CGSize sz = [mars size];
-UIGraphicsBeginImageContextWithOptions(CGSizeMake(sz.width*2, sz.height*2), NO, 0);
-[mars drawInRect:CGRectMake(0,0,sz.width*2,sz.height*2)];
-[mars drawInRect:CGRectMake(sz.width/2.0, sz.height/2.0, sz.width, sz.height) blendMode:kCGBlendModeMultiply alpha:1.0];
-UIImage* im = UIGraphicsGetImageFromCurrentImageContext();
-UIGraphicsEndImageContext();
-```
-<p style="text-align: center;"><span style="font-family: 'comic sans ms', sans-serif;"><img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201212/23211917-efbb4cc54ca745a0b21539875527e763.png" alt="" /></span></p>
-<p align="center"><span style="font-family: 'comic sans ms', sans-serif;">图2 UIImage缩放处理</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　UIImage没有提供截取图片指定区域的功能。但通过创建一个较小的图形上下文并移动图片到一个适当的图形上下文坐标系内，指定区域内的图片就会被获取。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　<strong>裁剪操作：</strong>下面代码展示了如何获取图片的右半边：</span></p>
-```objc
-UIImage* mars = [UIImage imageNamed:@”Mars.png”];
-CGSize sz = [mars size];
-UIGraphicsBeginImageContextWithOptions(CGSizeMake(sz.width/2.0, sz.height), NO, 0);
-[mars drawAtPoint:CGPointMake(-sz.width/2.0, 0)];
-UIImage* im = UIGraphicsGetImageFromCurrentImageContext();
-UIGraphicsEndImageContext();
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　以上的代码首先创建一个一半图片宽度的图形上下文，然后将图片左上角原点移动到与图形上下文负X坐标对齐，从而让图片只有右半部分与图形上下文相交。</span></p>
-<p style="text-align: center;"><span style="font-family: 'comic sans ms', sans-serif;"><img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201212/24135912-e57ea08be2db4656b406d5657f1c7357.png" alt="" /></span></p>
-<p align="center"><span style="font-family: 'comic sans ms', sans-serif;">图3 UIImage裁剪原理</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　CGImage常用的绘图操作</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　UIImage的Core Graphics版本是CGImage（具体类型是CGImageRef）。两者可以直接相互转化: 使用UIImage的CGImage属性可以访问Quartz图片数据；将CGImage作为UIImage方法<strong>imageWithCGImage:</strong>或<strong>initWithCGImage:</strong>的参数创建UIImage对象。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　一个CGImage对象可以让你获取原始图片中指定区域的图片（也可以获取指定区域外的图片，UIImage却办不到）。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　下面的代码展示了将图片拆分成两半，并分别绘制在上下文的左右两边：</span></p>
-```objc
-UIImage* mars = [UIImage imageNamed:@”Mars.png”];
-// 抽取图片的左右半边
-CGSize sz = [mars size];
-CGImageRef marsLeft = CGImageCreateWithImageInRect([mars CGImage],CGRectMake(0,0,sz.width/2.0,sz.height));
-CGImageRef marsRight = CGImageCreateWithImageInRect([mars CGImage],CGRectMake(sz.width/2.0,0,sz.width/2.0,sz.height));
-// 将每一个CGImage绘制到图形上下文中
-UIGraphicsBeginImageContextWithOptions(CGSizeMake(sz.width*1.5, sz.height), NO, 0);
-CGContextRef con = UIGraphicsGetCurrentContext();
-CGContextDrawImage(con, CGRectMake(0,0,sz.width/2.0,sz.height), marsLeft);
-CGContextDrawImage(con, CGRectMake(sz.width,0,sz.width/2.0,sz.height), marsRight);
-UIImage* im = UIGraphicsGetImageFromCurrentImageContext();
-UIGraphicsEndImageContext();
-// 记得释放内存，ARC在这里无效
-CGImageRelease(marsLeft);
-CGImageRelease(marsRight);
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　你也许发现绘出的图是上下颠倒的！图片的颠倒并不是因为被旋转了。当你创建了一个CGImage并使用<strong>CGContextDrawImage</strong>方法绘图就会引起这种问题。这主要是因为原始的本地坐标系统（坐标原点在左上角）与目标上下文（坐标原点在左下角）不匹配。有很多方法可以修复这个问题，其中一种方法就是使用<strong>CGContextDrawImage</strong>方法先将CGImage绘制到UIImage上，然后获取UIImage对应的CGImage，此时就得到了一个倒转的CGImage。当再调用<strong>CGContextDrawImage</strong>方法，我们就将倒转的图片还原回来了。实现代码如下：</span></p>
-```objc
-CGImageRef flip (CGImageRef im) {
-	CGSize sz = CGSizeMake(CGImageGetWidth(im), CGImageGetHeight(im));
-	UIGraphicsBeginImageContextWithOptions(sz, NO, 0);
-	CGContextDrawImage(UIGraphicsGetCurrentContext(), CGRectMake(0, 0, sz.width, sz.height), im);
-	CGImageRef result = [UIGraphicsGetImageFromCurrentImageContext() CGImage];
-	UIGraphicsEndImageContext();
-	return result;
-}
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　现在将之前的代码修改如下：</span></p>
-```objc
-CGContextDrawImage(con, CGRectMake(0,0,sz.width/2.0,sz.height), flip(marsLeft));
-CGContextDrawImage(con, CGRectMake(sz.width,0,sz.width/2.0,sz.height), flip(marsRight));
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　然而，这里又出现了另外一个问题：在双分辨率的设备上，如果我们的图片文件是高分辨率（@2x）版本，上面的绘图就是错误的。原因在于对于UIImage来说，在加载原始图片时使用<strong>imageNamed:</strong>方法，它会自动根据所在设备的分辨率类型选择图片，并且UIImage通过设置用来适配的<strong>scale</strong>属性补偿图片的两倍尺寸。但是一个CGImage对象并没有<strong>scale</strong>属性，它不知道图片文件的尺寸是否为两倍！所以当调用UIImage的<strong>CGImage</strong>方法，你不能假定所获得的CGImage尺寸与原始UIImage是一样的。在单分辨率和双分辨率下，一个UIImage对象的<strong>size</strong>属性值都是一样的，但是双分辨率UIImage对应的CGImage是单分辨率UIImage对应的CGImage的两倍大。所以我们需要修改上面的代码，让其在单双分辨率下都可以工作。代码如下：</span></p>
-```objc
-UIImage* mars = [UIImage imageNamed:@”Mars.png”];
-CGSize sz = [mars size];
-// 转换CGImage并使用对应的CGImage尺寸截取图片的左右部分
-CGImageRef marsCG = [mars CGImage];
-CGSize szCG = CGSizeMake(CGImageGetWidth(marsCG), CGImageGetHeight(marsCG));
-CGImageRef marsLeft = CGImageCreateWithImageInRect(marsCG,CGRectMake(0,0,szCG.width/2.0,szCG.height));
-CGImageRef marsRight = CGImageCreateWithImageInRect(marsCG, CGRectMake(szCG.width/2.0,0,szCG.width/2.0,szCG.height));
-UIGraphicsBeginImageContextWithOptions(CGSizeMake(sz.width*1.5, sz.height), NO, 0);
-//剩下的和之前的代码一样，修复倒置问题
-CGContextRef con = UIGraphicsGetCurrentContext();
-CGContextDrawImage(con, CGRectMake(0,0,sz.width/2.0,sz.height),flip(marsLeft));
-CGContextDrawImage(con, CGRectMake(sz.width,0,sz.width/2.0,sz.height),flip(marsRight));
-UIImage* im = UIGraphicsGetImageFromCurrentImageContext();
-UIGraphicsEndImageContext();
-CGImageRelease(marsLeft);
-CGImageRelease(marsRight);
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　上面的代码初看上去很繁杂，不过不用担心，这里还有另一种修复倒置问题的方案。相对于使用<strong>flip</strong>函数，你可以在绘图之前将CGImage包装进UIImage中，这样做有两大优点：</span></p>
-<ul>
-     <li><span style="font-family: 'comic sans ms', sans-serif;">当UIImage绘图时它会自动修复倒置问题</span></li>
-     <li><span style="font-family: 'comic sans ms', sans-serif;">当你从CGImage转化为Uimage时，可调用imageWithCGImage:scale:orientation:方法生成CGImage作为对缩放性的补偿。</span></li>
-</ul>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　所以这是一个解决倒置和缩放问题的自包含方法。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　代码如下：</span></p>
-```objc
-UIImage* mars = [UIImage imageNamed:@”Mars.png”];
-CGSize sz = [mars size];
-CGImageRef marsCG = [mars CGImage];
-CGSize szCG = CGSizeMake(CGImageGetWidth(marsCG), CGImageGetHeight(marsCG));
-CGImageRef marsLeft = CGImageCreateWithImageInRect(marsCG, CGRectMake(0,0,szCG.width/2.0,szCG.height));
-CGImageRef marsRight = CGImageCreateWithImageInRect(marsCG, CGRectMake(szCG.width/2.0,0,szCG.width/2.0,szCG.height));
-UIGraphicsBeginImageContextWithOptions(CGSizeMake(sz.width*1.5, sz.height), NO, 0);
-[[UIImage imageWithCGImage:marsLeft scale:[mars scale] orientation:UIImageOrientationUp] drawAtPoint:CGPointMake(0,0)];
-[[UIImage imageWithCGImage:marsRight scale:[mars scale] orientation:UIImageOrientationUp] drawAtPoint:CGPointMake(sz.width,0)];
-UIImage* im = UIGraphicsGetImageFromCurrentImageContext();
-UIGraphicsEndImageContext();
-CGImageRelease(marsLeft); 
-CGImageRelease(marsRight); 
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　还有另一种解决倒置问题的方案是在绘制CGImage之前，对上下文应用变换操作，有效地倒置上下文的内部坐标系统。这里先不做讨论。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　<strong>为什么会发生倒置问题</strong></span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　究其原因是因为Core Graphics源于Mac OS X系统，在Mac OS X中，坐标原点在左下方并且正y坐标是朝上的，而在iOS中，原点坐标是在左上方并且正y坐标是朝下的。在大多数情况下，这不会出现任何问题，因为图形上下文的坐标系统是会自动调节补偿的。但是创建和绘制一个CGImage对象时就会暴露出倒置问题。&nbsp;</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　CIFilter</strong><strong>与</strong><strong>CIImage</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　CIFilter与CIImage是iOS 5新引入的，虽然它们已在MAX OS X系统中存在多年。前缀&#8220;CI&#8221;表示Core Image，这是一种使用数学滤镜变换图片的技术。但是你不要去幻想iOS提供了像Photoshop软件那样强大的滤镜功能。使用Core Image之前你需要将<em>CoreImage.framework</em>框架导入到你的target之中。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　所谓滤镜指的是CIFilter类，滤镜可被分为以下几类：</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　模板与渐变类</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　这两类滤镜创建的CIImage可以和其他的CIImage进行合并，比如一种单色，一个棋盘，条纹，亦或是渐变。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　合成类&nbsp;</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　此类滤镜可以将一张图片与另外的图片合并，合成滤镜模式常见于图形处理软件Photoshop中。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　色彩类</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　此滤镜调整、修改图片的色彩。因此你可以改变一张图片的饱和度、色度、亮度、对比度、伽马、白点、曝光度、阴影、高亮等属性。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　几何变换类</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　此类滤镜可对图片执行基本的几何变换，比如缩放、旋转、裁剪。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;　&nbsp;CIFilter使用起来非常的简单。CIFilter看上去就像一个由键值组成的字典。它生成一个CIImage对象作为其输出。一般地，一个滤镜有一个或多个输入，而对于部分滤镜，生成的图片是基于其他类型的参数值。CIFilter对象是一个集合，可使用键值对进行检索。通过提供滤镜的字符串名称创建一个滤镜，如果想知道有哪些滤镜，可以查询苹果的<a href="https://developer.apple.com/library/mac/#documentation/graphicsimaging/reference/CoreImageFilterReference/Reference/reference.html"><em>Core Image Filter Reference</em></a>文档，或是调用CIFilter的类方法<strong>filterNamesInCategories</strong><strong>：</strong>，参数值为nil。每一个滤镜拥有一小部分用来确定其行为的键值。如果你想修改某一个键（比如亮度键）对应的值，你可以调用<strong>setValue</strong><strong>：</strong><strong>forKey</strong><strong>：</strong>方法或当你指定一个滤镜名时提供所有键值对。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp;需要处理的图片必须是CIImage类型，调用<strong>initWithCGImage</strong><strong>：</strong>方法可获得CIImage。因为CGImage又是作为滤镜的输出，因此滤镜之间可被连接在一起（将滤镜的输出作为<strong>initWithCGImage</strong><strong>：</strong>方法的输入参数）</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp; 当你构建一个滤镜链时，并没有做复杂的运算。只有当整个滤镜链需要输出一个CGImage时，密集型计算才会发生。调用<strong>contextWithOptions</strong><strong>：</strong>和<strong>createCGImage: fromRect:</strong>方法创建CIContext。与以往不同的地方是CIImage没有frame与bounds属性；只有extent属性。你将非常频繁的使用这个属性作为<strong>createCGImage: fromRect:</strong>方法的第二个参数。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp;接下来我将演示Core Image的使用。首先创建一个径向渐变的滤镜，该滤镜是从白到黑的渐变方式，白色区域的半径默认是100。接着将其与一张使用CIDarkenBlendMode滤镜的图片合成。CIDarkenBlendMode的作用是背景图片样本将被源图片的黑色部分替换掉。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">代码如下：</span></p>
-```objc
-UIImage* moi = [UIImage imageNamed:@”Mars.jpeg”];
-CIImage* moi2 = [[CIImage alloc] initWithCGImage:moi.CGImage];
-CIFilter* grad = [CIFilter filterWithName:@”CIRadialGradient”];
-CIVector* center = [CIVector vectorWithX:moi.size.width / 2.0 Y:moi.size.height / 2.0];
-// 使用setValue：forKey：方法设置滤镜属性
-[grad setValue:center forKey:@”inputCenter”];
-// 在指定滤镜名时提供所有滤镜键值对
-CIFilter* dark = [CIFilter filterWithName:@”CIDarkenBlendMode” keysAndValues:@”inputImage”, grad.outputImage, @”inputBackgroundImage”, moi2, nil];
-CIContext* c = [CIContext contextWithOptions:nil];
-CGImageRef moi3 = [c createCGImage:dark.outputImage fromRect:moi2.extent];
-UIImage* moi4 = [UIImage imageWithCGImage:moi3 scale:moi.scale orientation:moi.imageOrientation];
-CGImageRelease(moi3);
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;"><img style="border: 1px solid black; display: block; margin-left: auto; margin-right: auto;" src="http://images.cnitblog.com/blog/429321/201212/27103647-2fcd19d1ca1e4a0d9f42e2c79687e881.png" alt="" width="693" height="199" /></span></p>
-<p style="text-align: center;">&nbsp;<span style="font-family: 'comic sans ms', sans-serif; text-align: left; line-height: 1.5;">&nbsp;图4 图片合成快照　</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　这个例子可能没有什么吸引人的地方，因为所有一切都可以使用Core Graphics完成。除了Core Image是使用GPU处理，可能有点吸引人。Core Graphics也可以做到径向渐变并使用混合模式合成图片。但Core Image要简单得多，特别是当你有多个图片输入想重用一个滤镜链时。并且Core Image的颜色调整功能比Core Graphics更加强大。对了，Core Image还能实现自动人脸识别哦！</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　绘制一个</strong><strong>UIView</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　绘制一个UIVIew最灵活的方式就是由它自己完成绘制。实际上你不是绘制一个UIView，你只是子类化了UIView并赋予子类绘制自己的能力。当一个UIVIew需要执行绘图操作的时， <strong>drawRect</strong>:方法就会被调用。覆盖此方法让你获得绘图操作的机会。当<strong>drawRect</strong><strong>：</strong>方法被调用，当前图形上下文也被设置为属于视图的图形上下文。你可以使用Core Graphics或UIKit提供的方法将图形画到该上下文中。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　你不应该手动调用<strong>drawRect</strong><strong>：</strong>方法！如果你想调用<strong>drawRect：</strong>方法更新视图，只需发送<strong>setNeedsDisplay</strong>方法。这将使得<strong>drawRect：</strong>方法会在下一个适当的时间调用。当然，不要覆盖<strong>drawRect</strong><strong>：</strong>方法除非你知道这样做绝对合法。比方说，在UIImageView子类中覆盖<strong>drawRect</strong><strong>：</strong>方法是不合法的，你将得不到你绘制的图形。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 在UIView子类的<strong>drawRect</strong><strong>：</strong>方法中无需调用super，因为本身UIView的<strong>drawRect</strong><strong>：</strong>方法是空的。为了提高一些绘图性能，你可以调用<strong>setNeedsDisplayInRect</strong>方法重新绘制视图的子区域，而视图的其他部分依然保持不变。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 一般情况下，你不应该过早的进行优化。绘图代码可能看上去非常的繁琐，但它们是非常快的。并且iOS绘图系统自身也是非常高效，它不会频繁调用<strong>drawRect</strong><strong>：</strong>方法，除非迫不得已（或调用了<strong>setNeedsDisplay</strong>方法）。一旦一个视图已由自己绘制完成，那么绘制的结果会被缓存下来留待重用，而不是每次重头再来。(苹果公司将缓存绘图称为视图的位图存储回填（<em>bitmap backing store</em>）)。你可能会发现<strong>drawRect</strong><strong>：</strong>方法中的代码在整个应用程序生命周期内只被调用了一次！事实上，将代码移到<strong>drawRect</strong><strong>：</strong>方法中是提高性能的普遍做法。这是因为绘图引擎直接对屏幕进行渲染相对于先是脱屏渲染然后再将像素拷贝到屏幕要来的高效。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当视图的<strong>backgroundColor</strong>为nil并且<strong>opaque</strong>属性为YES，视图的背景颜色就会变成黑色。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　Core Graphics</strong><strong>上下文属性设置</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　当你在图形上下文中绘图时，当前图形上下文的相关属性设置将决定绘图的行为与外观。因此，绘图的一般过程是先设定好图形上下文参数，然后绘图。比方说，要画一根红线，接着画一根蓝线。那么首先需要将上下文的线条颜色属性设定为为红色，然后画红线；接着设置上下文的线条颜色属性为蓝色，再画出蓝线。表面上看,红线和蓝线是分开的，但事实上，在你画每一条线时，线条颜色却是整个上下文的属性。无论你用的是UIKit方法还是Core Graphics函数。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　因为图形上下文在每一时刻都有一个确定的状态，该状态概括了图形上下文所有属性的设置。为了便于操作这些状态，图形上下文提供了一个用来持有状态的栈。调用<strong>CGContextSaveGState</strong>函数，上下文会将完整的当前状态压入栈顶；调用<strong>CGContextRestoreGState</strong>函数，上下文查找处在栈顶的状态，并设置当前上下文状态为栈顶状态。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　因此一般绘图模式是：在绘图之前调用<strong>CGContextSaveGState</strong>函数保存当前状态，接着根据需要设置某些上下文状态，然后绘图，最后调用<strong>CGContextRestoreGState</strong>函数将当前状态恢复到绘图之前的状态。要注意的是，<strong>CGContextSaveGState</strong>函数和<strong>CGContextRestoreGState</strong>函数必须成对出现，否则绘图很可能出现意想不到的错误，这里有一个简单的做法避免这种情况。代码如下：</span></p>
-```objc
-- (void)drawRect:(CGRect)rect {
-	CGContextRef ctx = UIGraphicsGetCurrentContext();
-	CGContextSaveGState(ctx);
-	{
-		// 绘图代码
-	}
-	
-	CGContextRestoreGState(ctx);
-} 　
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　但你不需要在每次修改上下文状态之前都这样做，因为你对某一上下文属性的设置并不一定会和之前的属性设置或其他的属性设置产生冲突。你完全可以在不调用保存和恢复函数的情况下先设置线条颜色为红色，然后再设置为蓝色。但在一定情况下，你希望你对状态的设置是可撤销的，我将在接下来讨论这样的情况。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　许多的属性组成了一个图形上下文状态，这些属性设置决定了在你绘图时图形的外观和行为。下面我列出了一些属性和对应修改属性的函数；虽然这些函数是关于Core Graphics的，但记住，实际上UIKit同样是调用这些函数操纵上下文状态。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　线条的宽度和线条的虚线样式</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　CGContextSetLineWidth</strong>、<strong>CGContextSetLineDash</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　线帽和线条联接点样式</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　CGContextSetLineCap</strong><strong>、</strong><strong>CGContextSetLineJoin</strong><strong>、</strong><strong>CGContextSetMiterLimit</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　线条颜色和线条模式</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>CGContextSetStrokeColorWithColor</strong><strong>、</strong><strong>CGContextSetStrokePattern</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　CGContextSetRGBStrokeColor</strong><strong>、</strong><strong>CGContextSetGrayStrokeColor</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　填充颜色和模式</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong style="line-height: 1.5;">　　CGContextSetRGBFillColor,CGContextSetGrayFillColor</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong style="line-height: 1.5;">　　CGContextSetFillColorWithColor, CGContextSetFillPattern</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　阴影</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　CGContextSetShadow</strong><strong>、</strong><strong>CGContextSetShadowWithColor</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　混合模式</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　CGContextSetBlendMode</strong>（决定你当前绘制的图形与已经存在的图形如何被合成）</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　整体透明度</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　CGContextSetAlpha</strong>（个别颜色也具有alpha成分）</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　文本属性</span></p>
-<p><strong>　　CGContextSelectFont</strong><strong>、</strong><strong>CGContextSetFont</strong><strong>、
+#import "NSArray+Swizzle.h"  
 
-<p><strong>CGContextSetFontSize</strong><strong>、</strong><strong>CGContextSetTextDrawingMode</strong><strong>、</strong><strong>CGContextSetCharacterSpacing</strong>
+
+@implementation NSArray (Swizzle)  
+
+
+- (id)myLastObject  
+{  
+    id ret = [self myLastObject];  
+    NSLog(@"**********  myLastObject *********** ");  
+    return ret;  
+}  
+@end  
+```
+乍一看，这不递归了么？别忘记这是我们准备调换IMP的selector，[self myLastObject] 将会执行真的 [self lastObject] 。
 </p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　是否开启反锯齿和字体平滑</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　CGContextSetShouldAntialias</strong><strong>、</strong><strong>CGContextSetShouldSmoothFonts</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　另外一些属性设置：</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　裁剪区域:在裁剪区域外绘图不会被实际的画出来。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　变换（或称为&#8220;CTM&#8220;，意为当前变换矩阵):&nbsp;改变你随后指定的绘图命令中的点如何被映射到画布的物理空间。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　许多这些属性设置接下来我都会举例说明。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　路径与绘图</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　通过编写移动虚拟画笔的代码描画一段路径，这样的路径并不构成一个图形。绘制路径意味着对路径描边或填充该路径，也或者两者都做。同样，你应该从某些绘图程序中得到过相似的体会。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　一段路径是由点到点的描画构成。想象一下绘图系统是你手里的一只画笔，你首先必须要设置画笔当前所处的位置，然后给出一系列命令告诉画笔如何描画随后的每段路径。每一段新增的路径开始于当前点，当完成一条路径的描画，路径的终点就变成了当前点。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 下面列出了一些路径描画的命令：</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 定位当前点</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; <strong>CGContextMoveToPoint</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 描画一条线</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; <strong>CGContextAddLineToPoint</strong><strong>、</strong><strong>CGContextAddLines</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 描画一个矩形</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; <strong>CGContextAddRect</strong><strong>、</strong><strong>CGContextAddRects</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 描画一个椭圆或圆形</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; <strong>CGContextAddEllipseInRect</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 描画一段圆弧</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; <strong>CGContextAddArcToPoint</strong><strong>、</strong><strong>CGContextAddArc</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 通过一到两个控制点描画一段贝赛尔曲线</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>&nbsp;&nbsp;&nbsp; CGContextAddQuadCurveToPoint</strong><strong>、</strong><strong>CGContextAddCurveToPoint</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 关闭当前路径</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; <strong>CGContextClosePath</strong> 这将从路径的终点到起点追加一条线。如果你打算填充一段路径，那么就不需要使用该命令，因为该命令会被自动调用。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 描边或填充当前路径</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; <strong>CGContextStrokePath</strong><strong>、</strong><strong>CGContextFillPath</strong><strong>、</strong><strong>CGContextEOFillPath</strong><strong>、</strong><strong>CGContextDrawPath</strong>。<span style="color: #ff0000;">对当前路径描边或填充会清除掉路径。</span>如果你只想使用一条命令完成描边和填充任务，可以使用<strong>CGContextDrawPath</strong>命令，因为如果你只是使用<strong>CGContextStrokePath</strong>对路径描边，路径就会被清除掉，你就不能再对它进行填充了。</span></p>
-<p>创建路径并描边路径或填充路径只需一条命令就可完成的函数：<strong>CGContextStrokeLineSegments</strong><strong>、</strong><strong>CGContextStrokeRect</strong><strong>、</strong><strong>CGContextStrokeRectWithWidth</strong><strong>、
-<p><strong>CGContextFillRect</strong><strong>、</strong><strong>CGContextFillRects</strong><strong>、</strong><strong>CGContextStrokeEllipseInRect</strong><strong>、</strong><strong>CGContextFillEllipseInRect</strong></p>
+<p>
+第二步：调换IMP
+```objc
+#import &lt;objc/runtime.h&gt;  
+#import "NSArray+Swizzle.h"  
 
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 一段路径是被合成的，意思是它是由多条独立的路径组成。举个例子，一条单独的路径可能由两个独立的闭合形状组成：一个矩形和一个圆形。当你在构造一条路径的中间过程（意思是在描画了一条路径后没有调用描边或填充命令，或调用<strong>CGContextBeginPath</strong>函数来清除路径）调用<strong>CGContextMoveToPoint</strong>函数，就像是你拾起画笔，并将画笔移动到一个新的位置，如此来准备开始一段独立的相同路径。如果你担心当你开始描画一条路径的时候，已经存在的路径和新的路径会被认为是已存在路径的一个合成部分，你可以调用<strong>CGContextBeginPath</strong>函数指定你绘制的路径是一条独立的路径；苹果的许多例子都是这样做的，但在实际开发中我发现这是非必要的。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; <strong>CGContextClearRect</strong>函数的功能是擦除一个区域。这个函数会擦除一个矩形内的所有已存在的绘图；并对该区域执行裁剪。结果像是打了一个贯穿所有已存在绘图的孔。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; <strong>CGContextClearRect</strong>函数的行为依赖于上下文是透明还是不透明。当在图形上下文中绘图时，这会尤为明显和直观。如果图片上下文是透明的（<strong>UIGraphicsBeginImageContextWithOptions</strong>第二个参数为NO），那么<strong>CGContextClearRect</strong>函数执行擦除后的颜色为透明，反之则为黑色。</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 当在一个视图中直接绘图（使用<strong>drawRect：</strong>或<strong>drawLayer：inContext：</strong>方法），如果视图的背景颜色为nil或颜色哪怕有一点点透明度，那么CGContextClearRect的矩形区域将会显示为透明的，打出的孔将穿过视图包括它的背景颜色。如果背景颜色完全不透明，那么<strong>CGContextClearRect</strong>函数的结果将会是黑色。这是因为视图的背景颜色决定了是否视图的图形上下文是透明的还是不透明的。</span></p>
-<p style="text-align: center;"><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;<img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201301/04135105-c4e1981ec5e84cbfaba3e2dd641f7411.png" alt="" /></span></p>
-<p style="text-align: center;"><span style="font-family: 'comic sans ms', sans-serif;">图5 CGContextClearRect函数的应用</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 如图5，在左边的蓝色正方形被挖去部分留为黑色，然而在右边的蓝色正方形也被挖去部分留为透明。但这两个正方形都是UIView子类的实例，采用相同的绘图代码！不同之处在于视图的背景颜色，左边的正方形的背景颜色在nib文件中</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　但是这却完全改变了CGContextClearRect函数的效果。UIView子类的drawRect：方法看起来像这样：</span></p>
-```objc
-CGContextRef con = UIGraphicsGetCurrentContext();
-CGContextSetFillColorWithColor(con, [UIColor blueColor].CGColor);
-CGContextFillRect(con, rect);
-CGContextClearRect(con, CGRectMake(0,0,30,30));
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　为了说明典型路径的描画命令，我将生成一个向上的箭头图案，我谨慎避免使用便利函数操作，也许这不是创建箭头最好的方式，但依然清楚的展示了各种典型命令的用法。</span></p>
-<p align="center"><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;<img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201301/03223022-6cc72c828292475eb6f9915454403b4d.png" alt="" /></span></p>
-<p align="center"><span style="font-family: 'comic sans ms', sans-serif;">图6 一个简单的路径绘图</span></p>
-```objc
-CGContextRef con = UIGraphicsGetCurrentContext();
-// 绘制一个黑色的垂直黑色线，作为箭头的杆子
-CGContextMoveToPoint(con, 100, 100);
-CGContextAddLineToPoint(con, 100, 19);
-CGContextSetLineWidth(con, 20);
-CGContextStrokePath(con);
-// 绘制一个红色三角形箭头
-CGContextSetFillColorWithColor(con, [[UIColor redColor] CGColor]);
-CGContextMoveToPoint(con, 80, 25);
-CGContextAddLineToPoint(con, 100, 0);
-CGContextAddLineToPoint(con, 120, 25);
-CGContextFillPath(con);
-// 从箭头杆子上裁掉一个三角形，使用清除混合模式
-CGContextMoveToPoint(con, 90, 101);
-CGContextAddLineToPoint(con, 100, 90);
-CGContextAddLineToPoint(con, 110, 101);
-CGContextSetBlendMode(con, kCGBlendModeClear);
-CGContextFillPath(con);
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　确切的说，为了以防万一，我们应该在绘图代码周围使用<strong>CGContextSaveGState</strong>和<strong>CGContextRestoreGState</strong>函数。可对于这个例子来说，添加与否不会有任何的区别。因为上下文在调用drawRect：方法中不会被持久，所以不会被破坏。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　如果一段路径需要重用或共享，你可以将路径封装为CGPath（具体类型是CGPathRef）。你可以创建一个新的CGMutablePathRef对象并使用多个类似于图形的路径函数的CGPath函数构造路径，或者使用CGContextCopyPath函数复制图形上下文的当前路径。有许多CGPath函数可用于创建基于简单几何形状的路径（<strong>CGPathCreateWithRect、CGPathCreateWithEllipseInRect</strong>）或基于已存在路径（<strong>CGPathCreateCopyByStrokingPath、CGPathCreateCopyDashingPath、CGPathCreateCopyByTransformingPath</strong>）。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　UIKit的UIBezierPath类包装了CGPath。它提供了用于绘制某种形状路径的方法，以及用于描边、填充、存取某些当前上下文状态的设置方法。类似地，UIColor提供了用于设置当前上下文描边与填充的颜色。因此我们可以重写我们之前绘制箭头的代码：</span></p>
-```objc
-UIBezierPath* p = [UIBezierPath bezierPath];
-[p moveToPoint:CGPointMake(100,100)];
-[p addLineToPoint:CGPointMake(100, 19)];
-[p setLineWidth:20];
-[p stroke];
-[[UIColor redColor] set];
-[p removeAllPoints];
-[p moveToPoint:CGPointMake(80,25)];
-[p addLineToPoint:CGPointMake(100, 0)];
-[p addLineToPoint:CGPointMake(120, 25)];
-[p fill];
-[p removeAllPoints];
-[p moveToPoint:CGPointMake(90,101)];
-[p addLineToPoint:CGPointMake(100, 90)];
-[p addLineToPoint:CGPointMake(110, 101)];
-[p fillWithBlendMode:kCGBlendModeClear alpha:1.0];
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　在这种特殊情况下，完成同样的工作并没有节省多少代码，但是UIBezierPath仍然还是有用的。如果你需要对象特性，UIBezierPath提供了一个便利方法：<strong>bezierPathWithRoundedRect</strong><strong>：</strong><strong>cornerRadius</strong><strong>：</strong>，它可用于绘制带有圆角的矩形，如果是使用Core Graphics就相当冗长乏味了。还可以只让圆角出现在左上角和右上角。</span></p>
-```objc
-- (void)drawRect:(CGRect)rect {
-  CGContextRef ctx = UIGraphicsGetCurrentContext();
-  CGContextSetStrokeColorWithColor(ctx, [UIColor blackColor].CGColor);
-  CGContextSetLineWidth(ctx, 3);
-  UIBezierPath *path;
-  path = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(100, 100, 100, 100) byRoundingCorners:(UIRectCornerTopLeft |UIRectCornerTopRight) cornerRadii:CGSizeMake(10, 10)];
-  [path stroke];
-}
-```
-<p style="text-align: center;" align="left"><span style="font-family: 'comic sans ms', sans-serif;"><img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201301/10164554-8b950cf0971d44788736463119e4eaf5.png" alt="" /></span></p>
-<p style="text-align: center;" align="left"><span style="font-family: 'comic sans ms', sans-serif;">图7 左右圆角矩形</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　<strong style="line-height: 1.5;">裁剪</strong></span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　路径的另一用处是遮蔽区域，以防对遮蔽区域进一步绘图。这种用法被称为裁剪。<span style="color: #ff0000;">裁剪区域外</span>的图形不会被绘制到。默认情况下，一个图形上下文的裁剪区域是整个图形上下文。你可在上下文中的任何地方绘图。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　总的来说，裁剪区域是上下文的一个特性。与已存在的裁剪区域相交会出现新的裁剪区域。所以如果你应用了你自己的裁剪区域，稍后将它从图形上下文中移除的做法是使用<strong>CGContextSaveGState</strong>和<strong>CGContextRestoreGState</strong>函数将代码包装起来。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 为了便于说明这一点，我使用裁剪而不是使用混合模式在箭头杆子上打孔的方法重写了生成箭头的代码。这样做有点小复杂，因为我们想要裁剪区域不在三角形内而在三角形外部。为了表明这一点，我们使用了一个三角形和一个矩形组成了一个组合路径。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 当填充一个组合路径并使用它表示一个裁剪区域时，系统遵循以下两规则之一：</span></p>
-<p><span style="font-family: 'comic sans ms', sans-serif;">　　环绕规则（Winding rule）</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　如果边界是顺时针绘制，那么在其内部逆时针绘制的边界所包含的内容为空。如果边界是逆时针绘制，那么在其内部顺时针绘制的边界所包含的内容为空。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　奇偶规则</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　最外层的边界代表内部都有效，都要填充；之后向内第二个边界代表它的内部无效，不需填充；如此规则继续向内寻找边界线。我们的情况非常简单，所以使用奇偶规则就很容易了。这里我们使用CGContextEOCllip设置裁剪区域然后进行绘图。（如果不是很明白，可以参见这篇文章：<span style="color: #ff0000;"><a style="line-height: 1.5; font-family: 'comic sans ms', sans-serif;" href="http://disanji.net/2010/12/05/5-ways-to-draw-2d-shape-with-hole-in-html/"><span style="color: #ff0000;">五种方法绘制有孔的2d形状</span></a></span>）</span></p>
-```objc
-CGContextRef con = UIGraphicsGetCurrentContext();
-// 在上下文裁剪区域中挖一个三角形状的孔
-CGContextMoveToPoint(con, 90, 100);
-CGContextAddLineToPoint(con, 100, 90);
-CGContextAddLineToPoint(con, 110, 100);
-CGContextClosePath(con);
-CGContextAddRect(con, CGContextGetClipBoundingBox(con));
-// 使用奇偶规则，裁剪区域为矩形减去三角形区域
-CGContextEOClip(con);
-// 绘制垂线
-CGContextMoveToPoint(con, 100, 100);
-CGContextAddLineToPoint(con, 100, 19);
-CGContextSetLineWidth(con, 20);
-CGContextStrokePath(con);
-// 画红色箭头
-CGContextSetFillColorWithColor(con, [[UIColor redColor] CGColor]);
-CGContextMoveToPoint(con, 80, 25);
-CGContextAddLineToPoint(con, 100, 0);
-CGContextAddLineToPoint(con, 120, 25);
-CGContextFillPath(con); 
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　渐变</strong></span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　</strong>渐变可以很简单也可以很复杂。一个简单的渐变（接下来要讨论的）由一端点的颜色与另一端点的颜色决定，如果在中间点加入颜色（可选），那么渐变会在上下文的两个点之间线性的绘制或在上下文的两个圆之间放射状的绘制。不能使用渐变作为路径的填充色，但可使用裁剪限制对路径形状的渐变。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　我重写了绘制箭头的代码，箭杆使用了线性渐变。效果如图7所示。</span></p>
-<p style="text-align: center;" align="left"><span style="font-family: 'comic sans ms', sans-serif;"><img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201301/07162647-645fc1f5a9d2469b83ef7577f6d1a461.png" alt="" />&nbsp;</span></p>
-<p style="text-align: center;" align="left"><span style="font-family: 'comic sans ms', sans-serif;">图8 箭头杆子渐变</span></p>
-```objc
-CGContextRef con = UIGraphicsGetCurrentContext();
-CGContextSaveGState(con);
-// 在上下文裁剪区域挖一个三角形孔
-CGContextMoveToPoint(con, 90, 100);
-CGContextAddLineToPoint(con, 100, 90);
-CGContextAddLineToPoint(con, 110, 100);
-CGContextClosePath(con);
-CGContextAddRect(con, CGContextGetClipBoundingBox(con));
-CGContextEOClip(con);
-//绘制一个垂线，让它的轮廓形状成为裁剪区域
-CGContextMoveToPoint(con, 100, 100);
-CGContextAddLineToPoint(con, 100, 19);
-CGContextSetLineWidth(con, 20);
-// 使用路径的描边版本替换图形上下文的路径
-CGContextReplacePathWithStrokedPath(con);
-// 对路径的描边版本实施裁剪
-CGContextClip(con);
-// 绘制渐变
-CGFloat locs[3] = { 0.0, 0.5, 1.0 };
-CGFloat colors[12] = {
-0.3,0.3,0.3,0.8, // 开始颜色，透明灰
-0.0,0.0,0.0,1.0, // 中间颜色，黑色
-0.3,0.3,0.3,0.8 // 末尾颜色，透明灰
-};
-CGColorSpaceRef sp = CGColorSpaceCreateDeviceGray();
-CGGradientRef grad = CGGradientCreateWithColorComponents (sp, colors, locs, 3);
-CGContextDrawLinearGradient(con, grad, CGPointMake(89,0), CGPointMake(111,0), 0);
-CGColorSpaceRelease(sp);
-CGGradientRelease(grad);
-CGContextRestoreGState(con); // 完成裁剪
-// 绘制红色箭头
-CGContextSetFillColorWithColor(con, [[UIColor redColor] CGColor]);
-CGContextMoveToPoint(con, 80, 25);
-CGContextAddLineToPoint(con, 100, 0);
-CGContextAddLineToPoint(con, 120, 25);
-CGContextFillPath(con);
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　调用<strong>CGContextReplacePathWithStrokedPath</strong>函数假装对当前路径描边，并使用当前线段宽度和与线段相关的上下文状态设置。但接着创建的是描边路径外部的一个新的路径。因此，相对于使用粗的线条，我们使用了一个矩形区域作为裁剪区域。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　虽然过程比较冗长但是非常的简单；我们将渐变描述为一组在一端点（0.0）和另一端点（1.0）之间连续区上的位置，以及设置与每个位置相对应的颜色。为了提亮边缘的渐变，加深中间的渐变，我使用了三个位置，黑色点的位置是0.5。为了创建渐变，还需要提供一个颜色空间。最后，我创建出了该渐变，并对裁剪区域绘制线性渐变，最后释放了颜色空间和渐变。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　<strong>颜色与模板</strong></span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　</strong>在iOS中，CGColor表示颜色（具体类型为CGColorRef）。使用UIColor的colorWithCGColor：和CGColor方法可bridged cast到UIColor。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　在iOS中，模板表示为CGPattern（具体类型为CGPatternRef）。你可以创建一个模板并使用它进行描边或填充。其过程是相当复杂的。作为一个非常简单的例子，我将使用红蓝相间的三角形替换箭头的三角形部分。现在移除下面行：</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　CGContextSetFillColorWithColor（con， [UIColor redColor].CGColor））；</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　在被移除的地方填入下面代码：</span></p>
-```objc
-CGColorSpaceRef sp2 = CGColorSpaceCreatePattern(NULL);
-CGContextSetFillColorSpace (con, sp2);
-CGColorSpaceRelease (sp2);
-CGPatternCallbacks callback = {0, &amp;drawStripes, NULL };
-CGAffineTransform tr = CGAffineTransformIdentity;
-CGPatternRef patt = CGPatternCreate(NULL,CGRectMake(0,0,4,4), tr, 4, 4, kCGPatternTilingConstantSpacingMinimalDistortion, true, &amp;callback);
-CGFloat alph = 1.0;
-CGContextSetFillPattern(con, patt, &amp;alph);
-CGPatternRelease(patt);
-```
-<p align="left"><span style="line-height: 1.5; font-family: 'comic sans ms', sans-serif;">　　代码非常冗长，但它却是一个完整的样板。现在我们从后往前分析代码: 我们调用<strong>CGContextSetFillPattern</strong>不是设置填充颜色，我们设置的是填充的模板。函数的第三个参数是一个指向CGFloat的指针，所以我们事先设置CGFloat自身。第二个参数是一个CGPatternRef对象，所以我们需要事先创建CGPatternRef，并在最后释放它。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　现在开始讨论CGPatternCreate。一个模板是在一个矩形元中的绘图。我们需要矩形元的尺寸（第二个参数）以及矩形元原始点之间的间隙（第四和第五个参数）。这这种情况下，矩形元是4*4的，每一个矩形元与它的周围矩形元是紧密贴合的。我们需要提供一个应用到矩形元的变换参数（第三个参数）；在这种情况下，我们不需要变换做什么工作，所以我们应用了一个恒等变换。我们应用了一个瓷砖规则（第六个参数）。我们需要声明的是颜色模板不是漏印（stencil）模板，所以参数值为true。并且我们需要提供一个指向回调函数的指针，回调函数的工作是向矩形元绘制模板。第八个参数是一个指向CGPatternCallbacks结构体的指针。这个结构体由数字0和两个指向函数的指针构成。第一个函数指针指向的函数当模板被绘制到矩形元中被调用，第二个函数指针指向的函数当模板被释放后调用。第二个函数指针我们没有指定，它的存在主要是为了内存管理的需要。但在这个简单的例子中，我们并不需要。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　在你使用颜色模板调用<strong>CGContextSetFillPattern</strong>函数之前，你需要设置将应用到模板颜色空间的上下文填充颜色空间。如果你忽略这项工作，那么当你调用<strong>CGContextSetFillPattern</strong>函数时会发生错误。所以我们创建了颜色空间，设置它作为上下文的填充颜色空间，并在后面做了释放。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　到这里我们仍然没有完成绘图。因为我还没有编写向矩形元中绘图的函数！绘图函数地址被表示为&amp;drawStripes。绘图代码如下所示：</span></p>
-```objc
-void drawStripes (void *info, CGContextRef con) {
-// assume 4 x 4 cell
-CGContextSetFillColorWithColor(con, [[UIColor redColor] CGColor]);
-CGContextFillRect(con, CGRectMake(0,0,4,4));
-CGContextSetFillColorWithColor(con, [[UIColor blueColor] CGColor]);
-CGContextFillRect(con, CGRectMake(0,0,4,2));
-}
-```
-<p style="text-align: center;"><span style="font-family: 'comic sans ms', sans-serif;"><img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201301/07163055-71996ba36a4f4a44bca579b8d6210dd4.png" alt="" /></span></p>
-<p align="center"><span style="font-family: 'comic sans ms', sans-serif;">图9 模板填充&nbsp;</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　如你所见，实际的模板绘图代码是非常简单的。唯一的复杂点在于<strong>CGPatternCreate</strong>函数必须与模板绘图函数的矩形元尺寸相同。我们知道矩形元的尺寸为4*4，所以我们用红色填充它，并接着填充它的下半部分为绿色。当这些矩形元被水平垂直平铺时，我们得到了如图8所示的条纹图案。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　注意，最后图形上下文遗留下了一个不可取的状态，即填充颜色空间被设置为了一个模板颜色空间。如果稍后尝试设置填充颜色为常规颜色，就会引起错误。通常的解决方案是，使用<strong>CGContextSaveGState</strong>和<strong>CGContextRestoreGState</strong>函数将代码包起来。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　你可能观察到图8的平铺效果并不与箭头的三角形内部相符合：最底部的似乎只平铺了一半蓝色。这是因为一个模板的定位并不关心你填充（描边）的形状，总的来说它只关心图形上下文。我们可以调用<strong>CGContextSetPatternPhase</strong>函数改变模板的定位。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　<strong>图形上下文变换</strong></span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　就像UIView可以实现变换，同样图形上下文也具备这项功能。然而对图形上下文应用一个变换操作不会对已在图形上下文上的绘图产生什么影响，它只会影响到在上下文变换之后被绘制的图形，并改变被映射到图形上下文区域的坐标方式。一个图形上下文变换被称为CTM，意为&#8220;当前变换矩阵&#8220;（current transformation matrix）。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　完全利用图形上下文的CTM来免于即使是简单的计算操作是很常见的。你可以使用CGContextConcatCTM函数将当前变换乘上任何CGAffineTransform，还有一些便利函数可对当前变换应用平移、缩放，旋转变换。&nbsp;</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　当你获得上下文的时候，对图形上下文的基本变换已经设置好了；这就是系统能映射上下文绘图坐标到屏幕坐标的原因。无论你对当前变换应用了什么变换，基本变换变换依然有效并且绘图继续工作。通过将你的变换代码封装到CGContextSaveGState和CGContextRestoreGState函数调用中，对基本变换应用的变换操作可以被还原。&nbsp;</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　举个例子，对于我们迄今为止使用代码绘制的向上箭头来说，已知的放置箭头的方式仅仅只有一个位置：箭头矩形框的左上角被硬编码在坐标{80，0}。这样代码很难理解、灵活性差、且很难被重用。最明智的做法是通过将所有代码中的x坐标值减去80，让箭头矩形框左上角在坐标{0，0}。事先应用一个简单的平移变换，很容易将箭头画在任何位置。为了映射坐标到箭头的左上角，我们使用下面代码：</span></p>
-<p class="MsoNormal" align="left" style="margin: 6pt 0cm; text-indent: 40pt; line-height: 15.75pt; background-color: #d9d9d9; background-position: initial initial; background-repeat: initial initial;"><span lang="EN-US" style="font-size: 10pt; font-family: Consolas;">CGContextTranslateCTM</span><span style="font-size: 10pt; font-family: 宋体;">（</span><span lang="EN-US" style="font-size: 10pt; font-family: Consolas;">con, 80, 0</span><span style="font-size: 10pt; font-family: 宋体;">）</span><span lang="EN-US" style="font-size: 10pt; font-family: Consolas;">;&nbsp;</span><span style="text-indent: 0px; line-height: 15.75pt; font-size: 10pt; font-family: Consolas;">//</span><span style="text-indent: 0px; line-height: 15.75pt; font-size: 10pt; font-family: 宋体;">在坐标</span><span style="text-indent: 0px; line-height: 15.75pt; font-size: 10pt; font-family: Consolas;">{0,0}</span><span style="text-indent: 0px; line-height: 15.75pt; font-size: 10pt; font-family: 宋体;">处绘制箭头</span></p>
-<p style="margin-top:3.75pt;margin-right:0cm;margin-bottom:3.75pt;margin-left: 0cm;line-height:15.75pt"><span style="font-size: 10.5pt; font-family: 'Comic Sans MS';">&nbsp; &nbsp; &nbsp; &nbsp;</span><span style="font-size: 10.5pt;">旋转变换特别的有用，它可以让你在一个被旋转的方向上进行绘制而无需使用任何复杂的三角函数。然而这略有点复杂，因为旋转变换围绕的点是原点坐标。这几乎不是你所想要的，所以你先是应用了一个平移变换，为的是映射原点到你真正想绕其旋转的点。但是接着，在旋转之后，为了算出你在哪里绘图，你可能需要做一次逆向平移变换。</span></p>
-<p style="margin: 3.75pt 0cm; line-height: 15.75pt;"><span style="font-size: 10.5pt;">　　为了说明这个做法，我将绕箭头杆子尾部旋转多个角度重复绘制箭头，并把对箭头的绘图封装为</span><span style="font-size: 10.5pt; font-family: 'Comic Sans MS';">UIImage</span><span style="font-size: 10.5pt;">对象。接着我们简单重复绘制</span><span style="font-size: 10.5pt; font-family: 'Comic Sans MS';">UIImage</span><span style="font-size: 10.5pt;">对象。</span></p>
-<p style="margin: 3.75pt 0cm; line-height: 15.75pt;"><span style="font-size: 10.5pt;">　　具体代码如下：</span></p>
-```objc
-- (void)drawRect:(CGRect)rect { 
-	UIGraphicsBeginImageContextWithOptions(CGSizeMake(40,100), NO, 0.0);
-	CGContextRef con = UIGraphicsGetCurrentContext();
-	CGContextSaveGState(con);
-	CGContextMoveToPoint(con, 90 - 80, 100);
-	CGContextAddLineToPoint(con, 100 - 80, 90);
-	CGContextAddLineToPoint(con, 110 - 80, 100);
-	CGContextMoveToPoint(con, 110 - 80, 100);
-	CGContextAddLineToPoint(con, 100 - 80, 90);
-	CGContextAddLineToPoint(con, 90 - 80, 100);
-	CGContextClosePath(con);
-	CGContextAddRect(con, CGContextGetClipBoundingBox(con));
-	CGContextEOClip(con);
-	CGContextMoveToPoint(con, 100 - 80, 100);
-	CGContextAddLineToPoint(con, 100 - 80, 19);
-	CGContextSetLineWidth(con, 20);
-	CGContextReplacePathWithStrokedPath(con);
-	CGContextClip(con);
-	CGFloat locs[3] = { 0.0, 0.5, 1.0 };
-	CGFloat colors[12] = {
-			0.3,0.3,0.3,0.8,
-			0.0,0.0,0.0,1.0,
-			0.3,0.3,0.3,0.8
-		};
-	CGColorSpaceRef sp = CGColorSpaceCreateDeviceGray();
-	CGGradientRef grad = CGGradientCreateWithColorComponents (sp, colors, locs, 3);
-	CGContextDrawLinearGradient (con, grad, CGPointMake(89 - 80,0), CGPointMake(111 - 80,0), 0);
-	CGColorSpaceRelease(sp);
-	CGGradientRelease(grad);
-	CGContextRestoreGState(con);
-	CGColorSpaceRef sp2 = CGColorSpaceCreatePattern(NULL);
-	CGContextSetFillColorSpace (con, sp2);
-	CGColorSpaceRelease (sp2);
-	CGPatternCallbacks callback = {0, &amp;drawStripes, NULL };
-	CGAffineTransform tr = CGAffineTransformIdentity;
-	CGPatternRef patt = CGPatternCreate(NULL,CGRectMake(0,0,4,4),tr,4,4，kCGPatternTilingConstantSpacingMinimalDistortion,true, &amp;callback);
-	CGFloat alph = 1.0;
-	CGContextSetFillPattern(con, patt, &amp;alph);
-	CGPatternRelease(patt);
-	CGContextMoveToPoint(con, 80 - 80, 25);
-	CGContextAddLineToPoint(con, 100 - 80, 0);
-	CGContextAddLineToPoint(con, 120 - 80, 25);
-	CGContextFillPath(con);
-	UIImage* im = UIGraphicsGetImageFromCurrentImageContext();
-	UIGraphicsEndImageContext();
-	con = UIGraphicsGetCurrentContext();
-	[im drawAtPoint:CGPointMake(0,0)];
-	for (int i=0; i&lt;3; i++) {
-		CGContextTranslateCTM(con, 20, 100);
-		CGContextRotateCTM(con, 30 * M_PI/180.0);
-		CGContextTranslateCTM(con, -20, -100);
-		[im drawAtPoint:CGPointMake(0,0)];
-	}
-}
 
+int main(int argc, char* argv[])  
+{  
+    @autoreleasepool {  
+
+        Method ori_Method =  class_getInstanceMethod([NSArray class], @selector(lastObject));  
+        Method my_Method = class_getInstanceMethod([NSArray class], @selector(myLastObject));  
+        method_exchangeImplementations(ori_Method, my_Method);  
+
+        NSArray* array = @[@"0",@"1",@"2",@"3"];  
+        NSString* string = [array lastObject];  
+        NSLog(@"TEST RESULT : %@",string);  
+
+        return 0;  
+    }  
+}  
 ```
-<p style="text-align: center;"><span style="font-family: 'comic sans ms', sans-serif;"><img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201301/07163256-346e34bf3956474f9df5a94c73593174.png" alt="" /></span></p>
-<p align="center"><span style="font-family: 'comic sans ms', sans-serif;">图10 使用CTM旋转变换</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　变换有多个方法解决我们早期使用CGContextDrawImage函数遇到的倒置问题。相对于逆向绘图，我们选择逆向我们绘图的上下文。实质上，我们对上下文坐标系统应用了一个&#8220;倒置&#8221;变换。你自上而下移动上下文，接着你通过应用一个让y坐标乘以-1的缩放变换逆向y坐标的方向。</span></p>
-```objc
-CGContextTranslateCTM(con, 0, theHeight);
-CGContextScaleCTM(con, 1.0, -1.0);
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp;&nbsp; 上下文的顶部应该被你往下移动多远依赖于你绘制的图片。比如说我们可以绘制没有倒置问题的两个半边的火星图形（前面讨论的一个例子）。</span></p>
-```objc
-CGContextTranslateCTM(con, 0, sz.height); // sz为[mars size]
-CGContextScaleCTM(con, 1.0, -1.0);
-CGContextDrawImage(con, CGRectMake(0, 0, sz.width/2.0, sz.height), marsLeft);
-CGContextDrawImage(con, CGRectMake(b.size.width-sz.width/2.0, 0, sz.width/2.0, sz.height),marsRight);
-```
-<p><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　阴影</strong></span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　为了在绘图上加入阴影，可在绘图之前设置上下文的阴影值。阴影的位置表示为CGSize，如果CGSize的两个值都是正数，则表示阴影是朝下和朝右的。模糊度被表示为任何一个正数。苹果没有解释缩放的工作方式，但实验表明12是最佳的模糊度，99及以上的模糊度会让阴影变得不成形。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;&nbsp;&nbsp; 我在图9的基础上给上下文加了一个阴影：</span></p>
-```objc
-con = UIGraphicsGetCurrentContext();
-CGContextSetShadow(con, CGSizeMake(7, 7), 12);
-[im drawAtPoint:CGPointMake(0,0)];
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　然而，使用这种方法有一个不太明显的问题。我们是在每绘制一个箭头的时候加上的阴影。因此，箭头的阴影会投射在另一个箭头上面。我们想要的是让所有的箭头集体地投射出一个阴影。解决方法是使用一个透明的图层；该图层类似一个先是叠加所有绘图然后加上阴影的一个子上下文。代码如下：</span></p>
-```objc
-con = UIGraphicsGetCurrentContext();
-CGContextSetShadow(con, CGSizeMake(7, 7), 12);
-CGContextBeginTransparencyLayer(con, NULL);
-[im drawAtPoint:CGPointMake(0,0)];
-for (int i=0; i&lt;3; i++) {
-	CGContextTranslateCTM(con, 20, 100);
-	CGContextRotateCTM(con, 30 * M_PI/180.0);
-	CGContextTranslateCTM(con, -20, -100);
-	[im drawAtPoint:CGPointMake(0,0)];
-}
-// 在调用了CGContextEndTransparencyLayer函数之后，
-// 图层内容会在应用全局alpha和上下文阴影状态之后被合成到上下文中
-CGContextEndTransparencyLayer(con);
-```
-<p style="text-align: center;"><span style="font-family: 'comic sans ms', sans-serif;">　<span style="text-align: center; line-height: 1.5;">&nbsp;</span><img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201301/09171900-f4e5eee50a41417498caf7b95a9ae3da.png" alt="" /></span></p>
-<p style="text-align: center;" align="left"><span style="font-family: 'comic sans ms', sans-serif;">图11 阴影效果</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　点与像素</strong></span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　一个点是由xy坐标描述的一个无穷小量的位置。通过指定点实现在图形上下文中的绘图。我们并没有关心设备的分辨率，因为Core Graphics已经精细地将绘图映射到物理输出设备（基于CTM、反锯齿和平滑技术）。因此，文章之前的讨论只关心图形上下文的点，不关注点与屏幕像素的关系。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　然而像素是真实存在的。一个像素是真实世界中一个具有完整物理尺寸的显示单元。整数的点实际上介于像素之间。在单分辨率设备上，这可能会让人感到迷惑。比方说，如果使用线宽为1的线条对一个整数坐标的垂直路径描边，那么线条将会被分为两半，分别落在路径的两侧。所以在单分辨率设备上线宽会变成2px（因为设备无法表示半个像素）。</span></p>
-<p style="text-align: center;" align="left"><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;<img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201301/10092953-804dd8b8a43f4dd1a5c5621e33aa5414.png" alt="" width="693" height="298" /></span></p>
-<p style="text-align: center;" align="left"><span style="font-family: 'comic sans ms', sans-serif; line-height: 1.5;">图12 整数的点坐标与偏移0.5点的坐标对应的描边处理</span></p>
-<p style="text-align: left;" align="center"><span style="font-family: 'comic sans ms', sans-serif; line-height: 1.5;">&nbsp; &nbsp; &nbsp; &nbsp;当你遇到显示效果不佳的时，可能会被建议通过对坐标增减0.5让它在像素中居中。这个建议可能有效，如图11。但它只是做了一些头脑简单的假设。一个复杂的做法是获得UIView的contentScaleFactor属性。这个值为1.0或2.0，所以你可以除以这个属性值得到从像素到点的转换。还可以想想用最精确的方式绘制一条水平或垂直的线条的方式不是描边路径，而是填充路径。使用这种方法UIView的子类代码将可以在任何设备上绘制一条完美的1px宽的垂线，代码如下：</span></p>
-```objc
-CGContextFillRect(con, CGRectMake(100,0,1.0/self.contentScaleFactor,100));
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;"><strong>　　内容模式</strong></span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　一个视图向它自身绘图，相对于只有背景颜色和子视图，它还有内容。这意味着每当视图被调整大小它的<strong>contentMode</strong>属性就变得非常重要。正如我之前提到的，绘图系统会尽可能避免重头开始绘制视图。相反，绘图系统将使用之前绘图操作的缓存结果（位图回填）。所以，如果视图被重新调整大小，系统可能简单的伸缩或重定位缓存绘图，前提是你的<strong>contentMode</strong>设置指令是是这样设置的。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　说明这一点略有点复杂。因为我需要安排调整视图大小而不引起重绘操作（调用<strong>drawRect：</strong>方法）。当程序启动时，我将创建一个MyView实例，并将它放在window上。接着将执行调整MyView尺寸的操作延迟到window出现和界面初次显示之后：</span></p>
-```objc
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-  self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-  self.window.rootViewController = [UIViewController new];
-  MyView* mv =[[MyView alloc] initWithFrame:CGRectMake(0, 0, self.window.bounds.size.width - 50, 150)];
-  mv.center = self.window.center;
-  [self.window.rootViewController.view addSubview: mv];
-  mv.opaque = NO;
-  mv.tag = 111; // so I can get a reference to this view later
-  [self performSelector:@selector(resize:) withObject:nil afterDelay:0.1];
-  self.window.backgroundColor = [UIColor whiteColor];
-  [self.window makeKeyAndVisible];
-  return YES;
-}
-```
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　我们将视图的高度调成之前的2倍。没有触发drawRect：方法的调用。如果我们视图的drawRect：方法代码和生成图9的代码相同，则我们得到如图12的结果，视图被显示在正确高度上。</span></p>
-<p style="text-align: center;" align="left"><span style="font-family: 'comic sans ms', sans-serif;">&nbsp;<img style="border: 1px solid black;" src="http://images.cnitblog.com/blog/429321/201301/09172048-10bd46b975944316bca85b7f3451b54d.png" alt="" /></span></p>
-<p align="center"><span style="font-family: 'comic sans ms', sans-serif;">图13 内容自动伸展</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　可是早晚drawRect：方法会被调用，绘图将按照<strong>drawRect：</strong>方法中的代码被刷新。代码不会将箭头绘制在相对于视图边界的高度。它是在一个固定的高度。因此箭头会伸展，而且会在以后某个时间返回到原始的尺寸。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　通常我们的视图的<strong>contentMode</strong>属性需要与视图绘制自己的方式一致。假设我们的<strong>drawRect：</strong>方法中的代码让箭头的尺寸和位置相对于视图的边界原点，即它的左上方。所以我们可以设置它的<strong>contentMode</strong>为<strong>UIViewContentModeTopLeft</strong>。又或者，我们可以将<strong>contentMode</strong>设置为<strong>UIVIewContentModeRedraw，</strong>这将引起缓存内容的自动缩放和重定位被关闭，最终结果是视图的<strong>setNeedsDisplay</strong>方法将被调用，触发<strong>drawRect：</strong>方法重绘视图内容。</span></p>
-<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　在另一方面，如果一个视图只是暂时被调整大小。假设是作为动画的一部分，那么伸缩行为正是你所想要的。假设我们的动画是想要让视图变大然后还原回原始大小以达到作为吸引用户的一种手段。这就需要视图伸缩的时候视图的内容也跟着伸缩，正确的<strong>contentMode</strong>的值是<strong>UIViewContentModeScaleToFill</strong>，被伸缩的内容仅仅是视图内容的一副缓存图片，所以它运行起来十分的高效。</span>&nbsp;</p>
-</strong></p></strong></p></span></p></div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[从UIKit到APPKit]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/08/04/cong-uikitdao-appkit/"/>
-    <updated>2014-08-04T10:03:56+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/08/04/cong-uikitdao-appkit</id>
-    <content type="html"><![CDATA[<p>Mac 不仅是一个强大的生产平台，也十分值得你<em>为其</em>开发一些东西。去年我们开始构建我们的第一款 <a href="http://decksetapp.com">Mac 应用</a>，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验，希望能启发你们去开发自己的第一个 Mac 应用。</p>
-
-<p>在这篇文章中，我们假定 OS X Yosemite 为我们默认使用的系统。今年，为了融合 iOS 和 OS X，苹果站在开发者的角度对 OS X 做出了巨大的改进。不过，我们会指出哪些特性仅适用于 Yosemite，而哪些特性也适用于之前的系统版本。</p>
-
-<h2>相似点</h2>
-
-<p>尽管 iOS 和 OS X 是两个独立的系统，它们却有很多共性。先就开发环境而言，它们使用同样的开发语言，同样的IDE。所以你会对这一切都感到非常熟悉。</p>
-
-<p>更重要的是，OS X 和你已经熟悉的 iOS 共用许多框架，像 Foundation，Core Data 和 Core Animation。今年，Apple 进一步整合两个平台，并给 Mac 带来了一些之前仅能在 iOS 上面使用的框架，其中一个例子就是 Multipeer Connectivity。在更底层的地方，你立刻可以看到你熟悉的 API：Core Graphics，Core Text，libdispatch 等等。</p>
-
-<p>真正开始有区别的是 UI 框架 — AppKit 早在 NeXT 时代就已面世并不断进化，而 UIKit 就像是简约版及现代版的 AppKit。出现这种情况的原因，是当 Apple 推出 iPhone 时可以从头开始，并吸取 AppKit 的经验：把已证实过可行的概念和部件拿过来用，并改进不够精良的设计。</p>
-
-<p>如果你对这个转换是怎么发生的感兴趣，请观看前 Apple iOS 应用总监 <a href="https://twitter.com/nitinganatra">Nitin Ganatra</a> 播客上的精彩剧集：<a href="http://www.imore.com/debug-39-nitin-ganatra-episode-i-system-7-carbon">System 7 to Carbon</a>，<a href="http://www.imore.com/debug-40-nitin-ganatra-episode-ii-os-x-ios">OS X to iOS</a>，以及 <a href="http://www.imore.com/debug-41-nitin-ganatra-episode-iii-iphone-ipad">iPhone to iPad</a>。</p>
-
-<p>考虑到这一点，也就不奇怪为什么 UIKit 和 AppKit 仍旧共享许多概念了。UI 是基于 window 和 view 构建起来的，消息像 iOS 一样通过响应者链传递。此外，<code>UIView</code> 是 <code>NSView</code>，<code>UIControl</code> 是 <code>NSControl</code>，<code>UIImage</code> 是 <code>NSImage</code>，<code>UIViewController</code> 是 <code>NSViewController</code>，<code>UITextView</code> 是 <code>NSTextView</code>...这样的例子不胜枚举。</p>
-
-<p>看起来就像你仅需把 <code>UI</code> 前缀替换为 <code>NS</code> 前缀，你就可以用同样的方法使用这些类。但事实是在很多情况下这并不奏效。它们在实现上并没有在概念上那么相似。你在 iOS 上的经验至多能帮你大致了解构建用户界面的基础，以及使用很多设计模式，比如代理，都是类似的。但是细节是魔鬼 — 你真的应该通过阅读文档来学习如果使用这些类。</p>
-
-<p>下一节，我们来看看那些常见的陷阱。</p>
-
-<h2>不同点</h2>
-
-<h3 id="windowwindowcontroller">Window 和 Window Controller</h3>
+</p>
 <!-- more -->
-<p>虽然在 iOS 上你几乎从来不用与 window 交互（因为它们占据了整个屏幕），window 在 Mac 上却是一个关键组件。从历史上看， Mac 应用包含多个 window，每个 window 有其自己的角色，非常类似于 iOS 上面的 view controller。因此, AppKit 有 <code>NSWindowController</code>，它接管很多在 iOS 上你会在 view controller 里面处理的任务。view controller 被添加到 AppKit 的时间并不长，而且直到现在，它们默认不接受 action，并且缺失很多生命周期的方法、view controller 容器，以及很多你在 UIKit 中熟悉的特性。</p>
+<p>
+控制台输出Log：
+```
+2013-07-18 16:26:12.585 Hook[1740:c07] **********  myLastObject ***********   
+2013-07-18 16:26:12.589 Hook[1740:c07] TEST RESULT : 3  
+```
+</p>
+<p>
+结果很让人欣喜，是不是忍不住想给UIWebView的loadRequest: 加 TODO 了呢？
+</p>
+<h2>Method Swizzling 的封装</h2>
+<p>之前在github上找到的RNSwizzle，推荐给大家，可以搜一下。
+```objc
+//  
+//  RNSwizzle.m  
+//  MethodSwizzle  
 
-<p>但 AppKit 框架已经改变，因为 Mac 应用越来越依赖于一个单一的 window。就 OS X 10.10 Yosemite 而言，<code>NSViewController</code> 在许多方面与 <code>UIViewController</code> 类似。它也默认是响应者链中的一环。但要记住，如果你的 Mac 应用需要兼容 OS X 10.9 或更早版本的系统，Mac 上的 window controller 更类似于 iOS 上你熟悉的 view controller。正如 <a href="https://www.mikeash.com/pyblog/friday-qa-2013-04-05-windows-and-window-controllers.html">Mike Ash 所言</a>，在 Mac 上实例化窗口的一个好的模式是：每个窗口类型对应一个 nib 文件和一个 window controller。</p>
 
-<p>此外，<code>NSWindow</code> 并不像 <code>UIWindow</code> 一样是一个 view 的子类。相反，每个 window 用 <code>contentView</code> 属性持有一个指向其顶层 view 的引用。</p>
+#import "RNSwizzle.h"  
+#import &lt;objc/runtime.h&gt;  
+@implementation NSObject (RNSwizzle)  
 
-<h3>响应者链</h3>
 
-<p>如果你在为 OS X 10.9 或者更低版本的系统开发，请注意在默认情况下 view controller 并不是响应者链的一环。相反，事件会沿着视图树向上传递然后直接到达 window 和 window controller。在这种情况下，如果你想在 view controller 处理事件，你需要<a href="http://www.cocoawithlove.com/2008/07/better-integration-for-nsviewcontroller.html">手动</a>把它添加到响应者链中。</p>
++ (IMP)swizzleSelector:(SEL)origSelector   
+               withIMP:(IMP)newIMP {  
+  Class class = [self class];  
+  Method origMethod = class_getInstanceMethod(class,  
+                                              origSelector);  
+  IMP origIMP = method_getImplementation(origMethod);  
 
-<p>除了在响应者链方面的不同，AppKit 在 action 的命名方法上还有一个严格的惯例，一个 action 方法看起来总是类似这样子的：</p>
+  if(!class_addMethod(self, origSelector, newIMP,  
+                      method_getTypeEncoding(origMethod)))  
+  {  
+    method_setImplementation(origMethod, newIMP);  
+  }  
 
-<p><code>objc
-- (void)performAction:(id)sender;
-</code></p>
-
-<p>以上方法在 iOS 上面所允许的没有参数，或者有一个 sender 和一个 event 参数，而这些变体在 OS X 上面是无法使用的。此外，控件（译者注：指 NSControl 及其子类）在 AppKit 中通常对应一个 target 和一个 action，而不像在 iOS 上可以通过 <code>addTarget:action:forControlEvents:</code> 方法为一个控件关联多个 target-action 对。</p>
-
-<h3 id="view">View</h3>
-
-<p>因为历史遗留问题，Mac 的视图系统和 iOS 的视图系统有很大区别。iOS 上的 view 一开始就由 Core Animation layer 驱动。但是 AppKit 比 Core Animation 早出来了很久，当 Apple 设计 AppKit 时，我们现在熟知的 GPU 还没有出现。因此，那时视图系统相关的任务主要靠 CPU 处理。</p>
-
-<p>当你要开始进行 Mac 相关的开发时，我们强烈推荐你查看 Apple 的 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaViewsGuide/Introduction/Introduction.html#//apple_ref/doc/uid/TP40002978">Introduction to View Programming Guide for Cocoa</a>。此外，你还应该看一下这两个精彩的 WWDC session：<a href="https://developer.apple.com/videos/wwdc/2012/#217">Layer-Backed Views: AppKit + Core Animation</a> 和 <a href="https://developer.apple.com/videos/wwdc/2013/#215">Optimizing Drawing and Scrolling</a>。</p>
-
-<h4 id="layerbackedview">Layer-Backed View</h4>
-
-<p>默认情况下，AppKit 的 view 不是由 Core Animation layer 驱动的；AppKit 整合 layer-backing 是 iOS 反哺的结果。一些在 AppKit 需要做的决定你在 UIKit 从来不需要关心。AppKit 区分 layer-backed view 和 layer-hosting view，可以在每个视图树的根节点启用或者禁用 layer backing。</p>
-
-<p>把窗口的 contentView 的 <code>wantsLayer</code> 属性设置为 <code>YES</code> 是启用 layer backing 最简单的方法。这会导致 window 的视图树中所有的 view 都启用 layer backing，这样就没必要反复设置每个 view 的 wantsLayer 属性了。这个操作可以用代码或者在 Interface Builder 的 View Effects Inspector 面板完成。</p>
-
-<p>和 iOS 相比而言，在 Mac 上你应该把 backing layer 看做是一个实现细节。这意味着你不应该和这些 layer 直接交互，因为 AppKit 才是这些 layer 的拥有者。举个例子，在 iOS 上你可以随意编写这样的代码：</p>
-
-<p><code>objc
-self.layer.backgroundColor = [UIColor redColor].CGColor;
-</code>objc</p>
-
-<p>但是在 AppKit，你不应该直接修改这些 layer。如果想用这种方式和 layer 交互，你还有一步工作要做。重写 <code>NSView</code> 的 <code>wantsUpdateLayer</code> 方法并返回 <code>YES</code>，这能让你可以改变 layer 的属性。如果你这样做，AppKit 将不会再调用 view 的 <code>drawRect:</code> 方法。取而代之，你应该在 <code>updateLayer</code> 里修改 Layer，这个方法会在 view 的更新周期中被调用。</p>
-
-<p>举个例子，你可以用这方法去实现一个非常简单的有纯色背景的 view（没错，<code>NSView</code> 没有 <code>backgroundColor</code> 属性）：</p>
-
-<p>```objc
-@interface ColoredView: NSView</p>
-
-<p>@property (nonatomic) NSColor *backgroundColor;</p>
-
-<p>@end</p>
-
-<p>@implementation ColoredView</p>
-
-<ul>
-  <li>
-    <p>(BOOL)wantsUpdateLayer
-{
-  return YES;
-}</p>
-  </li>
-  <li>
-    <p>(void)updateLayer
-{
-  self.layer.backgroundColor = self.backgroundColor.CGColor;
-}</p>
-  </li>
-  <li>
-    <p>(void)setBackgroundColor:(NSColor *)backgroundColor
-{
-  _backgroundColor = backgroundColor;
-  [self setNeedsDisplay:YES];
-}</p>
-  </li>
-</ul>
-
-<p>@end
+  return origIMP;  
+}  
+@end  
 ```</p>
-
-<p>这个例子的前提是这个 view 的父 view 已经为其视图树启用了 layer backing。另一种可行的实现则只需要重写 <code>drawRect:</code> 方法并在其中绘制背景颜色。</p>
-
-<h5 id="layer">合并 Layer</h5>
-
-<p>选择使用众多 layer-backed view 会带来巨大的内存消耗（每一个 layer 有其自己的 backing store，还有可能和其他 view 的 backing store 重叠）而且会带来潜在的合成这些 layer 的消耗。从 OS X 10.9 开始，你可以通过设置 <code>canDrawSubviewsIntoLayer</code> 属性来让 AppKit 合并一个视图树中所有 layer 的内容到一个共有的 layer。如果你不需要单独对一个 view 中的子 view 做动画，这将是一个很好的选择。</p>
-
-<p>所有隐式 layer-backed 的子 view（比如，你没有显式地对这些子 view 设置 <code>wantsLayer = YES</code>）现在将会被绘制到同一个 layer 中。不过，<code>wantsLayer</code> 设置为 <code>YES</code> 的子 view 仍然持有它们自己的 backing layer， 而且不管 <code>wantsUpdateLayer</code> 返回什么，它们的 <code>drawRect:</code> 方法仍然会被调用。</p>
-
-<h5 id="layer">Layer 重绘策略</h5>
-
-<p>另外一个需要注意的地方：layer-backed view 会默认设置重绘策略为 <code>NSViewLayerContentsRedrawDuringViewResize</code>。在行为上，这个非 layer-backed view 是类似的，不过如果动画的每一帧都引入一个绘制步骤的话可能会对动画的性能造成不利影响。</p>
-
-<p>为了避免这个问题，你可以把 <code>layerContentsRedrawPolicy</code> 属性设置为 <code>NSViewLayerContentsRedrawOnSetNeedsDisplay</code> 。这样子的话，便由你来决定 layer 的内容何时需要重绘。帧的改变将不再自动触发重绘；现在你要负责调用 <code>-setNeedsDisplay:</code> 来触发重绘操作。</p>
-
-<p>一旦你这样更改了重绘策略，你也许会想了解下 view 中和 layer 的 <code>contentGravity</code> 属性等价的 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSView_Class/Reference/NSView.html#//apple_ref/occ/instm/NSView/layerContentsPlacement"><code>layerContentsPlacement</code></a> 属性。这个属性允许你指定在调整大小的时候当前的 layer 内容该怎么映射到 layer 上。</p>
-
-<h4 id="layerhostingview">Layer-Hosting View</h4>
-
-<p><code>NSView</code> 的 layer 故事并没有完结。你可以用另一种完全不一样的方式来使用 Core Animation layer — 称为 layer-hosting view。简单来说，你可以对一个 layer-hosting view 的 layer 及其子 layer 做任何操作，代价是你再也不能给该 view 添加任何子 view。layer-hosting view 是视图树中的叶子节点。</p>
-
-<p>要创建一个 layer-hosting view，你首先要为 view 的 <code>layer</code> 属性分配一个 layer 对象，然后把 <code>wantsLayer</code> 设置为 <code>YES</code>。注意，这些步骤的顺序是非常关键的：</p>
-
-<p><code>objc
-- (instancetype)initWithFrame:(NSRect)frame
-{
-    self = [super initWithFrame:frame];
-    if (self) {
-        self.layer = [[CALayer alloc] init];
-        self.wantsLayer = YES;
-    }
-}
-</code></p>
-
-<p>在你设置了你自定义的 layer <em>之后</em>才设置 <code>wantsLayer</code> 是非常重要的。</p>
-
-<h4 id="view">其他与 View 相关的陷阱</h4>
-
-<p>默认情况下，Mac 上视图的坐标系统原点位于左下角，而不是像 iOS 的左上角。刚开始这可能会让人混乱，不过你可以通过重写 <code>isFlipped</code> 并返回 <code>YES</code> 来恢复到你熟悉的左上角。</p>
-
-<p>由于 AppKit 中的 view 没有背景颜色属性可以让你直接设置为 <code>[NSColor clearColor]</code> 来让其变得透明，许多 <code>NSView</code> 的子类比如 <code>NSTextView</code> 和 <code>NSScrollView</code> 开放了一个 <code>drawsBackground</code> 属性，如果你想让这一类 view 透明，你必须设置该属性为 <code>NO</code>。</p>
-
-<p>为了能接收光标进出一个 view 或者在 view 里面移动的事件，你需要创建一个追踪区域。你可以在 <code>NSView</code> 中指定的 <code>updateTrackingAreas</code> 方法中来做这件事情。一个通用的写法看起来是这样子的：</p>
-
-<p><code>objc
-- (void)updateTrackingAreas
-{
-    [self removeTrackingArea:self.trackingArea];
-    self.trackingArea = [[NSTrackingArea alloc] initWithRect:CGRectZero 
-                                                     options:NSTrackingMouseEnteredAndExited|NSTrackingInVisibleRect|NSTrackingActiveInActiveApp
-                                                       owner:self 
-                                                    userInfo:nil];
-    [self addTrackingArea:self.trackingArea];
-}
-</code></p>
-
-<p>AppKit 的控件之前是由 <code>NSCell</code> 的子类驱动的。不要混淆这些 cell 和 UIKit 里 table view 的 cell 及 collection view 的 cell。AppKit 最初区分 view 和 cell 是为了节省资源 - view 可以把所有的绘制工作代理给更轻量级的可以被所有同类型的 view 重用的 cell 对象。</p>
-
-<p>Apple 正在一步步地抛弃这样的实现方法了，但是你还是会时不时碰到这样的问题。举个例子，如果你想创建一个自定义的按钮，你首先要继承 <code>NSButton</code> <em>和</em> <code>NSButtonCell</code>，然后在这个 cell 子类里面进行你自定义的绘制，然后通过重写 <code>+[NSControl cellClass]</code> 方法告诉自定义按钮使用你的 cell 子类。</p>
-
-<p>最后，如果你想知道在你自己的 <code>drawRect:</code> 方法里怎么获取当前的 Core Graphics 上下文，答案是 <code>NSGraphicsContext</code> 的 <code>graphicsPort</code> 属性。详细内容请查看 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaDrawingGuide/">Cocoa Drawing Guide</a>。</p>
-
-<h3>动画</h3>
-
-<p>归结于上面提到的视图系统的差异，动画在 Mac 上的运作方式也十分不同。想要一个好的概述，请观看 WWDC session：<a href="https://developer.apple.com/videos/wwdc/2013/#213">Best Practices for Cocoa Animation</a></p>
-
-<p>如果你的 view 不是由 layer 驱动的，那你的动画自然是完全由 CPU 处理，这意味着动画的每一步都必须相应地绘制到 window-backing store 上。因为现今我们主要是对 layer-backed view 做动画以获得流畅的动画效果，所以我们在这儿就专注于这种情况。</p>
-
-<p>正如上面说的，在 AppKit 中你不应该修改 layer-backed view 中的 layer (看 <a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreAnimation_guide/CreatingBasicAnimations/CreatingBasicAnimations.html#//apple_ref/doc/uid/TP40004514-CH3-SW18">Core Animation Programming Guide</a> 这篇文档底部 “Rules for Modifying Layers in OS X” 那一节）。这些 layer 由 AppKit 管理，而且和 iOS 相反，view 的几何属性并不仅仅是对应的 layer 的几何属性的映射，但 AppKit 却会把 view 内部的几何属性同步到 layer。</p>
-
-<p>你可以用几种不同的方法对一个 view 进行动画。第一种，你可以使用 <a href="file:///Users/florian/Library/Developer/Shared/Documentation/DocSets/com.apple.adc.documentation.AppleOSX10.9.CoreReference.docset/Contents/Resources/Documents/documentation/Cocoa/Reference/NSAnimatablePropertyContainer_protocol/Introduction/Introduction.html#//apple_ref/occ/intfm/NSAnimatablePropertyContainer/animator">animator proxy</a>：</p>
-
-<p><code>objc
-view.animator.alphaValue = .5;
-</code></p>
-
-<p>在幕后，这句代码会启用 layer 的隐式动画，设置其透明度，然后再次禁用 layer 的隐式动画。</p>
-
-<p>你还可以把这句代码封装到一个 <a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/NSAnimationContext_class/Introduction/Introduction.html">animation context</a> 中，这样你就能得到它的结束回调：</p>
-
-<p><code>objc
-[NSAnimationContext runAnimationGroup:^(NSAnimationContext *context){
-    view.animator.alphaValue = .5;
-} completionHandler:^{
-    // ...
-}]; 
-</code></p>
-
-<p>如果想改变持续时间和缓动类型，我们必须对其动画上下文进行设置：</p>
-
-<p><code>objc
-[NSAnimationContext runAnimationGroup:^(NSAnimationContext *context){
-    context.duration = 1;
-    context.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn];
-    view.animator.alphaValue = .5;
-} completionHandler:^{
-    // ...
-}]; 
-</code></p>
-
-<p>如果你不需要结束回调，你可以用这种简化形式：</p>
-
-<p><code>objc
-[NSAnimationContext currentContext].duration = 1;
-view.animator.alphaValue = .5;    
-</code></p>
-
-<p>最后，你可以启用隐式动画，这样你就不必每次都明确地使用 animator proxy 了：</p>
-
-<p><code>objc
-[NSAnimationContext currentContext].allowsImplicitAnimations = YES;
-view.alphaValue = .5;
-</code></p>
-
-<p>要更全面地控制动画，你可以使用 <code>CAAnimation</code> 实例。和 iOS 相反，你不能直接把它们加到 layer 上（因为 layer 不应该由你来修改），不过你可以使用 <a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/NSAnimatablePropertyContainer_protocol/Introduction/Introduction.html"><code>NSAnimatablePropertyContainer</code></a> 协议中定义的 API，<code>NSView</code> 和 <code>NSWindow</code> 已经实现了该协议。举个例子：</p>
-
-<p><code>objc
-CAKeyframeAnimation *animation = [CAKeyframeAnimation animation];
-animation.values = @[@1, @.9, @.8, @.7, @.6];
-view.animations = @{@"alphaValue": animation};
-view.animator.alphaValue = .5;
-</code></p>
-
-<p>对于<code>帧</code>动画来说，把 view 的 <code>layerContentsRedrawPolicy</code> 设置为 <code>NSViewLayerContentsRedrawOnSetNeedsDisplay</code> 是非常重要的，不然的话 view 的内容在每一帧都会被重绘。</p>
-
-<p>很遗憾，<code>NSView</code> 没有开放 Core Animation layer 所有可以进行动画的属性，<code>transform</code> 是其中最重要的例子。看看 <a href="https://twitter.com/willing">Jonathan Willings</a> 的<a href="http://jwilling.com/osx-animations">这篇文章</a>，它描述了你可以如何解决这些限制。不过注意，文章中的解决方案是不受官方支持的。</p>
-
-<p>上面提到的所有东西都适用于 <em>layer-backed</em> view。对于 <em>layer-hosting</em> view 来说，你可以直接对 view 的 layer 或者子 layer 使用 <code>CAAnimations</code>，因为你拥有它们的控制权。</p>
-
-<h3 id="collectionview">Collection View</h3>
-
-<p>尽管 AppKit 有 <code>NSCollectionView</code> 类，它的功能却比 UIKit 里对应的类滞后很多。鉴于 <code>UICollectionView</code> 是 iOS 上一个如此多功能的控件（当然，这取决于你的 UI 观念），AppKit 里对应的控件一点都不像它这件事相当难以忍受。所以当你要规划你的用户界面的时候，要考虑构建一个网格布局有可能会非常麻烦，相反，在 iOS 上这很容易实现。</p>
-
-<h3>图像</h3>
-
-<p>来自 iOS 的你对 <code>UIImage</code> 肯定非常熟悉，正巧，AppKit 也有一个对应的 <code>NSImage</code> 类。不过很快你就会意识到这两个类简直是天差地别。从很多方面来说，<code>NSImage</code> 都比 <code>UIImage</code> 强大很多，但这是建立在复杂性增加的代价上的。Apple 的 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaDrawingGuide/Images/Images.html#//apple_ref/doc/uid/TP40003290-CH208-BCIBBFGJ">Cocoa Drawing Guide</a> 很好地介绍了如何使用 AppKit 中的图像。</p>
-
-<p>概念上最重要的不同是 <code>NSImage</code> 由一个或者多个图像表示（image representation，译者注：这里的图像表示为名词，可以参考<a href="http://baike.baidu.com/view/4301255.htm">百度百科</a>，本节下同）驱动，这些图像表示在 AppKit 表现为一些 <code>NSImageRep</code> 的子类，像 <code>NSBitmapImageRep</code>，<code>NSPDFImageRep</code> 和 <code>NSEPSImageRep</code>。举个例子，一个 <code>NSImage</code> 对象为了打印同样的内容可以持有缩略图，全尺寸和 PDF 三个图像表示。当你绘制图像时，图像表示会匹配当前的图形上下文，而绘图尺寸会根据颜色空间，维度，分辨率以及绘图深度得出。</p>
-
-<p>此外，Mac 上的图像除了尺寸还有分辨率的概念。图像表示的分辨率由三个属性构成：<code>size</code>，<code>pixelsWide</code> 以及 <code>pixelsHigh</code>。size 属性决定了图像表示被渲染时的尺寸，而 pixelsWide 和 pixelsHigh 指定了源于图像数据的原始尺寸。这三个属性共同决定了图像表示的分辨率。像素尺寸可以和<strong>图像表示</strong>的尺寸不一样，正如<strong>图像表示</strong>的尺寸可以和它所属的图片的尺寸不一样。</p>
-
-<p>另外一个和 <code>UIImage</code> 不一样的地方是当它被绘制到屏幕上时 <code>NSImage</code> 会缓存绘制结果（可以通过 <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSImage_Class/Reference/Reference.html#//apple_ref/occ/instm/NSImage/cacheMode"><code>cacheMode</code></a> 属性配置）。当你改变底层的图像表示，你必须对图像调用 <code>recache</code> 才能使其生效。</p>
-
-<p>不过在 Mac 上面处理图像并不总是比 iOS 复杂。<code>NSImage</code> 提供了一个很简单的方法去绘制一个新图像，而在 iOS 上，你需要创建一个位图上下文，然后用位图上下文创建 <code>CGImage</code>，最终用该 CGImage 初始化一个 <code>UIImage</code> 实例。用 <code>NSImage</code> 你仅需：</p>
-
-<p><code>objc
-[NSImage imageWithSize:(NSSize)size 
-            flipped:(BOOL)drawingHandlerShouldBeCalledWithFlippedContext 
-     drawingHandler:^BOOL (NSRect dstRect) 
-{
-    // your drawing commands here...
-}];
-</code></p>
-
-<h3>颜色</h3>
-
-<p>Mac 支持完全的 color-calibrated 工作流，所有跟颜色相关的任何东西都有可能变得更复杂。颜色管理是一个复杂的主题，我们也不精通这方面的东西。所以，我们希望你看看 Apple 关于这方面的指南： <a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/DrawColor/DrawColor.html#//apple_ref/doc/uid/10000082-SW1">Introduction to Color Programming Topics for Cocoa</a> 和 <a href="https://developer.apple.com/library/mac/documentation/GraphicsImaging/Conceptual/csintro/csintro_intro/csintro_intro.html#//apple_ref/doc/uid/TP30001148">Introduction to Color Management</a>。</p>
-
-<p>你经常需要在你的应用里使用一个你的设计师给你指定的颜色。要取得正确的颜色，设计模板使用的颜色空间和你以编程方式指定的颜色空间保持一致是非常重要的。系统标准的颜色选择器有一个下拉菜单，你可以在这里选择你想要的颜色空间。我们建议使用 device-independent sRGB 颜色空间，然后在代码里面用 <code>+[NSColor colorWithSRGBRed:green:blue:alpha:]</code> 类方法来创建颜色。</p>
-
-<p><img src="http://img.objccn.io/issue-14/color-picker.png" alt="" /></p>
-
-<h3>文字系统</h3>
-
-<p>有了 <a href="http://objccn.io/issue-5-1/">TextKit</a>，iOS 7 终于有了和 Mac 上早就有了的 <a href="https://developer.apple.com/library/mac/documentation/TextFonts/Conceptual/CocoaTextArchitecture/TextSystemArchitecture/ArchitectureOverview.html">Cocoa Text System</a> 等效的东西。但 Apple 并不仅仅是把文字系统从 Mac 上转移到 iOS；相反，Apple 对其做了些显著的改变。</p>
-
-<p>举个例子，AppKit 开放 <code>NSTypesetter</code> 和 <code>NSGlyphGenerator</code>，你可以通过继承这两者来自定义它们的一些特性。iOS 并不开放这些类，但是你可以通过 <code>NSLayoutManagerDelegate</code> 协议达到定制的目的。</p>
-
-<p>总体来说，两个平台的文字系统还是非常相似的，所有你在 iOS 上能做的在 Mac 上都可以做（甚至更多），但对于一些东西，你必须从不同的地方寻找合适的方法实现。</p>
-
-<h3>沙盒</h3>
-
-<p>符合沙盒机制的 Mac 应用才能通过 Mac App Store 销售。鉴于沙盒从一开始就是 iOS 的基本规范（所以你会对它非常熟悉），你可能会好奇我们为什么要在这里提起它。然而，我们已经习惯了沙盒机制还没出现之前的 Mac 开发环境，所以有时候会忽视一些你想要实现的功能会和沙盒的限制出现冲突。</p>
-
-<p>Mac 的文件系统是一直对用户开放的，所以如果用户明确表示，沙盒应用可以访问自身应用外的文件。同样的机制同时引进了 iOS 8。不过，和通过这种方式放宽对 iOS 的限制相反，它却加强了对 Mac 的限制。这让它容易被忽视和遗忘。</p>
-
-<p>对此我们也十分惭愧，所以希望能阻止你犯同样的错误。当我们开始开发 <a href="http://decksetapp.com">Deckset</a> — 一款把简单 Markdown 文件转换为演示幻灯片的应用 — 时，我们从来没想过我们会碰到什么关于沙盒的问题。毕竟，我们只需要读 Markdown 文件的权限。</p>
-
-<p>我们忘记了我们还要显示 Markdown 文件中引用的图片。尽管你在 Markdown 文件中输入了图片文件的路径，但沙盒系统并不认为这是用户的意图。最后，我们通过一个像通知中心一样的 UI 来提示用户授权我们访问 Markdown 文件中的所有图片‘解决’了该问题。</p>
-
-<p>及早看一下 Apple 的 <a href="https://developer.apple.com/app-sandboxing/">sandboxing guides</a> 以防以后在相关的问题上犯错误。</p>
-
-<h2>独有特性</h2>
-
-<p>有很多事情你只能在 Mac 上做，这主要是因为它不同的交互模型和它更为宽松的安全策略。在本期话题中，我们有一些文章深入探讨了其中的一些内容：<a href="http://objccn.io/issue-14-4/">进程间通讯</a>，<a href="http://objccn.io/issue-14-1/">使 Mac 应用脚本化</a>, <a href="http://objccn.io/issue-14-2/">在沙盒中脚本化其他应用</a>, <a href="http://objccn.io/issue-14-3/">为你的应用构建插件</a>。</p>
-
-<p>当然，这只是 Mac 独有特性中很小的一部分，但这给了你一个很好的视角看待 iOS 8 从头开始打造其可扩展性和 app 间通讯。最后，还有很多东西等待你去探索：Drag and Drop，Printing，Bindings，OpenCL 等等，这里仅仅是举几个例子。</p>
+<h2>Method Swizzling 危险不危险</h2>
+<p>
+针对这个问题，我在<a href="http://stackoverflow.com/questions/5339276/what-are-the-dangers-of-method-swizzling-in-objective-c">stackoverflow</a>上看到了满意的答案，这里翻译一下，总结记录在本文中，以示分享：
+
+
+使用 Method Swizzling 编程就好比切菜时使用锋利的刀，一些人因为担心切到自己所以害怕锋利的刀具，可是事实上，使用钝刀往往更容易出事，而利刀更为安全。
+Method swizzling 可以帮助我们写出更好的，更高效的，易维护的代码。但是如果滥用它，也将会导致难以排查的bug。
+</p>
+<h3>背景</h3>
+<p>
+好比设计模式，如果我们摸清了一个模式的门道，使用该模式与否我们自己心里有数。单例模式就是一个很好的例子，它饱受争议但是许多人依旧使用它。Method Swizzling也是一样，一旦你真正理解它的优势和弊端，使用它与否你应该就有你自己的观点。
+</p>
+<h3>讨论</h3>
+<p>
+这里是一些 Method Swizzling的陷阱：
+Method swizzling is not atomic
+Changes behavior of un-owned code
+Possible naming conflicts
+Swizzling changes the method arguments
+The order of swizzles matters
+Difficult to understand (looks recursive)
+Difficult to debug
+</p>
+<p>我将逐一分析这些点，增进对Method Swizzling的理解的同时，并搞懂如何应对。</p>
+<h4>Method swizzling is not atomic</h4>
+<p>
+我所见过的使用method swizzling实现的方法在并发使用时基本都是安全的。95%的情况里这都不会是个问题。通常你替换一个方法的实现，是希望它在整个程序的生命周期里有效的。也就是说，你会把 method swizzling 修改方法实现的操作放在一个加号方法 +(void)load里，并在应用程序的一开始就调用执行。你将不会碰到并发问题。假如你在 +(void)initialize初始化方法中进行swizzle，那么……rumtime可能死于一个诡异的状态。
+</p>
+<h4>Changes behavior of un-owned code</h4>
+<p>
+这是swizzling的一个问题。我们的目标是改变某些代码。swizzling方法是一件灰常灰常重要的事，当你不只是对一个NSButton类的实例进行了修改，而是程序中所有的NSButton实例。因此在swizzling时应该多加小心，但也不用总是去刻意避免。
+</p>
+<p>
+想象一下，如果你重写了一个类的方法，而且没有调用父类的这个方法，这可能会引起问题。大多数情况下，父类方法期望会被调用（至少文档是这样说的）。如果你在swizzling实现中也这样做了，这会避免大部分问题。还是调用原始实现吧，如若不然，你会费很大力气去考虑代码的安全问题。
+</p>
+<h4>Possible naming conflicts</h4>
+<p>
+命名冲突贯穿整个Cocoa的问题. 我们常常在类名和类别方法名前加上前缀。不幸的是，命名冲突仍是个折磨。但是swizzling其实也不必过多考虑这个问题。我们只需要在原始方法命名前做小小的改动来命名就好，比如通常我们这样命名：
+```objc
+@interface NSView : NSObject  
+- (void)setFrame:(NSRect)frame;  
+@end  
+
+
+@implementation NSView (MyViewAdditions)  
+
+
+- (void)my_setFrame:(NSRect)frame {  
+    // do custom work  
+    [self my_setFrame:frame];  
+}  
+
+
++ (void)load {  
+    [self swizzle:@selector(setFrame:) with:@selector(my_setFrame:)];  
+}  
+
+
+@end  
+```
+</p>
+<p>
+这段代码运行正确，但是如果my_setFrame: 在别处被定义了会发生什么呢？
+
+</p>
+<p>
+这个问题不仅仅存在于swizzling，这里有一个替代的变通方法：
+
+```objc
+@implementation NSView (MyViewAdditions)  
+
+
+static void MySetFrame(id self, SEL _cmd, NSRect frame);  
+static void (* SetFrameIMP)(id self, SEL _cmd, NSRect frame);  
+
+
+static void MySetFrame(id self, SEL _cmd, NSRect frame) {  
+    // do custom work  
+    SetFrameIMP(self, _cmd, frame);  
+}  
+
+
++ (void)load {  
+    [self swizzle:@selector(setFrame:) with:(IMP)MySetFrame store:(IMP* )&amp;SetFrameIMP];  
+}  
+
+
+@end
+```
+看起来不那么Objectice-C了（用了函数指针），这样避免了selector的命名冲突。
+
+最后给出一个较完美的swizzle方法的定义：
+```objc
+typedef IMP *IMPPointer;  
+
+
+BOOL class_swizzleMethodAndStore(Class class, SEL original, IMP replacement, IMPPointer store) {  
+    IMP imp = NULL;  
+    Method method = class_getInstanceMethod(class, original);  
+    if (method) {  
+        const char* type = method_getTypeEncoding(method);  
+        imp = class_replaceMethod(class, original, replacement, type);  
+        if (!imp) {  
+            imp = method_getImplementation(method);  
+        }  
+    }  
+    if (imp &amp;&amp; store) { * store = imp; }  
+    return (imp != NULL);  
+}  
+
+
+@implementation NSObject (FRRuntimeAdditions)  
++ (BOOL)swizzle:(SEL)original with:(IMP)replacement store:(IMPPointer)store {  
+    return class_swizzleMethodAndStore(self, original, replacement, store);  
+}  
+@end  
+```
+</p>
+<h4>Swizzling changes the method's arguments</h4>
+<p>
+我认为这是最大的问题。想正常调用method swizzling 将会是个问题。
+```objc
+[self my_setFrame:frame];  
+```
+直接调用my_setFrame: ， runtime做的是
+```objc
+objc_msgSend(self, @selector(my_setFrame:), frame);  
+```
+runtime去寻找my_setFrame:的方法实现, _ cmd参数为 my_setFrame: ，但是事实上runtime找到的方法实现是原始的 setFrame: 的。
+一个简单的解决办法：使用上面介绍的swizzling定义。
+</p>
+<h4>The order of swizzles matters</h4>
+<p>
+多个swizzle方法的执行顺序也需要注意。假设 setFrame: 只定义在NSView中，想像一下按照下面的顺序执行：
+```objc
+[NSButton swizzle:@selector(setFrame:) with:@selector(my_buttonSetFrame:)];  
+[NSControl swizzle:@selector(setFrame:) with:@selector(my_controlSetFrame:)];  
+[NSView swizzle:@selector(setFrame:) with:@selector(my_viewSetFrame:)];  
+```
+What happens when the method on NSButton is swizzled? Well most swizzling will ensure that it's not replacing the implementation of setFrame: for all views, so it will pull up the instance method. This will use the existing implementation to re-define setFrame: in the NSButton class so that exchanging implementations doesn't affect all views. The existing implementation is the one defined on NSView. The same thing will happen when swizzling on NSControl (again using the NSView implementation).
+
+When you call setFrame: on a button, it will therefore call your swizzled method, and then jump straight to the setFrame: method originally defined on NSView. The NSControl and NSView swizzled implementations will not be called.
+
+But what if the order were:
+```objc
+[NSView swizzle:@selector(setFrame:) with:@selector(my_viewSetFrame:)];  
+[NSControl swizzle:@selector(setFrame:) with:@selector(my_controlSetFrame:)];  
+[NSButton swizzle:@selector(setFrame:) with:@selector(my_buttonSetFrame:)];  
+```
+Since the view swizzling takes place first, the control swizzling will be able to pull up the right method. Likewise, since the control swizzling was before the button swizzling, the button will pull up the control's swizzled implementation of setFrame:. This is a bit confusing, but this is the correct order. How can we ensure this order of things?
+
+Again, just use load to swizzle things. If you swizzle in load and you only make changes to the class being loaded, you'll be safe. The load method guarantees that the super class load method will be called before any subclasses. We'll get the exact right order!
+这段贴了原文，硬翻译太拗口……总结一下就是：多个有继承关系的类的对象swizzle时，先从父对象开始。 这样才能保证子类方法拿到父类中的被swizzle的实现。在+(void)load中swizzle不会出错，就是因为load类方法会默认从父类开始调用。
+</p>
+<h4>Difficult to understand (looks recursive)</h4>
+<p>
+（新方法的实现）看起来像递归，但是看看上面已经给出的 swizzling 封装方法, 使用起来就很易读懂.
+这个问题是已完全解决的了！
+</p>
+<h4>Difficult to debug</h4>
+<p>
+debug时打出的backtrace，其中掺杂着被swizzle的方法名，一团糟啊！上面介绍的swizzle方案，使backtrace中打印出的方法名还是很清晰的。但仍然很难去debug，因为很难记住swizzling影响过什么。给你的代码写好文档（即使只有你一个人会看到）。养成一个好习惯，不会比调试多线程问题还难的。
+</p>
+<h2>结论</h2>
+<p>
+如果使用恰当，Method swizzling 还是很安全的.一个简单安全的方法是，仅在load中swizzle。 和许多其他东西一样，它也是有危险性的，但理解它了也就可以正确恰当的使用它了。
+</p>
 
 <hr />
 
@@ -1014,315 +298,468 @@ view.animator.alphaValue = .5;
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[闭包，你了解多少？]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/"/>
-    <updated>2014-07-04T14:48:57+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/07/04/bi-bao-,ni-liao-jie-duo-shao-?</id>
-    <content type="html"><![CDATA[<p>在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例，不同的引用环境和相同的函数组合可以产生不同的实例。
-闭包的概念出现于60年代，最早实现闭包的程序语言是Scheme。之后，闭包被广泛使用于函数式编程语言如ML语言和LISP。很多命令式程序语言也开始支持闭包。
-在一些语言中，在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可能产生闭包。运行时，一旦外部的 函数被执行，一个闭包就形成了，闭包中包含了内部函数的代码，以及所需外部函数中的变量的引用。其中所引用的变量称作上值(upvalue)。
-闭包一词经常和匿名函数混淆。这可能是因为两者经常同时使用，但是它们是不同的概念。</p>
+    <title type="html"><![CDATA[敏感逻辑的保护方案]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an/"/>
+    <updated>2016-08-25T15:13:53+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an</id>
+    <content type="html"><![CDATA[<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">24</span> <span class="title">敏感逻辑的保护方案</span></h1>
+    <p>Objective-C 代码容易被 hook，暴露信息太赤裸裸，为了安全，改用 C 来写吧！</p>
 
-<p>闭包和状态表达闭包可以用来在一个函数与一组“私有”变量之间创建关联关系。在给定函数被多次调用的过程中，这些私有变量能够保持其持久性。变量的作用域仅限于包含它们的函数，因此无法从其它程序代码部分进行访问。不过，变量的生存期是可以很长，在一次函数调用期间所创建所生成的值在下次函数调用时仍然存在。正因为这一特点，闭包可以用来完成信息隐藏，并进而应用于需要状态表达的某些编程范型中。
-不过，用这种方式来使用闭包时，闭包不再具有引用透明性，因此也不再是纯函数。即便如此，在某些“近似于函数式编程语言”的语言，例如Scheme中，闭包还是得到了广泛的使用。</p>
+<div class="figure" id="figure-24-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760k4kot8j205p04gdfu.jpg" />
 
-<p>闭包和第一类函数</p>
+    <p class="caption"><strong>图片 24.1</strong> sensitive1</p>
+</div>
 
-<p>典型的支持闭包的语言中，通常将函数当作第一类对象——在这些语言中，函数可以被当作参数传递、也可以作为函数返回值、绑定到变量名、就像字符串、整数等简单类型。例如以下Scheme代码：</p>
-<p><code>scheme
-; Return a list  of all books with at least THRESHOLD copies sold.
-(define  (best-selling-books  threshold)
-   (filter
-    (lambda (book) (&gt;= (book-sales book)  threshold))
-    book-list))
-</code>
-在这个例子中，lambda表达式(lambda (book) (&gt;= (book-sales book) threshold))出现在函数best-selling-books中。当这个lambda表达式被执行时，Scheme创造了一个包含此表达式以及对threshold变量的引用的闭包，其中threshold变量在lambda表达式中是自由变量。
-这个闭包接着被传递到filter函数。这个函数的功能是重复调用这个闭包以判断哪些书需要增加到列表那些需要丢弃。因为闭包中引用了变量threshold，所以它在每次被filter调用时都可以使用这个变量，虽然filter可能定义在另一个文件中。
-<!-- more --></p>
-<p>下面是用ECMAScript (JavaScript)写的同一个例子：</p>
 
-<p><code>javascript
-// Return a  list of all books with at least 'threshold' copies sold.
-function  bestSellingBooks(threshold) {
-  return bookList.filter(
-      function  (book) { return book.sales &gt;= threshold; }
-    );
-}
-</code>
-这里，关键字function取代了lambda，Array.filter方法[5]取代了filter函数，但两段代码的功能是一样的。</p>
+<p>当然不是全部代码都要 C 来写，我指的是敏感业务逻辑代码。</p>
 
-<p>一个函数可以创建一个闭包并返回它，如下述javascript例子：</p>
-<p><code>javascript
-// Return a  function that approximates the derivative of f
-// using an interval  of dx, which should be appropriately small.
-function derivative(f,  dx) {
-  return  function (x) {
-    return (f(x + dx) - f(x)) / dx;
-  };
-}
-</code>
-因为在这个例子中闭包已经超出了创建它的函数的范围，所以变量f和dx将在函数derivative返回后继续存在。在没有闭包的语言中，变量的生命周期只限于创建它的环境。但在有闭包的语言中，只要有一个闭包引用了这个变量，它就会一直存在。清理不被任何函数引用的变量的工作通常由垃圾回收完成。</p>
+<p>本文就介绍一种低学习成本的，简易的，Objective-C 逻辑代码重写为 C 代码的办法。</p>
 
-<p>闭包的用途</p>
+<p>也许，程序中存在一个类似这样的类：</p>
 
-<ul>
-  <li>因为闭包只有在被调用时才执行操作，即“惰性求值”，所以它可以被用来定义控制结构。例如：在Smalltalk语言中，所有的控制结构，包括分歧条件(if/then/else)和循环(while和for)，都是通过闭包实现的。用户也可以使用闭包定义自己的控制结构。</li>
-  <li>多个函数可以使用一个相同的环境，这使得它们可以通过改变那个环境相互交流。比如在Scheme中：</li>
-</ul>
+```objc
+@interface XXUtil : NSObject  
 
-<p />
-<p>```scheme
-(define foo #f)
-(define  bar #f)</p>
++ (BOOL)isVerified;  
++ (BOOL)isNeedSomething;  
++ (void)resetPassword:(NSString*)password;  
 
-<p>(let ((secret-message “none”))
-  (set! foo  (lambda (msg) (set! secret-message msg)))
-  (set! bar (lambda () secret-message)))</p>
-
-<p>(display  (bar)) ; prints “none”
-(newline)
-(foo “meet me by the docks at midnight”)
-(display (bar)) ; prints “meet me by the docks at midnight”
+@end
 ```
-   * 闭包可以用来实现对象系统。</p>
 
-<p>闭包的实现
-典型实现方式是定义一个特殊的数据结构，保存了函数地址指针与闭包创建时的函数的词法环境表示（那些nonlocal变量的绑定）。使用函数调用栈的语言实现闭包比较困难，因而这也说明了为什么大多数实现闭包的语言是基于垃圾收集机制。
-闭包的实现与函数对象很相似。这种技术也叫做lambda lifting。</p>
+<p>被 class-dump 出来后，利用 Cycript 很容易实现攻击，容易被 hook ，存在很大的安全隐患。</p>
 
-<p>各种语言中（类似）闭包的结构C语言的回调函数在C语言中，支持回调函数的库有时在注册时需要两个参数：一个函数指针，一个独立的void*指针用以保存用户数据。这样的做法允许回调函数恢复其调用时的状态。这样的惯用法在功能上类似于闭包，但语法上有所不同。gcc对C语言的扩展gcc编译器对C语言实现了一种闭包的程序特性。</p>
-<p>C语言扩展：BlocksC语言 (使用LLVM编译器或苹果修改版的GCC)支持块。闭包变量用__block标记。同时，这个扩展也可以应用到Objective-C与C++中。</p>
-<p>```objc
-typedef int (^IntBlock)();</p>
+<div class="figure" id="figure-24-2">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760knfbzhj20350360sm.jpg" />
 
-<p>IntBlock downCounter(int start) {
-	 __block int i = start;
-	 return Block_copy( ^int() {
-		 return i–;
-	 });
- }</p>
+    <p class="caption"><strong>图片 24.2</strong> sensitive2</p>
+</div>
 
-<p>IntBlock f = downCounter(5);
-printf(“%d”, f());
-printf(“%d”, f());
-printf(“%d”, f());
-Block_release(f);</p>
 
-<p>```
-C++函数对象C++早期标准允许通过重载operator()来定义函数对象。这种对象的行为在某种程度上与函数式编程语言中的函数类似。它们可以在运行时动态创建，保存状态，但是不能如闭包一般隐式获取局部变量。
-C++11标准已经支持了闭包，这是一种特殊的函数对象，由特殊的语言结构——lambda表达式自动构建。C++闭包中保存了全部nonlocal变量的拷贝或引用。如果是对外界环境中的对象的引用，且闭包执行时该外界环境的变量已经不存在（如在调用栈上已经unwinding），那么可导致undefined behavior，因为C++并不扩展这些被引用的外界环境的变量的生命期。</p>
-<p>示例代码如下</p>
-<p><code>c++
-void foo(string myname) {
-	typedef vector&lt;string&gt; names;
-	int y;
-	names n;
-	// ...
-	names::iterator i =
-	 find_if(n.begin(), n.end(), [&amp;](const string&amp; s){return s != myname &amp;&amp; s.size() &gt; y;});
-	// 'i' is now either 'n.end()' or points to the first string in 'n'
-	// 'i' 现在是'n.end()'或指向'n'中第一个
-	// 不等于'myname'且长度大于'y'的字符串
-}
-</code></p>
+<p>想改，但是不想大改程序结构，肿么办呢？</p>
+
+<p>把函数名隐藏在结构体里，以函数指针成员的形式存储。
+这样做的好处是，编译后，只留了下地址，去掉了名字和参数表，提高了逆向成本和攻击门槛。</p>
+
+<p>改写的程序如下：</p>
+```objc
+//XXUtil.h  
+ #import &lt;Foundation/Foundation.h&gt;  
+
+typedef struct _util {  
+    BOOL (*isVerified)(void);  
+    BOOL (*isNeedSomething)(void);  
+    void (*resetPassword)(NSString *password);  
+}XXUtil_t ;  
+
+ #define XXUtil ([_XXUtil sharedUtil])  
+
+@interface _XXUtil : NSObject  
+
++ (XXUtil_t *)sharedUtil;  
+@end  
+
+
+//XXUtil.m  
+ #import "XXUtil.h"  
+
+static BOOL _isVerified(void)  
+{  
+    //bala bala ...  
+    return YES;  
+}  
+
+static BOOL _isNeedSomething(void)  
+{  
+    //bala bala ...  
+    return YES;  
+}  
+
+static void _resetPassword(NSString *password)  
+{  
+    //bala bala ...  
+}  
+
+static XXUtil_t * util = NULL;  
+@implementation _XXUtil  
+
++(XXUtil_t *)sharedUtil  
+{  
+    static dispatch_once_t onceToken;  
+    dispatch_once(&amp;onceToken, ^{  
+        util = malloc(sizeof(XXUtil_t));  
+        util-&gt;isVerified = _isVerified;  
+        util-&gt;isNeedSomething = _isNeedSomething;  
+        util-&gt;resetPassword = _resetPassword;  
+    });  
+    return util;  
+}  
+
++ (void)destroy  
+{  
+    util ? free(util): 0;  
+    util = NULL;  
+}  
+@end
+```
+
+<p>最后，根据 Xcode 的报错指引，把以前这样的调用
+<code>[XXUtil isVerified];</code></p>
+
+<p>对应改成：
+<code>XXUtil-&gt;isVerified();</code></p>
+
+<p>就可以了。</p>
+
+<p>是的，绝不费一点脑子。</p>
+
+</div>
+</div>
 ]]></content>
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[iOS 8 体验推送]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/"/>
-    <updated>2014-07-02T11:55:11+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song</id>
-    <content type="html"><![CDATA[<p> 一直更新了iOS8，但是一直没有开始研究这个iOS8，今天因为项目用到了推送，于是体验了iOS8的推送，先讲讲这个推送。目前分为四个推送：用户推送，本地推送，远程推送，地理位置推送。
-</p>
-<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1ehyeq298goj21kw0sadmt.jpg" alt="推送界面" /></p>
+    <title type="html"><![CDATA[Objective-C 代码混淆]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/objective-c-dai-ma-hun-yao/"/>
+    <updated>2016-08-25T15:09:37+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/objective-c-dai-ma-hun-yao</id>
+    <content type="html"><![CDATA[<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">23</span> <span class="title">Objective-C 代码混淆</span></h1>
+    <p>class-dump 可以很方便的导出程序头文件，不仅让攻击者了解了程序结构方便逆向，还让着急赶进度时写出的欠完善的程序给同行留下笑柄。
+所以，我们迫切的希望混淆自己的代码。</p>
 
-<h2>用户推送</h2>
-<p>我们先开始讲这个用户推送,我们要使用之前必须先注册这个推送，用户要允许这个程序进行推送</p>
-<p>注册过程：</p>
+<h3>混淆的常规思路</h3>
 
-<p>```objc
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
-    UIUserNotificationType  types = UIUserNotificationTypeBadge | UIUserNotificationTypeSound | UIUserNotificationTypeAlert ;
-    UIUserNotificationSettings  *mySettings  = [UIUserNotificationSettings settingsForTypes:types categories:nil];
-    [[UIApplication sharedApplication] registerUserNotificationSettings:mySettings];
-    return YES;
-}</p>
+<p>混淆分许多思路，比如：</p>
 
-<ul>
-  <li>
-    <p>(void)application:(UIApplication *)application didRegisterUserNotificationSettings:(UIUserNotificationSettings *)notificationSettings
-{
-  UIUserNotificationType allowTypes = [notificationSettings types];
-}</p>
-  </li>
-  <li>
-    <p>(void)getReadyForNotification
-{
-  UIUserNotificationSettings *currentNotificationSettings = [[UIApplication sharedApplication] currentUserNotificationSettings];
-  [self checkSetting:currentNotificationSettings];</p>
-  </li>
-</ul>
+<p>1）花代码花指令，即随意往程序中加入迷惑人的代码指令</p>
 
-<p>}
-```</p>
+<p>2）易读字符替换 等等</p>
 
-<p>总结就是三个方法进行注册</p>
-<p><img src="http://ww4.sinaimg.cn/large/626e5d69gw1ehyeumz8inj21f80d40up.jpg" alt="推送注册三个方法" /></p>
+<div class="figure" id="figure-23-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760g4dzitj202o031dfp.jpg" />
 
-<p>我们现在仅仅是注册了通知的设置，还要注册推送通知的行为，在iOS8中，行为能直接在推送消息进行，如回复消息，拒绝消息等</p>
-<p><img src="http://ww1.sinaimg.cn/large/626e5d69gw1ehyeyi825mj21aa12ggoc.jpg" alt="直接在推送消息进行回复" /></p>
-<p>这个真心碉堡了</p>
-<p>我们如何能进行这些行为，首先我们需注册这些行为。</p>
-<!-- more -->
-<li>Actions</li>
-<p><code>objc
-	UIMutableUserNotificationAction *acceptAction = [[UIMutableUserNotificationAction alloc] init];
-    acceptAction.identifier = @"RickAction";
-    acceptAction.title = @"Accept";
-    acceptAction.activationMode = UIUserNotificationActivationModeBackground;
-    acceptAction.destructive = NO;
-    acceptAction.authenticationRequired = NO;
-</code></p>
-<li>Categories</li>
+    <p class="caption"><strong>图片 23.1</strong> confusion1</p>
+</div>
 
-<p><code>objc
-	UIMutableUserNotificationCategory *inviteCategory = [[UIMutableUserNotificationCategory alloc] init];
-    inviteCategory.identifier = @"INVITE_CATEGORY";
-    [inviteCategory setActions:@[acceptAction] forContext:UIUserNotificationActionContextDefault];
-</code></p>
-<p>我们需要注意这个<code>UIUserNotificationActionContextDefault</code>,如果我们使用这个，我们会得到这个推送行为，Maybe和Accept</p>
-<p><img src="http://ww1.sinaimg.cn/large/626e5d69gw1ehyf4bfhvrj20q80zytaw.jpg" alt="Maybe和Accept" /></p>
-<p>我们还可以使用<code>UIUserNotificationActionContextMinimal</code>得到的是Decline和Accept行为</p>
-<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1ehyf61ypo0j20q010476h.jpg" alt="Decline和Accept" /></p>
 
-<li>Settings</li>
-<p>在这些行为注册之后，我们加上之前提到的推送设置就完成了注册推送的这个流程了</p>
+<p>防止 class-dump 出可读信息的有效办法是易读字符替换。</p>
 
-<p><code>objc
-    NSSet *categories = [NSSet setWithObjects:inviteCategory, nil];
-    UIUserNotificationType  types = UIUserNotificationTypeBadge | UIUserNotificationTypeSound | UIUserNotificationTypeAlert ;
-    UIUserNotificationSettings  *mySettings  = [UIUserNotificationSettings settingsForTypes:types categories:categories];
-    [[UIApplication sharedApplication] registerUserNotificationSettings:mySettings];
-</code></p>
-<h2>远程推送</h2>
-<p>远程推送，所有消息大小不超过2KB,我们获取远程推送的json格式的消息，解析这个消息就是我们的远程推送了：</p>
-<p><code>json
-{
-    “aps”: {
-        "content-available": 1,
-        "alert": "This is the alert text",
-        "badge": 1,
-        "sound": "default"
-    }
-} 
-</code></p>
-<p>若要使用远程推送，满足两个条件：一、用户需要调用注册用户推送<code>registerUserNotificationSettings</code>;二、在<code>info.plist</code>文件中<code>UIBackgroundModes</code>必须包含远程通知。</p>
-<p><code>objc
-	[[UIApplication sharedApplication] registerForRemoteNotifications];
-</code></p>
-<blockquote>
-	<p>这个注册通知的方法开始更改了</p>
-</blockquote>
+<h3>Objective-C 的方法名混淆</h3>
 
-<p>```objc
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
-{
-}</p>
+<h4>混淆的时机</h4>
 
-<ul>
-  <li>(void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
-{
+<p>我们希望在开发时一直保留清晰可读的程序代码，方便自己。
+同时，希望编译出来的二进制包含乱七八糟的混淆后的程序代码，恶心他人。</p>
+
+<p>因此，我们可以在 Build Phrase 中设定在编译之前进行方法名的字符串替换。</p>
+
+<h4>混淆的方法</h4>
+
+<p>方法名混淆其实就是字符串替换，有 2 个方法可以，一个是 <code>#define</code>，一个是利用 tops。</p>
+
+<p>利用 <code>#define</code> 的方法有一个好处，就是可以把混淆结果合并在一个 .h 中，在工程 Prefix.pch 的最前面 <code>#import</code> 这个 .h 。不导入也可以编译、导入则实现混淆。</p>
+
+<p>单段的 selector ，如 <code>func:</code> ，可以通过 <code>#define func</code> 来实现字符串替换。</p>
+
+<p>多段的 selector，如 <code>a:b:c:</code> ，可以通过分别 <code>#define a 、b、c</code> 来实现字符串替换。</p>
+
+<h3>我的混淆工具</h3>
+
+<p>我写了个简易的混淆脚本，主要思路是把敏感方法名集中写在一个名叫 func.list 的文件中，逐一 <code>#define</code> 成随机字符，追加写入 .h 。</p>
+
+<p>脚本如下：</p>
+
+```
+#!/usr/bin/env bash  
+
+TABLENAME=symbols  
+SYMBOL_DB_FILE="symbols"  
+STRING_SYMBOL_FILE="func.list"  
+HEAD_FILE="$PROJECT_DIR/$PROJECT_NAME/codeObfuscation.h"  
+export LC_CTYPE=C  
+
+#维护数据库方便日后作排重  
+createTable()  
+{  
+   echo "create table $TABLENAME(src text, des text);" | sqlite3 $SYMBOL_DB_FILE  
+}  
+
+insertValue()  
+{  
+   echo "insert into $TABLENAME values('$1' ,'$2');" | sqlite3 $SYMBOL_DB_FILE  
+}  
+
+query()  
+{  
+   echo "select * from $TABLENAME where src='$1';" | sqlite3 $SYMBOL_DB_FILE  
+}  
+
+ramdomString()  
+{  
+   openssl rand -base64 64 | tr -cd 'a-zA-Z' |head -c 16  
+}  
+
+rm -f $SYMBOL_DB_FILE  
+rm -f $HEAD_FILE  
+createTable  
+
+touch $HEAD_FILE  
+echo '#ifndef Demo_codeObfuscation_h  
+#define Demo_codeObfuscation_h' &gt;&gt; $HEAD_FILE  
+echo "//confuse string at `date`" &gt;&gt; $HEAD_FILE  
+cat "$STRING_SYMBOL_FILE" | while read -ra line; do  
+   if [[ ! -z "$line" ]]; then  
+       ramdom=`ramdomString`  
+       echo $line $ramdom  
+       insertValue $line $ramdom  
+       echo "#define $line $ramdom" &gt;&gt; $HEAD_FILE  
+   fi  
+done  
+echo "#endif" &gt;&gt; $HEAD_FILE  
+
+
+sqlite3 $SYMBOL_DB_FILE .dump
+```
+
+<h4>操作步骤</h4>
+
+<p>1.将混淆脚本 confuse.sh 放到工程目录下
+<code>mv confuse.sh your_proj_path/</code></p>
+
+<p>2.修改 Prefix.pch</p>
+
+<p>打开 Xcode，修改 XXX-Prefix.ch ，添加混淆头文件:</p>
+
+```objc
+#ifdef __OBJC__  
+   #import &lt;UIKit/UIKit.h&gt;  
+   #import &lt;Foundation/Foundation.h&gt;  
+   //添加混淆作用的头文件（这个文件名是脚本confuse.sh中定义的）  
+   #import "codeObfuscation.h"  
+#endif
+```
+
+<p>3.配置 Build Phase</p>
+
+<p>在工程 Build Phase 中添加执行脚本操作，执行 confuse.sh 脚本，如图：</p>
+
+<div class="figure" id="figure-23-2">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f760gkuq1ej20z80eqjtx.jpg" />
+
+    <p class="caption"><strong>图片 23.2</strong> confusion3</p>
+</div>
+
+
+<p>4.创建函数名列表 func.list ，写入待混淆的函数名，如:</p>
+
+```objc
+-(void)sample;
+-(void)seg1:(NSString *)string seg2:(NSUInteger)num;
+```
+
+<p>就这样写：</p>
+
+<p>sample<br />
+seg1<br />
+seg2</p>
+
+<p>并将文件放置于与 confuse.sh 脚本同级<br />
+<code>mv func.list your_proj_path/</code></p>
+
+<p>5.编译查看结果</p>
+
+<p>直接 build，混淆脚本会在编译前运行，进行字符随机替换，并且每次 build 的随机字符不同，如图：</p>
+
+<div class="figure" id="figure-23-3">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f760hdde9nj20w40ecwjs.jpg" />
+
+    <p class="caption"><strong>图片 23.3</strong> confusion4</p>
+</div>
+
+
+</div>
+</div>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[static 和被裁的符号表]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao/"/>
+    <updated>2016-08-25T15:07:51+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao</id>
+    <content type="html"><![CDATA[<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">22</span> <span class="title">static 和被裁的符号表</span></h1>
+    <p>为了不让攻击者理清自己程序的敏感业务逻辑，于是我们想方设法提高逆向门槛。</p>
+
+<p>本文就介绍一个防御技巧——利用 static 关键字裁掉函数符号。</p>
+
+<h3>原理</h3>
+
+<p>如果函数属性为 static ，那么编译时该函数符号就会被解析为 local 符号。</p>
+
+<p>在发布 release 程序时（用 Xcode 打包编译二进制）默认会 strip 裁掉这些函数符号，无疑给逆向者加大了工作难度。</p>
+
+<h3>验证</h3>
+
+<p>写个 demo 验证一下上述理论，以一段创建 Button 的代码为例，对应补充一个 static 版本。</p>
+
+```objc
+id createBtn()  
+{  
+    UIButton *btn = [[UIButton alloc]initWithFrame:CGRectZero];  
+    [btn setFrame:CGRectMake(200, 100, 100, 100)];  
+    [btn setBackgroundColor:[UIColor redColor]];  
+    btn.layer.cornerRadius = 7.0f;  
+    btn.layer.masksToBounds = YES;  
+    return btn;  
+}  
+
+static id static_createBtn()  
+{  
+    UIButton *btn = [[UIButton alloc]initWithFrame:CGRectZero];  
+    [btn setFrame:CGRectMake(50, 100, 100, 100)];  
+    [btn setBackgroundColor:[UIColor blueColor]];  
+    btn.layer.cornerRadius = 7.0f;  
+    btn.layer.masksToBounds = YES;  
+    return btn;  
 }
-```</li>
-</ul>
-<p>iOS7通知代理方法</p>
-<p><img src="http://ww4.sinaimg.cn/large/626e5d69gw1ehyfq2omeij21kw0zc456.jpg" alt="iOS6的通知代理方法" /></p>
-<p>后来又增加了本地通知的代理方法</p>
-<p><img src="http://ww4.sinaimg.cn/large/626e5d69gw1ehyfvjws4ej21kw0uxn20.jpg" alt="添加本地推送的通知代理方法" /></p>
-<p>iOS8的推送代理方法只有两个了</p>
-<p><img src="http://ww4.sinaimg.cn/large/626e5d69gw1ehyfws0hdfj210g0oyq6d.jpg" alt="iOS 8推送的通知代理方法" /></p>
-<p>```objc
-- (void)application:(UIApplication *)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification completionHandler:(void (^)())completionHandler
-{
-}</p>
+```
 
-<ul>
-  <li>
-    <p>(void)application:(UIApplication *)application handleActionWithIdentifier:(NSString *)identifier forRemoteNotification:(NSDictionary *)userInfo completionHandler:(void (^)())completionHandler
-{
-}</p>
-  </li>
-  <li>
-    <p>(void)application:(UIApplication *)application handleActionWithIdentifier:(NSString *)identifier forLocalNotification:(UILocalNotification *)notification completionHandler:(void (^)())completionHandler
-{
-  if ([identifier isEqualToString:@”RickAction”]) {
-      [self handleAcceptActionWithNotification:notification];
-  }
-  completionHandler();
-}</p>
-  </li>
-  <li>
-    <p>(void)handleAcceptActionWithNotification:(UILocalNotification*)notification
-{
-}
-```</p>
-  </li>
-</ul>
-<h2>地理位置推送</h2>
-<p>这个推送是新的API才有的特性,必须配合CLLocation定位一起使用。</p>
-<p>```objc</p>
+<p>再来看一下反编的结果，对于 createBtn() 方法，我们可以得到它的伪代码：</p>
 
-<p>//Location Notification
-    CLLocationManager *locMan = [[CLLocationManager alloc] init];
-    locMan.delegate = self;
-    [locMan requestWhenInUseAuthorization];</p>
+<div class="figure" id="figure-22-1">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f760d9iqmfj20ns10aakb.jpg" />
 
-<h1 id="pragma-mark---cllocationmanager">pragma mark - CLLocationManager</h1>
+    <p class="caption"><strong>图片 22.1</strong> static</p>
+</div>
 
-<ul>
-  <li>(void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status</li>
-</ul>
 
-<p>{
-    BOOL canUseLocationNotifications = (status == kCLAuthorizationStatusAuthorizedWhenInUse);
-    if (canUseLocationNotifications) {
-        [self startShowLocationNotification];
-    }
-}
-- (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification</p>
+<p>函数名虽然面目全非，但是基本操作还是清晰的。</p>
 
-<p>{
-    CLRegion *region = notification.region;
-    if (region) {
-    }
-}</p>
+<p>对于<code>static_createBtn() </code>方法呢，我们已经无法看到它任何直观的有价值信息了。</p>
 
-<ul>
-  <li>(void)startShowLocationNotification</li>
-</ul>
+<h3>局限</h3>
 
-<p>{
-    CLLocationCoordinate2D local2D ;
-    local2D.latitude = 123.0;
-    local2D.longitude = 223.0;
-    UILocalNotification *locNotification = [[UILocalNotification alloc] init];
-    locNotification.alertBody = @”你接收到了”;
-    locNotification.regionTriggersOnce = YES;
-    locNotification.region = [[CLCircularRegion alloc] initWithCenter:local2D radius:45 identifier:@”local-identity”];
-    [[UIApplication sharedApplication] scheduleLocalNotification:locNotification];
-}
-```</p>
-<blockquote>
-	<p>如果没有开启Core Location 那么上面的didReceiveLocalNotification不会被调用</p>
-</blockquote>
+<p>当然这种方法也有局限性。正如你所知道的，<code>static </code>函数，只在本文件可见。</p>
 
-<p>最后再总结一下，整个推送流程我觉得是这样子的，先注册推送，然后推送消息，客户端接收推送消息，执行推送行为。如果有错误，还请在文章下面评论，欢迎指正。</p>
-<p><img src="http://ww2.sinaimg.cn/large/626e5d69gw1ehyg8u1o51j21ea0qkmz1.jpg" alt="推送的流程" /></p>
+<h3>打破局限</h3>
 
-<hr />
+<p>怎么让别的文件也能调到本文件的<code> static </code>方法呢？</p>
 
+<p>在本文件建造一个结构体，结构体里包含函数指针。把<code> static </code>函数的函数指针都赋在这个结构体里，再把这个结构体抛出去。</p>
+
+<p>这样做的好处是，既隐藏了函数代码也丰富了调用方式。</p>
+
+</div>
+</div>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[废除应用程序的 ASLR特性]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/"/>
+    <updated>2016-08-25T15:02:16+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing</id>
+    <content type="html"><![CDATA[<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">21</span> <span class="title">废除应用程序的 ASLR 特性</span></h1>
+    <p>ASLR (Address Space Layout Randomization)，即地址空间随机布局。大部分主流的操作系统都已实现了 ASLR，以防范对已知地址进行恶意攻击。iOS 从 4.3 开始支持 ASLR，Android 从 4.0 也支持了 ASLR 机制。</p>
+
+<p>ASLR 的存在，给 iOS 系统越狱造成了很大的困难，某些不完美越狱方案就是因为攻破不了或者绕不开 ASLR ，所以每次重新启动后地址再度随机偏移，需要重新进行越狱操作。与此同时，ASLR 也给应用层攻击带来了一些困难，不同进程会造成不同的地址空间偏移，而且在运行时才可确定其偏移量，不易锁定攻击地址。</p>
+
+<p><code>Mach-O </code>文件的文件头会记录二进制的属性标识，有个 flag 叫做 PIE  (Position Independent Enable)。开启了 PIE 的二进制文件，在执行时会产生 ASLR 。</p>
+
+<p>我们可以使用<code> otool </code>工具，来查看任意应用程序二进制文件的属性，以支付宝为例：<br />
+<code>otool -hv Portal</code></p>
+
+<div class="figure" id="figure-21-1">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f7607zmgrxj216a032ju4.jpg" />
+
+    <p class="caption"><strong>图片 21.1</strong> aslr</p>
+</div>
+
+
+<p>有 PIE 标识，表示该程序在启动时会产生随机地址布局。</p>
+
+<div class="figure" id="figure-21-2">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f7608woa04j202m02s3yc.jpg" />
+
+    <p class="caption"><strong>图片 21.2</strong> aslr1</p>
+</div>
+<a href="https://github.com/peterfillmore/removePIE">removePIE</a> 是个去掉 PIE flag 的工具。
+
+<p>坏消息是，年久失修，它不支持 iOS7 。
+好消息是，我们还有 2 个变通方法可以走。<br />
+    - 利用<code> Theos </code>编译 removePIE<br />
+    - 改编一个 Mac 版的 MyRemovePIE</p>
+
+<p>非越狱开发者可能不熟悉 Theos ，低学习成本的做法是第二种，那么让我们来改编一个 Mac 版的 MyRemovePIE 吧。
+（懒得动手的可以直接到<a href="https://github.com/CarinaTT/MyRemovePIE">这里</a>下载 demo ）</p>
+
+<p>创建一个 Command Line Tool 工程，</p>
+
+<div class="figure" id="figure-21-3">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609flo73j214k0rgqac.jpg" />
+
+    <p class="caption"><strong>图片 21.3</strong> aslr2</p>
+</div>
+
+
+<p>然后复制 <a href="https://github.com/peterfillmore/removePIE/blob/master/removePIE.c">removePIE.c</a>  代码到 <code>main.c</code> 中，并且修改第 43 行：
+    <code>if(currentHeader.magic == MH_MAGIC){ //little endian</code></p>
+
+<p>添加 iOS7 的判断条件:
+    <code>if(currentHeader.magic == MH_MAGIC || currentHeader.magic == 0xbebafeca ){ //little endian</code></p>
+
+<p>编译后生成可执行文件 MyRemovePIE .</p>
+
+<p>利用我们编译生成的 MyRemovePIE 来处理应用程序：</p>
+
+<p><code>./MyRemovePIE Portal</code></p>
+
+<div class="figure" id="figure-21-4">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f76079jd97j20p409iad1.jpg" />
+
+    <p class="caption"><strong>图片 21.4</strong> aslr3</p>
+</div>
+
+
+<p>这样以后支付宝 Portal 再被启动执行就不会具有 ASLR 特性了</p>
+
+<div class="figure" id="figure-21-5">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609ztn5kj215y04egnk.jpg" />
+
+    <p class="caption"><strong>图片 21.5</strong> aslr4</p>
+</div>
+
+
+<p>如何验证一下结果呢？</p>
+
+<p>把处理过的 Portal 二进制拷贝回 iPhone ，启动支付宝钱包应用，然后 gdb 该进程，利用<code> info sh </code>命令查看偏移：</p>
+
+<div class="figure" id="figure-21-6">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760anz667j21kw066gri.jpg" />
+
+    <p class="caption"><strong>图片 21.6</strong> aslr5</p>
+</div>
+
+
+<p>偏移量为 0 ，嗯，这下就好了。一些手动处理的过程可以升级为自动了～ <div class="figure" id="figure-21-7">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760b57h2fj202j02ka9v.jpg" />
+
+    <p class="caption"><strong>图片 21.7</strong> aslr6</p>
+</div>
+
+
+
+
+</p></div></div>
 ]]></content>
   </entry>
   

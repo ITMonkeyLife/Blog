@@ -1,0 +1,264 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>废除应用程序的 ASLR特性 - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="21 废除应用程序的 ASLR 特性 ASLR (Address Space Layout Randomization)，即地址空间随机布局。大部分主流的操作系统都已实现了 ASLR，以防范对已知地址进行恶意攻击。iOS 从 4.3 开始支持 ASLR，Android 从 4.0 也支持了 &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/Blog/favicon.png" rel="shortcut icon">
+	<link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/Blog/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+	</form>
+</nav>
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">废除应用程序的 ASLR特性</h2>
+	<div class="entry-content"><div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">21</span> <span class="title">废除应用程序的 ASLR 特性</span></h1>
+    <p>ASLR (Address Space Layout Randomization)，即地址空间随机布局。大部分主流的操作系统都已实现了 ASLR，以防范对已知地址进行恶意攻击。iOS 从 4.3 开始支持 ASLR，Android 从 4.0 也支持了 ASLR 机制。</p>
+
+<p>ASLR 的存在，给 iOS 系统越狱造成了很大的困难，某些不完美越狱方案就是因为攻破不了或者绕不开 ASLR ，所以每次重新启动后地址再度随机偏移，需要重新进行越狱操作。与此同时，ASLR 也给应用层攻击带来了一些困难，不同进程会造成不同的地址空间偏移，而且在运行时才可确定其偏移量，不易锁定攻击地址。</p>
+
+<p><code>Mach-O </code>文件的文件头会记录二进制的属性标识，有个 flag 叫做 PIE  (Position Independent Enable)。开启了 PIE 的二进制文件，在执行时会产生 ASLR 。</p>
+
+<p>我们可以使用<code> otool </code>工具，来查看任意应用程序二进制文件的属性，以支付宝为例：<br />
+<code>otool -hv Portal</code></p>
+
+<div class="figure" id="figure-21-1">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f7607zmgrxj216a032ju4.jpg" />
+
+    <p class="caption"><strong>图片 21.1</strong> aslr</p>
+</div>
+
+
+<p>有 PIE 标识，表示该程序在启动时会产生随机地址布局。</p>
+
+<div class="figure" id="figure-21-2">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f7608woa04j202m02s3yc.jpg" />
+
+    <p class="caption"><strong>图片 21.2</strong> aslr1</p>
+</div>
+<a href="https://github.com/peterfillmore/removePIE">removePIE</a> 是个去掉 PIE flag 的工具。
+
+<p>坏消息是，年久失修，它不支持 iOS7 。
+好消息是，我们还有 2 个变通方法可以走。<br />
+    - 利用<code> Theos </code>编译 removePIE<br />
+    - 改编一个 Mac 版的 MyRemovePIE</p>
+
+<p>非越狱开发者可能不熟悉 Theos ，低学习成本的做法是第二种，那么让我们来改编一个 Mac 版的 MyRemovePIE 吧。
+（懒得动手的可以直接到<a href="https://github.com/CarinaTT/MyRemovePIE">这里</a>下载 demo ）</p>
+
+<p>创建一个 Command Line Tool 工程，</p>
+
+<div class="figure" id="figure-21-3">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609flo73j214k0rgqac.jpg" />
+
+    <p class="caption"><strong>图片 21.3</strong> aslr2</p>
+</div>
+
+
+<p>然后复制 <a href="https://github.com/peterfillmore/removePIE/blob/master/removePIE.c">removePIE.c</a>  代码到 <code>main.c</code> 中，并且修改第 43 行：
+    <code>if(currentHeader.magic == MH_MAGIC){ //little endian</code></p>
+
+<p>添加 iOS7 的判断条件:
+    <code>if(currentHeader.magic == MH_MAGIC || currentHeader.magic == 0xbebafeca ){ //little endian</code></p>
+
+<p>编译后生成可执行文件 MyRemovePIE .</p>
+
+<p>利用我们编译生成的 MyRemovePIE 来处理应用程序：</p>
+
+<p><code>./MyRemovePIE Portal</code></p>
+
+<div class="figure" id="figure-21-4">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f76079jd97j20p409iad1.jpg" />
+
+    <p class="caption"><strong>图片 21.4</strong> aslr3</p>
+</div>
+
+
+<p>这样以后支付宝 Portal 再被启动执行就不会具有 ASLR 特性了</p>
+
+<div class="figure" id="figure-21-5">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609ztn5kj215y04egnk.jpg" />
+
+    <p class="caption"><strong>图片 21.5</strong> aslr4</p>
+</div>
+
+
+<p>如何验证一下结果呢？</p>
+
+<p>把处理过的 Portal 二进制拷贝回 iPhone ，启动支付宝钱包应用，然后 gdb 该进程，利用<code> info sh </code>命令查看偏移：</p>
+
+<div class="figure" id="figure-21-6">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760anz667j21kw066gri.jpg" />
+
+    <p class="caption"><strong>图片 21.6</strong> aslr5</p>
+</div>
+
+
+<p>偏移量为 0 ，嗯，这下就好了。一些手动处理的过程可以升级为自动了～ <div class="figure" id="figure-21-7">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760b57h2fj202j02ka9v.jpg" />
+
+    <p class="caption"><strong>图片 21.7</strong> aslr6</p>
+</div>
+
+
+
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</p></div></div>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/Blog/javascripts/slash.js"></script>
+<script src="/Blog/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/';
+        var disqus_url = 'http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>
