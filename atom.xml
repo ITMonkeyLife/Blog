@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-08-26T14:34:00+08:00</updated>
+  <updated>2016-08-30T21:58:15+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,280 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[iOS开发锦囊]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/29/ioskai-fa-jin-nang/"/>
+    <updated>2016-08-29T15:44:35+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/29/ioskai-fa-jin-nang</id>
+    <content type="html"><![CDATA[<p>
+1、判断是不是AppStore版本
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isAppStoreEnvironment</span> <span class="p">{</span>
+</span><span class="line"><span class="cp">#if TARGET_OS_IOS &amp;&amp; !TARGET_IPHONE_SIMULATOR</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">([[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="nl">pathForResource:</span><span class="s">@&quot;embedded&quot;</span> <span class="nl">ofType:</span><span class="s">@&quot;mobileprovision&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">nil</span><span class="p">);</span>
+</span><span class="line"><span class="cp">#endif</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>
+<p>
+2、判断当前系统时区名称
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">currentSystemTimeZoneName</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">static</span> <span class="n">NSLock</span> <span class="o">*</span> <span class="n">methodLock</span><span class="p">;</span>
+</span><span class="line">    <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
+</span><span class="line">    <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class="line">        <span class="n">methodLock</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSLock</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="p">});</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">methodLock</span> <span class="n">lock</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">NSTimeZone</span> <span class="n">resetSystemTimeZone</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span> <span class="n">systemTimeZoneName</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSTimeZone</span> <span class="n">systemTimeZone</span><span class="p">].</span><span class="n">name</span> <span class="n">copy</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">methodLock</span> <span class="n">unlock</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">systemTimeZoneName</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<p>
+3、安全的执行method
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cm">/**</span>
+</span><span class="line"><span class="cm"> * Performs selector on the target, only if the target and selector are non-nil,</span>
+</span><span class="line"><span class="cm"> * as well as target responds to selector</span>
+</span><span class="line"><span class="cm"> */</span>
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">safePerformSelector:</span><span class="p">(</span><span class="kt">SEL</span><span class="p">)</span><span class="nv">selector</span> <span class="nf">withTarget:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">target</span> <span class="nf">object:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">object</span> <span class="nf">object:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">anotherObject</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="o">==</span> <span class="nb">nil</span> <span class="o">||</span> <span class="n">selector</span> <span class="o">==</span> <span class="nb">nil</span> <span class="o">||</span> <span class="o">!</span><span class="p">[</span><span class="n">target</span> <span class="nl">respondsToSelector:</span><span class="n">selector</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="cp">#pragma clang diagnostic push</span>
+</span><span class="line"><span class="cp">#pragma clang diagnostic ignored &quot;-Warc-performSelector-leaks&quot;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">target</span> <span class="nl">performSelector:</span><span class="n">selector</span> <span class="nl">withObject:</span><span class="n">object</span> <span class="nl">withObject:</span><span class="n">anotherObject</span><span class="p">];</span>
+</span><span class="line"><span class="cp">#pragma clang diagnostic pop</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<p>
+4、主线程执行
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">CLLocationManager</span> <span class="o">*</span><span class="p">)</span><span class="nf">_newSystemLocationManager</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">__</span> <span class="n">block</span> <span class="n">CLLocationManager</span> <span class="o">*</span> <span class="n">manager</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// CLLocationManager should be created only on main thread, as it needs a run loop to serve delegate callbacks</span>
+</span><span class="line">    <span class="n">dispatch_block_t</span> <span class="n">block</span> <span class="o">=</span> <span class="o">^</span><span class="p">{</span>
+</span><span class="line">        <span class="n">manager</span> <span class="o">=</span> <span class="p">[[</span><span class="n">CLLocationManager</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="p">};</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">NSThread</span> <span class="n">currentThread</span><span class="p">].</span><span class="n">isMainThread</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">block</span><span class="p">();</span>
+</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">dispatch_sync</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="n">block</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">manager</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<p>
+5、添加Block
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addBlockForCurrentLocation:</span><span class="p">(</span><span class="n">PFLocationManagerLocationUpdateBlock</span><span class="p">)</span><span class="nv">handler</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">@synchronized</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">blockSet</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">blockSet</span> <span class="nl">addObject:</span><span class="p">[</span><span class="n">handler</span> <span class="n">copy</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">//</span>
+</span><span class="line">    <span class="c1">// Abandon hope all ye who enter here.</span>
+</span><span class="line">    <span class="c1">// Apparently, the CLLocationManager API is different for iOS/OSX/watchOS/tvOS up to the point,</span>
+</span><span class="line">    <span class="c1">// where encapsulating pieces together just makes much more sense</span>
+</span><span class="line">    <span class="c1">// than hard to human-parse compiled out pieces of the code.</span>
+</span><span class="line">    <span class="c1">// This looks duplicated, slightly, but very much intentional.</span>
+</span><span class="line">    <span class="c1">//</span>
+</span><span class="line"><span class="cp">#if TARGET_OS_WATCH</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">self</span><span class="p">.</span><span class="n">bundle</span> <span class="nl">objectForInfoDictionaryKey:</span><span class="s">@&quot;NSLocationWhenInUseUsageDescription&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">nil</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestWhenInUseAuthorization</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestAlwaysAuthorization</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestLocation</span><span class="p">];</span>
+</span><span class="line"><span class="cp">#elif TARGET_OS_TV</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestWhenInUseAuthorization</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestLocation</span><span class="p">];</span>
+</span><span class="line"><span class="cp">#elif TARGET_OS_IOS</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="nl">respondsToSelector:</span><span class="k">@selector</span><span class="p">(</span><span class="n">requestAlwaysAuthorization</span><span class="p">)])</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">application</span><span class="p">.</span><span class="n">applicationState</span> <span class="o">!=</span> <span class="n">UIApplicationStateBackground</span> <span class="o">&amp;&amp;</span>
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">bundle</span> <span class="nl">objectForInfoDictionaryKey:</span><span class="s">@&quot;NSLocationWhenInUseUsageDescription&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">nil</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestWhenInUseAuthorization</span><span class="p">];</span>
+</span><span class="line">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestAlwaysAuthorization</span><span class="p">];</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">startUpdatingLocation</span><span class="p">];</span>
+</span><span class="line"><span class="cp">#elif PF_TARGET_OS_OSX</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">startUpdatingLocation</span><span class="p">];</span>
+</span><span class="line"><span class="cp">#endif</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<p>
+6、安全执行线程
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+</span><span class="line"><span class="k">extern</span> <span class="n">dispatch_queue_t</span> <span class="nf">JPThreadsafetyCreateQueueForObject</span><span class="p">(</span><span class="kt">id</span> <span class="n">object</span><span class="p">);</span>
+</span><span class="line"><span class="k">extern</span> <span class="kt">void</span> <span class="nf">JPThreadsafetySafeDispatchSync</span><span class="p">(</span><span class="n">dispatch_queue_t</span> <span class="n">queue</span><span class="p">,</span> <span class="n">dispatch_block_t</span> <span class="n">block</span><span class="p">);</span>
+</span><span class="line"><span class="cp">#define JPThreadSafetyPerform(queue, block) ({                      \</span>
+</span><span class="line"><span class="cp">    __ block typeof((block())) result;                              \</span>
+</span><span class="line"><span class="cp">    JPThreadsafetySafeDispatchSync(queue, ^{ result = block(); }); \</span>
+</span><span class="line"><span class="cp">    result;                                                        \</span>
+</span><span class="line"><span class="cp">})</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &quot;JPThreadsafety.h&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="o">*</span><span class="k">const</span> <span class="n">JPThreadsafetyQueueIDKey</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">JPThreadsafetyQueueIDKey</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">dispatch_queue_t</span> <span class="nf">JPThreadsafetyCreateQueueForObject</span><span class="p">(</span><span class="kt">id</span> <span class="n">object</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">NSString</span><span class="o">*</span> <span class="n">label</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">object</span> <span class="n">class</span><span class="p">])</span> <span class="nl">stringByAppendingString:</span><span class="s">@&quot;.synchronizationQueue&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">dispatch_queue_t</span> <span class="n">queue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="n">label</span><span class="p">.</span><span class="n">UTF8String</span><span class="p">,</span> <span class="n">DISPATCH_QUEUE_SERIAL</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="kt">void</span><span class="o">*</span> <span class="n">uuid</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">uuid</span><span class="p">));</span>
+</span><span class="line">    <span class="n">dispatch_queue_set_specific</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">JPThreadsafetyQueueIDKey</span><span class="p">,</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">free</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">queue</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">void</span> <span class="nf">JPThreadsafetySafeDispatchSync</span><span class="p">(</span><span class="n">dispatch_queue_t</span> <span class="n">queue</span><span class="p">,</span> <span class="n">dispatch_block_t</span> <span class="n">block</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">void</span><span class="o">*</span> <span class="n">uuidMine</span> <span class="o">=</span> <span class="n">dispatch_get_specific</span><span class="p">(</span><span class="n">JPThreadsafetyQueueIDKey</span><span class="p">);</span>
+</span><span class="line">    <span class="kt">void</span><span class="o">*</span> <span class="n">uuidOther</span> <span class="o">=</span> <span class="n">dispatch_queue_get_specific</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">JPThreadsafetyQueueIDKey</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">uuidMine</span> <span class="o">==</span> <span class="n">uuidOther</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">block</span><span class="p">();</span>
+</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">dispatch_sync</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">block</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</p></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Method Swizzling]]></title>
@@ -3057,333 +3331,6 @@ cy# var visible = root.visibleViewController
 
 <p>id 类型的密码，很严谨，又给 hack 带来不少麻烦呀～
 不过没关系，我们可以利用 Method Swizzling 来打出 password 到底是什么，不过呢，貌似可以再写一篇新文章去介绍了……</p>
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[使用class-dump-z 分析支付宝]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/shi-yong-class-dump-z-fen-xi-zhi-fu-bao/"/>
-    <updated>2016-08-25T11:33:42+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/shi-yong-class-dump-z-fen-xi-zhi-fu-bao</id>
-    <content type="html"><![CDATA[<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">6</span> <span class="title">使用 class-dump-z 分析支付宝 App</span></h1>
-    <p>为了了解支付宝 app 的源码结构，我们可以使用 class-dump-z 工具来分析支付宝二进制。</p>
-
-<h3>下载配置 <code>class_dump_z</code></h3>
-
-<p>前往 <a href="https://code.google.com/p/networkpx/wiki/class_dump_z">https://code.google.com/p/networkpx/wiki/class_dump_z</a> ，下载 tar 包，然后解压配置到本地环境</p>
-
-<div class="code code">
-<pre class="code">$ tar -zxvf class-dump-z_0.2a.tar.gz  
-$ sudo cp mac_x86/class-dump-z /usr/bin/</pre>
-</div>
-
-<h3>class_dump 支付宝 App</h3>
-
-<div class="code code">
-<pre class="code">$ class-dump-z Portal &gt; Portal-dump.txt  
-&nbsp;
-@protocol XXEncryptedProtocol_10764b0  
--(?)XXEncryptedMethod_d109df;  
--(?)XXEncryptedMethod_d109d3;  
--(?)XXEncryptedMethod_d109c7;  
--(?)XXEncryptedMethod_d109bf;  
--(?)XXEncryptedMethod_d109b8;  
--(?)XXEncryptedMethod_d109a4;  
--(?)XXEncryptedMethod_d10990;  
--(?)XXEncryptedMethod_d1097f;  
--(?)XXEncryptedMethod_d10970;  
--(?)XXEncryptedMethod_d10968;  
--(?)XXEncryptedMethod_d10941;  
--(?)XXEncryptedMethod_d10925;  
--(?)XXEncryptedMethod_d10914;  
--(?)XXEncryptedMethod_d1090f;  
--(?)XXEncryptedMethod_d1090a;  
--(?)XXEncryptedMethod_d10904;  
--(?)XXEncryptedMethod_d108f9;  
--(?)XXEncryptedMethod_d108f4;  
--(?)XXEncryptedMethod_d108eb;  
-@optional  
--(?)XXEncryptedMethod_d109eb;  
-@end</pre>
-</div>
-
-<p>查看得到的信息是加过密的，这个加密操作是苹果在部署到 app store时做的，所以我们还需要做一步解密操作。</p>
-
-<h3>使用 Clutch 解密支付宝 App</h3>
-
-<h4>下载 Clutch</h4>
-
-<p>iOS7 越狱后的 Cydia 源里已经下载不到 Clutch 了，但是我们可以从网上下载好推进 iPhone</p>
-
-<p>地址：<a href="https://github.com/KJCracks/Clutch-dl/releases">Clutch 传送门</a></p>
-
-<h4>查看可解密的应用列表</h4>
-
-<div class="code code">
-<pre class="code">root# ./Clutch   
-&nbsp;
-Clutch-1.3.2  
-usage: ./Clutch [flags] [application name] [...]  
-Applications available: 9P_RetinaWallpapers breadtrip Chiizu CodecademyiPhone FisheyeFree food GirlsCamera IMDb InstaDaily InstaTextFree iOne ItsMe3 linecamera Moldiv MPCamera MYXJ NewsBoard Photo Blur Photo Editor PhotoWonder POCO 相机 Portal QQPicShow smashbandits Spark tripcamera Tuding_vITC_01 wantu WaterMarkCamera WeiBo Weibo</pre>
-</div>
-
-<h4>解密支付宝 App</h4>
-
-<div class="code code">
-<pre class="code">root# ./Clutch Portal  
-&nbsp;
-Clutch-1.3.2  
-Cracking Portal...  
-Creating working directory...  
-Performing initial analysis...  
-Performing cracking preflight...  
-dumping binary: analyzing load commands  
-dumping binary: obtaining ptrace handle  
-dumping binary: forking to begin tracing  
-dumping binary: successfully forked  
-dumping binary: obtaining mach port  
-dumping binary: preparing code resign  
-dumping binary: preparing to dump  
-dumping binary: ASLR enabled, identifying dump location dynamically  
-dumping binary: performing dump  
-dumping binary: patched cryptid  
-dumping binary: writing new checksum  
-Censoring iTunesMetadata.plist...  
-Packaging IPA file...  
-&nbsp;
-compression level: 0  
-    /var/root/Documents/Cracked/支付宝钱包-v8.0.0-(Clutch-1.3.2).ipa  
-&nbsp;
-elapsed time: 7473ms  
-&nbsp;
-Applications Cracked:   
-Portal  
-&nbsp;
-Applications that Failed:  
-&nbsp;
-Total Success: 1 Total Failed: 0</pre>
-</div>
-
-<h4>导出已解密的支付宝 App</h4>
-
-<p>从上一步骤得知，已解密的 ipa 位置为：<code>/var/root/Documents/Cracked/支付宝钱包-v8.0.0-(Clutch-1.3.2).ipa</code>
-将其拷贝到本地去分析</p>
-
-<h3><code>class_dump</code> 已解密的支付宝 App</h3>
-
-<p>解压 .ipa 后，到支付宝钱包-<code>v8.0.0-(Clutch-1.3.2)/Payload/Portal.app</code> 目录下，class_dump 已解密的二进制文件
-<code>$ class-dump-z Portal &gt; ~/Portal-classdump.txt</code></p>
-
-<p>这回就可以得到对应的信息了：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-<span class="line-number">50</span>
-<span class="line-number">51</span>
-<span class="line-number">52</span>
-<span class="line-number">53</span>
-<span class="line-number">54</span>
-<span class="line-number">55</span>
-<span class="line-number">56</span>
-<span class="line-number">57</span>
-<span class="line-number">58</span>
-<span class="line-number">59</span>
-<span class="line-number">60</span>
-<span class="line-number">61</span>
-<span class="line-number">62</span>
-<span class="line-number">63</span>
-<span class="line-number">64</span>
-<span class="line-number">65</span>
-<span class="line-number">66</span>
-<span class="line-number">67</span>
-<span class="line-number">68</span>
-<span class="line-number">69</span>
-<span class="line-number">70</span>
-<span class="line-number">71</span>
-<span class="line-number">72</span>
-<span class="line-number">73</span>
-<span class="line-number">74</span>
-<span class="line-number">75</span>
-<span class="line-number">76</span>
-<span class="line-number">77</span>
-<span class="line-number">78</span>
-<span class="line-number">79</span>
-<span class="line-number">80</span>
-<span class="line-number">81</span>
-<span class="line-number">82</span>
-<span class="line-number">83</span>
-<span class="line-number">84</span>
-<span class="line-number">85</span>
-<span class="line-number">86</span>
-<span class="line-number">87</span>
-<span class="line-number">88</span>
-<span class="line-number">89</span>
-<span class="line-number">90</span>
-<span class="line-number">91</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@protocol</span> <span class="nc">ALPNumPwdInputViewDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
-</span><span class="line"><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">onPasswordDidChange:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">onPassword</span><span class="p">;</span>
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@protocol</span> <span class="nc">ALPContactBaseTableViewCellDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
-</span><span class="line"><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">shareClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">clicked</span> <span class="nl">sender:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">sender</span><span class="p">;</span>
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@interface</span> <span class="nc">MMPPayWayViewController</span> : <span class="nc">XXUnknownSuperclass</span> <span class="o">&lt;</span><span class="n">SubChannelSelectDelegate</span><span class="p">,</span> <span class="n">UITableViewDataSource</span><span class="p">,</span> <span class="n">UITableViewDelegate</span><span class="p">,</span> <span class="n">CellDelegate</span><span class="p">,</span> <span class="n">UIAlertViewDelegate</span><span class="o">&gt;</span> <span class="p">{</span>
-</span><span class="line"><span class="k">@private</span>
-</span><span class="line">    <span class="n">Item</span><span class="o">*</span> <span class="n">channelSelected</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bCheck</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bOpenMiniPay</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bNeedPwd</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bSimplePwd</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bAutopayon</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bHasSub</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bFirstChannel</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bChangeSub</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">BOOL</span> <span class="n">_bClickBack</span><span class="p">;</span>
-</span><span class="line">    <span class="n">UITableView</span><span class="o">*</span> <span class="n">_channelListTableView</span><span class="p">;</span>
-</span><span class="line">    <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">_channelListArray</span><span class="p">;</span>
-</span><span class="line">    <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">_subChanneSelectedlList</span><span class="p">;</span>
-</span><span class="line">    <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">_unCheckArray</span><span class="p">;</span>
-</span><span class="line">    <span class="n">UIButton</span><span class="o">*</span> <span class="n">_saveButton</span><span class="p">;</span>
-</span><span class="line">    <span class="n">UILabel</span><span class="o">*</span> <span class="n">_tipLabel</span><span class="p">;</span>
-</span><span class="line">    <span class="n">MMPPasswordSwichView</span><span class="o">*</span> <span class="n">_payWaySwitch</span><span class="p">;</span>
-</span><span class="line">    <span class="n">MMPPopupAlertView</span><span class="o">*</span> <span class="n">_alertView</span><span class="p">;</span>
-</span><span class="line">    <span class="n">UIView</span><span class="o">*</span> <span class="n">_setView</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">_originalSelectedRow</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">_currentSelectedRow</span><span class="p">;</span>
-</span><span class="line">    <span class="n">NSString</span><span class="o">*</span> <span class="n">_statusCode</span><span class="p">;</span>
-</span><span class="line">    <span class="n">ChannelListModel</span><span class="o">*</span> <span class="n">_defaultChannelList</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bClickBack</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">ChannelListModel</span><span class="o">*</span> <span class="n">defaultChannelList</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span><span class="o">*</span> <span class="n">statusCode</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">int</span> <span class="n">currentSelectedRow</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">int</span> <span class="n">originalSelectedRow</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">UIView</span><span class="o">*</span> <span class="n">setView</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">MMPPopupAlertView</span><span class="o">*</span> <span class="n">alertView</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">MMPPasswordSwichView</span><span class="o">*</span> <span class="n">payWaySwitch</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">,</span> <span class="n">getter</span><span class="o">=</span><span class="n">isSubChannelChanged</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bChangeSub</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bFirstChannel</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bHasSub</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bAutopayon</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bSimplePwd</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bNeedPwd</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bOpenMiniPay</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="kt">BOOL</span> <span class="n">bCheck</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">UILabel</span><span class="o">*</span> <span class="n">tipLabel</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">UIButton</span><span class="o">*</span> <span class="n">saveButton</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">unCheckArray</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">subChanneSelectedlList</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSMutableArray</span><span class="o">*</span> <span class="n">channelListArray</span><span class="p">;</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">UITableView</span><span class="o">*</span> <span class="n">channelListTableView</span><span class="p">;</span>
-</span><span class="line"><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">).</span><span class="n">cxx_destruct</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">subChannelDidSelected:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">subChannel</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">switchCheckButtonClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">clicked</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">checkboxButtonClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">clicked</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">onCellClick:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">click</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">showSubChannels</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didSelectRowAtIndexPath:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">indexPath</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">cellForRowAtIndexPath:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">indexPath</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">numberOfRowsInSection:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">section</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">heightForRowAtIndexPath:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">indexPath</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">numberOfSectionsInTableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">tableView</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setTableViewFootView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setTableViewHeaderView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">viewForHeaderInSection:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">section</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">viewForFooterInSection:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">section</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">heightForHeaderInSection:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">section</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="nf">tableView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">heightForFooterInSection:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">section</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">alertView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">clickedButtonAtIndex:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">index</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">clickSave</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">netWorkRequestWithPwd:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">pwd</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setPayWaySwitchStates:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">states</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">changePayWaySwitch:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">aSwitch</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">scrollToSelectedRow</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">didReceiveMemoryWarning</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">applicationEnterBackground:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">background</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dealloc</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">goBack</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isChannelsSetChanged</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">subChannelCode:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">code</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">subChannelDesc:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">desc</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithDefaultData:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">defaultData</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithNibName:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">nibName</span> <span class="nf">bundle:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">bundle</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">commonInit:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">init</span><span class="p">;</span>
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>分析支付宝源码片段</h3>
-
-<h4>使用了 @private 关键字限制成员访问权限</h4>
-
-<p>但是实际上，在 Objective-C 编程中，使用 @private 连 Keypath 访问都拦不住的</p>
-
-<h4>抛出了冗长的成员对象</h4>
-
-<p>这非常有利分析程序结构</p>
-
-<h3>进一步思考</h3>
-
-<p>1）如何利用 class-dump 结果，结合 cycript 进行攻击呢？</p>
-
-<p>2）class-dump-z 如此强大，有什么方法可以减少暴露的信息吗？</p>
-
-<p>接下来的博文将针对上面的思考，继续总结～</p>
 
 </div>
 </div>

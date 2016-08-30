@@ -4,7 +4,7 @@
   <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-08-26T14:34:00+08:00</updated>
+  <updated>2016-08-30T21:58:58+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,170 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[iOS开发锦囊]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/29/ioskai-fa-jin-nang/"/>
+    <updated>2016-08-29T15:44:35+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/29/ioskai-fa-jin-nang</id>
+    <content type="html"><![CDATA[<p>
+1、判断是不是AppStore版本
+```objc
+- (BOOL)isAppStoreEnvironment {
+#if TARGET_OS_IOS &amp;&amp; !TARGET_IPHONE_SIMULATOR
+    return ([[NSBundle mainBundle] pathForResource:@"embedded" ofType:@"mobileprovision"] == nil);
+#endif
+
+    return NO;
+}
+```
+<p>
+<p>
+2、判断当前系统时区名称
+```objc
++ (NSString *)currentSystemTimeZoneName {
+    static NSLock * methodLock;
+    static dispatch_once_t onceToken;
+    dispatch_once(&amp;onceToken, ^{
+        methodLock = [[NSLock alloc] init];
+    });
+
+    [methodLock lock];
+    [NSTimeZone resetSystemTimeZone];
+    NSString * systemTimeZoneName = [[NSTimeZone systemTimeZone].name copy];
+    [methodLock unlock];
+
+    return systemTimeZoneName;
+}
+```
+</p>
+
+<p>
+3、安全的执行method
+```objc
+/**
+ * Performs selector on the target, only if the target and selector are non-nil,
+ * as well as target responds to selector
+ */
++ (void)safePerformSelector:(SEL)selector withTarget:(id)target object:(id)object object:(id)anotherObject {
+    if (target == nil || selector == nil || ![target respondsToSelector:selector]) {
+        return;
+    }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    [target performSelector:selector withObject:object withObject:anotherObject];
+#pragma clang diagnostic pop
+}
+```
+</p>
+<p>
+4、主线程执行
+```objc
++ (CLLocationManager *)_newSystemLocationManager {
+    __ block CLLocationManager * manager = nil;
+
+    // CLLocationManager should be created only on main thread, as it needs a run loop to serve delegate callbacks
+    dispatch_block_t block = ^{
+        manager = [[CLLocationManager alloc] init];
+    };
+    if ([NSThread currentThread].isMainThread) {
+        block();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), block);
+    }
+    return manager;
+}
+```
+</p>
+
+<p>
+5、添加Block
+```objc
+- (void)addBlockForCurrentLocation:(PFLocationManagerLocationUpdateBlock)handler {
+    @synchronized (self.blockSet) {
+        [self.blockSet addObject:[handler copy]];
+    }
+
+    //
+    // Abandon hope all ye who enter here.
+    // Apparently, the CLLocationManager API is different for iOS/OSX/watchOS/tvOS up to the point,
+    // where encapsulating pieces together just makes much more sense
+    // than hard to human-parse compiled out pieces of the code.
+    // This looks duplicated, slightly, but very much intentional.
+    //
+#if TARGET_OS_WATCH
+    if ([self.bundle objectForInfoDictionaryKey:@"NSLocationWhenInUseUsageDescription"] != nil) {
+        [self.locationManager requestWhenInUseAuthorization];
+    } else {
+        [self.locationManager requestAlwaysAuthorization];
+    }
+    [self.locationManager requestLocation];
+#elif TARGET_OS_TV
+    [self.locationManager requestWhenInUseAuthorization];
+    [self.locationManager requestLocation];
+#elif TARGET_OS_IOS
+    if ([self.locationManager respondsToSelector:@selector(requestAlwaysAuthorization)]) {
+        if (self.application.applicationState != UIApplicationStateBackground &amp;&amp;
+            [self.bundle objectForInfoDictionaryKey:@"NSLocationWhenInUseUsageDescription"] != nil) {
+            [self.locationManager requestWhenInUseAuthorization];
+        } else {
+            [self.locationManager requestAlwaysAuthorization];
+        }
+    }
+    [self.locationManager startUpdatingLocation];
+#elif PF_TARGET_OS_OSX
+    [self.locationManager startUpdatingLocation];
+#endif
+}
+
+```
+</p>
+
+<p>
+6、安全执行线程
+```objc
+#import &lt;Foundation/Foundation.h&gt;
+extern dispatch_queue_t JPThreadsafetyCreateQueueForObject(id object);
+extern void JPThreadsafetySafeDispatchSync(dispatch_queue_t queue, dispatch_block_t block);
+#define JPThreadSafetyPerform(queue, block) ({                      \
+    __ block typeof((block())) result;                              \
+    JPThreadsafetySafeDispatchSync(queue, ^{ result = block(); }); \
+    result;                                                        \
+})
+```
+
+```objc
+#import "JPThreadsafety.h"
+
+static void *const JPThreadsafetyQueueIDKey = (void *)&JPThreadsafetyQueueIDKey;
+
+dispatch_queue_t JPThreadsafetyCreateQueueForObject(id object) {
+    NSString* label = [NSStringFromClass([object class]) stringByAppendingString:@".synchronizationQueue"];
+    dispatch_queue_t queue = dispatch_queue_create(label.UTF8String, DISPATCH_QUEUE_SERIAL);
+
+    void* uuid = calloc(1, sizeof(uuid));
+    dispatch_queue_set_specific(queue, JPThreadsafetyQueueIDKey, uuid, free);
+
+    return queue;
+}
+
+void JPThreadsafetySafeDispatchSync(dispatch_queue_t queue, dispatch_block_t block) {
+    void* uuidMine = dispatch_get_specific(JPThreadsafetyQueueIDKey);
+    void* uuidOther = dispatch_queue_get_specific(queue, JPThreadsafetyQueueIDKey);
+
+    if (uuidMine == uuidOther) {
+        block();
+    } else {
+        dispatch_sync(queue, block);
+    }
+}
+
+```
+</p>
+</p></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Method Swizzling]]></title>
@@ -658,108 +822,6 @@ static id static_createBtn()
 
 </div>
 </div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[废除应用程序的 ASLR特性]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/"/>
-    <updated>2016-08-25T15:02:16+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing</id>
-    <content type="html"><![CDATA[<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">21</span> <span class="title">废除应用程序的 ASLR 特性</span></h1>
-    <p>ASLR (Address Space Layout Randomization)，即地址空间随机布局。大部分主流的操作系统都已实现了 ASLR，以防范对已知地址进行恶意攻击。iOS 从 4.3 开始支持 ASLR，Android 从 4.0 也支持了 ASLR 机制。</p>
-
-<p>ASLR 的存在，给 iOS 系统越狱造成了很大的困难，某些不完美越狱方案就是因为攻破不了或者绕不开 ASLR ，所以每次重新启动后地址再度随机偏移，需要重新进行越狱操作。与此同时，ASLR 也给应用层攻击带来了一些困难，不同进程会造成不同的地址空间偏移，而且在运行时才可确定其偏移量，不易锁定攻击地址。</p>
-
-<p><code>Mach-O </code>文件的文件头会记录二进制的属性标识，有个 flag 叫做 PIE  (Position Independent Enable)。开启了 PIE 的二进制文件，在执行时会产生 ASLR 。</p>
-
-<p>我们可以使用<code> otool </code>工具，来查看任意应用程序二进制文件的属性，以支付宝为例：<br />
-<code>otool -hv Portal</code></p>
-
-<div class="figure" id="figure-21-1">
-    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f7607zmgrxj216a032ju4.jpg" />
-
-    <p class="caption"><strong>图片 21.1</strong> aslr</p>
-</div>
-
-
-<p>有 PIE 标识，表示该程序在启动时会产生随机地址布局。</p>
-
-<div class="figure" id="figure-21-2">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f7608woa04j202m02s3yc.jpg" />
-
-    <p class="caption"><strong>图片 21.2</strong> aslr1</p>
-</div>
-<a href="https://github.com/peterfillmore/removePIE">removePIE</a> 是个去掉 PIE flag 的工具。
-
-<p>坏消息是，年久失修，它不支持 iOS7 。
-好消息是，我们还有 2 个变通方法可以走。<br />
-    - 利用<code> Theos </code>编译 removePIE<br />
-    - 改编一个 Mac 版的 MyRemovePIE</p>
-
-<p>非越狱开发者可能不熟悉 Theos ，低学习成本的做法是第二种，那么让我们来改编一个 Mac 版的 MyRemovePIE 吧。
-（懒得动手的可以直接到<a href="https://github.com/CarinaTT/MyRemovePIE">这里</a>下载 demo ）</p>
-
-<p>创建一个 Command Line Tool 工程，</p>
-
-<div class="figure" id="figure-21-3">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609flo73j214k0rgqac.jpg" />
-
-    <p class="caption"><strong>图片 21.3</strong> aslr2</p>
-</div>
-
-
-<p>然后复制 <a href="https://github.com/peterfillmore/removePIE/blob/master/removePIE.c">removePIE.c</a>  代码到 <code>main.c</code> 中，并且修改第 43 行：
-    <code>if(currentHeader.magic == MH_MAGIC){ //little endian</code></p>
-
-<p>添加 iOS7 的判断条件:
-    <code>if(currentHeader.magic == MH_MAGIC || currentHeader.magic == 0xbebafeca ){ //little endian</code></p>
-
-<p>编译后生成可执行文件 MyRemovePIE .</p>
-
-<p>利用我们编译生成的 MyRemovePIE 来处理应用程序：</p>
-
-<p><code>./MyRemovePIE Portal</code></p>
-
-<div class="figure" id="figure-21-4">
-    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f76079jd97j20p409iad1.jpg" />
-
-    <p class="caption"><strong>图片 21.4</strong> aslr3</p>
-</div>
-
-
-<p>这样以后支付宝 Portal 再被启动执行就不会具有 ASLR 特性了</p>
-
-<div class="figure" id="figure-21-5">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609ztn5kj215y04egnk.jpg" />
-
-    <p class="caption"><strong>图片 21.5</strong> aslr4</p>
-</div>
-
-
-<p>如何验证一下结果呢？</p>
-
-<p>把处理过的 Portal 二进制拷贝回 iPhone ，启动支付宝钱包应用，然后 gdb 该进程，利用<code> info sh </code>命令查看偏移：</p>
-
-<div class="figure" id="figure-21-6">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760anz667j21kw066gri.jpg" />
-
-    <p class="caption"><strong>图片 21.6</strong> aslr5</p>
-</div>
-
-
-<p>偏移量为 0 ，嗯，这下就好了。一些手动处理的过程可以升级为自动了～ <div class="figure" id="figure-21-7">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760b57h2fj202j02ka9v.jpg" />
-
-    <p class="caption"><strong>图片 21.7</strong> aslr6</p>
-</div>
-
-
-
-
-</p></div></div>
 ]]></content>
   </entry>
   

@@ -7,7 +7,16 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="在没有一个类的实现源码的情况下，想改变其中一个方法的实现，除了继承它重写、和借助类别重名方法暴力抢先之外，还有更加灵活的方法吗？在Objective-C编程中，如何实现hook呢？标题有点大，计划分几篇来总结。 本文主要介绍针对selector的hook，主角被标题剧透了———— Method &hellip;">
+	<meta name="description" content="1、判断是不是AppStore版本
+1
+2
+3
+4
+5
+6
+7
+- (BOOL)isAppStoreEnvironment {
+#if TARGET_OS_IOS &amp;&amp; !TARGET_IPHONE_SIMULATOR return ([[NSBundle mainBundle &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +83,307 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/29/ioskai-fa-jin-nang/">
+		
+			iOS开发锦囊</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+1、判断是不是AppStore版本
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isAppStoreEnvironment</span> <span class="p">{</span>
+</span><span class="line"><span class="cp">#if TARGET_OS_IOS &amp;&amp; !TARGET_IPHONE_SIMULATOR</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">([[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="nl">pathForResource:</span><span class="s">@&quot;embedded&quot;</span> <span class="nl">ofType:</span><span class="s">@&quot;mobileprovision&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">nil</span><span class="p">);</span>
+</span><span class="line"><span class="cp">#endif</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>
+<p>
+2、判断当前系统时区名称
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">currentSystemTimeZoneName</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">static</span> <span class="n">NSLock</span> <span class="o">*</span> <span class="n">methodLock</span><span class="p">;</span>
+</span><span class="line">    <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
+</span><span class="line">    <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class="line">        <span class="n">methodLock</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSLock</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="p">});</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">methodLock</span> <span class="n">lock</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">NSTimeZone</span> <span class="n">resetSystemTimeZone</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span> <span class="n">systemTimeZoneName</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSTimeZone</span> <span class="n">systemTimeZone</span><span class="p">].</span><span class="n">name</span> <span class="n">copy</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">methodLock</span> <span class="n">unlock</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">systemTimeZoneName</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<p>
+3、安全的执行method
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cm">/**</span>
+</span><span class="line"><span class="cm"> * Performs selector on the target, only if the target and selector are non-nil,</span>
+</span><span class="line"><span class="cm"> * as well as target responds to selector</span>
+</span><span class="line"><span class="cm"> */</span>
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">safePerformSelector:</span><span class="p">(</span><span class="kt">SEL</span><span class="p">)</span><span class="nv">selector</span> <span class="nf">withTarget:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">target</span> <span class="nf">object:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">object</span> <span class="nf">object:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">anotherObject</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="o">==</span> <span class="nb">nil</span> <span class="o">||</span> <span class="n">selector</span> <span class="o">==</span> <span class="nb">nil</span> <span class="o">||</span> <span class="o">!</span><span class="p">[</span><span class="n">target</span> <span class="nl">respondsToSelector:</span><span class="n">selector</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="cp">#pragma clang diagnostic push</span>
+</span><span class="line"><span class="cp">#pragma clang diagnostic ignored &quot;-Warc-performSelector-leaks&quot;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">target</span> <span class="nl">performSelector:</span><span class="n">selector</span> <span class="nl">withObject:</span><span class="n">object</span> <span class="nl">withObject:</span><span class="n">anotherObject</span><span class="p">];</span>
+</span><span class="line"><span class="cp">#pragma clang diagnostic pop</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<p>
+4、主线程执行
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">CLLocationManager</span> <span class="o">*</span><span class="p">)</span><span class="nf">_newSystemLocationManager</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">__</span> <span class="n">block</span> <span class="n">CLLocationManager</span> <span class="o">*</span> <span class="n">manager</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// CLLocationManager should be created only on main thread, as it needs a run loop to serve delegate callbacks</span>
+</span><span class="line">    <span class="n">dispatch_block_t</span> <span class="n">block</span> <span class="o">=</span> <span class="o">^</span><span class="p">{</span>
+</span><span class="line">        <span class="n">manager</span> <span class="o">=</span> <span class="p">[[</span><span class="n">CLLocationManager</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="p">};</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">NSThread</span> <span class="n">currentThread</span><span class="p">].</span><span class="n">isMainThread</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">block</span><span class="p">();</span>
+</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">dispatch_sync</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="n">block</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">manager</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<p>
+5、添加Block
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addBlockForCurrentLocation:</span><span class="p">(</span><span class="n">PFLocationManagerLocationUpdateBlock</span><span class="p">)</span><span class="nv">handler</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">@synchronized</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">blockSet</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">blockSet</span> <span class="nl">addObject:</span><span class="p">[</span><span class="n">handler</span> <span class="n">copy</span><span class="p">]];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">//</span>
+</span><span class="line">    <span class="c1">// Abandon hope all ye who enter here.</span>
+</span><span class="line">    <span class="c1">// Apparently, the CLLocationManager API is different for iOS/OSX/watchOS/tvOS up to the point,</span>
+</span><span class="line">    <span class="c1">// where encapsulating pieces together just makes much more sense</span>
+</span><span class="line">    <span class="c1">// than hard to human-parse compiled out pieces of the code.</span>
+</span><span class="line">    <span class="c1">// This looks duplicated, slightly, but very much intentional.</span>
+</span><span class="line">    <span class="c1">//</span>
+</span><span class="line"><span class="cp">#if TARGET_OS_WATCH</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">self</span><span class="p">.</span><span class="n">bundle</span> <span class="nl">objectForInfoDictionaryKey:</span><span class="s">@&quot;NSLocationWhenInUseUsageDescription&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">nil</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestWhenInUseAuthorization</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestAlwaysAuthorization</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestLocation</span><span class="p">];</span>
+</span><span class="line"><span class="cp">#elif TARGET_OS_TV</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestWhenInUseAuthorization</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestLocation</span><span class="p">];</span>
+</span><span class="line"><span class="cp">#elif TARGET_OS_IOS</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="nl">respondsToSelector:</span><span class="k">@selector</span><span class="p">(</span><span class="n">requestAlwaysAuthorization</span><span class="p">)])</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">application</span><span class="p">.</span><span class="n">applicationState</span> <span class="o">!=</span> <span class="n">UIApplicationStateBackground</span> <span class="o">&amp;&amp;</span>
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">bundle</span> <span class="nl">objectForInfoDictionaryKey:</span><span class="s">@&quot;NSLocationWhenInUseUsageDescription&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">nil</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestWhenInUseAuthorization</span><span class="p">];</span>
+</span><span class="line">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">requestAlwaysAuthorization</span><span class="p">];</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">startUpdatingLocation</span><span class="p">];</span>
+</span><span class="line"><span class="cp">#elif PF_TARGET_OS_OSX</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locationManager</span> <span class="n">startUpdatingLocation</span><span class="p">];</span>
+</span><span class="line"><span class="cp">#endif</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<p>
+6、安全执行线程
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+</span><span class="line"><span class="k">extern</span> <span class="n">dispatch_queue_t</span> <span class="nf">JPThreadsafetyCreateQueueForObject</span><span class="p">(</span><span class="kt">id</span> <span class="n">object</span><span class="p">);</span>
+</span><span class="line"><span class="k">extern</span> <span class="kt">void</span> <span class="nf">JPThreadsafetySafeDispatchSync</span><span class="p">(</span><span class="n">dispatch_queue_t</span> <span class="n">queue</span><span class="p">,</span> <span class="n">dispatch_block_t</span> <span class="n">block</span><span class="p">);</span>
+</span><span class="line"><span class="cp">#define JPThreadSafetyPerform(queue, block) ({                      \</span>
+</span><span class="line"><span class="cp">    __ block typeof((block())) result;                              \</span>
+</span><span class="line"><span class="cp">    JPThreadsafetySafeDispatchSync(queue, ^{ result = block(); }); \</span>
+</span><span class="line"><span class="cp">    result;                                                        \</span>
+</span><span class="line"><span class="cp">})</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &quot;JPThreadsafety.h&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="o">*</span><span class="k">const</span> <span class="n">JPThreadsafetyQueueIDKey</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">JPThreadsafetyQueueIDKey</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">dispatch_queue_t</span> <span class="nf">JPThreadsafetyCreateQueueForObject</span><span class="p">(</span><span class="kt">id</span> <span class="n">object</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">NSString</span><span class="o">*</span> <span class="n">label</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">object</span> <span class="n">class</span><span class="p">])</span> <span class="nl">stringByAppendingString:</span><span class="s">@&quot;.synchronizationQueue&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">dispatch_queue_t</span> <span class="n">queue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="n">label</span><span class="p">.</span><span class="n">UTF8String</span><span class="p">,</span> <span class="n">DISPATCH_QUEUE_SERIAL</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="kt">void</span><span class="o">*</span> <span class="n">uuid</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">uuid</span><span class="p">));</span>
+</span><span class="line">    <span class="n">dispatch_queue_set_specific</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">JPThreadsafetyQueueIDKey</span><span class="p">,</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">free</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">queue</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">void</span> <span class="nf">JPThreadsafetySafeDispatchSync</span><span class="p">(</span><span class="n">dispatch_queue_t</span> <span class="n">queue</span><span class="p">,</span> <span class="n">dispatch_block_t</span> <span class="n">block</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">void</span><span class="o">*</span> <span class="n">uuidMine</span> <span class="o">=</span> <span class="n">dispatch_get_specific</span><span class="p">(</span><span class="n">JPThreadsafetyQueueIDKey</span><span class="p">);</span>
+</span><span class="line">    <span class="kt">void</span><span class="o">*</span> <span class="n">uuidOther</span> <span class="o">=</span> <span class="n">dispatch_queue_get_specific</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">JPThreadsafetyQueueIDKey</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">uuidMine</span> <span class="o">==</span> <span class="n">uuidOther</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">block</span><span class="p">();</span>
+</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">dispatch_sync</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">block</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</p></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/29/ioskai-fa-jin-nang/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1716,120 +2026,6 @@ hackers 总是想象如果自己是开发者会怎么写，然后才能找到入
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/25/fish-hook/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/shi-yong-introspy-zhui-zong-fen-xi-ying-yong-cheng-xu/">
-		
-			使用 Introspy 追踪分析应用程序</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">16</span> <span class="title">使用 introspy 追踪分析应用程序</span></h1>
-    <p>如果你已阅读了《 iOS 安全攻防》系列专栏之前的文章，一定已经对静态以及运行时分析<code> App </code>有了一定的了解。</p>
-
-<p>我们可以借助的分析工具很多，工具和工具之间一般没有什么优劣比较性，完全看个人习惯什么擅长什么。</p>
-
-<p>多个工具多条路，那么本文将介绍追踪分析利器<code> introspy </code>。</p>
-
-<p>对应 iOS 系统版本，下载适用的<code> introspy </code>工具包：<a href="https://github.com/iSECPartners/Introspy-iOS/releases">introspy下载地址传送门</a></p>
-
-<p>下载后，将其拷贝到设备中，并执行安装命令：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line"># dpkg -i com.isecpartners.introspy-v0.4-iOS_7.deb</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>重启设备：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class=""><span class="line"># killall SpringBoard</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>到设置中，就可以查看到 instrospy 的设置选项了:</p>
-
-<div class="figure" id="figure-16-1">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69jw1f75zfuzba2j208w0adjrr.jpg" />
-
-    <p class="caption"><strong>图片 16.1</strong> instrospy1</p>
-</div>
-
-
-<p>在<code> Introspy-Apps </code>中选择要跟踪的<code> app </code>名称。
-<code>Instrospy-Settings </code>则提供一些常规跟踪设置选项，默认是全部开启。</p>
-
-<p>然后启动想要跟踪的应用程序，就可以直接查看 log 获取<code> Instrospy </code>为我们跟踪捕获的信息，这里以跟踪支付宝 app 为例。</p>
-
-<p>打开支付宝 App ，选择添加银行卡，随意添加一个卡号，然后点击下一步:</p>
-
-<div class="figure" id="figure-16-2">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69jw1f75zgf02jqj208w0fsjrq.jpg" />
-
-    <p class="caption"><strong>图片 16.2</strong> instrospy2</p>
-</div>
-
-
-<p>支付宝 app 反馈添加失败，该卡暂不支持，Instrospy 捕获的信息也很清晰：</p>
-
-<div class="figure" id="figure-16-3">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75zm8s5qyj21bc0h4425.jpg" />
-
-    <p class="caption"><strong>图片 16.3</strong> instrospy3</p>
-</div>
-
-
-<p>追踪信息被保存为一个数据库<code>introspy-com.alipay.iphoneclient.db</code>，存放在：
-<code>./private/var/mobile/Applications/4763A8A5-2E1D-4DC2-8376-6CB7A8B98728/Library/introspy-com.alipay.iphoneclient.db</code></p>
-
-<p>也可以借助<code> Introspy-Analyzer </code>在本地将该数据库解析成一个直观的 report.html 查看
-<a href="https://github.com/iSECPartners/Introspy-Analyzer">Introspy-Analyzer下载地址传送门</a></p>
-
-<p>将 <code>introspy-com.alipay.iphoneclient.db</code> 拷贝到本地，执行：
-<code>python introspy.py -p ios --outdir Portal-introspy-html introspy-com.alipay.iphoneclient.db</code></p>
-
-<p>就会生成一个 <code>Portal-introspy-html</code>  文件夹，该目录下有 <code>report.html</code> ，用浏览器打开:
-<code>open report.html</code></p>
-
-<p>就可以清晰的查看追踪信息了，主要分为<code> DataStorage</code>、<code>IPC</code>、<code>Misc</code>、<code>Network</code>、<code>Crypto</code> 六大类信息。
-举个例子，选择<code> Crypto </code>可以查看支付宝 app 采取了什么加密措施，如果你看过我之前的文章，一定会一眼就认出来手势密码的：</p>
-
-<div class="figure" id="figure-16-4">
-    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f75zn5ysdnj218u1cctgb.jpg" />
-
-    <p class="caption"><strong>图片 16.4</strong> instrospy4</p>
-</div>
-
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/shi-yong-introspy-zhui-zong-fen-xi-ying-yong-cheng-xu/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

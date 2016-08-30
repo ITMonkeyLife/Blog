@@ -4,7 +4,7 @@
   <title><![CDATA[Category: React-Native | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/react-native/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-08-26T14:34:00+08:00</updated>
+  <updated>2016-08-30T21:58:58+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -200,7 +200,7 @@ var App = React.createClass({
     return (
       <tabbarios>
         &lt;TabBarIOS.Item title="React Native" selected={true}&gt;
-          &lt;NavigatorIOS initialRoute= /&gt;
+          &lt;NavigatorIOS initialRoute={{ title: 'React Native' }} /&gt;
         
       </tabbarios>
     );
@@ -268,7 +268,7 @@ var ReactNative = React.createClass({
     return (
       &lt;View style={styles.row}&gt;
         &lt;Image
-          source=
+          source={{uri: 'http://facebook.github.io/react/img/logo_og.png'}}
           style={styles.image}
         /&gt;
         &lt;View style={styles.text}&gt;
