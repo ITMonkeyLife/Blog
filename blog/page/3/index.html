@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="6 使用 class-dump-z 分析支付宝 App 为了了解支付宝 app 的源码结构，我们可以使用 class-dump-z 工具来分析支付宝二进制。 下载配置 class_dump_z 前往 https://code.google.com/p/networkpx/wiki/ &hellip;">
+	<meta name="description" content="7 Hack 实战——解除支付宝 App 手势解锁错误次数限制 之前仅仅介绍了工具的使用，本文将实践一下如何利用 cycript 结合 class-dump 结果 hack，还要牺牲一下支付宝 App 。 首先，老套路，取到手势解锁界面的 View Controller: cy# var app &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -74,6 +74,172 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/">
+		
+			Hack 实战——解除支付宝手势解锁次数限制</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">7</span> <span class="title">Hack 实战——解除支付宝 App 手势解锁错误次数限制</span></h1>
+    <p>之前仅仅介绍了工具的使用，本文将实践一下如何利用 cycript 结合 class-dump 结果 hack，还要牺牲一下支付宝 App 。</p>
+
+<p>首先，老套路，取到手势解锁界面的 View Controller:</p>
+
+<div class="code code">
+<pre class="code">cy# var app = [UIApplication sharedApplication]  
+@&quot;&lt;DFApplication: 0x1666c960&gt;&quot;  
+cy# var keyWindow = app.keyWindow  
+@&quot;&lt;UIWindow: 0x16591bd0; frame = (0 0; 320 568); gestureRecognizers = &lt;NSArray: 0x1b047000&gt;; layer = &lt;UIWindowLayer: 0x165d0650&gt;&gt;&quot;  
+cy# var root = keyWindow.rootViewController  
+@&quot;&lt;UINavigationController: 0x179779a0&gt;&quot;  
+cy# var visible = root.visibleViewController  
+@&quot;&lt;GestureUnlockViewController: 0x165de090&gt;&quot;</pre>
+</div>
+
+<p>然后，对照 class-dump-z 结果，来分析 GestureUnlockViewController 有什么利用价值 ：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">GestureUnlockViewController</span> : <span class="nc">DTViewController</span> <span class="o">&lt;</span><span class="n">UIAlertViewDelegate</span><span class="p">,</span> <span class="n">GestureHeadImageViewDelegate</span><span class="o">&gt;</span> <span class="p">{</span>
+</span><span class="line"><span class="k">@private</span>
+</span><span class="line">    <span class="n">GestureHeadImageView</span><span class="o">*</span> <span class="n">_headImageView</span><span class="p">;</span>
+</span><span class="line">    <span class="n">GestureTipLabel</span><span class="o">*</span> <span class="n">_tipLabel</span><span class="p">;</span>
+</span><span class="line">    <span class="n">GestureInputView</span><span class="o">*</span> <span class="n">_inputView</span><span class="p">;</span>
+</span><span class="line">    <span class="n">DTButton</span><span class="o">*</span> <span class="n">_forgetButton</span><span class="p">;</span>
+</span><span class="line">    <span class="n">DTButton</span><span class="o">*</span> <span class="n">_changeAccountButton</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">_retryCount</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIView</span><span class="o">*</span> <span class="n">_guideView</span><span class="p">;</span>
+</span><span class="line">    <span class="kt">id</span><span class="o">&lt;</span><span class="n">GestrueViewControllerDelegate</span><span class="o">&gt;</span> <span class="n">_delegate</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">__weak</span> <span class="kt">id</span><span class="o">&lt;</span><span class="n">GestrueViewControllerDelegate</span><span class="o">&gt;</span> <span class="n">delegate</span><span class="p">;</span>
+</span><span class="line"><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">).</span><span class="n">cxx_destruct</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">shouldAutorotateToInterfaceOrientation:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">interfaceOrientation</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">headClicked</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputViewFirstEffectiveTouch:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">touch</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">alertView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">clickedButtonAtIndex:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">index</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">actionChangeAccountToLogin</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">actionResetPswBtnClick</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">resetCurrentUser</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">resetPsw</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewWillDisappear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">view</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">notifyFaceToFacePayReceivedData:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">facePayReceivedData</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewWillAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">view</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">breakFirstRun</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isFirstRun</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">guideViewClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">clicked</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewWillLayoutSubviews</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>目测 <code>_tipLabel</code> 是写账户名和提示操作的 label ，上篇文章我提到过：@private 限制不了 keyPath ，现在我们来修改一下支付宝登录页的用户名信息：</p>
+
+<div class="code code">
+<pre class="code">cy# [visible setValue:@&quot;Test By yiyaaixuexi&quot; forKeyPath:@&quot;_tipLabel.text&quot;]</pre>
+</div>
+
+<div class="figure" id="figure-7-1">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f75ua3yb6aj208w0fsmys.jpg" />
+
+    <p class="caption"><strong>图片 7.1</strong> hack-practice</p>
+</div>
+
+
+<p>支付宝手势密码解锁有尝试次数限制，连续错 5 次就要重新登录。
+我想解除重试解锁次数的限制，发现了记录解锁次数的类型是 int ，<code>int _retryCount</code> ，这一点让我很不开心，因为我无法通过 KVC 来修改其值了。</p>
+
+<p>但是没有关系，我可以通过指针访问：</p>
+
+<div class="code code">
+<pre class="code">cy# visible-&gt;_retryCount = 0  
+0</pre>
+</div>
+
+<p>这样我就能无限制的用程序暴力破解手势密码了，来计算一下有多少种可能呢？</p>
+
+<div class="figure" id="figure-7-2">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75uaz3e83j20lk01aaam.jpg" />
+
+    <p class="caption"><strong>图片 7.2</strong> hack-practice2</p>
+</div>
+
+
+<p>这个数字对我来说有点大，可是对 iPhone5 的 CPU 来说就是小菜一碟了～</p>
+
+<p>等一下，密码格式是什么呢？</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>id 类型的密码，很严谨，又给 hack 带来不少麻烦呀～
+不过没关系，我们可以利用 Method Swizzling 来打出 password 到底是什么，不过呢，貌似可以再写一篇新文章去介绍了……</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1416,138 +1582,6 @@ Hello world !!!</pre>
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/18/javascriptde-zuo-yong-yu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/06/15/swift-3-dot-0-abi/">
-		
-			Swift 3.0 ABI</a>
-	</h2>
-	<div class="entry-content">
-		<h2><a class="toc-backref" href="#id2">Hard Constraints on Resilience</a><a class="headerlink" href="#hard-constraints-on-resilience" title="Permalink to this headline"></a></h2>
-<p>The root of a class hierarchy must remain stable, at pain of
-invalidating the metaclass hierarchy.  Note that a Swift class without an
-explicit base class is implicitly rooted in the SwiftObject
-Objective-C class.</p>
-
-<h2><a class="toc-backref" href="#id3">Type Layout</a><a class="headerlink" href="#type-layout" title="Permalink to this headline"></a></h2>
-<div class="section" id="fragile-struct-and-tuple-layout">
-<h3><a class="toc-backref" href="#id4">Fragile Struct and Tuple Layout</a><a class="headerlink" href="#fragile-struct-and-tuple-layout" title="Permalink to this headline"></a></h3>
-<p>Structs and tuples currently share the same layout algorithm, noted as the
-&#8220;Universal&#8221; layout algorithm in the compiler implementation. The algorithm
-is as follows:</p>
-<ul class="simple">
-<li>Start with a <strong>size</strong> of <strong>0</strong> and an <strong>alignment</strong> of <strong>1</strong>.</li>
-<li>Iterate through the fields, in element order for tuples, or in <code class="docutils literal"><span class="pre">var</span></code>
-declaration order for structs. For each field:<ul>
-<li>Update <strong>size</strong> by rounding up to the <strong>alignment of the field</strong>, that is,
-increasing it to the least value greater or equal to <strong>size</strong> and evenly
-divisible by the <strong>alignment of the field</strong>.</li>
-<li>Assign the <strong>offset of the field</strong> to the current value of <strong>size</strong>.</li>
-<li>Update <strong>size</strong> by adding the <strong>size of the field</strong>.</li>
-<li>Update <strong>alignment</strong> to the max of <strong>alignment</strong> and the
-<strong>alignment of the field</strong>.</li>
-</ul>
-</li>
-<li>The final <strong>size</strong> and <strong>alignment</strong> are the size and alignment of the
-aggregate. The <strong>stride</strong> of the type is the final <strong>size</strong> rounded up to
-<strong>alignment</strong>.</li>
-</ul>
-<p>Note that this differs from C or LLVM&#8217;s normal layout rules in that <em>size</em>
-and <em>stride</em> are distinct; whereas C layout requires that an embedded struct&#8217;s
-size be padded out to its alignment and that nothing be laid out there,
-Swift layout allows an outer struct to lay out fields in the inner struct&#8217;s
-tail padding, alignment permitting. Unlike C, zero-sized structs and tuples
-are also allowed, and take up no storage in enclosing aggregates. The Swift
-compiler emits LLVM packed struct types with manual padding to get the
-necessary control over the binary layout. Some examples:</p>
-<pre>// LLVM &lt;{ i64, i8 }&gt;
-struct S {
-  var x: Int
-  var y: UInt8
-}
-
-// LLVM &lt;{ i8, [7 x i8], &lt;{ i64, i8 }&gt;, i8 }&gt;
-struct S2 {
-  var x: UInt8
-  var s: S
-  var y: UInt8
-}
-
-// LLVM &lt;{}&gt;
-struct Empty {}
-
-// LLVM &lt;{ i64, i64 }&gt;
-struct ContainsEmpty {
-  var x: Int
-  var y: Empty
-  var z: Int
-}
-</pre></div>
-
-<h3><a class="toc-backref" href="#id5">Class Layout</a><a class="headerlink" href="#class-layout" title="Permalink to this headline"></a></h3>
-<p>Swift relies on the following assumptions about the Objective-C runtime,
-which are therefore now part of the Objective-C ABI:</p>
-<ul class="simple">
-<li>32-bit platforms never have tagged pointers.  ObjC pointer types are
-either nil or an object pointer.</li>
-<li>On x86-64, a tagged pointer either sets the lowest bit of the pointer
-or the highest bit of the pointer.  Therefore, both of these bits are
-zero if and only if the value is not a tagged pointer.</li>
-<li>On ARM64, a tagged pointer always sets the highest bit of the pointer.</li>
-<li>32-bit platforms never perform any isa masking.  <code class="docutils literal"><span class="pre">object_getClass</span></code>
-is always equivalent to <code class="docutils literal"><span class="pre">*(Class*)object</span></code>.</li>
-<li>64-bit platforms perform isa masking only if the runtime exports a
-symbol <code class="docutils literal"><span class="pre">uintptr_t</span> <span class="pre">objc_debug_isa_class_mask;</span></code>.  If this symbol
-is exported, <code class="docutils literal"><span class="pre">object_getClass</span></code> on a non-tagged pointer is always
-equivalent to <code class="docutils literal"><span class="pre">(Class)(objc_debug_isa_class_mask</span> <span class="pre">&amp;</span> <span class="pre">*(uintptr_t*)object)</span></code>.</li>
-<li>The superclass field of a class object is always stored immediately
-after the isa field.  Its value is either nil or a pointer to the
-class object for the superclass; it never has other bits set.</li>
-</ul>
-<p>The following assumptions are part of the Swift ABI:</p>
-<ul class="simple">
-<li>Swift class pointers are never tagged pointers.</li>
-</ul>
-<p>TODO</p>
-<h3><a class="toc-backref" href="#id6">Fragile Enum Layout</a><a class="headerlink" href="#fragile-enum-layout" title="Permalink to this headline"></a></h3>
-<p>In laying out enum types, the ABI attempts to avoid requiring additional
-storage to store the tag for the enum case. The ABI chooses one of five
-strategies based on the layout of the enum:</p>
-<h4><a class="toc-backref" href="#id7">Empty Enums</a><a class="headerlink" href="#empty-enums" title="Permalink to this headline"></a></h4>
-<p>In the degenerate case of an enum with no cases, the enum is an empty type.</p>
-<pre><span class="n">enum</span><span class="w"> </span><span class="n">Empty</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="c1">// =&gt; empty type</span>
-</pre>
-<h4><a class="toc-backref" href="#id8">Single-Case Enums</a><a class="headerlink" href="#single-case-enums" title="Permalink to this headline"></a></h4>
-<p>In the degenerate case of an enum with a single case, there is no
-discriminator needed, and the enum type has the exact same layout as its
-case&#8217;s data type, or is empty if the case has no data type.</p>
-<pre><span class="n">enum</span><span class="w"> </span><span class="n">EmptyCase</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">case</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="p">}</span><span class="w">             </span><span class="c1">// =&gt; empty type</span>
-<span class="n">enum</span><span class="w"> </span><span class="n">DataCase</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">case</span><span class="w"> </span><span class="no">Y</span><span class="p">(</span><span class="n">Int</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// =&gt; LLVM &lt;{ i64, double }&gt;</span>
-</pre>
-
-		
-		<a href="/Blog/blog/2016/06/15/swift-3-dot-0-abi/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/06/15/swift-3-dot-0-abi/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
