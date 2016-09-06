@@ -1,0 +1,738 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>UIKit-Dynamics基于物理引擎新特性 - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="UIKit Dynamics 是 iOS 7 中基于物理动画引擎的一个新功能&#8211;它被特别设计使其能很好地与 collection views 配合工作，而后者是在 iOS 6 中才被引入的新特性。接下来，我们要好好看看如何将这两个特性结合在一起。 这篇文章将讨论两个结合使用 UIkit &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog/">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog/">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">UIKit-Dynamics基于物理引擎新特性</h2>
+	<div class="entry-content"><p>UIKit Dynamics 是 iOS 7 中基于物理动画引擎的一个新功能&#8211;它被特别设计使其能很好地与 collection views 配合工作，而后者是在 iOS 6 中才被引入的新特性。接下来，我们要好好看看如何将这两个特性结合在一起。 </p>
+
+<p>这篇文章将讨论两个结合使用 UIkit Dynamics 和 collection view 的例子。第一个例子展示了如何去实现像 iOS 7 里信息 app 中的消息泡泡的弹簧动效，然后再进一步结合平铺机制来实现布局的可伸缩性。第二个例子展现了如何用 UIKit Dynamics 来模拟<a href="http://zh.wikipedia.org/wiki/牛顿摆">牛顿摆</a>，这个例子中物体可以一个个地加入到 collection view 中，并和其他物体发生相互作用。</p>
+
+<p>在我们开始之前，我假定你们对 <code>UICollectionView</code> 是如何工作是有基本的了解——查看<a href="http://www.objccn.io/issue-3-3/">这篇 objc.io 文章</a>会有你想要的所有细节。我也假定你已经理解了 <code>UIKit Dynamics</code> 的工作原理&#8211;阅读这篇<a href="http://www.teehanlax.com/blog/introduction-to-uikit-dynamics/">博客</a>，可以了解更多 UIKit Dynamics 的知识。</p>
+
+<blockquote>
+  <p><span class="secondary radius label">编者注</span> 如果您阅读本篇文章感觉有点吃力的话，可以先来看看 <a href="http://im.onevcat.com">@onevcat</a> 的<a href="http://onevcat.com/2012/06/introducing-collection-views/">《UICollectionView 入门》</a> 和<a href="http://onevcat.com/2013/06/uikit-dynamics-started/">《UIKit Dynamics 入门》</a>这两篇入门文章，帮助您快速补充相关知识。</p>
+</blockquote>
+
+<p>文章中的两个例子项目都已经在 GitHub 中:</p>
+
+<ul>
+<li><a href="https://github.com/objcio/issue-5-springy-collection-view">ASHSpringyCollectionView</a>（基于 <a href="https://github.com/TeehanLax/UICollectionView-Spring-Demo">UICollectionView Spring Demo</a>）</li>
+<li><a href="https://github.com/objcio/issue-5-newtonian-collection-view">Newtownian UICollectionView</a></li>
+</ul>
+
+<h2 id="uidynamicanimator">关于 UIDynamicAnimator</h2>
+
+<p>支持 <code>UICollectionView</code> 实现 UIKit Dynamics 的最关键部分就是 <code>UIDynamicAnimator</code>。要实现这样的 UIKit Dynamics 的效果，我们需要自己自定义一个继承于 <code>UICollectionViewFlowLayout</code> 的子类，并且在这个子类对象里面持有一个 UIDynamicAnimator 的对象。</p>
+
+<p>当我们创建自定义的 dynamic animator 时，我们不会使用常用的初始化方法 <code>-initWithReferenceView:</code> ，因为我们不需要把这个 dynamic animator 关联一个 view ，而是给它关联一个 collection view layout。所以我们使用 <code>-initWithCollectionViewLayout:</code> 这个初始化方法，并把 collection view layout 作为参数传入。这很关键，当的 animator 的 behavior item 的属性应该被更新的时候，它必须能够确保 collection view 的 layout 失效。换句话说，dynamic animator 将会经常使旧的 layout 失效。</p>
+
+<p>我们很快就能看到这些事情是怎么连接起来的，但是在概念上理解 collection view 如何与 dynamic animator 相互作用是很重要的。</p>
+
+<p>Collection view layout 将会为 collection view 中的每个 <code>UICollectionViewLayoutAttributes</code> 添加 behavior（稍后我们会讨论平铺它们）。在将这些 behaviors 添加到 dynamic animator 之后，UIKit 将会向 collection view layout 询问 atrribute 的状态。我们此时可以直接将由 dynamic animator 所提供的 items 返回，而不需要自己做任何计算。Animator 将在模拟时禁用 layout。这会导致 UIKit 再次查询 layout，这个过程会一直持续到模拟满足设定条件而结束。</p>
+
+<p>所以重申一下，layout 创建了 dynamic animator，并且为其中每个 item 的 layout attribute 添加对应的 behaviors。当 collection view 需要 layout 信息时，由 dynamic animator 来提供需要的信息。</p>
+
+<h2 id="uicollectionviewflowlayout">继承 UICollectionViewFlowLayout</h2>
+
+<p>我们将要创建一个简单的例子来展示如何使用一个带 UIkit Dynamic 的 collection view layout。当然，我们需要做的第一件事就是，创建一个数据源去驱动我们的 collection view。我知道以你的能力完全可以独立实现一个数据源，但是为了完整性，我还是提供了一个给你:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">ASHCollectionViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span> <span class="n">CellIdentifier</span> <span class="o">=</span> <span class="s">@&quot;CellIdentifier&quot;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">viewDidLoad</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span> <span class="nl">registerClass:</span><span class="p">[</span><span class="n">UICollectionViewCell</span> <span class="n">class</span><span class="p">]</span>
+</span><span class="line">            <span class="nl">forCellWithReuseIdentifier:</span><span class="n">CellIdentifier</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">UIStatusBarStyle</span><span class="p">)</span><span class="nf">preferredStatusBarStyle</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">UIStatusBarStyleLightContent</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">animated</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">viewDidAppear:</span><span class="n">animated</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionViewLayout</span> <span class="n">invalidateLayout</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="cp">#pragma mark - UICollectionView Methods</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nf">collectionView:</span><span class="p">(</span><span class="n">UICollectionView</span> <span class="o">*</span><span class="p">)</span><span class="nv">collectionView</span>
+</span><span class="line">    <span class="nf">numberOfItemsInSection:</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">section</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="mi">120</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">UICollectionViewCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">collectionView:</span><span class="p">(</span><span class="n">UICollectionView</span> <span class="o">*</span><span class="p">)</span><span class="nv">collectionView</span>
+</span><span class="line">                 <span class="nf">cellForItemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UICollectionViewCell</span> <span class="o">*</span><span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">collectionView</span>
+</span><span class="line">        <span class="nl">dequeueReusableCellWithReuseIdentifier:</span><span class="n">CellIdentifier</span>
+</span><span class="line">                                  <span class="nl">forIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">backgroundColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">orangeColor</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<!-- more -->
+<p>我们注意到当 view 第一次出现的时候，这个 layout 是被无效的。这是因为没有用 Storyboard 的结果（使用或不使用 Storyboard，调用 prepareLayout 方法的时机是不同的，苹果在 WWDC 的视频中并没有告诉我们这一点）。所以，当这些视图一出现我们就需要手动使这个 collection view layout 无效。当我们用平铺（后面会详细介绍）的时候，就不需要这样。</p>
+
+<p>现在来创建自定义的 collection view layout 吧，我们需要强引用一个 dynamic animator，并且使用它来驱动我们的 collcetion view layout 的 attribute。我们在实现文件里定义了一个私有属性：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ASHSpringyCollectionViewFlowLayout</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">UIDynamicAnimator</span> <span class="o">*</span><span class="n">dynamicAnimator</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们将在 layout 的初始化方法中初始化我们的 dynamic animator。还要设置一些属于父类 <code>UICollectionViewFlowLayout</code> 中的属性:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">]))</span> <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">minimumInteritemSpacing</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">minimumLineSpacing</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">itemSize</span> <span class="o">=</span> <span class="n">CGSizeMake</span><span class="p">(</span><span class="mi">44</span><span class="p">,</span> <span class="mi">44</span><span class="p">);</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">sectionInset</span> <span class="o">=</span> <span class="n">UIEdgeInsetsMake</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIDynamicAnimator</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithCollectionViewLayout:</span><span class="n">self</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们将实现的下一个方法是 prepareLayout。我们首先需要调用父类的方法。因为我们是继承 <code>UICollectionViewFlowLayout</code> 类，所以在调用父类的 prepareLayout 方法时，可以使 collection view layout 的各个 attribute 都放置在合适的位置。我们可以依靠父类的这个方法来提供一个默认的排布，并且能够使用 <code>[super layoutAttributesForElementsInRect:visibleRect];</code> 方法得到指定 rect 内的<em>所有</em> item 的 layout attributes。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">super</span> <span class="n">prepareLayout</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">CGSize</span> <span class="n">contentSize</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">contentSize</span><span class="p">;</span>
+</span><span class="line"><span class="n">NSArray</span> <span class="o">*</span><span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nl">layoutAttributesForElementsInRect:</span>
+</span><span class="line">    <span class="n">CGRectMake</span><span class="p">(</span><span class="mf">0.0f</span><span class="p">,</span> <span class="mf">0.0f</span><span class="p">,</span> <span class="n">contentSize</span><span class="p">.</span><span class="n">width</span><span class="p">,</span> <span class="n">contentSize</span><span class="p">.</span><span class="n">height</span><span class="p">)];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这<em>真的</em>是效率低下的代码。因为我们的 collection view 中可能会有成千上万个 cell，一次性加载所有的 cell 是一个可能会产生难以置信的内存紧张的操作。我们要在一段时间内遍历所有的元素，这也成为耗时的操作。这真的是效率的双重打击！别担心——我们是负责任的开发者，所以我们会很快解决这个问题的。我们先暂时继续使用简单、粗暴的实现方式。</p>
+
+<p>当加载完我们所有的 collection view layout attribute 之后，我们需要检查他们是否都已经被加载到我们的 animator 里了。如果一个 behavior 已经在 animator 中存在，那么我们就不能重新添加，否则就会得到一个非常难懂的运行异常提示:</p>
+
+<pre><code>&lt;UIDynamicAnimator: 0xa5ba280&gt; (0.004987s) in 
+&lt;ASHSpringyCollectionViewFlowLayout: 0xa5b9e60&gt; \{\{0, 0}, \{0, 0\}\}: 
+body &lt;PKPhysicsBody&gt; type:&lt;Rectangle&gt; representedObject:
+[&lt;UICollectionViewLayoutAttributes: 0xa281880&gt; 
+index path: (&lt;NSIndexPath: 0xa281850&gt; {length = 2, path = 0 - 0}); 
+frame = (10 10; 300 44); ] 0xa2877c0  
+PO:(159.999985,32.000000) AN:(0.000000) VE:(0.000000,0.000000) AV:(0.000000) 
+dy:(1) cc:(0) ar:(1) rs:(0) fr:(0.200000) re:(0.200000) de:(1.054650) gr:(0) 
+without representedObject for item &lt;UICollectionViewLayoutAttributes: 0xa3833e0&gt; 
+index path: (&lt;NSIndexPath: 0xa382410&gt; {length = 2, path = 0 - 0}); 
+frame = (10 10; 300 44);
+</code></pre>
+
+<p>如果看到了这个错误，那么这基本表明你添加了两个 behavior 给同一个 <code>UICollectionViewLayoutAttribute</code>，这使得系统不知道该怎么处理。</p>
+
+<p>无论如何，一旦我们已经检查好我们是否已经将 behavior 添加到 dynamic animator 之后，我们就需要遍历每个 collection view layout attribute 来创建和添加新的 dynamic animator：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span><span class="p">.</span><span class="n">behaviors</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">items</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">UIDynamicItem</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">obj</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">behaviour</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAttachmentBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItem:</span><span class="n">obj</span>
+</span><span class="line">                                                                    <span class="nl">attachedToAnchor:</span><span class="p">[</span><span class="n">obj</span> <span class="n">center</span><span class="p">]];</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">behaviour</span><span class="p">.</span><span class="n">length</span> <span class="o">=</span> <span class="mf">0.0f</span><span class="p">;</span>
+</span><span class="line">        <span class="n">behaviour</span><span class="p">.</span><span class="n">damping</span> <span class="o">=</span> <span class="mf">0.8f</span><span class="p">;</span>
+</span><span class="line">        <span class="n">behaviour</span><span class="p">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">addBehavior:</span><span class="n">behaviour</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这段代码非常简单。我们为每个 item 创建了一个以物体的中心为附着点的 <code>UIAttachmentBehavior</code> 对象。然后又设置了我们的 attachment behavior 的 length 为 0 以便约束这个 cell 能一直以 behavior 的附着点为中心。然后又给 <code>damping</code> 和 <code>frequency</code> 这两个参数设置一个比较合适的值。</p>
+
+<p>这就是 <code>prepareLayout</code>。我们现在需要实现 <code>layoutAttributesForElementsInRect:</code> 和 <code>layoutAttributesForItemAtIndexPath:</code> 这两个方法，UIKit 会调用它们来询问 collection view 每一个 item 的布局信息。我们写的代码会把这些查询交给专门做这些事的 dynamic animator:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForElementsInRect:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">rect</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">itemsInRect:</span><span class="n">rect</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForItemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">layoutAttributesForCellAtIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h1>响应滚动事件</h1>
+
+<p>我们目前实现的代码给我们展示的只是一个在正常滑动下只有静态感觉的 <code>UICollectionView</code>，运行起来没什么特别的。看上去很好，但不是真的<em>动态</em>，不是么？</p>
+
+<p>为了使它表现地动态点，我们需要 layout 和 dynamic animator 能够对 collection view 中滑动位置的变化做出反应。幸好这里有个非常适合这个要求的方法 <code>shouldInvalidateLayoutForBoundsChange:</code>。这个方法会在 collection view 的 bound 发生改变的时候被调用，根据最新的 <a href="http://www.objccn.io/issue-3-2/">content offset</a> 调整我们的 dynamic animator 中的 behaviors 的参数。在重新调整这些 behavior 的 item 之后，我们在这个方法中返回 NO；因为 dynamic animator 会关心 layout 的无效问题，所以在这种情况下，它不需要去主动使其无效：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">shouldInvalidateLayoutForBoundsChange:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">newBounds</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIScrollView</span> <span class="o">*</span><span class="n">scrollView</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">newBounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">scrollView</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">touchLocation</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">panGestureRecognizer</span> <span class="nl">locationInView:</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span><span class="p">.</span><span class="n">behaviors</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">springBehaviour</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">yDistanceFromTouch</span> <span class="o">=</span> <span class="n">fabsf</span><span class="p">(</span><span class="n">touchLocation</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">springBehaviour</span><span class="p">.</span><span class="n">anchorPoint</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">xDistanceFromTouch</span> <span class="o">=</span> <span class="n">fabsf</span><span class="p">(</span><span class="n">touchLocation</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">springBehaviour</span><span class="p">.</span><span class="n">anchorPoint</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">scrollResistance</span> <span class="o">=</span> <span class="p">(</span><span class="n">yDistanceFromTouch</span> <span class="o">+</span> <span class="n">xDistanceFromTouch</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1500.0f</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">item</span> <span class="o">=</span> <span class="n">springBehaviour</span><span class="p">.</span><span class="n">items</span><span class="p">.</span><span class="n">firstObject</span><span class="p">;</span>
+</span><span class="line">        <span class="n">CGPoint</span> <span class="n">center</span> <span class="o">=</span> <span class="n">item</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
+</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="n">delta</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">MAX</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">delta</span><span class="o">*</span><span class="n">scrollResistance</span><span class="p">);</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">        <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">MIN</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">delta</span><span class="o">*</span><span class="n">scrollResistance</span><span class="p">);</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">        <span class="n">item</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">center</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">updateItemUsingCurrentState:</span><span class="n">item</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>让我们仔细查看这个代码的细节。首先我们得到了这个 scroll view（就是我们的 collection view ），然后计算它的 content offset 中 y 的变化（在这个例子中，我们的 collection view 是垂直滑动的）。一旦我们得到这个增量，我们需要得到用户接触的位置。这是非常重要的，因为我们希望离接触位置比较近的那些物体能移动地更迅速些，而离接触位置比较远的那些物体则应该滞后些。</p>
+
+<p>对于 dynamic animator 中的每个 behavior，我们将接触点到该 behavior 物体的 x 和 y 的距离之和除以 1500，1500 是我根据经验设的。分母越小，这个 collection view 的的交互就越有弹簧的感觉。一旦我们拿到了这个“滑动阻力”的值，我们就可以用它的增量乘上 <code>scrollResistance</code> 这个变量来指定这个 behavior 物体的中心点的 y 值。最后，我们在滑动阻力大于增量的情况下对增量和滑动阻力的结果进行了选择（这意味着物体开始往错误的方向移动了）。在本例我们用了这么大的分母，那么这种情况是不可能的，但是在一些更具弹性的 collection view layout 中还是需要注意的。</p>
+
+<p>就是这么一回事。以我的经验，这个方法对多达几百个物体的 collection view 来说也是是适用的。超过这个数量的话，一次性加载所有物体到内存中就会变成很大的负担，并且在滑动的时候就会开始卡顿了。</p>
+
+<p><img src="http://img.objccn.io/issue-5/springyCollectionView.gif" alt="Springy Collection View" /></p>
+
+<h2 id="tilingdynamicbehaviors">平铺（Tiling）你的 Dynamic Behaviors 来优化性能</h2>
+
+<p>当你的 collection view 中只有几百个 cell 的时候，他运行的很好，但当数据源超过这个范围的时候会发生什么呢？或者在运行的时你不能预测你的数据源有多大呢？我们的简单粗暴的方法就不管用了。</p>
+
+<p>除了在 <code>prepareLayout</code> 中加载<em>所有</em>的物体，如果我们能<em>更聪明地</em>知道哪些物体会加载那该多好啊。是的，就是仅加载显示的和即将显示的物体。这正是我们要采取的办法。</p>
+
+<p>我们需要做的第一件事就是是跟踪 dynamic animator 中的所有 behavior 物体的 index path。我在 collection view 中添加一个属性来做这件事:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">NSMutableSet</span> <span class="o">*</span><span class="n">visibleIndexPathsSet</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们用 set 是因为它具有常数复杂度的查找效率，并且我们<em>经常</em>地查找 <code>visibleIndexPathsSet</code> 中是否已经包含了某个 index path。</p>
+
+<p>在我们实现全新的 <code>prepareLayout</code> 方法之前——有一个问题就是什么是<strong>平铺 behavior</strong> —— 理解平铺的意思是非常重要的。当我们平铺behavior 的时候，我们会在这些 item 离开 collection view 的可视范围的时候删除对应的 behavior，在这些 item 进入可视范围的时候又添加对应的 behavior。这是一个大麻烦：我们需要在<em>滚动中</em>创建新的 behavior。这就意味着让人觉得创建它们就好像它们本来就已经在 dynamic animator 里了一样，并且它们是在 <code>shouldInvalidateLayoutForBoundsChange:</code> 方法被修改的。</p>
+
+<p>因为我们是在滚动中创建这些新的 behavior，所以我们需要维持现在 collection view 的一些状态。尤其我们需要跟踪最近一次我们 <code>bound</code> 变化的增量。我们会在滚动时用这个状态去创建我们的 behavior：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">assign</span><span class="p">)</span> <span class="n">CGFloat</span> <span class="n">latestDelta</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>添加完这个 property 后，我们将要在 <code>shouldInvalidateLayoutForBoundsChange:</code> 方法中添加下面这行代码：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span> <span class="o">=</span> <span class="n">delta</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这就是我们需要修改我们的方法来响应滚动事件。我们的这两个方法是为了将 collection view 中 items 的 layout 信息传给 dynamic animator，这种方式没有变化。事实上，当你的 collection view 实现了 dynamic animator 的大部分情况下，都需要实现我们上面提到的两个方法 <code>layoutAttributesForElementsInRect:</code> 和 <code>layoutAttributesForItemAtIndexPath:</code>。</p>
+
+<p>这里最难懂的部分就是平铺机制。我们将要完全重写我们的 prepareLayout。</p>
+
+<p>这个方法的第一步是将那些物体的 index path 已经不在屏幕上显示的 behavior 从 dynamic animator 上删除。第二步是添加那些即将显示的物体的 behavior。</p>
+
+<p>让我们先看一下第一步。</p>
+
+<p>像以前一样，我们要调用 <code>super prepareLayout</code>，这样我们就能依赖父类 <code>UICollectionViewFlowLayout</code> 提供的默认排布。还像以前一样，我们通过父类获取一个矩形内的所有元素的 layout attribute。不同的是我们不是获取整个 collection view 中的元素属性，而只是获取显示范围内的。</p>
+
+<p>所以我们需要计算这个显示矩形。但是别着急！有件事要记住。我们的用户可能会非常快地滑动 collection view，导致了 dynamic animator 不能跟上，所以我们需要稍微扩大显示范围，这样就能包含到那些将要显示的物体了。否则，在滑动很快的时候就会出现频闪现象了。让我们计算一下显示范围:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGRect</span> <span class="n">originalRect</span> <span class="o">=</span> <span class="p">(</span><span class="n">CGRect</span><span class="p">){.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">,</span> <span class="p">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">};</span>
+</span><span class="line"><span class="n">CGRect</span> <span class="n">visibleRect</span> <span class="o">=</span> <span class="n">CGRectInset</span><span class="p">(</span><span class="n">originalRect</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我确信在实际显示矩形上的每个方向都扩大100个像素对我的 demo 来说是可行的。仔细查看这些值是否适合你们的 collection view，尤其是当你们的 cell 很小的情况下。</p>
+
+<p>接下来我们就需要收集在显示范围内的 collection view layout attributes。还有它们的 index paths:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSArray</span> <span class="o">*</span><span class="n">itemsInVisibleRectArray</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nl">layoutAttributesForElementsInRect:</span><span class="n">visibleRect</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="n">NSSet</span> <span class="o">*</span><span class="n">itemsIndexPathsInVisibleRectSet</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSSet</span> <span class="nl">setWithArray:</span><span class="p">[</span><span class="n">itemsInVisibleRectArray</span> <span class="nl">valueForKey:</span><span class="s">@&quot;indexPath&quot;</span><span class="p">]];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>注意我们是在用一个 NSSet。这是因为它具有常数复杂度的查找效率，并且我们经常的查找 <code>visibleIndexPathsSet</code> 是否已经包含了某个 index path:</p>
+
+<p>接下来我们要做的就是遍历 dynamic animator 的 behaviors，过滤掉那些已经在 <code>itemsIndexPathsInVisibleRectSet</code> 中的 item。因为我们已经过滤掉我们的 behavior，所以我们将要遍历的这些 item 都是不在显示范围里的，我们就可以将这些 item 从 animator 中删除掉（连同 <code>visibleIndexPathsSet</code> 属性中的 index path）:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSPredicate</span> <span class="o">*</span><span class="n">predicate</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithBlock:</span><span class="o">^</span><span class="kt">BOOL</span><span class="p">(</span><span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">behaviour</span><span class="p">,</span> <span class="n">NSDictionary</span> <span class="o">*</span><span class="n">bindings</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">currentlyVisible</span> <span class="o">=</span> <span class="p">[</span><span class="n">itemsIndexPathsInVisibleRectSet</span> <span class="nl">member:</span><span class="p">[[[</span><span class="n">behaviour</span> <span class="n">items</span><span class="p">]</span> <span class="n">firstObject</span><span class="p">]</span> <span class="n">indexPath</span><span class="p">]]</span> <span class="o">!=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="o">!</span><span class="n">currentlyVisible</span><span class="p">;</span>
+</span><span class="line"><span class="p">}]</span>
+</span><span class="line"><span class="n">NSArray</span> <span class="o">*</span><span class="n">noLongerVisibleBehaviours</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span><span class="p">.</span><span class="n">behaviors</span> <span class="nl">filteredArrayUsingPredicate:</span><span class="n">predicate</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="p">[</span><span class="n">noLongerVisibleBehaviours</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="kt">id</span> <span class="n">obj</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">index</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">removeBehavior:</span><span class="n">obj</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">visibleIndexPathsSet</span> <span class="nl">removeObject:</span><span class="p">[[[</span><span class="n">obj</span> <span class="n">items</span><span class="p">]</span> <span class="n">firstObject</span><span class="p">]</span> <span class="n">indexPath</span><span class="p">]];</span>
+</span><span class="line"><span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>下一步就是要得到<em>新</em>出现 item 的 <code>UICollectionViewLayoutAttributes</code> 数组——那些 item 的 index path 在 <code>itemsIndexPathsInVisibleRectSet</code> 而不在 <code>visibleIndexPathsSet</code>：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSPredicate</span> <span class="o">*</span><span class="n">predicate</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSPredicate</span> <span class="nl">predicateWithBlock:</span><span class="o">^</span><span class="kt">BOOL</span><span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">item</span><span class="p">,</span> <span class="n">NSDictionary</span> <span class="o">*</span><span class="n">bindings</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="n">currentlyVisible</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">visibleIndexPathsSet</span> <span class="nl">member:</span><span class="n">item</span><span class="p">.</span><span class="n">indexPath</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="o">!</span><span class="n">currentlyVisible</span><span class="p">;</span>
+</span><span class="line"><span class="p">}];</span>
+</span><span class="line"><span class="n">NSArray</span> <span class="o">*</span><span class="n">newlyVisibleItems</span> <span class="o">=</span> <span class="p">[</span><span class="n">itemsInVisibleRectArray</span> <span class="nl">filteredArrayUsingPredicate:</span><span class="n">predicate</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>一旦我们有新的 layout attribute 出现，我就可以遍历他们来创建新的 behavior，并且将他们的 index path 添加到 <code>visibleIndexPathsSet</code> 中。首先，无论如何，我都需要获取到用户手指触碰的位置。如果它是 <code>CGPointZero</code> 的话，那就表示这个用户没有在滑动 collection view，这时我就<em>假定</em>我们不需要在滚动时创建新的 behavior 了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CGPoint</span> <span class="n">touchLocation</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">panGestureRecognizer</span> <span class="nl">locationInView:</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这是一个潜藏危险的假定。如果用户很快地滑动了 collection view 之后释放了他的手指呢？这个 collection view 就会一直滚动，但是我们的方法就不会在滚动时创建新的 behavior 了。但幸运的是，那也就意味这时 scroll view 滚动太快很难被注意到！好哇！但是，对于那些拥有大型 cell 的 collection view 来说，这仍然是个问题。那么在这种情况下，就需要增加你的可视范围的 bounds 来加载更多物体以解决这个问题。</p>
+
+<p>现在我们需要枚举我们刚显示的 item，为他们创建 behavior，再将他们的 index path 添加到 <code>visibleIndexPathsSet</code>。我们还需要在滚动时做些<a href="http://www.youtube.com/watch?v=gENVB6tjq_M">数学运算</a>来创建 behavior：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">[</span><span class="n">newlyVisibleItems</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">item</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">center</span> <span class="o">=</span> <span class="n">item</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">springBehaviour</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAttachmentBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItem:</span><span class="n">item</span> <span class="nl">attachedToAnchor:</span><span class="n">center</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">springBehaviour</span><span class="p">.</span><span class="n">length</span> <span class="o">=</span> <span class="mf">0.0f</span><span class="p">;</span>
+</span><span class="line">    <span class="n">springBehaviour</span><span class="p">.</span><span class="n">damping</span> <span class="o">=</span> <span class="mf">0.8f</span><span class="p">;</span>
+</span><span class="line">    <span class="n">springBehaviour</span><span class="p">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">CGPointEqualToPoint</span><span class="p">(</span><span class="n">CGPointZero</span><span class="p">,</span> <span class="n">touchLocation</span><span class="p">))</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">yDistanceFromTouch</span> <span class="o">=</span> <span class="n">fabsf</span><span class="p">(</span><span class="n">touchLocation</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">springBehaviour</span><span class="p">.</span><span class="n">anchorPoint</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">xDistanceFromTouch</span> <span class="o">=</span> <span class="n">fabsf</span><span class="p">(</span><span class="n">touchLocation</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">springBehaviour</span><span class="p">.</span><span class="n">anchorPoint</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
+</span><span class="line">        <span class="n">CGFloat</span> <span class="n">scrollResistance</span> <span class="o">=</span> <span class="p">(</span><span class="n">yDistanceFromTouch</span> <span class="o">+</span> <span class="n">xDistanceFromTouch</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1500.0f</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">MAX</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span><span class="o">*</span><span class="n">scrollResistance</span><span class="p">);</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">        <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">MIN</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">latestDelta</span><span class="o">*</span><span class="n">scrollResistance</span><span class="p">);</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">        <span class="n">item</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">center</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">addBehavior:</span><span class="n">springBehaviour</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">visibleIndexPathsSet</span> <span class="nl">addObject:</span><span class="n">item</span><span class="p">.</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line"><span class="p">}];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>大部分代码看起来还是挺熟悉的。大概有一半是来自没有实现平铺的 <code>prepareLayout</code>。另一半是来自 <code>shouldInvalidateLayoutForBoundsChange:</code> 这个方法。我们用 latestDelta 这个属性来表示 <code>bound</code> 变化的增量，适当地调整 <code>UICollectionViewLayoutAttributes</code> 使这些 cell 表现地就像被 attachment behavior “拉”着一样。</p>
+
+<p>就这样就完成了，真的！我已经在真机上测试过显示上千个 cell 的情况了，它运行地非常完美。<a href="https://github.com/objcio/issue-5-springy-collection-view">去试试吧</a>。</p>
+
+<h2>超越瀑布流布局</h2>
+
+<p>一般来说，当我们使用 <code>UICollectionView</code> 的时候，继承 <code>UICollectionViewFlowLayout</code> 会比直接继承 <code>UICollectionViewLayout</code> 更容易。这是因为 <em>flow</em> layout 会为我们做很多事。然而，瀑布流布局是严格基于它们的尺寸一个接一个的展现出来。如果你有一个布局不能适应这个标准怎么办？好的，如果你已经尝试用 <code>UICollectionViewFlowLayout</code> 来适应，而且你很确定它不能很好运行，那么就应该抛弃 <code>UICollectionViewFlowLayout</code> 这个定制性比较弱的子类，而应该直接在 <code>UICollectionViewLayout</code> 这个基类上进行定制。</p>
+
+<p>这个原则在处理 UIKit Dynamic 时也是适用的。</p>
+
+<p>让我们先创建 <code>UICollectionViewLayout</code> 的子类。当继承 <code>UICollectionViewLayout</code> 的时候需要实现 <code>collectionViewContentSize</code> 方法，这点非常重要。否则这个 collection view 就不知道如果去显示自己，也不会有显示任何东西。因为我们想要 collection view 不能滚动，所以这里要返回 collection view 的 frame 的 size，减去它的 <code>contentInset.top</code>：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">CGSize</span><span class="p">)</span><span class="nf">collectionViewContentSize</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">CGSizeMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">-</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">contentInset</span><span class="p">.</span><span class="n">top</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在这个（有点教学式）的例子中，我们的 collection view <em>总是会以零个cell开始</em>，物体通过 <code>performBatchUpdates:</code> 这个方法添加。这就意味着我们必须使用 <code>-[UICollectionViewLayout prepareForCollectionViewUpdates:]</code> 这个方法来添加我们的 behavior（即这个 collection view 的数据源总是以零开始）。</p>
+
+<p>除了给各个 item 添加 attachment behavior 外，我们还将保留另外两个 behavior：重力和碰撞。对于添加在这个 collection view 中的每个 item 来说，我们必须把这些 item 添加到我们的碰撞和 attachment behavior 中。最后一步就是设置这些 item 的初始位置为屏幕外的某些地方，这样就有被 attachment behavior 拉入到屏幕内的效果了:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">prepareForCollectionViewUpdates:</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nv">updateItems</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">prepareForCollectionViewUpdates:</span><span class="n">updateItems</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">updateItems</span> <span class="nl">enumerateObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">UICollectionViewUpdateItem</span> <span class="o">*</span><span class="n">updateItem</span><span class="p">,</span> <span class="n">NSUInteger</span> <span class="n">idx</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="n">updateItem</span><span class="p">.</span><span class="n">updateAction</span> <span class="o">==</span> <span class="n">UICollectionUpdateActionInsert</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">UICollectionViewLayoutAttributes</span>
+</span><span class="line">                <span class="nl">layoutAttributesForCellWithIndexPath:</span><span class="n">updateItem</span><span class="p">.</span><span class="n">indexPathAfterUpdate</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">            <span class="n">attributes</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="n">CGRectGetMaxX</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">.</span><span class="n">frame</span><span class="p">)</span> <span class="o">+</span> <span class="n">kItemSize</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="n">kItemSize</span><span class="p">,</span> <span class="n">kItemSize</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">            <span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">attachmentBehaviour</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAttachmentBehavior</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithItem:</span><span class="n">attributes</span>
+</span><span class="line">                                                                                  <span class="nl">attachedToAnchor:</span><span class="n">attachmentPoint</span><span class="p">];</span>
+</span><span class="line">            <span class="n">attachmentBehaviour</span><span class="p">.</span><span class="n">length</span> <span class="o">=</span> <span class="mf">300.0f</span><span class="p">;</span>
+</span><span class="line">            <span class="n">attachmentBehaviour</span><span class="p">.</span><span class="n">damping</span> <span class="o">=</span> <span class="mf">0.4f</span><span class="p">;</span>
+</span><span class="line">            <span class="n">attachmentBehaviour</span><span class="p">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="p">;</span>
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">dynamicAnimator</span> <span class="nl">addBehavior:</span><span class="n">attachmentBehaviour</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">gravityBehaviour</span> <span class="nl">addItem:</span><span class="n">attributes</span><span class="p">];</span>
+</span><span class="line">            <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collisionBehaviour</span> <span class="nl">addItem:</span><span class="n">attributes</span><span class="p">];</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p><img src="http://img.objccn.io/issue-5/newtonianCollectionView.gif" alt="Demo" /></p>
+
+<p>删除就有点复杂了。我们希望这些物体有“掉落”的效果而不是简单的消失。这就不仅仅是从 collection view 中删除个 cell 这么简单了，因为我们希望在它离开了屏幕之前还是保留它。我已经在代码中实现了这样的效果，但是做法有点取巧。</p>
+
+<p>基本上我们要做的是在 layout 中提供一个方法，在它删除 attachment behavior 两秒之后，将这个 cell 从 collection view 中删除。我们希望在这段时间里，这个 cell 能掉出屏幕，但是这不一定会发生。如果没有发生，也没关系。只要淡出就行了。然而，我们必须保证在这两秒内既没有新的 cell 被添加，也没有旧的 cell 被删除。（我说了有点取巧。）</p>
+
+<p>欢迎提交 pull request。</p>
+
+<p>这个方法是有局限性的。我将 cell 数量的上限设为 10，但是即使这样，在像 iPad2 这样比较旧的设备中，动画就会运行地很慢。当然，这个例子只是为了展示如何模拟有趣的动力学的一个方法——它并不是一个可以解决任何问题的万金油。你个人在实践中如何来进行模拟，包括性能等各个方面，都取决于你自己了。</p>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io/Blog//blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/';
+        var disqus_url = 'http://ITMonkeyLife.github.io/Blog//blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>

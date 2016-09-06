@@ -1,0 +1,433 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>自定义Formatters - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="我们希望有一种快速的一次性的解决方案，可以把数据格式化为一种易读的格式。Foundation 框架中的就有 NSFormatter 可以很好地胜任这个工作。另外，在 Mac 上，Appkit 已经内建了 NSFormatter 的支持。 内建格式器 Foundation 框架中的 &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog/">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog/">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">自定义Formatters</h2>
+	<div class="entry-content"><p>我们希望有一种快速的一次性的解决方案，可以把数据格式化为一种易读的格式。Foundation 框架中的就有 <code>NSFormatter</code> 可以很好地胜任这个工作。另外，在 Mac 上，Appkit 已经内建了 <code>NSFormatter</code> 的支持。</p>
+
+<h2>内建格式器</h2>
+
+<p>Foundation 框架中的 <code>NSFormatter</code> 是一个抽象类，它有两个已经实现的子类：<code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code>。现在我们先跳过这些，来实现我们自己的子类。</p>
+
+<p>如果你想了解更多的相关知识，我推荐阅读 <a href="http://nshipster.com/nsformatter/">NSHipster</a>。</p>
+
+<h2>介绍</h2>
+
+<p><code>NSFormatter</code> 除了抛出错误，其它什么事也不做。我还不知道有人想要用这个，当然如果它对你有用，就去用它吧。</p>
+
+<p>因为我们不喜欢错误，我们在此实现一个 <code>NSFormatter</code> 的子类，它可以把 <code>UIColor</code> 实例转换成可读的名字。例如，以下代码可以返回字符串“Blue”:</p>
+
+<pre><code>KPAColorFormatter *colorFormatter = [[KPAColorFormatter alloc] init];
+[colorFormatter stringForObjectValue:[UIColor blueColor]] // Blue
+</code></pre>
+
+<p><code>NSFormatter</code> 的子类化有两个方法需要实现：<code>stringForObjectValue:</code> 与 <code>getObjectValue:ForString:errorDescription:</code>。我们先开始介绍第一个方法，因为这个方法更常用。第二个方法，就我所知，经常用于 OS X 上，并且通常不是很有用，我们将稍后介绍。</p>
+
+<h2>初始化</h2>
+
+<p>首先，我们需要做些初始化的工作。由于没有事先定义好的字典可以把颜色映射至名字，这些工作将由我们来完成。为了简化，这些工作将在初始化方法中完成：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span><span class="p">;</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span> <span class="nl">initWithColors:</span><span class="err">@</span><span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Red&quot;</span><span class="p">,</span>
+</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Blue&quot;</span><span class="p">,</span>
+</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">greenColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Green&quot;</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<!-- more -->
+<p>这里的 colors 是一个以 <code>UIColor</code> 实例为键，英语名为值的字典。大家可以自行地去实现 <code>initWithColors:</code> 方法。当然你也可以自行实现，或者直接前往 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github repo</a> 获得答案。</p>
+
+<h2>格式化对象值</h2>
+
+<p>由于我们这里只可以格式化 <code>UIColor</code> 实例对象，于是在方法 <code>stringForObjectValue:</code> 中的第一件事就是判断传入的参数类型是否是 <code>UIColor</code> 类。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span><span class="p">;</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">[</span><span class="n">value</span> <span class="nl">isKindOfClass:</span><span class="p">[</span><span class="n">UIColor</span> <span class="n">class</span><span class="p">]])</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// To be continued...</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在判断参数合法后，我们可以实现真正的逻辑了。我们的格式器中包含一个 <code>UIColor</code> 对象为键，颜色名为值的字典。因此，我们只需要以 <code>UIColor</code> 对象为键找到对应的值：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span><span class="p">;</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">// Previously on KPAColorFormatter</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">colors</span> <span class="nl">objectForKey:</span><span class="n">value</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>以上代码是一个尽可能简单的实现。一个更高级（有用）的格式器应该是在我们的颜色字典中没有找到匹配的颜色时，返回一个最接近的颜色。大家可以自行实现，或是你不想花费太多功夫，可以前往 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github repo</a>。</p>
+
+<h2>反向格式化</h2>
+
+<p>我们的格式器也应该支持反向格式化，即把字符串转成实例对象。这是通过 <code>getObjectValue:forString:errorDescription:</code> 方法实现。在 OS X 上，在使用 <code>NSCell</code> 时会经常用到这个方法。</p>
+
+<p><code>NSCell</code> 有一个 <code>objectValue</code> 属性。默认情况下，<code>NSCell</code> 会用 <code>objectValue</code> 的描述，但是它也可以选择用一个格式器。在用 <code>NSTextFieldCell</code> 时，用户可以输入值，作为程序员，我们可能期望 <code>objedctValue</code> 可以根据根据输入的字符串转成一个 <code>UIColor</code> 实例。例如，用户如果输入“Blue”，我们需要返回一个 <code>[UIColor blueColor]</code> 实例的引用。</p>
+
+<p>实现反向格式化分为两部分：一部分为当格式器可以成功地把字符串转成 <code>UIColor</code> 实例，另一部分当其不能成功转换。第一部分代码如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">getObjectValue:</span><span class="p">(</span><span class="n">out</span> <span class="n">__autoreleasing</span> <span class="kt">id</span> <span class="o">*</span><span class="p">)</span><span class="nv">obj</span>
+</span><span class="line">             <span class="nf">forString:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">string</span>
+</span><span class="line">      <span class="nf">errorDescription:</span><span class="p">(</span><span class="n">out</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">__autoreleasing</span> <span class="o">*</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">__block</span> <span class="n">UIColor</span> <span class="o">*</span><span class="n">matchingColor</span> <span class="o">=</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">colors</span> <span class="nl">enumerateKeysAndObjectsUsingBlock:</span><span class="o">^</span><span class="p">(</span><span class="n">UIColor</span> <span class="o">*</span><span class="n">color</span><span class="p">,</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="kt">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">if</span><span class="p">([</span><span class="n">name</span> <span class="nl">isEqualToString:</span><span class="n">string</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="line">            <span class="n">matchingColor</span> <span class="o">=</span> <span class="n">color</span><span class="p">;</span>
+</span><span class="line">            <span class="o">*</span><span class="n">stop</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">matchingColor</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="o">*</span><span class="n">obj</span> <span class="o">=</span> <span class="n">matchingColor</span><span class="p">;</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span> <span class="c1">// Snip</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这里可以做一些优化，但是我们先不去做这些。以上方法会遍历我们颜色字典里的每一个对象 ，当一个颜色名字找到时，则会返回其对应关联的 <code>UIColor</code> 实例对象的引用，同时返回 YES 告知调用者我们已经成功地把字符串转成了一个 <code>UIColor</code> 实例对象。</p>
+
+<p>现在处理第二部分：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">matchingColor</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="c1">// snap</span>
+</span><span class="line"><span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="o">*</span><span class="n">error</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;No known color for name: %@&quot;</span><span class="p">,</span> <span class="n">string</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">return</span> <span class="n">NO</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这里，我们如果不能找到一个匹配的颜色，我们会检测调用者是否需要错误信息，如果需要，则把错误通过引用返回。这里检查错误很重要。如果你不这样做，程序就会 crash。同时，我们也会返回 NO，告知调用者这次转换失败。</p>
+
+<h2>本地化</h2>
+
+<p>到现在，我们已经建立了一个完全功能的 <code>NSFormatter</code> 的子类，当然这只是对于生活在美国的英语使用者而言有用。</p>
+
+<p>但相比全世界 71.3 亿人，那才 3.19 亿。或者说，你还有 96% 的潜在用户。当然你可以说：这些潜在用户绝大部分都不是 iPhone 或 Mac 使用者，这么做有什么意思呢？这么想你就太扫兴了。</p>
+
+<p><code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code> 都有一个 locale 属性，它是 <code>NSLocale</code> 实例对象。我们现在来扩展格式器以支持本地化，让它可以根据 local 属性来返回对应翻译的名字。</p>
+
+<h3>翻译</h3>
+
+<p>首先，我们需要翻译颜色名字字符串。有关 genstring 与 *.lprojs 超出了本文的范围。有<a href="http://www.getlocalization.com/library/get-localization-mac/">很多文章</a>讨论这点。好了，不需要其它工作了，快要结束了。</p>
+
+<h3>本地化的格式化</h3>
+
+<p>接下来是本地化功能的实现。在获取翻译的字符串后，我们需要更新 <code>stringForObejectValue:</code> 方法。以前已经使用过 <code>NSLocalizedString</code> 的人可能已经早早的把每一个字符串都用 <code>NSLocalizedString</code> 替换了。但是我们不会这么做。</p>
+
+<p>我们现在处理的是一个动态的 local，而 <code>NSLocalizedString</code> 只会查找当前默认的语言的翻译。在99%的情况下，这种默认的行为是你所想要的，但是我们会用格式化器的 locale 属性来动态查询语言。</p>
+
+<p>以下是 <code>stringForObjectValue:</code> 的新的实现：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">stringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span><span class="p">;</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">// Previously on... don&#39;t you hate these? I just watched that 20 seconds ago!</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">languageCode</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">locale</span> <span class="nl">objectForKey:</span><span class="n">NSLocaleLanguageCode</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSURL</span> <span class="o">*</span><span class="n">bundleURL</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSBundle</span> <span class="nl">bundleForClass:</span><span class="n">self</span><span class="p">.</span><span class="n">class</span><span class="p">]</span> <span class="nl">URLForResource:</span><span class="n">languageCode</span>
+</span><span class="line">                                                              <span class="nl">withExtension:</span><span class="s">@&quot;lproj&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSBundle</span> <span class="o">*</span><span class="n">languageBundle</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSBundle</span> <span class="nl">bundleWithURL:</span><span class="n">bundleURL</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">languageBundle</span> <span class="nl">localizedStringForKey:</span><span class="n">name</span> <span class="nl">value:</span><span class="n">name</span> <span class="nl">table:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面的代码还有可以重构改进的地方，但因为把代码都放在同一个地方可以方便阅读，所以请大家多多包涵了。</p>
+
+<p>首先，我们通过 locale 属性查找相应的语言，之后通过 NSBundle 找到对应的语言代码。最后，我们会让 bundle 对英语名称进行翻译。如果找不到对应的翻译，则会返回 name: 方法的参数（即英语名称）。如上即是 <code>NSLocalizedString</code> 的具体实现。</p>
+
+<h3>本地化的反向格式化</h3>
+
+<p>同样，我们也可以把颜色名称转成 <code>UIColor</code> 实例对象，当然，我认为这样做是不值得的。我们当前的实现适用于99%的情况。另外1%的情况是在 Mac 的 <code>NSCell</code> 上使用，而且你允许用户输入一个你试图解析的颜色的名字，这所需要做的要比简单的 子类化 NSFormatter 复杂很多。或许，你不应该允许你的用户通过文本输入颜色值。<a href="https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Classes/NSColorPanel_Class/">NSColorPanel</a> 在这里是一个更好的解决方案。</p>
+
+<h2>属性化字符串</h2>
+
+<p>到目前为止，我们的格式器都按我们预期的工作。接下来让我们做一个完全没用的功能，只是示范一下我们可以这么做，你懂的。</p>
+
+<p>格式器同时支持属性化字符串。要不要支持它取决于你特定的应用与其用户界面。因此，你最好把这个功能做成可配置。</p>
+
+<p>以下代码就是将文本颜色设置为当前正在格式化的颜色：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">NSAttributedString</span> <span class="o">*</span><span class="p">)</span><span class="nf">attributedStringForObjectValue:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">value</span>
+</span><span class="line">                                 <span class="nf">withDefaultAttributes:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">defaultAttributes</span><span class="p">;</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">string</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">stringForObjectValue:</span><span class="n">value</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span>  <span class="p">(</span><span class="o">!</span><span class="n">string</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSMutableDictionary</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableDictionary</span> <span class="nl">dictionaryWithDictionary:</span><span class="n">defaultAttributes</span><span class="p">];</span>
+</span><span class="line">    <span class="n">attributes</span><span class="p">[</span><span class="n">NSForegroundColorAttributeName</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[[</span><span class="n">NSAttributedString</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithString:</span><span class="n">string</span> <span class="nl">attributes:</span><span class="n">attributes</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>首先，我们如之前一样处理字符串，然后检查格式化是否成功。然后我们把默认的属性值与前面设置的颜色属性结合后，最终返回属性化字符串。很容易，是吗？</p>
+
+<h2>便捷</h2>
+
+<p>因为初始化内建的格式器<a href="https://twitter.com/ID_AA_Carmack/status/28939697453">太慢了</a>，所以通常需要对外给你的格式器提供一个便利的类方法。这个格式器应该用默认值与当前的本地化环境。以下是格式器的实现：</p>
+
+<pre><code>+ (NSString *)localizedStringFromColor:(UIColor *)color;
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&amp;onceToken, ^{
+        KPAColorFormatterReusableInstance = [[KPAColorFormatter alloc] init];
+    });
+
+    return [KPAColorFormatterReusableInstance stringForObjectValue:color];
+}
+</code></pre>
+
+<p>除非你的格式器像 <code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code> 一样做一些疯狂的事情 ，你可能不需要因为性能问题这么做。但是这样做也可以让使用格式器简单许多。</p>
+
+<h2>总结</h2>
+
+<p>我们的颜色格式器现在可以把一个 <code>UIColor</code> 实例格式成一个可读的名字或是反过来也行。当然还有放多有关 <code>NSFormatter</code> 的事情没有涉及。特别是在 Mac 上，因为它跟 <code>NSCell</code> 相关，你可以用更多高级的特性。例如当用户在编辑的时，你可以对字符串做一些检测。</p>
+
+<p>我们的格式器还可以做更多自定义的事情。例如，在没查找到一个你需要的颜色名字时，我们可以返回给你最相近的颜色名字。有时，你可能需要我们的格式器有一个 Boolean 属性来控制该功能。或许我们的属性化字符串的格式化不是你想要的，并且应该支持更多自定义操作。</p>
+
+<p>就此，我们完成了一个非常可靠的格式器。所有的代码（伴有 OS X 示例）都放在了 <a href="https://github.com/klaaspieter/KPAColorFormatter">Github</a> 上， 并且你也可以在 <a href="http://cocoapods.org/">CocoaPods</a> 上看到。如果你应用需要此功能，可以将 &#8220;KPAColorFormatter&#8221; 放在你的 Podfile 中，开始使用它吧。</p>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io/Blog//blog/2014/05/16/zi-ding-yi-formatters/';
+        var disqus_url = 'http://ITMonkeyLife.github.io/Blog//blog/2014/05/16/zi-ding-yi-formatters/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>
