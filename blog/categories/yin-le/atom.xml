@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 音乐 | IT Monkey Life]]></title>
+  <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/yin-le/atom.xml" rel="self"/>
+  <link href="http://ITMonkeyLife.github.io/Blog/"/>
+  <updated>2016-09-06T14:01:39+08:00</updated>
+  <id>http://ITMonkeyLife.github.io/Blog/</id>
+  <author>
+    <name><![CDATA[Rick]]></name>
+    <email><![CDATA[382542165@qq.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[音乐乐理:五线谱，谱号，加线]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/09/06/yin-le-le-li-wu-xian-pu-%2Cpu-hao-%2Cjia-xian/"/>
+    <updated>2016-09-06T10:02:28+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/09/06/yin-le-le-li-wu-xian-pu-,pu-hao-,jia-xian</id>
+    <content type="html"><![CDATA[<p>
+<code>五线谱</code>是对音符绘制的基础。现代的五线谱是由5根线和4个空间组成的。
+<br />
+<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7jn3flan2j21kw0lcdh6.jpg" />
+在五线谱上的每行线或者空白处都表示键盘上的白建。
+<br />
+</p>
+
+<p>
+谱号分配给各个音符某些行或空格。
+两个谱号经常用到，分别是：高音和低音。
+<br />
+<img src="http://ww3.sinaimg.cn/large/626e5d69gw1f7jqbp0363j21kw0lcq4r.jpg" />
+<br />
+我们先讨论高音（通常也称为G 谱）.该谱号环绕（显示为红色）五线谱线被称为G.放在该行的任何音符变成G.
+<br />
+G调以上的空白处的调是A调（记住，没有一个“H”调）
+<br />
+A调以上的调是B调。以此类推，G、A、B、C、D、E、F、G
+<br />
+<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f7jqd7qzk5j21kw0lcdi6.jpg" />
+额我们看来已经超过了五线谱的范围了，这时候该怎么办？
+</p>
+
+<p>
+加线将解决我们的困境。
+我们在五线谱之外，额外添加一条线，然后在这个线处继续添加A
+<br />
+<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7jsx3rujij21kw0lcdi5.jpg" />
+</p>
+
+<p>
+接下来，我们看看低音（也被称为F谱）
+F谱是在这两个点之间的线上做的谱。
+<br />
+<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f7jsz10y8bj21kw0lc0u3.jpg" />
+我们把剩下的五线谱上的谱都标记出来。
+<br />
+<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7jsxovewdj21kw0lcjtl.jpg" />
+</p>
+
+<p>
+最后我们来看看Grand Staff,五线谱基于原理组成的十一条线。消掉中间的线，变成两个五线谱。
+<br />
+<img src="http://ww4.sinaimg.cn/large/626e5d69gw1f7jtlgp82ej21kw0lcmzh.jpg" />
+</p>
+
+<p>
+在上面的五线谱添加高音，下面的五线谱添加低音，我们能看到这两个五线谱的关系。
+我们注意到这两个五线谱通过C谱连接在一起（红色展示）,在这里的C通常称中C,因为它对应于Grand Staff中间的线
+</p>
+
+<p>
+下面是本小节完整的演示。
+</p>
+<p>
+<embed src="http://www.musictheory.net/vc/6/0/53481700c244fded30bde8b5683ebc08f0eaafe6/lesson10.swf" width="800" height="380" type="application/x-shockwave-flash" />
+</p>
+]]></content>
+  </entry>
+  
+</feed>

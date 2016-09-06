@@ -7,9 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Hard Constraints on Resilience
-The root of a class hierarchy must remain stable, at pain of
-invalidating the metaclass hierarchy. Note that a Swift &hellip;">
+	<meta name="description" content="function switchStylestyle(styleName) { $('link[rel*=style][title]').each(function (i) { this.disabled = true; if (this.getAttribute('title') == &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -76,6 +74,99 @@ invalidating the metaclass hierarchy. Note that a Swift &hellip;">
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/18/javascriptde-zuo-yong-yu/">
+		
+			JavaScript的作用域</a>
+	</h2>
+	<div class="entry-content">
+		<script type="text/javascript">
+
+    function switchStylestyle(styleName) {
+        $('link[rel*=style][title]').each(function (i) {
+            this.disabled = true;
+            if (this.getAttribute('title') == styleName) this.disabled = false;
+        });
+    }
+
+    $(function () {
+        $('.markdown-body pre').addClass('prettyprint');
+        prettyPrint();
+
+        $(".markdown-body pre").each(function () {
+            var lines = $(this).attr("data-strong-lines");
+            if (lines == undefined || lines == "")
+                return;
+            var nums = lines.split(' ');
+            if (nums.length > 0)
+                for (var i = 0; i < nums.length; i++) {
+                    $(this).find("li:nth-child(" + nums[i] + ")").addClass("strong-code-line");
+                }
+        });
+
+    });
+
+
+</script>
+
+<h1>　作用域是什么</h1>
+<p>几乎所有编程语言最基本的功能之一，就是能够储存变量当中的值，并且能在之后对这个值进行访问或修改。事实上，正是这种储存和访问变量的值的能力将<strong>状态</strong>带给了程序。</p>
+<p>若没有了状态这个概念，程序虽然也能够执行一些简单的任务，但它会受到高度限制，做不到非常有趣。</p>
+<p>但是将变量引入程序会引起几个很有意思的问题，也正是我们将要讨论的：这些变量<strong>住在</strong>哪里？换句话说，它们储存在哪里？最重要的是，程序需要时如何找到它们？</p>
+<p>这些问题说明需要一套设计良好的规则来存储变量，并且之后可以方便地找到这些变量。这套规则被称为<strong>作用域</strong>。</p>
+<p>但是，究竟在哪里而且怎样设置这些<strong>作用域</strong>的规则呢？</p>
+<h2>　编译原理</h2>
+<p>尽管通常将JavaScript归类为“动态”或“解释执行”语言，但事实上它是一门编译语言。这个事实对你来说可能显而易见，也可能你闻所未闻，取决于你接触过多少编程语言，具有多少经验。但与传统的编译语言不同，它<strong>不是</strong>提前编译的，编译结果也不能在分布式系统中进行移植。</p>
+<p>尽管如此，JavaScript引擎进行编译的步骤和传统的编译语言非常相似，在某些环节可能比预想的要复杂。</p>
+<p>在传统编译语言的流程中，程序中的一段源代码在执行<strong>之前</strong>会经历三个步骤，统称为“编译”。</p>
+<ul>
+<li><p><strong>分词/词法分析</strong>（Tokenizing/Lexing）</p>
+<p>这个过程会将由字符组成的字符串分解成（对编程语言来说）有意义的代码块，这些代码块被称为词法单元（token）。例如，考虑程序<code>var a = 2;</code>。这段程序通常会被分解成为下面这些词法单元：<code>var</code>、<code>a</code>、<code>=</code>、<code>2</code> 、<code>;</code>。空格是否会被当作词法单元，取决于空格在这门语言中是否具有意义。</p>
+</li>
+</ul>
+<blockquote>
+<p><img src="http://epub.ituring.com.cn/api/storage/getbykey/screenshow?key=1405bfdb7c117638d93d" alt="" width="5%" style="width: 5%" />分词（tokenizing）和词法分析（Lexing）之间的区别是非常微妙、晦涩的，主要差异在于词法单元的识别是通过<strong>有状态</strong>还是<strong>无状态</strong>的方式进行的。简单来说，如果词法单元生成器在判断<code>a</code>是一个独立的词法单元还是其他词法单元的一部分时，调用的是有状态的解析规则，那么这个过程就被称为<strong>词法分析</strong>。</p>
+</blockquote>
+<ul>
+<li><p><strong>解析/语法分析</strong>（Parsing）</p>
+<p>这个过程是将词法单元流（数组）转换成一个由元素逐级嵌套所组成的代表了程序语法结构的树。这个树被称为“抽象语法树”（Abstract Syntax Tree，AST）。</p>
+<p><code>var a = 2;</code>的抽象语法树中可能会有一个叫作<code>VariableDeclaration</code>的顶级节点，接下来是一个叫作<code>Identifier</code>（它的值是<code>a</code>）的子节点，以及一个叫作<code>AssignmentExpression</code>的子节点。<code>AssignmentExpression</code>节点有一个叫作<code>NumericLiteral</code>（它的值是<code>2</code>）的子节点。</p>
+</li>
+</ul>
+<ul>
+<li><p><strong>代码生成</strong></p>
+<p>将AST转换为可执行代码的过程称被称为代码生成。这个过程与语言、目标平台等息息相关。</p>
+<p>抛开具体细节，简单来说就是有某种方法可以将<code>var a = 2;</code>的AST转化为一组机器指令，用来<strong>创建</strong>一个叫作<code>a</code>的变量（包括分配内存等），并将一个值储存在<code>a</code>中。</p>
+</li>
+</ul>
+<blockquote>
+<p><img src="http://epub.ituring.com.cn/api/storage/getbykey/screenshow?key=1405bfdb7c117638d93d" alt="" width="5%" style="width: 5%" />关于引擎如何管理系统资源超出了我们的讨论范围，因此只需要简单地了解引擎可以根据需要创建并储存变量即可。</p>
+</blockquote>
+
+		
+		<a href="/Blog/blog/2016/08/18/javascriptde-zuo-yong-yu/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/18/javascriptde-zuo-yong-yu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -791,52 +882,6 @@ React-Native 帮助在原生平台打造世界一流的应用体验，使用基�
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2015/12/26/2015nian-du-zong-jie/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/">
-		
-			JSPatch用法剖析</a>
-	</h2>
-	<div class="entry-content">
-		<h2 id="目录"><a name="jspatchIntroducton">目录</a></h2>
-<ol>
-<li><a href="#jspatchIntroducton"><strong>JSPatch介绍</strong></a></li>
-<li><a href="#jspatch-wax"><strong>JSPatch VS Wax lua</strong></a></li>
-<li><a href="#jspatch-core"><strong>JSPatch的原理和核心</strong></a></li>
-<li><a href="#jspatch-Extension"><strong>JSPatch Extension机制</strong></a></li>
-<li><a href="#jspatch-Tech"><strong>JSPatch中的实现技巧总结</strong></a> </li>
-<li><a href="#jspatch-problem"><strong>遇到的问题与解决方法</strong></a></li>
-</ol>
-<h2 id="一、JSPatch介绍"><a name="jspatchIntroducton">一、JSPatch介绍</a></h2>
-<h3 id="用途">用途</h3>
-<p>iOS产品开发之中常常会遇到这种情况: 新版本上线后发现有个严重的bug，可能会导致crash率激增，可能会使网络请求无法发出，这时能做的只是赶紧修复bug然后提交等待漫长的AppStore审核，再盼望用户快点升级，付出巨大的人力和时间成本，才能完成此次bug的修复。</p>
-<p>JSPatch的出现解决了这样的问题，只需要在项目中引入极小的JSPatch引擎，就可以使用JavaScript语言调用Objective-C的原生接口，获得脚本语言的能力：动态更新iOS APP，替换项目原生代码、快速修复bug。      </p>
-<h3 id="技术核心">技术核心</h3>
-<p>JSPatch核心主要是JSBinding和Objective-C中的runtime技术。一方面，它采用Apple在iOS7中发布的JavaScriptCore.framework作为Javascript引擎解析JavaScript脚本，执行JavaSript代码并与Objective-C端的代码进行桥接。另一方面则是使用Objective-C runtime中的method swizzling的方式达到使用JavaScript脚本动态替换原有Objective-C方法的目的，并利用ForwardInvocation标准消息转发机制使得在JavaScript脚本中调用Objective-C的方法成为可能。</p>
-
-		
-		<a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2015/12/23/jspatchyong-fa-pou-xi/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
