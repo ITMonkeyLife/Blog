@@ -1,0 +1,456 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>iOS设备信息收集 - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="收集iOS设备的信息，包含设备系统版本，设备型号，手机型号，屏幕分辨率，当地所在时区，CPU 型号，系统语言，网络环境，应用名称以及应用版本，还有判断设备是否，应用是否被破解
+需要的头文件
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+#import &quot;ISSMobileClick.h &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">iOS设备信息收集</h2>
+	<div class="entry-content"><p>收集iOS设备的信息，包含设备系统版本，设备型号，手机型号，屏幕分辨率，当地所在时区，CPU 型号，系统语言，网络环境，应用名称以及应用版本，还有判断设备是否，应用是否被破解</p>
+<p>需要的头文件</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &quot;ISSMobileClick.h&quot;</span>
+</span><span class="line"><span class="cp">#import &quot;AppInfoModel.h&quot;</span>
+</span><span class="line"><span class="cp">#import &lt;CoreLocation/CoreLocation.h&gt;</span>
+</span><span class="line"><span class="cp">#import &lt;CoreTelephony/CTCarrier.h&gt;</span>
+</span><span class="line"><span class="cp">#import &lt;CoreTelephony/CTTelephonyNetworkInfo.h&gt;</span>
+</span><span class="line"><span class="cp">#import &lt;objc/runtime.h&gt;</span>
+</span><span class="line"><span class="cp">#include &lt;sys/types.h&gt;</span>
+</span><span class="line"><span class="cp">#include &lt;sys/sysctl.h&gt;</span>
+</span><span class="line"><span class="cp">#include &lt;mach/machine.h&gt;</span>
+</span><span class="line"><span class="cp">#include &lt;sys/types.h&gt;</span>
+</span><span class="line"><span class="cp">#import &quot;ITTNetworkTrafficManager.h&quot;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>实现方法，我使用类方法方便调用，无需实例化，直接类调用</p>
+<!-- more -->
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+<span class="line-number">59</span>
+<span class="line-number">60</span>
+<span class="line-number">61</span>
+<span class="line-number">62</span>
+<span class="line-number">63</span>
+<span class="line-number">64</span>
+<span class="line-number">65</span>
+<span class="line-number">66</span>
+<span class="line-number">67</span>
+<span class="line-number">68</span>
+<span class="line-number">69</span>
+<span class="line-number">70</span>
+<span class="line-number">71</span>
+<span class="line-number">72</span>
+<span class="line-number">73</span>
+<span class="line-number">74</span>
+<span class="line-number">75</span>
+<span class="line-number">76</span>
+<span class="line-number">77</span>
+<span class="line-number">78</span>
+<span class="line-number">79</span>
+<span class="line-number">80</span>
+<span class="line-number">81</span>
+<span class="line-number">82</span>
+<span class="line-number">83</span>
+<span class="line-number">84</span>
+<span class="line-number">85</span>
+<span class="line-number">86</span>
+<span class="line-number">87</span>
+<span class="line-number">88</span>
+<span class="line-number">89</span>
+<span class="line-number">90</span>
+<span class="line-number">91</span>
+<span class="line-number">92</span>
+<span class="line-number">93</span>
+<span class="line-number">94</span>
+<span class="line-number">95</span>
+<span class="line-number">96</span>
+<span class="line-number">97</span>
+<span class="line-number">98</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">collectAppInfo</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">//获取设备信息，如当前系统版本、设备型号，</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">content</span><span class="o">=</span><span class="p">[[</span><span class="n">NSString</span> <span class="n">alloc</span><span class="p">]</span>
+</span><span class="line">                       <span class="nl">initWithFormat:</span>
+</span><span class="line">                       <span class="s">@&quot;unique id: %@ </span><span class="se">\n</span><span class="s">localized model: %@ </span><span class="se">\n</span><span class="s">system version: %@ </span><span class="se">\n</span><span class="s">system name: %@ </span><span class="se">\n</span><span class="s">model: %@&quot;</span><span class="p">,</span>
+</span><span class="line">                       <span class="p">[[</span><span class="n">UIDevice</span> <span class="n">currentDevice</span><span class="p">]</span> <span class="n">identifierForVendor</span><span class="p">],</span>
+</span><span class="line">                       <span class="p">[[</span><span class="n">UIDevice</span> <span class="n">currentDevice</span><span class="p">]</span> <span class="n">localizedModel</span><span class="p">],</span>
+</span><span class="line">                       <span class="p">[[</span><span class="n">UIDevice</span> <span class="n">currentDevice</span><span class="p">]</span> <span class="n">systemVersion</span><span class="p">],</span>
+</span><span class="line">                       <span class="p">[[</span><span class="n">UIDevice</span> <span class="n">currentDevice</span><span class="p">]</span> <span class="n">systemName</span><span class="p">],</span>
+</span><span class="line">                       <span class="p">[[</span><span class="n">UIDevice</span> <span class="n">currentDevice</span><span class="p">]</span> <span class="n">model</span><span class="p">]];</span>
+</span><span class="line">    <span class="c1">//platform手机型号</span>
+</span><span class="line">    <span class="c1">//</span>
+</span><span class="line">    <span class="n">size_t</span> <span class="n">size</span><span class="p">;</span>
+</span><span class="line">    <span class="n">sysctlbyname</span><span class="p">(</span><span class="s">&quot;hw.machine&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">    <span class="kt">char</span> <span class="o">*</span><span class="n">machine</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
+</span><span class="line">    <span class="n">sysctlbyname</span><span class="p">(</span><span class="s">&quot;hw.machine&quot;</span><span class="p">,</span> <span class="n">machine</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">platform</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithCString:</span><span class="n">machine</span> <span class="nl">encoding:</span><span class="n">NSUTF8StringEncoding</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;手机型号 :%@&quot;</span><span class="p">,</span><span class="n">platform</span><span class="p">);</span>
+</span><span class="line">    <span class="c1">//date</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">date</span> <span class="o">=</span><span class="p">[[</span><span class="n">NSDate</span> <span class="n">date</span><span class="p">]</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;yyyy-MM-dd&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">time</span> <span class="o">=</span><span class="p">[[</span><span class="n">NSDate</span> <span class="n">date</span><span class="p">]</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;HH:MM:SS&quot;</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;%@</span><span class="se">\n</span><span class="s">app version %@</span><span class="se">\n</span><span class="s">date :%@</span><span class="se">\n</span><span class="s">time:%@&quot;</span><span class="p">,</span><span class="n">content</span><span class="p">,</span><span class="n">XcodeAppVersion</span><span class="p">,</span><span class="n">date</span><span class="p">,</span><span class="n">time</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">CTTelephonyNetworkInfo</span> <span class="o">*</span><span class="n">netInfo</span> <span class="o">=</span> <span class="p">[[</span><span class="n">CTTelephonyNetworkInfo</span> <span class="n">alloc</span><span class="p">]</span><span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="n">CTCarrier</span><span class="o">*</span><span class="n">carrier</span> <span class="o">=</span> <span class="p">[</span><span class="n">netInfo</span> <span class="n">subscriberCellularProvider</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Carriername:%@</span><span class="se">\n</span><span class="s">ISO Country Code:%@&quot;</span><span class="p">,[</span><span class="n">carrier</span> <span class="n">carrierName</span><span class="p">],[</span><span class="n">carrier</span> <span class="n">isoCountryCode</span><span class="p">]);</span><span class="c1">//手机运营商以及运营国家标号</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">UIScreen</span> <span class="o">*</span><span class="n">MainScreen</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIScreen</span> <span class="n">mainScreen</span><span class="p">];</span>
+</span><span class="line">    <span class="n">CGSize</span> <span class="n">Size</span> <span class="o">=</span> <span class="p">[</span><span class="n">MainScreen</span> <span class="n">bounds</span><span class="p">].</span><span class="n">size</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">scale</span> <span class="o">=</span> <span class="p">[</span><span class="n">MainScreen</span> <span class="n">scale</span><span class="p">];</span>
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">screenWidth</span> <span class="o">=</span> <span class="n">Size</span><span class="p">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">scale</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">screenHeight</span> <span class="o">=</span> <span class="n">Size</span><span class="p">.</span><span class="n">height</span> <span class="o">*</span> <span class="n">scale</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;屏幕分辨率为 :%.0f %.0f&quot;</span><span class="p">,</span><span class="n">screenWidth</span><span class="p">,</span> <span class="n">screenHeight</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;当地所在时区 :%@&quot;</span><span class="p">,[[</span><span class="n">NSTimeZone</span> <span class="n">localTimeZone</span><span class="p">]</span> <span class="n">description</span><span class="p">]);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSMutableString</span> <span class="o">*</span><span class="n">cpu</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSMutableString</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">cpu_type_t</span> <span class="n">type</span><span class="p">;</span>
+</span><span class="line">    <span class="n">cpu_subtype_t</span> <span class="n">subtype</span><span class="p">;</span>
+</span><span class="line">    <span class="n">size</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">type</span><span class="p">);</span>
+</span><span class="line">    <span class="n">sysctlbyname</span><span class="p">(</span><span class="s">&quot;hw.cputype&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">type</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">size</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">subtype</span><span class="p">);</span>
+</span><span class="line">    <span class="n">sysctlbyname</span><span class="p">(</span><span class="s">&quot;hw.cpusubtype&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">subtype</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// values for cputype and cpusubtype defined in mach/machine.h</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">type</span> <span class="o">==</span> <span class="n">CPU_TYPE_X86</span><span class="p">)</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">cpu</span> <span class="nl">appendString:</span><span class="s">@&quot;x86 &quot;</span><span class="p">];</span>
+</span><span class="line">        <span class="c1">// check for subtype ...</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">type</span> <span class="o">==</span> <span class="n">CPU_TYPE_ARM</span><span class="p">)</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">cpu</span> <span class="nl">appendString:</span><span class="s">@&quot;ARM&quot;</span><span class="p">];</span>
+</span><span class="line">        <span class="k">switch</span><span class="p">(</span><span class="n">subtype</span><span class="p">)</span>
+</span><span class="line">        <span class="p">{</span>
+</span><span class="line">            <span class="k">case</span> <span class="nl">CPU_SUBTYPE_ARM_V7:</span>
+</span><span class="line">                <span class="p">[</span><span class="n">cpu</span> <span class="nl">appendString:</span><span class="s">@&quot;V7&quot;</span><span class="p">];</span>
+</span><span class="line">                <span class="k">break</span><span class="p">;</span>
+</span><span class="line">            <span class="k">case</span> <span class="nl">CPU_SUBTYPE_ARM_V7S:</span>
+</span><span class="line">                <span class="p">[</span><span class="n">cpu</span> <span class="nl">appendString:</span><span class="s">@&quot;V7s&quot;</span><span class="p">];</span>
+</span><span class="line">                <span class="k">break</span><span class="p">;</span>
+</span><span class="line">                <span class="c1">// ...</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;cpu 型号 :%@&quot;</span><span class="p">,</span><span class="n">cpu</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">arLanguages</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSUserDefaults</span> <span class="n">standardUserDefaults</span><span class="p">]</span> <span class="nl">objectForKey:</span><span class="s">@&quot;AppleLanguages&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">strLang</span> <span class="o">=</span> <span class="p">[</span><span class="n">arLanguages</span> <span class="nl">objectAtIndex:</span><span class="mi">0</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;LANG:%@&quot;</span><span class="p">,</span><span class="n">strLang</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;网络环境:%@&quot;</span><span class="p">,[</span><span class="n">ITTNetworkTrafficManager</span> <span class="n">sharedManager</span><span class="p">].</span><span class="n">networkType</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">    <span class="n">AppInfoModel</span> <span class="o">*</span><span class="n">appInfo</span> <span class="o">=</span> <span class="p">[[</span><span class="n">AppInfoModel</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">uniqIdentifier</span> <span class="o">=</span> <span class="p">(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)[[</span><span class="n">UIDevice</span> <span class="n">currentDevice</span><span class="p">]</span> <span class="n">identifierForVendor</span><span class="p">];</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">deviceModel</span> <span class="o">=</span> <span class="n">platform</span><span class="p">;</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">systemVersion</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIDevice</span> <span class="n">currentDevice</span><span class="p">]</span> <span class="n">systemVersion</span><span class="p">];</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">systemName</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIDevice</span> <span class="n">currentDevice</span><span class="p">]</span> <span class="n">systemName</span><span class="p">];</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">systemModel</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIDevice</span> <span class="n">currentDevice</span><span class="p">]</span> <span class="n">model</span><span class="p">];</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">currentDate</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDate</span> <span class="n">date</span><span class="p">];</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">carrierName</span> <span class="o">=</span> <span class="p">[</span><span class="n">carrier</span> <span class="n">carrierName</span><span class="p">];</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">carrierCountryCode</span> <span class="o">=</span> <span class="p">[</span><span class="n">carrier</span> <span class="n">isoCountryCode</span><span class="p">];</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">screen</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSString</span> <span class="nl">stringWithFormat:</span><span class="s">@&quot;%.0fx%.0f&quot;</span><span class="p">,</span><span class="n">screenWidth</span><span class="p">,</span> <span class="n">screenHeight</span><span class="p">];</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">timeZone</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSTimeZone</span> <span class="n">localTimeZone</span><span class="p">]</span> <span class="n">abbreviation</span><span class="p">];</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">sdkType</span> <span class="o">=</span> <span class="s">@&quot;iOS&quot;</span><span class="p">;</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">packageName</span> <span class="o">=</span> <span class="n">PACKAGE_NAME</span><span class="p">;</span>
+</span><span class="line">    <span class="n">appInfo</span><span class="p">.</span><span class="n">appName</span> <span class="o">=</span> <span class="n">XcodeAppName</span><span class="p">;</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;应用名称 ：%@</span><span class="se">\n</span><span class="s">gmt %@&quot;</span><span class="p">,</span><span class="n">appInfo</span><span class="p">.</span><span class="n">appName</span> <span class="p">,[[</span><span class="n">NSTimeZone</span> <span class="n">localTimeZone</span><span class="p">]</span> <span class="n">abbreviation</span><span class="p">]);</span>
+</span><span class="line">
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>真机运行之后，log信息如下</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+</pre></td><td class="code"><pre><code class="c"><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.224</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="err">手机型号</span> <span class="o">:</span><span class="n">iPhone5</span><span class="p">,</span><span class="mi">4</span>
+</span><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.230</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="n">unique</span> <span class="n">id</span><span class="o">:</span> <span class="o">&lt;</span><span class="n">__NSConcreteUUID</span> <span class="mh">0x17d827f0</span><span class="o">&gt;</span> <span class="mf">0E21</span><span class="n">F593</span><span class="o">-</span><span class="mo">06</span><span class="n">EB</span><span class="o">-</span><span class="mi">4</span><span class="n">D3B</span><span class="o">-</span><span class="mi">8</span><span class="n">DE4</span><span class="o">-</span><span class="mi">8</span><span class="n">CAF31AB413A</span>
+</span><span class="line"><span class="n">localized</span> <span class="n">model</span><span class="o">:</span> <span class="n">iPhone</span>
+</span><span class="line"><span class="n">system</span> <span class="n">version</span><span class="o">:</span> <span class="mf">7.1</span>
+</span><span class="line"><span class="n">system</span> <span class="n">name</span><span class="o">:</span> <span class="n">iPhone</span> <span class="n">OS</span>
+</span><span class="line"><span class="nl">model:</span> <span class="n">iPhone</span>
+</span><span class="line"><span class="n">app</span> <span class="n">version</span> <span class="mf">1.0</span>
+</span><span class="line"><span class="n">date</span> <span class="o">:</span><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span>
+</span><span class="line"><span class="nl">time:</span><span class="mi">17</span><span class="o">:</span><span class="mo">03</span><span class="o">:</span><span class="mi">22</span>
+</span><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.240</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="n">Carriername</span><span class="o">:</span><span class="err">中国联通</span>
+</span><span class="line"><span class="n">ISO</span> <span class="n">Country</span> <span class="n">Code</span><span class="o">:</span><span class="n">cn</span>
+</span><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.242</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="err">屏幕分辨率为</span> <span class="o">:</span><span class="mi">640</span> <span class="mi">1136</span>
+</span><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.244</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="err">当地所在时区</span> <span class="o">:</span><span class="n">Local</span> <span class="n">Time</span> <span class="n">Zone</span> <span class="p">(</span><span class="n">Asia</span><span class="o">/</span><span class="n">Shanghai</span> <span class="p">(</span><span class="n">GMT</span><span class="o">+</span><span class="mi">8</span><span class="p">)</span> <span class="n">offset</span> <span class="mi">28800</span><span class="p">)</span>
+</span><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.246</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="n">cpu</span> <span class="err">型号</span> <span class="o">:</span><span class="n">ARMV7s</span>
+</span><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.247</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="n">LANG</span><span class="o">:</span><span class="n">zh</span><span class="o">-</span><span class="n">Hans</span>
+</span><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.260</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="n">Reachability</span> <span class="n">Flag</span> <span class="n">Status</span><span class="o">:</span> <span class="o">-</span><span class="n">R</span> <span class="o">-----</span><span class="n">l</span><span class="o">-</span> <span class="n">networkStatusForFlags</span>
+</span><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.261</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="o">-</span><span class="p">[</span><span class="n">ITTNetworkTrafficManager</span> <span class="n">updateNetwordStatus</span><span class="o">:</span><span class="p">](</span><span class="mi">120</span><span class="p">)</span><span class="o">:</span> <span class="n">network</span> <span class="n">status</span> <span class="n">wifi</span>
+</span><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.304</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="err">网络环境</span><span class="o">:</span><span class="n">wifi</span>
+</span><span class="line"><span class="mi">2014</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">21</span> <span class="mi">17</span><span class="o">:</span><span class="mi">40</span><span class="o">:</span><span class="mf">13.306</span> <span class="n">AppCountDemo</span><span class="p">[</span><span class="mi">2004</span><span class="o">:</span><span class="mi">60</span><span class="n">b</span><span class="p">]</span> <span class="err">应用名称</span> <span class="err">：统计</span><span class="n">SDKDemo</span>
+</span><span class="line"><span class="n">gmt</span> <span class="n">GMT</span><span class="o">+</span><span class="mi">8</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>最后聊一下，目前遇到的问题</p>
+<li>生成静态库，另一个工程载入静态库时候出现一个问题，Catagory使用出现错误，调用方法会报错，运行时exception “selector not recognized”。</li>
+<p>这是由于 UNIX的静态库实现、linker和Objective-C的动态结构三者之间的问题引起的。通过修改工程配置文件，只要在build静态库时，加上linker flag “-ObjC”即可（在64位osx上和iOS程序上，这样做还不够），这个flag告诉linker将每个定义了class或者category的对象文件都载入静态库。</p>
+<p>但是最终程序还是会抛这个异常，这是因为linker的bug，对于64位osx程序和iOS程序，这个bug导致只包含category而不包含class的文件没法从静态库中加载。</p>
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io//blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/';
+        var disqus_url = 'http://ITMonkeyLife.github.io//blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>
