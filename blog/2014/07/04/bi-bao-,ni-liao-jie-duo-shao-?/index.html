@@ -1,0 +1,327 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>闭包，你了解多少？ - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例， &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/Blog/favicon.png" rel="shortcut icon">
+	<link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/Blog/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">闭包，你了解多少？</h2>
+	<div class="entry-content"><p>在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例，不同的引用环境和相同的函数组合可以产生不同的实例。
+闭包的概念出现于60年代，最早实现闭包的程序语言是Scheme。之后，闭包被广泛使用于函数式编程语言如ML语言和LISP。很多命令式程序语言也开始支持闭包。
+在一些语言中，在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可能产生闭包。运行时，一旦外部的 函数被执行，一个闭包就形成了，闭包中包含了内部函数的代码，以及所需外部函数中的变量的引用。其中所引用的变量称作上值(upvalue)。
+闭包一词经常和匿名函数混淆。这可能是因为两者经常同时使用，但是它们是不同的概念。</p>
+
+<p>闭包和状态表达闭包可以用来在一个函数与一组“私有”变量之间创建关联关系。在给定函数被多次调用的过程中，这些私有变量能够保持其持久性。变量的作用域仅限于包含它们的函数，因此无法从其它程序代码部分进行访问。不过，变量的生存期是可以很长，在一次函数调用期间所创建所生成的值在下次函数调用时仍然存在。正因为这一特点，闭包可以用来完成信息隐藏，并进而应用于需要状态表达的某些编程范型中。
+不过，用这种方式来使用闭包时，闭包不再具有引用透明性，因此也不再是纯函数。即便如此，在某些“近似于函数式编程语言”的语言，例如Scheme中，闭包还是得到了广泛的使用。</p>
+
+<p>闭包和第一类函数</p>
+
+<p>典型的支持闭包的语言中，通常将函数当作第一类对象——在这些语言中，函数可以被当作参数传递、也可以作为函数返回值、绑定到变量名、就像字符串、整数等简单类型。例如以下Scheme代码：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="scheme"><span class="line"><span class="c1">; Return a list  of all books with at least THRESHOLD copies sold.</span>
+</span><span class="line"><span class="p">(</span><span class="k">define </span> <span class="p">(</span><span class="nf">best-selling-books</span>  <span class="nv">threshold</span><span class="p">)</span>
+</span><span class="line">   <span class="p">(</span><span class="nf">filter</span>
+</span><span class="line">    <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">book</span><span class="p">)</span> <span class="p">(</span><span class="nb">&gt;= </span><span class="p">(</span><span class="nf">book-sales</span> <span class="nv">book</span><span class="p">)</span>  <span class="nv">threshold</span><span class="p">))</span>
+</span><span class="line">    <span class="nv">book-list</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>在这个例子中，lambda表达式(lambda (book) (&gt;= (book-sales book) threshold))出现在函数best-selling-books中。当这个lambda表达式被执行时，Scheme创造了一个包含此表达式以及对threshold变量的引用的闭包，其中threshold变量在lambda表达式中是自由变量。
+这个闭包接着被传递到filter函数。这个函数的功能是重复调用这个闭包以判断哪些书需要增加到列表那些需要丢弃。因为闭包中引用了变量threshold，所以它在每次被filter调用时都可以使用这个变量，虽然filter可能定义在另一个文件中。
+<!-- more --></p>
+<p>下面是用ECMAScript (JavaScript)写的同一个例子：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// Return a  list of all books with at least &#39;threshold&#39; copies sold.</span>
+</span><span class="line"><span class="kd">function</span>  <span class="nx">bestSellingBooks</span><span class="p">(</span><span class="nx">threshold</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span> <span class="nx">bookList</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span>
+</span><span class="line">      <span class="kd">function</span>  <span class="p">(</span><span class="nx">book</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">book</span><span class="p">.</span><span class="nx">sales</span> <span class="o">&gt;=</span> <span class="nx">threshold</span><span class="p">;</span> <span class="p">}</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>这里，关键字function取代了lambda，Array.filter方法[5]取代了filter函数，但两段代码的功能是一样的。</p>
+
+<p>一个函数可以创建一个闭包并返回它，如下述javascript例子：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// Return a  function that approximates the derivative of f</span>
+</span><span class="line"><span class="c1">// using an interval  of dx, which should be appropriately small.</span>
+</span><span class="line"><span class="kd">function</span> <span class="nx">derivative</span><span class="p">(</span><span class="nx">f</span><span class="p">,</span>  <span class="nx">dx</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span>  <span class="kd">function</span> <span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span><span class="nx">f</span><span class="p">(</span><span class="nx">x</span> <span class="o">+</span> <span class="nx">dx</span><span class="p">)</span> <span class="o">-</span> <span class="nx">f</span><span class="p">(</span><span class="nx">x</span><span class="p">))</span> <span class="o">/</span> <span class="nx">dx</span><span class="p">;</span>
+</span><span class="line">  <span class="p">};</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>因为在这个例子中闭包已经超出了创建它的函数的范围，所以变量f和dx将在函数derivative返回后继续存在。在没有闭包的语言中，变量的生命周期只限于创建它的环境。但在有闭包的语言中，只要有一个闭包引用了这个变量，它就会一直存在。清理不被任何函数引用的变量的工作通常由垃圾回收完成。</p>
+
+<p>闭包的用途</p>
+
+<ul>
+  <li>因为闭包只有在被调用时才执行操作，即“惰性求值”，所以它可以被用来定义控制结构。例如：在Smalltalk语言中，所有的控制结构，包括分歧条件(if/then/else)和循环(while和for)，都是通过闭包实现的。用户也可以使用闭包定义自己的控制结构。</li>
+  <li>多个函数可以使用一个相同的环境，这使得它们可以通过改变那个环境相互交流。比如在Scheme中：</li>
+</ul>
+
+<p />
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="scheme"><span class="line"><span class="p">(</span><span class="k">define </span><span class="nv">foo</span> <span class="no">#f</span><span class="p">)</span>
+</span><span class="line"><span class="p">(</span><span class="k">define </span> <span class="nv">bar</span> <span class="no">#f</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="p">(</span><span class="k">let </span><span class="p">((</span><span class="nf">secret-message</span> <span class="s">&quot;none&quot;</span><span class="p">))</span>
+</span><span class="line">  <span class="p">(</span><span class="k">set! </span><span class="nv">foo</span>  <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">msg</span><span class="p">)</span> <span class="p">(</span><span class="k">set! </span><span class="nv">secret-message</span> <span class="nv">msg</span><span class="p">)))</span>
+</span><span class="line">  <span class="p">(</span><span class="k">set! </span><span class="nv">bar</span> <span class="p">(</span><span class="k">lambda </span><span class="p">()</span> <span class="nv">secret-message</span><span class="p">)))</span>
+</span><span class="line">
+</span><span class="line"><span class="p">(</span><span class="nb">display </span> <span class="p">(</span><span class="nf">bar</span><span class="p">))</span> <span class="c1">; prints &quot;none&quot;</span>
+</span><span class="line"><span class="p">(</span><span class="nf">newline</span><span class="p">)</span>
+</span><span class="line"><span class="p">(</span><span class="nf">foo</span> <span class="s">&quot;meet me by the docks at midnight&quot;</span><span class="p">)</span>
+</span><span class="line"><span class="p">(</span><span class="nb">display </span><span class="p">(</span><span class="nf">bar</span><span class="p">))</span> <span class="c1">; prints &quot;meet me by the docks at midnight&quot;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<ul>
+  <li>闭包可以用来实现对象系统。</li>
+</ul>
+
+<p>闭包的实现
+典型实现方式是定义一个特殊的数据结构，保存了函数地址指针与闭包创建时的函数的词法环境表示（那些nonlocal变量的绑定）。使用函数调用栈的语言实现闭包比较困难，因而这也说明了为什么大多数实现闭包的语言是基于垃圾收集机制。
+闭包的实现与函数对象很相似。这种技术也叫做lambda lifting。</p>
+
+<p>各种语言中（类似）闭包的结构C语言的回调函数在C语言中，支持回调函数的库有时在注册时需要两个参数：一个函数指针，一个独立的void*指针用以保存用户数据。这样的做法允许回调函数恢复其调用时的状态。这样的惯用法在功能上类似于闭包，但语法上有所不同。gcc对C语言的扩展gcc编译器对C语言实现了一种闭包的程序特性。</p>
+<p>C语言扩展：BlocksC语言 (使用LLVM编译器或苹果修改版的GCC)支持块。闭包变量用__block标记。同时，这个扩展也可以应用到Objective-C与C++中。</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">typedef</span> <span class="nf">int</span> <span class="p">(</span><span class="o">^</span><span class="n">IntBlock</span><span class="p">)();</span>
+</span><span class="line">
+</span><span class="line"><span class="n">IntBlock</span> <span class="nf">downCounter</span><span class="p">(</span><span class="kt">int</span> <span class="n">start</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">	 <span class="n">__block</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">start</span><span class="p">;</span>
+</span><span class="line">	 <span class="k">return</span> <span class="n">Block_copy</span><span class="p">(</span> <span class="o">^</span><span class="kt">int</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">		 <span class="k">return</span> <span class="n">i</span><span class="o">--</span><span class="p">;</span>
+</span><span class="line">	 <span class="p">});</span>
+</span><span class="line"> <span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="n">IntBlock</span> <span class="n">f</span> <span class="o">=</span> <span class="n">downCounter</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+</span><span class="line"><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">());</span>
+</span><span class="line"><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">());</span>
+</span><span class="line"><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">());</span>
+</span><span class="line"><span class="n">Block_release</span><span class="p">(</span><span class="n">f</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>C++函数对象C++早期标准允许通过重载operator()来定义函数对象。这种对象的行为在某种程度上与函数式编程语言中的函数类似。它们可以在运行时动态创建，保存状态，但是不能如闭包一般隐式获取局部变量。
+C++11标准已经支持了闭包，这是一种特殊的函数对象，由特殊的语言结构——lambda表达式自动构建。C++闭包中保存了全部nonlocal变量的拷贝或引用。如果是对外界环境中的对象的引用，且闭包执行时该外界环境的变量已经不存在（如在调用栈上已经unwinding），那么可导致undefined behavior，因为C++并不扩展这些被引用的外界环境的变量的生命期。</p>
+<p>示例代码如下</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="c++"><span class="line"><span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">string</span> <span class="n">myname</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">	<span class="k">typedef</span> <span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">names</span><span class="p">;</span>
+</span><span class="line">	<span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+</span><span class="line">	<span class="n">names</span> <span class="n">n</span><span class="p">;</span>
+</span><span class="line">	<span class="c1">// ...</span>
+</span><span class="line">	<span class="n">names</span><span class="o">::</span><span class="n">iterator</span> <span class="n">i</span> <span class="o">=</span>
+</span><span class="line">	 <span class="n">find_if</span><span class="p">(</span><span class="n">n</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">n</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="k">const</span> <span class="n">string</span><span class="o">&amp;</span> <span class="n">s</span><span class="p">){</span><span class="k">return</span> <span class="n">s</span> <span class="o">!=</span> <span class="n">myname</span> <span class="o">&amp;&amp;</span> <span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">;});</span>
+</span><span class="line">	<span class="c1">// &#39;i&#39; is now either &#39;n.end()&#39; or points to the first string in &#39;n&#39;</span>
+</span><span class="line">	<span class="c1">// &#39;i&#39; 现在是&#39;n.end()&#39;或指向&#39;n&#39;中第一个</span>
+</span><span class="line">	<span class="c1">// 不等于&#39;myname&#39;且长度大于&#39;y&#39;的字符串</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/Blog/javascripts/slash.js"></script>
+<script src="/Blog/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/';
+        var disqus_url = 'http://ITMonkeyLife.github.io/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>

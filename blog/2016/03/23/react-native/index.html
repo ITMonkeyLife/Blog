@@ -1,0 +1,705 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>React Native - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="React-Native 帮助在原生平台打造世界一流的应用体验，使用基于JavaSript和React的结合的开发经验。React-Native的宗旨是更有效的开发全平台的应用。 Native Components 在React-Native你能使用标准平台组件如： &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/Blog/favicon.png" rel="shortcut icon">
+	<link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/Blog/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">React Native</h2>
+	<div class="entry-content"><p>
+React-Native 帮助在原生平台打造世界一流的应用体验，使用基于<code>JavaSript</code>和React的结合的开发经验。React-Native的宗旨是更有效的开发全平台的应用。
+</p>
+
+<h2>Native Components</h2>
+<p>
+在React-Native你能使用标准平台组件如：iOS的<code>UITabBar</code>以及<code>Android</code>的<code>Drawer</code>。这个给了你APP标准统一的外观，使用这个平台的生态系统，去保持高质量。这些组件能轻易的嵌入到你的APP中使用，和React组件是差不多的，例如:<code>TabBariOS</code>和<code>DrawerLayoutAndroid</code>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// iOS</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">TabBarIOS</span><span class="p">,</span> <span class="nx">NavigatorIOS</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">TabBarIOS</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">TabBarIOS</span><span class="p">.</span><span class="nx">Item</span> <span class="nx">title</span><span class="o">=</span><span class="s2">&quot;React Native&quot;</span> <span class="nx">selected</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="nx">NavigatorIOS</span> <span class="nx">initialRoute</span><span class="o">=</span><span class="p"></span> <span class="o">/&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="err">/TabBarIOS.Item&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/TabBarIOS&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// Android</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">DrawerLayoutAndroid</span><span class="p">,</span> <span class="nx">ProgressBarAndroid</span><span class="p">,</span> <span class="nx">Text</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">DrawerLayoutAndroid</span>
+</span><span class="line">        <span class="nx">renderNavigationView</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="nx">React</span> <span class="nx">Native</span><span class="o">&lt;</span><span class="err">/Text&gt;}&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">ProgressBarAndroid</span> <span class="o">/&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/DrawerLayoutAndroid&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<h2>异步执行</h2>
+<p>
+所有的<code>Javascript</code>应用程序代码以及原生平台的操作都是异步的，并且原生模块也能够使用额外的线程。这意味着我们能关闭主线程的图像解码，后台把图片保存到磁盘，渲染文字和计算布局而不会阻塞UI。这样一来，React-Native应用自然流畅性和响应。通信也完全序列化，这使我们能够充分利用<code>Chrome</code>开发者工具来调试<code>Javascript</code>的运行时完整的应用程序，无论是模拟器还是真实设备。
+</p>
+<!-- more-->
+<h2>触摸处理</h2>
+<p>
+React-Native实现了一个功能强大的系统解决触摸在复杂的视图层次中，并且提供高层级的组件，例如：<code>TouchableHighlight</code>和滚动视图和其他元素融合在一起，不需要额外的配置。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// iOS &amp; Android</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">ScrollView</span><span class="p">,</span> <span class="nx">TouchableHighlight</span><span class="p">,</span> <span class="nx">Text</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">TouchDemo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">ScrollView</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">TouchableHighlight</span> <span class="nx">onPress</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;pressed&#39;</span><span class="p">)}</span><span class="o">&gt;</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="nx">Proper</span> <span class="nx">Touch</span> <span class="nx">Handling</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="err">/TouchableHighlight&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/ScrollView&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<h2>Flexbox和样式</h2>
+<p>
+视图布局应该很容易，这就是为什么我们把<code>Flexbox</code>的布局模型从web带到了React-Native。Flexbox让构建大部分公共部分的UI布局更简单，例如用<code>margin</code>和<code>padding</code>堆叠和嵌套的Box。React-Native也支持公共的网页样式，如：<code>fontWeight</code>和<code>StyleSheet</code>抽象提供了一个优化的机制来声明所有的样式和布局正确一起使用它们和内联应用它们的组件
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// iOS &amp; Android</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">Image</span><span class="p">,</span> <span class="nx">StyleSheet</span><span class="p">,</span> <span class="nx">Text</span><span class="p">,</span> <span class="nx">View</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">ReactNative</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">View</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">row</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Image</span>
+</span><span class="line">          <span class="nx">source</span><span class="o">=</span><span class="p"></span>
+</span><span class="line">          <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">image</span><span class="p">}</span>
+</span><span class="line">        <span class="o">/&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">View</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">title</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">            <span class="nx">React</span> <span class="nx">Native</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">subtitle</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">            <span class="nx">Build</span> <span class="nx">high</span> <span class="nx">quality</span> <span class="nx">mobile</span> <span class="nx">apps</span> <span class="nx">using</span> <span class="nx">React</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="err">/View&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/View&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span><span class="line"><span class="kd">var</span> <span class="nx">styles</span> <span class="o">=</span> <span class="nx">StyleSheet</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">row</span><span class="o">:</span> <span class="p">{</span> <span class="nx">flexDirection</span><span class="o">:</span> <span class="s1">&#39;row&#39;</span><span class="p">,</span> <span class="nx">margin</span><span class="o">:</span> <span class="mi">40</span> <span class="p">},</span>
+</span><span class="line">  <span class="nx">image</span><span class="o">:</span> <span class="p">{</span> <span class="nx">width</span><span class="o">:</span> <span class="mi">40</span><span class="p">,</span> <span class="nx">height</span><span class="o">:</span> <span class="mi">40</span><span class="p">,</span> <span class="nx">marginRight</span><span class="o">:</span> <span class="mi">10</span> <span class="p">},</span>
+</span><span class="line">  <span class="nx">text</span><span class="o">:</span> <span class="p">{</span> <span class="nx">flex</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">justifyContent</span><span class="o">:</span> <span class="s1">&#39;center&#39;</span><span class="p">},</span>
+</span><span class="line">  <span class="nx">title</span><span class="o">:</span> <span class="p">{</span> <span class="nx">fontSize</span><span class="o">:</span> <span class="mi">11</span><span class="p">,</span> <span class="nx">fontWeight</span><span class="o">:</span> <span class="s1">&#39;bold&#39;</span> <span class="p">},</span>
+</span><span class="line">  <span class="nx">subtitle</span><span class="o">:</span> <span class="p">{</span> <span class="nx">fontSize</span><span class="o">:</span> <span class="mi">10</span> <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<h2>开源</h2>
+<p>
+React-Native集中于改变视图代码编写的方式，至于剩下的，我们期待在网络的普遍标准和在恰当情况下填充那些API。你能使用npm安装<code>JavaSript</code>库拷贝到React-Native运行。如:<code>XMLHttpRequest</code>,window.requestAnimationFrame,navigator.geolocation。我们努力扩展可用的API，并且很高兴为开源贡献力量。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// iOS (Android support for geolocation coming)</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">Text</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">GeoInfo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">{</span> <span class="nx">position</span><span class="o">:</span> <span class="s1">&#39;unknown&#39;</span> <span class="p">};</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">navigator</span><span class="p">.</span><span class="nx">geolocation</span><span class="p">.</span><span class="nx">getCurrentPosition</span><span class="p">(</span>
+</span><span class="line">      <span class="p">(</span><span class="nx">position</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">position</span><span class="p">}),</span>
+</span><span class="line">      <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="nx">Position</span><span class="o">:</span> <span class="p">{</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">position</span><span class="p">)}</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<h2>可扩展性</h2>
+<p>
+React-Native可用来开发一个伟大的APP而不用写一行原生代码，但是React-Native的设计也与自定义原生的视图和模块的扩展，这意味着你开源复用任何你之前已经构建过的，也能导入使用你喜欢的原生库。
+</p>
+
+<h3>创建iOS模块</h3>
+<p>
+创建一个简单的iOS模块，创建一个新的类来实现<code>RCTBridgeModule</code>协议,包含函数实现JavaSript在RCT_EXPORT_METHOD的功能。额外，这个类自身必须明确的导出RCT_EXPORT_MODULE();。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &quot;RCTBridgeModule.h&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">MyCustomModule</span> : <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">RCTBridgeModule</span><span class="o">&gt;</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">MyCustomModule</span>
+</span><span class="line">
+</span><span class="line"><span class="n">RCT_EXPORT_MODULE</span><span class="p">();</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// Available as NativeModules.MyCustomModule.processString</span>
+</span><span class="line">
+</span><span class="line"><span class="n">RCT_EXPORT_METHOD</span><span class="p">(</span><span class="nl">processString:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span> <span class="p">)</span><span class="n">input</span> <span class="nl">callback:</span><span class="p">(</span><span class="n">RCTResponseSenderBlock</span><span class="p">)</span><span class="n">callback</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">  <span class="n">callback</span><span class="p">(</span><span class="err">@</span><span class="p">[[</span><span class="n">input</span> <span class="nl">stringByReplacingOccurrencesOfString:</span><span class="s">@&quot;Goodbye&quot;</span> <span class="nl">withString:</span><span class="s">@&quot;Hello&quot;</span><span class="p">]]);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">NativeModules</span><span class="p">,</span> <span class="nx">Text</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">Message</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">getInitialState</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">{</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;Goodbye World.&#39;</span> <span class="p">};</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nx">componentDidMount</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">NativeModules</span><span class="p">.</span><span class="nx">MyCustomModule</span><span class="p">.</span><span class="nx">processString</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">,</span> <span class="p">(</span><span class="nx">text</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class="line">      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">text</span><span class="p">});</span>
+</span><span class="line">    <span class="p">});</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<h3>创建iOS视图</h3>
+<p>
+自定义的iOS视图能被导出，继承于<code>RCTViewManager</code>,实现-(UIView*)view方法，并且导出属性通过<code>RCT_EXPORT_VIEW_PROPERTY</code>这个宏。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &quot;RCTViewManager.h&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">MyCustomViewManager</span> : <span class="nc">RCTViewManager</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">MyCustomViewManager</span>
+</span><span class="line">
+</span><span class="line"><span class="n">RCT_EXPORT_MODULE</span><span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="o">-</span> <span class="p">(</span><span class="n">UIView</span> <span class="o">*</span> <span class="p">)</span><span class="n">view</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">  <span class="k">return</span> <span class="p">[[</span><span class="n">MyCustomView</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="n">RCT_EXPORT_VIEW_PROPERTY</span><span class="p">(</span><span class="n">myCustomProperty</span><span class="p">,</span> <span class="n">NSString</span><span class="p">);</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">requireNativeComponent</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">MyCustomView</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">NativeMyCustomView</span> <span class="p">{...</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="nx">MyCustomView</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">myCustomProperty</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">([</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">]),</span>
+</span><span class="line"><span class="p">};</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">NativeMyCustomView</span> <span class="o">=</span> <span class="nx">requireNativeComponent</span><span class="p">(</span><span class="s1">&#39;MyCustomView&#39;</span><span class="p">,</span> <span class="nx">MyCustomView</span><span class="p">);</span>
+</span><span class="line"><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">MyCustomView</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<h3>创建安卓模块</h3>
+<p>
+同样，安卓也支持自定义扩展，这些方法只是略有不同。
+</p>
+<p>
+要在Android的一个简单的模块，创建一个扩展<code>ReactContextBaseJavaModule</code>类的新类和注释，你要提供给<code>JavaScript</code>与@ReactMethod功能。此外，类本身必须的<code>ReactPackage</code>注册您的React-Native程序。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyCustomModule</span> <span class="kd">extends</span> <span class="n">ReactContextBaseJavaModule</span> <span class="o">{</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// Available as NativeModules.MyCustomModule.processString</span>
+</span><span class="line">  <span class="nd">@ReactMethod</span>
+</span><span class="line">  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">processString</span><span class="o">(</span><span class="n">String</span> <span class="n">input</span><span class="o">,</span> <span class="n">Callback</span> <span class="n">callback</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="n">callback</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">input</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="s">&quot;Goodbye&quot;</span><span class="o">,</span> <span class="s">&quot;Hello&quot;</span><span class="o">));</span>
+</span><span class="line">  <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">NativeModules</span><span class="p">,</span> <span class="nx">Text</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line"><span class="kd">var</span> <span class="nx">Message</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">getInitialState</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">{</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;Goodbye World.&#39;</span> <span class="p">};</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nx">componentDidMount</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">NativeModules</span><span class="p">.</span><span class="nx">MyCustomModule</span><span class="p">.</span><span class="nx">processString</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">,</span> <span class="p">(</span><span class="nx">text</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class="line">      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">text</span><span class="p">});</span>
+</span><span class="line">    <span class="p">});</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<h3>创建安卓视图</h3>
+<p>
+定制安卓视图能通过<code>SimpleViewManager</code>扩展，实现一个创建视图实例并且返货函数名称的方法，并与@UIProp标记导出属性被暴露。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyCustomViewManager</span> <span class="kd">extends</span> <span class="n">SimpleViewManager</span><span class="o">&lt;</span><span class="n">MyCustomView</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class="line">
+</span><span class="line">  <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">REACT_CLASS</span> <span class="o">=</span> <span class="s">&quot;MyCustomView&quot;</span><span class="o">;</span>
+</span><span class="line">
+</span><span class="line">  <span class="nd">@UIProp</span><span class="o">(</span><span class="n">UIProp</span><span class="o">.</span><span class="na">Type</span><span class="o">.</span><span class="na">STRING</span><span class="o">)</span>
+</span><span class="line">  <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">PROP_MY_CUSTOM_PROPERTY</span> <span class="o">=</span> <span class="s">&quot;myCustomProperty&quot;</span><span class="o">;</span>
+</span><span class="line">
+</span><span class="line">  <span class="nd">@Override</span>
+</span><span class="line">  <span class="kd">public</span> <span class="n">String</span> <span class="nf">getName</span><span class="o">()</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">REACT_CLASS</span><span class="o">;</span>
+</span><span class="line">  <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">  <span class="nd">@Override</span>
+</span><span class="line">  <span class="kd">protected</span> <span class="n">MyCustomView</span> <span class="nf">createViewInstance</span><span class="o">(</span><span class="n">ThemedReactContext</span> <span class="n">reactContext</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="k">new</span> <span class="nf">MyCustomView</span><span class="o">(</span><span class="n">reactContext</span><span class="o">);</span>
+</span><span class="line">  <span class="o">}</span>
+</span><span class="line">
+</span><span class="line">  <span class="nd">@Override</span>
+</span><span class="line">  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">updateView</span><span class="o">(</span><span class="n">MyCustomView</span> <span class="n">view</span><span class="o">,</span> <span class="n">ReactStylesDiffMap</span> <span class="n">props</span><span class="o">)</span> <span class="o">{</span>
+</span><span class="line">    <span class="kd">super</span><span class="o">.</span><span class="na">updateView</span><span class="o">(</span><span class="n">view</span><span class="o">,</span> <span class="n">props</span><span class="o">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span> <span class="o">(</span><span class="n">props</span><span class="o">.</span><span class="na">hasKey</span><span class="o">(</span><span class="n">PROP_MY_CUSTOM_PROPERTY</span><span class="o">))</span> <span class="o">{</span>
+</span><span class="line">      <span class="n">view</span><span class="o">.</span><span class="na">setMyCustomProperty</span><span class="o">(</span><span class="n">props</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="n">PROP_MY_CUSTOM_PROPERTY</span><span class="o">));</span>
+</span><span class="line">    <span class="o">}</span>
+</span><span class="line">  <span class="o">}</span>
+</span><span class="line"><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">requireNativeComponent</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">MyCustomView</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">NativeMyCustomView</span> <span class="p">{...</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="nx">MyCustomView</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">myCustomProperty</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">([</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">]),</span>
+</span><span class="line"><span class="p">};</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">NativeMyCustomView</span> <span class="o">=</span> <span class="nx">requireNativeComponent</span><span class="p">(</span><span class="s1">&#39;MyCustomView&#39;</span><span class="p">,</span> <span class="nx">MyCustomView</span><span class="p">);</span>
+</span><span class="line"><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">MyCustomView</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<hr />
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React-Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/Blog/javascripts/slash.js"></script>
+<script src="/Blog/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io/Blog/blog/2016/03/23/react-native/';
+        var disqus_url = 'http://ITMonkeyLife.github.io/Blog/blog/2016/03/23/react-native/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>
