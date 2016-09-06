@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="在话题 #5 中，Chris Eidhof 向我们介绍了 iOS7 引入的新特性自定义 View Controller 转场. 他给出了一个 结论： 我们在本文只探讨了在 navigation controller 中的两个 view controller 之间的转场动画，但是这些做法在 tab &hellip;">
+	<meta name="description" content="UICollectionView 和相关类的设置非常灵活和强大。但是灵活性一旦增强，某种程度上也增加了其复杂性： UICollectionView 比老式的 UITableView 更有深度，适用性也更强。 Collection View 深入太多了，事实上，Ole Begeman 和 Ash &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -69,11 +69,65 @@
 	</form>
 </nav>
 
+
 </header>
 	
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/">
+		
+			CollectionView布局动画</a>
+	</h2>
+	<div class="entry-content">
+		<p><code>UICollectionView</code> 和相关类的设置非常灵活和强大。但是灵活性一旦增强，某种程度上也增加了其复杂性： <code>UICollectionView</code> 比老式的 <code>UITableView</code> 更有深度，适用性也更强。</p>
+
+<p>Collection View 深入太多了，事实上，<a href="http://oleb.net">Ole Begeman</a> 和 <a href="https://twitter.com/ashfurrow">Ash Furrow</a> 之前曾在 objc.io 上发表过 <a href="http://objccn.io/issue-3-3/">自定义 Collection View 布局</a> 和 <a href="http://objccn.io/issue-5-2/">UICollectionView + UIKit 力学</a>，但是我依然有一些他们没有提及的内容可以写。在这篇文章中，我假设你已经非常熟悉 <code>UICollectionView</code> 的基本布局，并且至少阅读了苹果精彩的<a href="https://developer.apple.com/library/ios/documentation/WindowsViews/Conceptual/CollectionViewPGforIOS/Introduction/Introduction.html#//apple_ref/doc/uid/TP40012334">编程指南</a>以及 Ole 之前的<a href="http://objccn.io/issue-3-3/">文章</a>。</p>
+
+<p>本文的第一部分将集中讨论并举例说明如何用不同的类和方法来共同帮助实现一些常见的 <code>UICollectionView</code> 动画。在第二部分，我们将看一下带有 collection views 的 view controller 转场动画以及在 <code>useLayoutToLayoutNavigationTransitions</code> 可用时使用其进行转场，如果不可用时，我们会实现一个自定义转场动画。</p>
+
+<p>你可以在 GitHub 中找到本文提到的两个示例工程:</p>
+
+<ul>
+<li><a href="https://github.com/objcio/issue-12-CollectionViewAnimations">布局动画</a></li>
+<li><a href="https://github.com/objcio/issue-12-CustomCollectionViewTransition">自定义 collection view 转场动画</a></li>
+</ul>
+
+<h2 id="collectionview">Collection View 布局动画</h2>
+
+<p>标准 <code>UICollectionViewFlowLayout</code> 除了动画是非常容易自定义的，苹果选择了一种安全的途径去实现一个简单的淡入淡出动画作为所有布局的默认动画。如果你想实现自定义动画，最好的办法是子类化 <code>UICollectionViewFlowLayout</code> 并且在适当的地方实现你的动画。让我们通过一些例子来了解 <code>UICollectionViewFlowLayout</code> 子类中的一些方法如何协助完成自定义动画。</p>
+
+<h3>插入删除元素</h3>
+
+		
+		<a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/13/collectionviewbu-ju-dong-hua/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -755,75 +809,6 @@ Link Layer -- e.g. IEEE 802.2
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/21/http/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/15/foundationji-chu-ji-he-lei/">
-		
-			Foundation基础集合类</a>
-	</h2>
-	<div class="entry-content">
-		<h2 id="nsarraynssetnsorderedsetnsdictionary">NSArray, NSSet, NSOrderedSet 和 NSDictionary</h2>
-
-<p>基础集合类是每一个 Mac/iOS 应用的基本组成部分。在本文中，我们将对”老类” (<code>NSArray</code>, <code>NSSet</code>)和”新类” (<code>NSMapTable</code>, <code>NSHashTable</code>, <code>NSPointerArray</code>) 进行一个深入的研究，探索每一个的效率细节，并讨论其使用场景。</p>
-
-<p>作者提示：本文包含一些参照结果，但它们并不意味着绝对精确，也没有进行均差分析及多次的测试。这些结果的目的是给出运行时统计，来帮助我们认识到通常来说用什么会更快。所有的测试基于 iPhone 5s，使用 Xcode 5.1b1 和 iOS 7.1b1 的 64 位程序。编译选项设置为 -Ofast 的发布构建。Vectorize loops 和 unroll loops (默认设置) 均设置为关闭。</p>
-
-<h2 id="o">大 O 符号，算法复杂度计量</h2>
-
-<p>首先，我们需要一些理论知识。效率通常用<a href="https://en.wikipedia.org/wiki/Big_O_notation">大 O 符号</a>描述。它定义了一个函数的<em>极限特征</em>，通常被用于描绘其算法效率。O 定义了函数增长率的上限。不同量级的差异非常巨大，可以看看通常使用的 O 符号的量级以及它们所对应需要的操作数的关系。</p>
-
-<p><img src="http://img.objccn.io/issue-7/big-o-notation.png" alt="" /></p>
-
-<p>例如，如果用算法复杂度为 O(n^2)的算法对一个有 50 个元素的数组排序，需要 2,500 步的操作。而且，还有内部的系统开销和方法调用 — 所以是 250 0个操作的时间常量。 O(1)是理想的复杂度，代表着恒定的时间。<a href="http://en.wikipedia.org/wiki/Sorting_algorithm#Comparison_of_algorithms">好的排序算法通常需要 O(n*log n) 的时间</a>。</p>
-
-<h3>可变性</h3>
-
-<p>大多数的集合类存在两个版本:可变和不可变(默认)。这和其他大多数的框架有非常大的不同，一开始会让人觉得有一点奇怪。然而其他的框架现在也应用了这一特性：就在几个月前，<a href="http://blogs.msdn.com/b/dotnet/archive/2013/09/25/immutable-collections-ready-for-prime-time.aspx">.NET公布了作为官方扩展的不可变集合</a>。</p>
-
-<p>最大的好处是什么？<strong>线程安全</strong>。不可变的集合完全是线程安全的，可以同时在多个线程中迭代，避免各种转变时出现异常的风险。你的 API <em>绝不</em>应该暴露一个可变的集合。</p>
-
-<p>当然从不可变到可变然后再回来是会有一定代价的 — 对象必须被拷贝两次，所有集合内的对象将被 retain/release。有时在内部使用一个可变的集合，而在访问时返回一个不可变的对象副本会更高效。</p>
-
-<p>与其他框架不同的是，苹果没有提供一个线程安全的可变集合，<code>NSCache</code> 是例外，但它真的算不上是集合类，因为它不是一个通用的容器。大多数时候，你不会需要在集合层级的同步特性。想象一段代码，作用是检查字典中一个 key 是否存在，并根据检查结果决定设置一个新的 key 或者返回某些值 — 你通常需要把多个操作归类，这时线程安全的可变集合并不能对你有所帮助。</p>
-
-<p>其实也有<em>一些</em>同步的，线程安全的可以使用的可变集合案例，它们往往只需要用几行代码，通过子类和组合的方法建立，比如这个 <a href="https://gist.github.com/steipete/7746843"><code>NSDictionary</code></a> 或这个 <a href="https://github.com/Cue/TheKitchenSync/blob/master/Classes/Collections/CueSyncArray.mm"><code>NSArray</code></a>。</p>
-
-<p>需要注意的是，一些较新的集合类，如 <code>NSHashTable</code>，<code>NSMapTable</code> 和 <code>NSPointerArray</code> 默认就是可变的，它们并没有对应的不可变的类。它们用于类的内部使用，你基本应该不会能找到需要它们的不可变版本的应用场景。</p>
-
-<h2 id="nsarray">NSArray</h2>
-
-<p><code>NSArray</code> 作为一个存储对象的有序集合，可能是被使用最多的集合类。这也是为什么它有自己的比原来的 <code>[NSArray arrayWithObjects:..., nil]</code> 简短得多的快速语法糖符号 <code>@[...]</code>。
-<code>NSArray</code> 实现了 <code>objectAtIndexedSubscript:</code>，因为我们可以使用类 C 的语法 <code>array[0]</code> 来代替原来的 <code>[array objectAtIndex:0]</code>。</p>
-
-<h3>性能特征</h3>
-
-		
-		<a href="/Blog/blog/2014/04/15/foundationji-chu-ji-he-lei/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/15/foundationji-chu-ji-he-lei/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
