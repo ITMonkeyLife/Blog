@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-09-06T14:01:39+08:00</updated>
+  <updated>2016-09-06T15:59:32+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -74,7 +74,12 @@ F谱是在这两个点之间的线上做的谱。
 下面是本小节完整的演示。
 </p>
 <p>
-<embed src="http://www.musictheory.net/vc/6/0/53481700c244fded30bde8b5683ebc08f0eaafe6/lesson10.swf" width="800" height="380" type="application/x-shockwave-flash" />
+<video width="800" height="300" controls="controls" preload="auto">
+ <source src="http://ITMonkeyLife.github.io/Blog/videos/lesson10.mp4" type="video/mp4" />
+</video>
+<!-- <embed src="http://www.musictheory.net/vc/6/0/53481700c244fded30bde8b5683ebc08f0eaafe6/lesson10.swf"
+width="800" height="380"
+type="application/x-shockwave-flash"> &#8211;>
 </p>
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
