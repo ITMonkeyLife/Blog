@@ -1,0 +1,782 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: iOS | IT Monkey Life]]></title>
+  <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/categories/ios/atom.xml" rel="self"/>
+  <link href="http://ITMonkeyLife.github.io/Blog//"/>
+  <updated>2016-09-06T19:39:39+08:00</updated>
+  <id>http://ITMonkeyLife.github.io/Blog//</id>
+  <author>
+    <name><![CDATA[Rick]]></name>
+    <email><![CDATA[382542165@qq.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[iOS 推送证书过期指南]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog//blog/2016/09/05/ios-tui-song-zheng-shu-guo-qi-zhi-nan/"/>
+    <updated>2016-09-05T12:30:46+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog//blog/2016/09/05/ios-tui-song-zheng-shu-guo-qi-zhi-nan</id>
+    <content type="html"><![CDATA[<p>  
+今天一早，运维部门同事，说咱们友盟上面推送证书已经到期了。那么到期了证书应该怎么样去更换新的证书呢。
+</p>
+<p>
+1、我们先去<a href="https://developer.apple.com/account/ios/certificate/distribution">苹果开发者中心</a>新建一个Certificates证书。
+</p>
+<p>
+2、下载<code>Cert</code>文件到本地，双击之后。在<code>Keychain Access</code>中找到我们创建的证书。Export导出p12格式，创建密码。
+</p>
+<p>
+3、有时候后端需要pem格式的证书,我们通过终端进入p12 文件所在的文件夹，通过终端输入下面的命令生成pem文件
+```
+openssl pkcs12 -in dev_push_Certificates.p12 -out apns-dev-cert.pem -nodes -clcerts
+Enter Import Password:
+MAC verified OK
+```
+</p>
+<p>
+4、生成证书后，只要替换Push证书就好了。
+</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[iOS开发锦囊]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog//blog/2016/08/29/ioskai-fa-jin-nang/"/>
+    <updated>2016-08-29T15:44:35+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog//blog/2016/08/29/ioskai-fa-jin-nang</id>
+    <content type="html"><![CDATA[<p>
+1、判断是不是AppStore版本
+```objc
+- (BOOL)isAppStoreEnvironment {
+#if TARGET_OS_IOS &amp;&amp; !TARGET_IPHONE_SIMULATOR
+    return ([[NSBundle mainBundle] pathForResource:@"embedded" ofType:@"mobileprovision"] == nil);
+#endif
+
+    return NO;
+}
+```
+<p>
+<p>
+2、判断当前系统时区名称
+```objc
++ (NSString *)currentSystemTimeZoneName {
+    static NSLock * methodLock;
+    static dispatch_once_t onceToken;
+    dispatch_once(&amp;onceToken, ^{
+        methodLock = [[NSLock alloc] init];
+    });
+
+    [methodLock lock];
+    [NSTimeZone resetSystemTimeZone];
+    NSString * systemTimeZoneName = [[NSTimeZone systemTimeZone].name copy];
+    [methodLock unlock];
+
+    return systemTimeZoneName;
+}
+```
+</p>
+
+<p>
+3、安全的执行method
+```objc
+/**
+ * Performs selector on the target, only if the target and selector are non-nil,
+ * as well as target responds to selector
+ */
++ (void)safePerformSelector:(SEL)selector withTarget:(id)target object:(id)object object:(id)anotherObject {
+    if (target == nil || selector == nil || ![target respondsToSelector:selector]) {
+        return;
+    }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    [target performSelector:selector withObject:object withObject:anotherObject];
+#pragma clang diagnostic pop
+}
+```
+</p>
+<p>
+4、主线程执行
+```objc
++ (CLLocationManager *)_newSystemLocationManager {
+    __ block CLLocationManager * manager = nil;
+
+    // CLLocationManager should be created only on main thread, as it needs a run loop to serve delegate callbacks
+    dispatch_block_t block = ^{
+        manager = [[CLLocationManager alloc] init];
+    };
+    if ([NSThread currentThread].isMainThread) {
+        block();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), block);
+    }
+    return manager;
+}
+```
+</p>
+
+<p>
+5、添加Block
+```objc
+- (void)addBlockForCurrentLocation:(PFLocationManagerLocationUpdateBlock)handler {
+    @synchronized (self.blockSet) {
+        [self.blockSet addObject:[handler copy]];
+    }
+
+    //
+    // Abandon hope all ye who enter here.
+    // Apparently, the CLLocationManager API is different for iOS/OSX/watchOS/tvOS up to the point,
+    // where encapsulating pieces together just makes much more sense
+    // than hard to human-parse compiled out pieces of the code.
+    // This looks duplicated, slightly, but very much intentional.
+    //
+#if TARGET_OS_WATCH
+    if ([self.bundle objectForInfoDictionaryKey:@"NSLocationWhenInUseUsageDescription"] != nil) {
+        [self.locationManager requestWhenInUseAuthorization];
+    } else {
+        [self.locationManager requestAlwaysAuthorization];
+    }
+    [self.locationManager requestLocation];
+#elif TARGET_OS_TV
+    [self.locationManager requestWhenInUseAuthorization];
+    [self.locationManager requestLocation];
+#elif TARGET_OS_IOS
+    if ([self.locationManager respondsToSelector:@selector(requestAlwaysAuthorization)]) {
+        if (self.application.applicationState != UIApplicationStateBackground &amp;&amp;
+            [self.bundle objectForInfoDictionaryKey:@"NSLocationWhenInUseUsageDescription"] != nil) {
+            [self.locationManager requestWhenInUseAuthorization];
+        } else {
+            [self.locationManager requestAlwaysAuthorization];
+        }
+    }
+    [self.locationManager startUpdatingLocation];
+#elif PF_TARGET_OS_OSX
+    [self.locationManager startUpdatingLocation];
+#endif
+}
+
+```
+</p>
+
+<p>
+6、安全执行线程
+```objc
+#import &lt;Foundation/Foundation.h&gt;
+extern dispatch_queue_t JPThreadsafetyCreateQueueForObject(id object);
+extern void JPThreadsafetySafeDispatchSync(dispatch_queue_t queue, dispatch_block_t block);
+#define JPThreadSafetyPerform(queue, block) ({                      \
+    __ block typeof((block())) result;                              \
+    JPThreadsafetySafeDispatchSync(queue, ^{ result = block(); }); \
+    result;                                                        \
+})
+```
+
+```objc
+#import "JPThreadsafety.h"
+
+static void *const JPThreadsafetyQueueIDKey = (void *)&JPThreadsafetyQueueIDKey;
+
+dispatch_queue_t JPThreadsafetyCreateQueueForObject(id object) {
+    NSString* label = [NSStringFromClass([object class]) stringByAppendingString:@".synchronizationQueue"];
+    dispatch_queue_t queue = dispatch_queue_create(label.UTF8String, DISPATCH_QUEUE_SERIAL);
+
+    void* uuid = calloc(1, sizeof(uuid));
+    dispatch_queue_set_specific(queue, JPThreadsafetyQueueIDKey, uuid, free);
+
+    return queue;
+}
+
+void JPThreadsafetySafeDispatchSync(dispatch_queue_t queue, dispatch_block_t block) {
+    void* uuidMine = dispatch_get_specific(JPThreadsafetyQueueIDKey);
+    void* uuidOther = dispatch_queue_get_specific(queue, JPThreadsafetyQueueIDKey);
+
+    if (uuidMine == uuidOther) {
+        block();
+    } else {
+        dispatch_sync(queue, block);
+    }
+}
+
+```
+</p>
+</p></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Method Swizzling]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog//blog/2016/08/26/method-swizzling/"/>
+    <updated>2016-08-26T09:43:31+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog//blog/2016/08/26/method-swizzling</id>
+    <content type="html"><![CDATA[<p>
+在没有一个类的实现源码的情况下，想改变其中一个方法的实现，除了继承它重写、和借助类别重名方法暴力抢先之外，还有更加灵活的方法吗？在Objective-C编程中，如何实现hook呢？标题有点大，计划分几篇来总结。
+
+本文主要介绍针对selector的hook，主角被标题剧透了———— Method Swizzling
+</p>
+<h2>Method Swizzling 原理</h2>
+<p>在Objective-C中调用一个方法，其实是向一个对象发送消息，查找消息的唯一依据是selector的名字。利用Objective-C的动态特性，可以实现在运行时偷换selector对应的方法实现，达到给方法挂钩的目的。</p>
+<p>每个类都有一个方法列表，存放着selector的名字和方法实现的映射关系。IMP有点类似函数指针，指向具体的Method实现。</p>
+<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1f76wrdzvssj214y0dcmxy.jpg" /></p>
+<p>
+我们可以利用 method_exchangeImplementations 来交换2个方法中的IMP，
+
+我们可以利用 class_replaceMethod 来修改类，
+
+我们可以利用 method_setImplementation 来直接设置某个方法的IMP，
+……
+归根结底，都是偷换了selector的IMP，如下图所示：
+</p>
+<p><img src="http://ww2.sinaimg.cn/large/626e5d69gw1f76wshrop2j20kf09mt95.jpg" /></p>
+<h2>Method Swizzling 实践</h2>
+<p>
+
+举个例子好了，我想钩一下NSArray的lastObject 方法，只需两个步骤。
+第一步：给NSArray加一个我自己的lastObject
+```objc
+#import "NSArray+Swizzle.h"  
+
+
+@implementation NSArray (Swizzle)  
+
+
+- (id)myLastObject  
+{  
+    id ret = [self myLastObject];  
+    NSLog(@"**********  myLastObject *********** ");  
+    return ret;  
+}  
+@end  
+```
+乍一看，这不递归了么？别忘记这是我们准备调换IMP的selector，[self myLastObject] 将会执行真的 [self lastObject] 。
+</p>
+<p>
+第二步：调换IMP
+```objc
+#import &lt;objc/runtime.h&gt;  
+#import "NSArray+Swizzle.h"  
+
+
+int main(int argc, char* argv[])  
+{  
+    @autoreleasepool {  
+
+        Method ori_Method =  class_getInstanceMethod([NSArray class], @selector(lastObject));  
+        Method my_Method = class_getInstanceMethod([NSArray class], @selector(myLastObject));  
+        method_exchangeImplementations(ori_Method, my_Method);  
+
+        NSArray* array = @[@"0",@"1",@"2",@"3"];  
+        NSString* string = [array lastObject];  
+        NSLog(@"TEST RESULT : %@",string);  
+
+        return 0;  
+    }  
+}  
+```
+</p>
+<!-- more -->
+<p>
+控制台输出Log：
+```
+2013-07-18 16:26:12.585 Hook[1740:c07] **********  myLastObject ***********   
+2013-07-18 16:26:12.589 Hook[1740:c07] TEST RESULT : 3  
+```
+</p>
+<p>
+结果很让人欣喜，是不是忍不住想给UIWebView的loadRequest: 加 TODO 了呢？
+</p>
+<h2>Method Swizzling 的封装</h2>
+<p>之前在github上找到的RNSwizzle，推荐给大家，可以搜一下。
+```objc
+//  
+//  RNSwizzle.m  
+//  MethodSwizzle  
+
+
+#import "RNSwizzle.h"  
+#import &lt;objc/runtime.h&gt;  
+@implementation NSObject (RNSwizzle)  
+
+
++ (IMP)swizzleSelector:(SEL)origSelector   
+               withIMP:(IMP)newIMP {  
+  Class class = [self class];  
+  Method origMethod = class_getInstanceMethod(class,  
+                                              origSelector);  
+  IMP origIMP = method_getImplementation(origMethod);  
+
+  if(!class_addMethod(self, origSelector, newIMP,  
+                      method_getTypeEncoding(origMethod)))  
+  {  
+    method_setImplementation(origMethod, newIMP);  
+  }  
+
+  return origIMP;  
+}  
+@end  
+```</p>
+<h2>Method Swizzling 危险不危险</h2>
+<p>
+针对这个问题，我在<a href="http://stackoverflow.com/questions/5339276/what-are-the-dangers-of-method-swizzling-in-objective-c">stackoverflow</a>上看到了满意的答案，这里翻译一下，总结记录在本文中，以示分享：
+
+
+使用 Method Swizzling 编程就好比切菜时使用锋利的刀，一些人因为担心切到自己所以害怕锋利的刀具，可是事实上，使用钝刀往往更容易出事，而利刀更为安全。
+Method swizzling 可以帮助我们写出更好的，更高效的，易维护的代码。但是如果滥用它，也将会导致难以排查的bug。
+</p>
+<h3>背景</h3>
+<p>
+好比设计模式，如果我们摸清了一个模式的门道，使用该模式与否我们自己心里有数。单例模式就是一个很好的例子，它饱受争议但是许多人依旧使用它。Method Swizzling也是一样，一旦你真正理解它的优势和弊端，使用它与否你应该就有你自己的观点。
+</p>
+<h3>讨论</h3>
+<p>
+这里是一些 Method Swizzling的陷阱：
+Method swizzling is not atomic
+Changes behavior of un-owned code
+Possible naming conflicts
+Swizzling changes the method arguments
+The order of swizzles matters
+Difficult to understand (looks recursive)
+Difficult to debug
+</p>
+<p>我将逐一分析这些点，增进对Method Swizzling的理解的同时，并搞懂如何应对。</p>
+<h4>Method swizzling is not atomic</h4>
+<p>
+我所见过的使用method swizzling实现的方法在并发使用时基本都是安全的。95%的情况里这都不会是个问题。通常你替换一个方法的实现，是希望它在整个程序的生命周期里有效的。也就是说，你会把 method swizzling 修改方法实现的操作放在一个加号方法 +(void)load里，并在应用程序的一开始就调用执行。你将不会碰到并发问题。假如你在 +(void)initialize初始化方法中进行swizzle，那么……rumtime可能死于一个诡异的状态。
+</p>
+<h4>Changes behavior of un-owned code</h4>
+<p>
+这是swizzling的一个问题。我们的目标是改变某些代码。swizzling方法是一件灰常灰常重要的事，当你不只是对一个NSButton类的实例进行了修改，而是程序中所有的NSButton实例。因此在swizzling时应该多加小心，但也不用总是去刻意避免。
+</p>
+<p>
+想象一下，如果你重写了一个类的方法，而且没有调用父类的这个方法，这可能会引起问题。大多数情况下，父类方法期望会被调用（至少文档是这样说的）。如果你在swizzling实现中也这样做了，这会避免大部分问题。还是调用原始实现吧，如若不然，你会费很大力气去考虑代码的安全问题。
+</p>
+<h4>Possible naming conflicts</h4>
+<p>
+命名冲突贯穿整个Cocoa的问题. 我们常常在类名和类别方法名前加上前缀。不幸的是，命名冲突仍是个折磨。但是swizzling其实也不必过多考虑这个问题。我们只需要在原始方法命名前做小小的改动来命名就好，比如通常我们这样命名：
+```objc
+@interface NSView : NSObject  
+- (void)setFrame:(NSRect)frame;  
+@end  
+
+
+@implementation NSView (MyViewAdditions)  
+
+
+- (void)my_setFrame:(NSRect)frame {  
+    // do custom work  
+    [self my_setFrame:frame];  
+}  
+
+
++ (void)load {  
+    [self swizzle:@selector(setFrame:) with:@selector(my_setFrame:)];  
+}  
+
+
+@end  
+```
+</p>
+<p>
+这段代码运行正确，但是如果my_setFrame: 在别处被定义了会发生什么呢？
+
+</p>
+<p>
+这个问题不仅仅存在于swizzling，这里有一个替代的变通方法：
+
+```objc
+@implementation NSView (MyViewAdditions)  
+
+
+static void MySetFrame(id self, SEL _cmd, NSRect frame);  
+static void (* SetFrameIMP)(id self, SEL _cmd, NSRect frame);  
+
+
+static void MySetFrame(id self, SEL _cmd, NSRect frame) {  
+    // do custom work  
+    SetFrameIMP(self, _cmd, frame);  
+}  
+
+
++ (void)load {  
+    [self swizzle:@selector(setFrame:) with:(IMP)MySetFrame store:(IMP* )&amp;SetFrameIMP];  
+}  
+
+
+@end
+```
+看起来不那么Objectice-C了（用了函数指针），这样避免了selector的命名冲突。
+
+最后给出一个较完美的swizzle方法的定义：
+```objc
+typedef IMP *IMPPointer;  
+
+
+BOOL class_swizzleMethodAndStore(Class class, SEL original, IMP replacement, IMPPointer store) {  
+    IMP imp = NULL;  
+    Method method = class_getInstanceMethod(class, original);  
+    if (method) {  
+        const char* type = method_getTypeEncoding(method);  
+        imp = class_replaceMethod(class, original, replacement, type);  
+        if (!imp) {  
+            imp = method_getImplementation(method);  
+        }  
+    }  
+    if (imp &amp;&amp; store) { * store = imp; }  
+    return (imp != NULL);  
+}  
+
+
+@implementation NSObject (FRRuntimeAdditions)  
++ (BOOL)swizzle:(SEL)original with:(IMP)replacement store:(IMPPointer)store {  
+    return class_swizzleMethodAndStore(self, original, replacement, store);  
+}  
+@end  
+```
+</p>
+<h4>Swizzling changes the method's arguments</h4>
+<p>
+我认为这是最大的问题。想正常调用method swizzling 将会是个问题。
+```objc
+[self my_setFrame:frame];  
+```
+直接调用my_setFrame: ， runtime做的是
+```objc
+objc_msgSend(self, @selector(my_setFrame:), frame);  
+```
+runtime去寻找my_setFrame:的方法实现, _ cmd参数为 my_setFrame: ，但是事实上runtime找到的方法实现是原始的 setFrame: 的。
+一个简单的解决办法：使用上面介绍的swizzling定义。
+</p>
+<h4>The order of swizzles matters</h4>
+<p>
+多个swizzle方法的执行顺序也需要注意。假设 setFrame: 只定义在NSView中，想像一下按照下面的顺序执行：
+```objc
+[NSButton swizzle:@selector(setFrame:) with:@selector(my_buttonSetFrame:)];  
+[NSControl swizzle:@selector(setFrame:) with:@selector(my_controlSetFrame:)];  
+[NSView swizzle:@selector(setFrame:) with:@selector(my_viewSetFrame:)];  
+```
+What happens when the method on NSButton is swizzled? Well most swizzling will ensure that it's not replacing the implementation of setFrame: for all views, so it will pull up the instance method. This will use the existing implementation to re-define setFrame: in the NSButton class so that exchanging implementations doesn't affect all views. The existing implementation is the one defined on NSView. The same thing will happen when swizzling on NSControl (again using the NSView implementation).
+
+When you call setFrame: on a button, it will therefore call your swizzled method, and then jump straight to the setFrame: method originally defined on NSView. The NSControl and NSView swizzled implementations will not be called.
+
+But what if the order were:
+```objc
+[NSView swizzle:@selector(setFrame:) with:@selector(my_viewSetFrame:)];  
+[NSControl swizzle:@selector(setFrame:) with:@selector(my_controlSetFrame:)];  
+[NSButton swizzle:@selector(setFrame:) with:@selector(my_buttonSetFrame:)];  
+```
+Since the view swizzling takes place first, the control swizzling will be able to pull up the right method. Likewise, since the control swizzling was before the button swizzling, the button will pull up the control's swizzled implementation of setFrame:. This is a bit confusing, but this is the correct order. How can we ensure this order of things?
+
+Again, just use load to swizzle things. If you swizzle in load and you only make changes to the class being loaded, you'll be safe. The load method guarantees that the super class load method will be called before any subclasses. We'll get the exact right order!
+这段贴了原文，硬翻译太拗口……总结一下就是：多个有继承关系的类的对象swizzle时，先从父对象开始。 这样才能保证子类方法拿到父类中的被swizzle的实现。在+(void)load中swizzle不会出错，就是因为load类方法会默认从父类开始调用。
+</p>
+<h4>Difficult to understand (looks recursive)</h4>
+<p>
+（新方法的实现）看起来像递归，但是看看上面已经给出的 swizzling 封装方法, 使用起来就很易读懂.
+这个问题是已完全解决的了！
+</p>
+<h4>Difficult to debug</h4>
+<p>
+debug时打出的backtrace，其中掺杂着被swizzle的方法名，一团糟啊！上面介绍的swizzle方案，使backtrace中打印出的方法名还是很清晰的。但仍然很难去debug，因为很难记住swizzling影响过什么。给你的代码写好文档（即使只有你一个人会看到）。养成一个好习惯，不会比调试多线程问题还难的。
+</p>
+<h2>结论</h2>
+<p>
+如果使用恰当，Method swizzling 还是很安全的.一个简单安全的方法是，仅在load中swizzle。 和许多其他东西一样，它也是有危险性的，但理解它了也就可以正确恰当的使用它了。
+</p>
+
+<hr />
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[敏感逻辑的保护方案]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog//blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an/"/>
+    <updated>2016-08-25T15:13:53+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog//blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an</id>
+    <content type="html"><![CDATA[<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">24</span> <span class="title">敏感逻辑的保护方案</span></h1>
+    <p>Objective-C 代码容易被 hook，暴露信息太赤裸裸，为了安全，改用 C 来写吧！</p>
+
+<div class="figure" id="figure-24-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760k4kot8j205p04gdfu.jpg" />
+
+    <p class="caption"><strong>图片 24.1</strong> sensitive1</p>
+</div>
+
+
+<p>当然不是全部代码都要 C 来写，我指的是敏感业务逻辑代码。</p>
+
+<p>本文就介绍一种低学习成本的，简易的，Objective-C 逻辑代码重写为 C 代码的办法。</p>
+
+<p>也许，程序中存在一个类似这样的类：</p>
+
+```objc
+@interface XXUtil : NSObject  
+
++ (BOOL)isVerified;  
++ (BOOL)isNeedSomething;  
++ (void)resetPassword:(NSString*)password;  
+
+@end
+```
+
+<p>被 class-dump 出来后，利用 Cycript 很容易实现攻击，容易被 hook ，存在很大的安全隐患。</p>
+
+<div class="figure" id="figure-24-2">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760knfbzhj20350360sm.jpg" />
+
+    <p class="caption"><strong>图片 24.2</strong> sensitive2</p>
+</div>
+
+
+<p>想改，但是不想大改程序结构，肿么办呢？</p>
+
+<p>把函数名隐藏在结构体里，以函数指针成员的形式存储。
+这样做的好处是，编译后，只留了下地址，去掉了名字和参数表，提高了逆向成本和攻击门槛。</p>
+
+<p>改写的程序如下：</p>
+```objc
+//XXUtil.h  
+ #import &lt;Foundation/Foundation.h&gt;  
+
+typedef struct _util {  
+    BOOL (*isVerified)(void);  
+    BOOL (*isNeedSomething)(void);  
+    void (*resetPassword)(NSString *password);  
+}XXUtil_t ;  
+
+ #define XXUtil ([_XXUtil sharedUtil])  
+
+@interface _XXUtil : NSObject  
+
++ (XXUtil_t *)sharedUtil;  
+@end  
+
+
+//XXUtil.m  
+ #import "XXUtil.h"  
+
+static BOOL _isVerified(void)  
+{  
+    //bala bala ...  
+    return YES;  
+}  
+
+static BOOL _isNeedSomething(void)  
+{  
+    //bala bala ...  
+    return YES;  
+}  
+
+static void _resetPassword(NSString *password)  
+{  
+    //bala bala ...  
+}  
+
+static XXUtil_t * util = NULL;  
+@implementation _XXUtil  
+
++(XXUtil_t *)sharedUtil  
+{  
+    static dispatch_once_t onceToken;  
+    dispatch_once(&amp;onceToken, ^{  
+        util = malloc(sizeof(XXUtil_t));  
+        util-&gt;isVerified = _isVerified;  
+        util-&gt;isNeedSomething = _isNeedSomething;  
+        util-&gt;resetPassword = _resetPassword;  
+    });  
+    return util;  
+}  
+
++ (void)destroy  
+{  
+    util ? free(util): 0;  
+    util = NULL;  
+}  
+@end
+```
+
+<p>最后，根据 Xcode 的报错指引，把以前这样的调用
+<code>[XXUtil isVerified];</code></p>
+
+<p>对应改成：
+<code>XXUtil-&gt;isVerified();</code></p>
+
+<p>就可以了。</p>
+
+<p>是的，绝不费一点脑子。</p>
+
+</div>
+</div>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Objective-C 代码混淆]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog//blog/2016/08/25/objective-c-dai-ma-hun-yao/"/>
+    <updated>2016-08-25T15:09:37+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog//blog/2016/08/25/objective-c-dai-ma-hun-yao</id>
+    <content type="html"><![CDATA[<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">23</span> <span class="title">Objective-C 代码混淆</span></h1>
+    <p>class-dump 可以很方便的导出程序头文件，不仅让攻击者了解了程序结构方便逆向，还让着急赶进度时写出的欠完善的程序给同行留下笑柄。
+所以，我们迫切的希望混淆自己的代码。</p>
+
+<h3>混淆的常规思路</h3>
+
+<p>混淆分许多思路，比如：</p>
+
+<p>1）花代码花指令，即随意往程序中加入迷惑人的代码指令</p>
+
+<p>2）易读字符替换 等等</p>
+
+<div class="figure" id="figure-23-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760g4dzitj202o031dfp.jpg" />
+
+    <p class="caption"><strong>图片 23.1</strong> confusion1</p>
+</div>
+
+
+<p>防止 class-dump 出可读信息的有效办法是易读字符替换。</p>
+
+<h3>Objective-C 的方法名混淆</h3>
+
+<h4>混淆的时机</h4>
+
+<p>我们希望在开发时一直保留清晰可读的程序代码，方便自己。
+同时，希望编译出来的二进制包含乱七八糟的混淆后的程序代码，恶心他人。</p>
+
+<p>因此，我们可以在 Build Phrase 中设定在编译之前进行方法名的字符串替换。</p>
+
+<h4>混淆的方法</h4>
+
+<p>方法名混淆其实就是字符串替换，有 2 个方法可以，一个是 <code>#define</code>，一个是利用 tops。</p>
+
+<p>利用 <code>#define</code> 的方法有一个好处，就是可以把混淆结果合并在一个 .h 中，在工程 Prefix.pch 的最前面 <code>#import</code> 这个 .h 。不导入也可以编译、导入则实现混淆。</p>
+
+<p>单段的 selector ，如 <code>func:</code> ，可以通过 <code>#define func</code> 来实现字符串替换。</p>
+
+<p>多段的 selector，如 <code>a:b:c:</code> ，可以通过分别 <code>#define a 、b、c</code> 来实现字符串替换。</p>
+
+<h3>我的混淆工具</h3>
+
+<p>我写了个简易的混淆脚本，主要思路是把敏感方法名集中写在一个名叫 func.list 的文件中，逐一 <code>#define</code> 成随机字符，追加写入 .h 。</p>
+
+<p>脚本如下：</p>
+
+```
+#!/usr/bin/env bash  
+
+TABLENAME=symbols  
+SYMBOL_DB_FILE="symbols"  
+STRING_SYMBOL_FILE="func.list"  
+HEAD_FILE="$PROJECT_DIR/$PROJECT_NAME/codeObfuscation.h"  
+export LC_CTYPE=C  
+
+#维护数据库方便日后作排重  
+createTable()  
+{  
+   echo "create table $TABLENAME(src text, des text);" | sqlite3 $SYMBOL_DB_FILE  
+}  
+
+insertValue()  
+{  
+   echo "insert into $TABLENAME values('$1' ,'$2');" | sqlite3 $SYMBOL_DB_FILE  
+}  
+
+query()  
+{  
+   echo "select * from $TABLENAME where src='$1';" | sqlite3 $SYMBOL_DB_FILE  
+}  
+
+ramdomString()  
+{  
+   openssl rand -base64 64 | tr -cd 'a-zA-Z' |head -c 16  
+}  
+
+rm -f $SYMBOL_DB_FILE  
+rm -f $HEAD_FILE  
+createTable  
+
+touch $HEAD_FILE  
+echo '#ifndef Demo_codeObfuscation_h  
+#define Demo_codeObfuscation_h' &gt;&gt; $HEAD_FILE  
+echo "//confuse string at `date`" &gt;&gt; $HEAD_FILE  
+cat "$STRING_SYMBOL_FILE" | while read -ra line; do  
+   if [[ ! -z "$line" ]]; then  
+       ramdom=`ramdomString`  
+       echo $line $ramdom  
+       insertValue $line $ramdom  
+       echo "#define $line $ramdom" &gt;&gt; $HEAD_FILE  
+   fi  
+done  
+echo "#endif" &gt;&gt; $HEAD_FILE  
+
+
+sqlite3 $SYMBOL_DB_FILE .dump
+```
+
+<h4>操作步骤</h4>
+
+<p>1.将混淆脚本 confuse.sh 放到工程目录下
+<code>mv confuse.sh your_proj_path/</code></p>
+
+<p>2.修改 Prefix.pch</p>
+
+<p>打开 Xcode，修改 XXX-Prefix.ch ，添加混淆头文件:</p>
+
+```objc
+#ifdef __OBJC__  
+   #import &lt;UIKit/UIKit.h&gt;  
+   #import &lt;Foundation/Foundation.h&gt;  
+   //添加混淆作用的头文件（这个文件名是脚本confuse.sh中定义的）  
+   #import "codeObfuscation.h"  
+#endif
+```
+
+<p>3.配置 Build Phase</p>
+
+<p>在工程 Build Phase 中添加执行脚本操作，执行 confuse.sh 脚本，如图：</p>
+
+<div class="figure" id="figure-23-2">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f760gkuq1ej20z80eqjtx.jpg" />
+
+    <p class="caption"><strong>图片 23.2</strong> confusion3</p>
+</div>
+
+
+<p>4.创建函数名列表 func.list ，写入待混淆的函数名，如:</p>
+
+```objc
+-(void)sample;
+-(void)seg1:(NSString *)string seg2:(NSUInteger)num;
+```
+
+<p>就这样写：</p>
+
+<p>sample<br />
+seg1<br />
+seg2</p>
+
+<p>并将文件放置于与 confuse.sh 脚本同级<br />
+<code>mv func.list your_proj_path/</code></p>
+
+<p>5.编译查看结果</p>
+
+<p>直接 build，混淆脚本会在编译前运行，进行字符随机替换，并且每次 build 的随机字符不同，如图：</p>
+
+<div class="figure" id="figure-23-3">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f760hdde9nj20w40ecwjs.jpg" />
+
+    <p class="caption"><strong>图片 23.3</strong> confusion4</p>
+</div>
+
+
+</div>
+</div>
+]]></content>
+  </entry>
+  
+</feed>
