@@ -1,4 +1,0 @@
-User-agent: *
-Disallow: 
-
-Sitemap: http://ITMonkeyLife.github.io/Blog//sitemap.xml 
