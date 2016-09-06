@@ -1,0 +1,203 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>使用Keychain-Dumper 导出 keychain 数据 - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="9 使用 Keychain-Dumper 导出 keychain 数据 iOS 系统及第三方应用都会使用 Keychain 来作为数据持久化存储媒介，或者应用间数据共享的渠道。 所以 Keychain 数据库是 hacker 们最关注的数据源头之一。
+不知道是算幸运还是不幸，导出 &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog/">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog/">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">使用Keychain-Dumper 导出 Keychain 数据</h2>
+	<div class="entry-content"><div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">9</span> <span class="title">使用 Keychain-Dumper 导出 keychain 数据</span></h1>
+    <p>iOS 系统及第三方应用都会使用 Keychain 来作为数据持久化存储媒介，或者应用间数据共享的渠道。</p>
+
+<p>所以 Keychain 数据库是 hacker 们最关注的数据源头之一。
+不知道是算幸运还是不幸，导出 Keychain 数据库数据的工具早已非常完善，下载地址：<a href="https://github.com/ptoomey3/Keychain-Dumper">Keychain-Dumper传送门</a></p>
+
+<h4>操作步骤极其简单：</h4>
+
+<p>1）赋予 Keychain 数据库可读权限</p>
+
+<div class="code code">
+<pre class="code">Primer:~ root# cd /private/var/Keychains/
+&nbsp;
+Primer:/private/var/Keychains root# ls  
+TrustStore.sqlite3  accountStatus.plist  caissuercache.sqlite3  keychain-2.db  keychain-2.db-shm  keychain-2.db-wal  ocspcache.sqlite3  ocspcache.sqlite3-shm  ocspcache.sqlite3-wal  
+&nbsp;
+Primer:/private/var/Keychains root# chmod +r keychain-2.db</pre>
+</div>
+
+<p>2）使用 Keychain-Dumper 导出 Keychain</p>
+
+<div class="code code">
+<pre class="code">Primer:/private/var/Keychains root# /your_path/keychain_dumper &gt; keychain-export.txt</pre>
+</div>
+
+<p>然后拷贝到本地查看，到底 iOS 系统和第三方应用都存放了哪些信息，就一览无余了。</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/shi-yong-keychain-dumper-dao-chu-keychain-shu-ju/';
+        var disqus_url = 'http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/shi-yong-keychain-dumper-dao-chu-keychain-shu-ju/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>

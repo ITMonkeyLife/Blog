@@ -1,0 +1,993 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Layer中动画概述 - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="默认情况下，CALayer 及其子类的绝大部分标准属性都可以执行动画，无论是添加一个 CAAnimation 到 Layer（显式动画），亦或是为属性指定一个动作然后修改它（隐式动画）。 但有时候我们希望能同时为好几个属性添加动画，使它们看起来像是一个动画一样；或者， &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog/">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog/">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">Layer中动画概述</h2>
+	<div class="entry-content"><p>默认情况下，<code>CALayer</code> 及其子类的绝大部分标准属性都可以执行动画，无论是添加一个 <code>CAAnimation</code> 到 Layer（显式动画），亦或是为属性指定一个动作然后修改它（隐式动画）。</p>
+
+<p>但有时候我们希望能同时为好几个属性添加动画，使它们看起来像是一个动画一样；或者，我们需要执行的动画不能通过使用标准 Layer 属性动画来实现。</p>
+
+<p>在本文中，我们将讨论如何子类化 <code>CALayer</code> 并添加我们自己的属性，以便比较容易地创建那些如果以其他方式实现起来会很麻烦的动画效果。</p>
+
+<p>一般说来，我们希望添加到 <code>CALayer</code> 的子类上的可动画属性有三种类型：</p>
+
+<ul>
+<li>能间接动画 Layer （或其子类）的一个或多个标准属性的属性。</li>
+<li>能触发 Layer 背后的图像（即 <code>contents</code> 属性）重绘的属性。</li>
+<li>不涉及 Layer 重绘或对任何已有属性执行动画的属性。</li>
+</ul>
+
+<h2>间接属性动画</h2>
+
+<p>能间接修改其它标准 Layer 属性的自定义属性是这些选项中最简单的。它们仅仅只是自定义 setter 方法。然后将它们的输入转换为适用于创建动画的一个或多个不同的值。</p>
+
+<p>如果被我们设置的属性已经预设好标准动画，那我们完全不需要编写任何实际的动画代码，因为我们修改这些属性后，它们就会继承任何被配置在当前 <code>CATransaction</code> 上的动画设置，并且自动执行动画。</p>
+
+<p>换句话说，即使 <code>CALayer</code> 不知道如何对我们自定义的属性进行动画，它依然能对因自定义属性被改变而引起的其它可见副作用进行动画，而这恰好就是我们所需要的。</p>
+
+<p>为了演示这种方法，让我们来创建一个简单的模拟时钟，之后我们可以使用被声明为 <code>NSDate</code> 类型 <code>time</code> 属性来设置它的时间。我会将从创建一个静态的时钟面盘开始。这个时钟包含三个 <code>CAShapeLayer</code> 实例 —— 一个用于时钟面盘的圆形 Layer 和两个用于时针和分针的长方形 Sublayer。</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span>: <span class="nc">CAShapeLayer</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">NSDate</span> <span class="o">*</span><span class="n">time</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// 私有属性</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">CAShapeLayer</span> <span class="o">*</span><span class="n">hourHand</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">CAShapeLayer</span> <span class="o">*</span><span class="n">minuteHand</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ClockFace</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">((</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">]))</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithOvalInRect:</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">].</span><span class="n">CGPath</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">whiteColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">strokeColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">lineWidth</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAShapeLayer</span> <span class="n">layer</span><span class="p">];</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">70</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">70</span><span class="p">)].</span><span class="n">CGPath</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAShapeLayer</span> <span class="n">layer</span><span class="p">];</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIBezierPath</span> <span class="nl">bezierPathWithRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">90</span><span class="p">)].</span><span class="n">CGPath</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">fillColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">blackColor</span><span class="p">].</span><span class="n">CGColor</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<!-- more -->
+<p>同时我们要设置一个包含 <code>UIDatePicker</code> 的基本的 View Controller，这样我们就能测试我们的 Layer （日期选择器在 Storyboard 里设置）了：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ViewController</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="kt">IBOutlet</span> <span class="n">UIDatePicker</span> <span class="o">*</span><span class="n">datePicker</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">ClockFace</span> <span class="o">*</span><span class="n">clockFace</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">viewDidLoad</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 添加时钟面板 Layer</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span> <span class="o">=</span> <span class="p">[[</span><span class="n">ClockFace</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">150</span><span class="p">);</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 设置默认时间</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">.</span><span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDate</span> <span class="n">date</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">setTime</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">datePicker</span><span class="p">.</span><span class="n">date</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>现在我们只需要实现 <code>time</code> 属性的 setter 方法。这个方法使用 <code>NSCalendar</code> 将时间变为小时和分钟，之后我们将它们转换为角坐标。然后我们就可以使用这些角度去生成两个 <code>CGAffineTransform</code> 以旋转时针和分针。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setTime:</span><span class="p">(</span><span class="n">NSDate</span> <span class="o">*</span><span class="p">)</span><span class="nv">time</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSCalendar</span> <span class="o">*</span><span class="n">calendar</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSCalendar</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithCalendarIdentifier:</span><span class="n">NSGregorianCalendar</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSDateComponents</span> <span class="o">*</span><span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="n">calendar</span> <span class="nl">components:</span><span class="n">NSHourCalendarUnit</span> <span class="o">|</span> <span class="n">NSMinuteCalendarUnit</span> <span class="nl">fromDate:</span><span class="n">time</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">hourHand</span><span class="p">.</span><span class="n">affineTransform</span> <span class="o">=</span> <span class="n">CGAffineTransformMakeRotation</span><span class="p">(</span><span class="n">components</span><span class="p">.</span><span class="n">hour</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span><span class="p">);</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">minuteHand</span><span class="p">.</span><span class="n">affineTransform</span> <span class="o">=</span> <span class="n">CGAffineTransformMakeRotation</span><span class="p">(</span><span class="n">components</span><span class="p">.</span><span class="n">minute</span> <span class="o">/</span> <span class="mf">60.0</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>结果看起来像这样：</p>
+
+<p><img src="http://img.objccn.io/issue-12/clock.gif" width="320px" /></p>
+
+<p>你可以 <a href="https://github.com/objcio/issue-12-custom-layer-property-animations">从 GitHub 上</a> 下载这个项目看看。</p>
+
+<p>如你所见，我们实在没有做什么太费脑筋的事情；我们并没有创建一个新的可动画属性，而只是在单个方法里设置了几个标准可动画 Layer 属性而已。然而，如果我们想创建的动画并不能映射到任何已有的 Layer 属性上时，该怎么办呢？</p>
+
+<h2 id="layer">动画 Layer 内容</h2>
+
+<p>假设不使用几个分离的 Layer 来实现我们的时钟面板，那我们可以改用 Core Graphics 来绘制时钟。（这通常会降低性能，但我们可以假想我们所要实现的效果需要许多复杂的绘图操作，而它们很难用常规的 Layer 属性和 transform 来复制。）我们要怎么做呢？</p>
+
+<p>与 <code>NSManagedObject</code> 很类似， <code>CALayer</code> 具有为任何被声明的属性生成 dynamic 的 setter 和 getter 的能力。在我们当前的实现中，我们让编译器去 synthesize 了 <code>time</code> 属性的 ivar 和 getter 方法，而我们自己实现了 setter 方法。但让我们来改变一下：丢弃我们的 setter 并将属性标记为 <code>@dynamic</code> 。同时我们也丢弃分离的时针和分针 Layer ，因为我们将自己去绘制它们。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ClockFace</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ClockFace</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@dynamic</span> <span class="n">time</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">((</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">]))</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>在我们开始之前，需要先做一个小调整：因为不幸的是，<code>CALayer</code> 不知道如何对 <code>NSDate</code> 属性进行插值（interpolate）（例如，虽然它可以处理数字类型和其它例如 <code>CGColor</code> 和 <code>CGAffineTransform</code> 这样的类型，但它不能自动生成不同的 <code>NSDate</code> 实例之间的中间值）。我们可以保留我们的自定义 setter 方法并用它设置另一个等价于 <code>NSTimeInterval</code> 的动态属性（这是一个数字值，可以被插值），但为了保持例子的简单性，我们会用一个浮点值替换 <code>NSDate</code> 属性来表征时钟的小时。我们还更新了用户界面，现在使用一个简单的 <code>UITextField</code> 来设置浮点值，而不再使用日期选择器：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ViewController</span> <span class="p">()</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">UITextFieldDelegate</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="kt">IBOutlet</span> <span class="n">UITextField</span> <span class="o">*</span><span class="n">textField</span><span class="p">;</span>
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">ClockFace</span> <span class="o">*</span><span class="n">clockFace</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">viewDidLoad</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 添加时钟面板 Layer</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span> <span class="o">=</span> <span class="p">[[</span><span class="n">ClockFace</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">150</span><span class="p">);</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">textFieldShouldReturn:</span><span class="p">(</span><span class="n">UITextField</span> <span class="o">*</span><span class="p">)</span><span class="nv">textField</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">textField</span> <span class="n">resignFirstResponder</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">textFieldDidEndEditing:</span><span class="p">(</span><span class="n">UITextField</span> <span class="o">*</span><span class="p">)</span><span class="nv">textField</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">clockFace</span><span class="p">.</span><span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span class="n">textField</span><span class="p">.</span><span class="n">text</span> <span class="n">floatValue</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>现在，既然我们已经移除了自定义的 setter 方法，那我们要如何才能知晓 <code>time</code> 属性的改变呢？我们需要一个无论何时 <code>time</code> 属性改变时都能自动通知 <code>CALayer</code> 的方式，这样它才好重绘它的内容。我们通过覆写 <code>+needsDisplayForKey:</code> 方法即可做到这一点，如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">needsDisplayForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="s">@&quot;time&quot;</span> <span class="nl">isEqualToString:</span><span class="n">key</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">super</span> <span class="nl">needsDisplayForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>这就告诉了 Layer ，无论何时 <code>time</code> 属性被修改，它都需要调用 <code>-display</code> 方法。现在我们就覆写 <code>-display</code> 方法，添加一个 <code>NSLog</code> 语句打印出 <code>time</code> 的值：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">display</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;time: %f&quot;</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">time</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>如果我们设置 <code>time</code> 属性为 1.5 ，我们就会看到 <code>-display</code> 被调用，打印出新值：</p>
+
+<pre><code>2014-04-28 22:37:04.253 ClockFace[49145:60b] time: 1.500000
+</code></pre>
+
+<p>但这还不是我们真正想要的；我们希望 <code>time</code> 属性能在旧值和新值之间在几帧之内做一个平滑的过渡动画。为了实现这一点，我们需要为 <code>time</code> 属性指定一个动画（或“动作（action）”），而通过覆写 <code>-actionForKey:</code> 方法就能做到：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">CAAction</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;)</span><span class="nf">actionForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">key</span> <span class="nl">isEqualToString:</span><span class="s">@&quot;time&quot;</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">timingFunction</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">time</span><span class="p">);</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">animation</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">super</span> <span class="nl">actionForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>现在，如果我们再次设置 <code>time</code> 属性，我们就会看到 <code>-display</code> 被多次调用。调用的次数大约为每秒 60 次，至于动画的长度，默认为 0.25 秒，大约是 15 帧：</p>
+
+<pre><code>2014-04-28 22:37:04.253 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.255 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.351 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.370 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.388 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.407 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.425 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.443 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.461 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.479 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.497 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.515 ClockFace[49145:60b] time: 1.500000
+2014-04-28 22:37:04.755 ClockFace[49145:60b] time: 1.500000
+</code></pre>
+
+<p>由于某些原因，当我们在每个中间点打印 <code>time</code> 值时，我们一直看到的是最终值。为何不能得到插值呢？因为我们查看的是错误的 <code>time</code> 属性。</p>
+
+<p>当你设置某个 <code>CALayer</code> 的某个属性，你实际设置的是 <em>model</em> Layer 的值 —— 这里的 <em>model</em> Layer 表示正在进行的动画结束时， Layer 所达到的最终状态。如果你取 <em>model</em> Layer 的值，它就总是给你它被设置到的最终值。</p>
+
+<p>但连接到 <em>model</em> Layer 的是所谓的 <em>presentation</em> Layer ——它是 <em>model</em> Layer 的一个拷贝，但它的值所表示的是 <em>当前的</em>，中间动画状态。如果我们修改 <code>-display</code> 方法去打印 Layer 的 <code>presentationLayer</code> 的 <code>time</code> 属性，那我们就会看到我们所期望的插值。（同时我们也使用 <code>presentationLayer</code> 的 <code>time</code> 属性来获取动画的开始值，替代 <code>self.time</code> ）：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">CAAction</span><span class="o">&gt;</span><span class="p">)</span><span class="nf">actionForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">key</span> <span class="nl">isEqualToString:</span><span class="s">@&quot;time&quot;</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">timingFunction</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="p">([[</span><span class="n">self</span> <span class="n">presentationLayer</span><span class="p">]</span> <span class="n">time</span><span class="p">]);</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">animation</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">super</span> <span class="nl">actionForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">display</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;time: %f&quot;</span><span class="p">,</span> <span class="p">[[</span><span class="n">self</span> <span class="n">presentationLayer</span><span class="p">]</span> <span class="n">time</span><span class="p">]);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>下面是打印出的值：</p>
+
+<pre><code>2014-04-28 22:43:31.200 ClockFace[49176:60b] time: 0.000000
+2014-04-28 22:43:31.203 ClockFace[49176:60b] time: 0.002894
+2014-04-28 22:43:31.263 ClockFace[49176:60b] time: 0.363371
+2014-04-28 22:43:31.300 ClockFace[49176:60b] time: 0.586421
+2014-04-28 22:43:31.318 ClockFace[49176:60b] time: 0.695179
+2014-04-28 22:43:31.336 ClockFace[49176:60b] time: 0.803713
+2014-04-28 22:43:31.354 ClockFace[49176:60b] time: 0.912598
+2014-04-28 22:43:31.372 ClockFace[49176:60b] time: 1.021573
+2014-04-28 22:43:31.391 ClockFace[49176:60b] time: 1.134173
+2014-04-28 22:43:31.409 ClockFace[49176:60b] time: 1.242892
+2014-04-28 22:43:31.427 ClockFace[49176:60b] time: 1.352016
+2014-04-28 22:43:31.446 ClockFace[49176:60b] time: 1.460729
+2014-04-28 22:43:31.464 ClockFace[49176:60b] time: 1.500000
+2014-04-28 22:43:31.636 ClockFace[49176:60b] time: 1.500000
+</code></pre>
+
+<p>所以现在我们所要做就是画出时钟。我们将使用普通的 Core Graphics 函数以绘制到一个 Graphics Context 上来做到这一点，然后将产生出图像设置为我们 Layer 的 <code>contents</code>。下面是更新后的 <code>-display</code> 方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">display</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">// 获取时间插值</span>
+</span><span class="line">    <span class="kt">float</span> <span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presentationLayer</span> <span class="n">time</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 创建绘制上下文</span>
+</span><span class="line">    <span class="n">UIGraphicsBeginImageContextWithOptions</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">,</span> <span class="n">NO</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextRef</span> <span class="n">ctx</span> <span class="o">=</span> <span class="n">UIGraphicsGetCurrentContext</span><span class="p">();</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 绘制时钟面板</span>
+</span><span class="line">    <span class="n">CGContextSetLineWidth</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextStrokeEllipseInRect</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">CGRectInset</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">));</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 绘制时针</span>
+</span><span class="line">    <span class="n">CGFloat</span> <span class="n">angle</span> <span class="o">=</span> <span class="n">time</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGPoint</span> <span class="n">center</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextSetLineWidth</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextMoveToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="mi">80</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="mi">80</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextStrokePath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 绘制分针</span>
+</span><span class="line">    <span class="n">angle</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span> <span class="o">-</span> <span class="n">floor</span><span class="p">(</span><span class="n">time</span><span class="p">))</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span><span class="p">;</span>
+</span><span class="line">    <span class="n">CGContextSetLineWidth</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextMoveToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="mi">90</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="mi">90</span><span class="p">);</span>
+</span><span class="line">    <span class="n">CGContextStrokePath</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">//set backing image 设置 contents </span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">contents</span> <span class="o">=</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">UIGraphicsGetImageFromCurrentImageContext</span><span class="p">().</span><span class="n">CGImage</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIGraphicsEndImageContext</span><span class="p">();</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>结果看起来如下：</p>
+
+<p><img src="http://img.objccn.io/issue-12/clock2.gif" width="320px" /></p>
+
+<p>如你所见，不同于第一个时钟动画，随着时针的变化，分针实际上对每一个小时都会转上满满一圈（就像一个真正的时钟那样），而不仅仅只是通过最短的路径移动到它的最终位置；因为我们正在动画的是 <code>time</code> 值本身而不仅仅是时针或分针的位置，所以上下文信息被保留了。</p>
+
+<p>通过这样的方式绘制一个时钟并不是很理想，因为 Core Graphics 函数没有硬件加速，可能会引起动画帧数的下降。另一种能每秒重绘 <code>contents</code> 图像 60 次的方式是用一个数组存储一些预先绘制好的图像，然后基于合适的插值简单的选择对应的图像即可。实现代码大概如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">const</span> <span class="n">NSInteger</span> <span class="n">hoursOnAClockFace</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">display</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">// 获取时间插值 </span>
+</span><span class="line">    <span class="kt">float</span> <span class="n">time</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presentationLayer</span> <span class="n">time</span><span class="p">]</span> <span class="o">/</span> <span class="n">hoursOnAClockFace</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// 从之前定义好的图像数组里获取图像帧</span>
+</span><span class="line">    <span class="n">NSInteger</span> <span class="n">numberOfFrames</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">frames</span> <span class="n">count</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSInteger</span> <span class="n">index</span> <span class="o">=</span> <span class="n">round</span><span class="p">(</span><span class="n">time</span> <span class="o">*</span> <span class="n">numberOfFrames</span><span class="p">)</span> <span class="o">%</span> <span class="n">numberOfFrames</span><span class="p">;</span>
+</span><span class="line">    <span class="n">UIImage</span> <span class="o">*</span><span class="n">frame</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">frames</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">contents</span> <span class="o">=</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="n">frame</span><span class="p">.</span><span class="n">CGImage</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>通过避免在每一帧里都用昂贵的软件绘制，我们能改善动画的性能，但代价是我们需要在内存里存储所有预先绘制的动画帧图像，对于一个复杂的动画来说，这可能造成惊人的内存浪费。</p>
+
+<p>但这提出了一个有趣的可能性。如果我们完全不在 <code>-display</code> 里更新 <code>contents</code> 图像会发生什么？我们做一些其它的事情怎样？</p>
+
+<h2>非可视属性的动画</h2>
+
+<p>在 <code>-display</code> 里更新其它 Layer 属性就是不必要的，因为我们可以很简单地直接对任何这样的属性做动画，如同我们在第一个时钟面板例子里所做的那样。但如果我们设置一些其它的东西，比如某些完全和 Layer 不相关的东西，会怎样呢？</p>
+
+<p>下面的代码使用一个 <code>CALayer</code> 结合 <code>AVAudioPlayer</code> 来创建一个可动画的音量控制器。通过把音量绑定到 dynamic 的 Layer 属性上，我们可以使用 Core Animation 的属性插值来平滑的在两个不同的音量之间渐变，以同样的方式我们可以动画 Layer 上的任何自定义属性：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+<span class="line-number">59</span>
+<span class="line-number">60</span>
+<span class="line-number">61</span>
+<span class="line-number">62</span>
+<span class="line-number">63</span>
+<span class="line-number">64</span>
+<span class="line-number">65</span>
+<span class="line-number">66</span>
+<span class="line-number">67</span>
+<span class="line-number">68</span>
+<span class="line-number">69</span>
+<span class="line-number">70</span>
+<span class="line-number">71</span>
+<span class="line-number">72</span>
+<span class="line-number">73</span>
+<span class="line-number">74</span>
+<span class="line-number">75</span>
+<span class="line-number">76</span>
+<span class="line-number">77</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">AudioLayer</span> : <span class="nc">CALayer</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithAudioFileURL:</span><span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">URL</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">assign</span><span class="p">)</span> <span class="kt">float</span> <span class="n">volume</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">play</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">stop</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isPlaying</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">AudioLayer</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">AVAudioPlayer</span> <span class="o">*</span><span class="n">player</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">AudioLayer</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@dynamic</span> <span class="n">volume</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithAudioFileURL:</span><span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">URL</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">((</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">init</span><span class="p">]))</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">volume</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">player</span> <span class="o">=</span> <span class="p">[[</span><span class="n">AVAudioPlayer</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithContentsOfURL:</span><span class="n">URL</span> <span class="nl">error:</span><span class="nb">NULL</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">play</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">player</span> <span class="n">play</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">stop</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">player</span> <span class="n">stop</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isPlaying</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">.</span><span class="n">player</span><span class="p">.</span><span class="n">playing</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">needsDisplayForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="s">@&quot;volume&quot;</span> <span class="nl">isEqualToString:</span><span class="n">key</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">super</span> <span class="nl">needsDisplayForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">CAAction</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;)</span><span class="nf">actionForKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">key</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">key</span> <span class="nl">isEqualToString:</span><span class="s">@&quot;volume&quot;</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">timingFunction</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">];</span>
+</span><span class="line">        <span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="p">([[</span><span class="n">self</span> <span class="n">presentationLayer</span><span class="p">]</span> <span class="n">volume</span><span class="p">]);</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">animation</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">super</span> <span class="nl">actionForKey:</span><span class="n">key</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">display</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">// 设置音量值为合适的音量插值</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">player</span><span class="p">.</span><span class="n">volume</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">presentationLayer</span> <span class="n">volume</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>我们可以通过使用一个简单的有着播放、停止、音量增大以及音量减小按钮的 View Controller 来做测试：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">ViewController</span> <span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">AudioLayer</span> <span class="o">*</span><span class="n">audioLayer</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">ViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">viewDidLoad</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSURL</span> <span class="o">*</span><span class="n">musicURL</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">fileURLWithPath:</span><span class="p">[[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="nl">pathForResource:</span><span class="s">@&quot;music&quot;</span> <span class="nl">ofType:</span><span class="s">@&quot;caf&quot;</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span> <span class="o">=</span> <span class="p">[[</span><span class="n">AudioLayer</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithAudioFileURL:</span><span class="n">musicURL</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addSublayer:</span><span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">playPauseMusic:</span><span class="p">(</span><span class="n">UIButton</span> <span class="o">*</span><span class="p">)</span><span class="nv">sender</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span> <span class="n">isPlaying</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span> <span class="n">stop</span><span class="p">];</span>
+</span><span class="line">        <span class="p">[</span><span class="n">sender</span> <span class="nl">setTitle:</span><span class="s">@&quot;Play Music&quot;</span> <span class="nl">forState:</span><span class="n">UIControlStateNormal</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">else</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span> <span class="n">play</span><span class="p">];</span>
+</span><span class="line">        <span class="p">[</span><span class="n">sender</span> <span class="nl">setTitle:</span><span class="s">@&quot;Pause Music&quot;</span> <span class="nl">forState:</span><span class="n">UIControlStateNormal</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">fadeIn</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span><span class="p">.</span><span class="n">volume</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">IBAction</span><span class="p">)</span><span class="nf">fadeOut</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">audioLayer</span><span class="p">.</span><span class="n">volume</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>注意：尽管我们的 Layer 没有可见的外观，但它依然需要被添加到屏幕上的视图层级里，以便动画能正常工作。</p>
+
+<h2>结论</h2>
+
+<p><code>CALayer</code> 的 dynamic 属性提供了一中简单的机制来实现任何形式的动画 —— 不仅仅只是内建的那些。而通过覆写 <code>-display</code>  方法，我们可以使用这些属性去控制任何我们想控制的东西，甚至是音量值这样的东西。</p>
+
+<p>通过使用这些属性，我们不仅仅避免了重复造轮子，同时还确保了我们的自定义动画能与标准动画的时机和控制函数协同工作，以此就能非常容易地与其它动画属性同步。</p>
+
+<hr />
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io/Blog//Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/';
+        var disqus_url = 'http://ITMonkeyLife.github.io/Blog//Blog/blog/2014/05/11/layerzhong-dong-hua-gai-shu/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>

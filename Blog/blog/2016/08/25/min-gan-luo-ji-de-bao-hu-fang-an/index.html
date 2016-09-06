@@ -1,0 +1,350 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>敏感逻辑的保护方案 - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="24 敏感逻辑的保护方案 Objective-C 代码容易被 hook，暴露信息太赤裸裸，为了安全，改用 C 来写吧！ 图片 24.1 sensitive1 当然不是全部代码都要 C 来写，我指的是敏感业务逻辑代码。 本文就介绍一种低学习成本的，简易的，Objective-C 逻辑代码重写为 C &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog/">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog/">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">敏感逻辑的保护方案</h2>
+	<div class="entry-content"><div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">24</span> <span class="title">敏感逻辑的保护方案</span></h1>
+    <p>Objective-C 代码容易被 hook，暴露信息太赤裸裸，为了安全，改用 C 来写吧！</p>
+
+<div class="figure" id="figure-24-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760k4kot8j205p04gdfu.jpg" />
+
+    <p class="caption"><strong>图片 24.1</strong> sensitive1</p>
+</div>
+
+
+<p>当然不是全部代码都要 C 来写，我指的是敏感业务逻辑代码。</p>
+
+<p>本文就介绍一种低学习成本的，简易的，Objective-C 逻辑代码重写为 C 代码的办法。</p>
+
+<p>也许，程序中存在一个类似这样的类：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">XXUtil</span> : <span class="nc">NSObject</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isVerified</span><span class="p">;</span>
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isNeedSomething</span><span class="p">;</span>
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">resetPassword:</span><span class="p">(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>被 class-dump 出来后，利用 Cycript 很容易实现攻击，容易被 hook ，存在很大的安全隐患。</p>
+
+<div class="figure" id="figure-24-2">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760knfbzhj20350360sm.jpg" />
+
+    <p class="caption"><strong>图片 24.2</strong> sensitive2</p>
+</div>
+
+
+<p>想改，但是不想大改程序结构，肿么办呢？</p>
+
+<p>把函数名隐藏在结构体里，以函数指针成员的形式存储。
+这样做的好处是，编译后，只留了下地址，去掉了名字和参数表，提高了逆向成本和攻击门槛。</p>
+
+<p>改写的程序如下：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">//XXUtil.h  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">Foundation</span><span class="o">/</span><span class="n">Foundation</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_util</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="p">(</span><span class="o">*</span><span class="n">isVerified</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="p">(</span><span class="o">*</span><span class="n">isNeedSomething</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class="line">    <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">resetPassword</span><span class="p">)(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">password</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span><span class="n">XXUtil_t</span> <span class="p">;</span>
+</span><span class="line">
+</span><span class="line"> <span class="err">#</span><span class="n">define</span> <span class="n">XXUtil</span> <span class="p">([</span><span class="n">_XXUtil</span> <span class="n">sharedUtil</span><span class="p">])</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">_XXUtil</span> : <span class="nc">NSObject</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">XXUtil_t</span> <span class="o">*</span><span class="p">)</span><span class="nf">sharedUtil</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="c1">//XXUtil.m  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="s">&quot;XXUtil.h&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">BOOL</span> <span class="n">_isVerified</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">//bala bala ...  </span>
+</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">BOOL</span> <span class="n">_isNeedSomething</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">//bala bala ...  </span>
+</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="n">_resetPassword</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">password</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">//bala bala ...  </span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="n">XXUtil_t</span> <span class="o">*</span> <span class="n">util</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">_XXUtil</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span><span class="p">(</span><span class="n">XXUtil_t</span> <span class="o">*</span><span class="p">)</span><span class="nf">sharedUtil</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
+</span><span class="line">    <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class="line">        <span class="n">util</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">XXUtil_t</span><span class="p">));</span>
+</span><span class="line">        <span class="n">util</span><span class="o">-&gt;</span><span class="n">isVerified</span> <span class="o">=</span> <span class="n">_isVerified</span><span class="p">;</span>
+</span><span class="line">        <span class="n">util</span><span class="o">-&gt;</span><span class="n">isNeedSomething</span> <span class="o">=</span> <span class="n">_isNeedSomething</span><span class="p">;</span>
+</span><span class="line">        <span class="n">util</span><span class="o">-&gt;</span><span class="n">resetPassword</span> <span class="o">=</span> <span class="n">_resetPassword</span><span class="p">;</span>
+</span><span class="line">    <span class="p">});</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">util</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">destroy</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">util</span> <span class="o">?</span> <span class="n">free</span><span class="p">(</span><span class="n">util</span><span class="p">)</span><span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">    <span class="n">util</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>最后，根据 Xcode 的报错指引，把以前这样的调用
+<code>[XXUtil isVerified];</code></p>
+
+<p>对应改成：
+<code>XXUtil-&gt;isVerified();</code></p>
+
+<p>就可以了。</p>
+
+<p>是的，绝不费一点脑子。</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an/';
+        var disqus_url = 'http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[IT Monkey Life]]></title>
-  <link href="http://ITMonkeyLife.github.io//atom.xml" rel="self"/>
-  <link href="http://ITMonkeyLife.github.io//"/>
-  <updated>2016-09-06T19:53:34+08:00</updated>
-  <id>http://ITMonkeyLife.github.io//</id>
+  <link href="http://ITMonkeyLife.github.io/Blog//atom.xml" rel="self"/>
+  <link href="http://ITMonkeyLife.github.io/Blog//"/>
+  <updated>2016-09-06T19:56:03+08:00</updated>
+  <id>http://ITMonkeyLife.github.io/Blog//</id>
   <author>
     <name><![CDATA[Rick]]></name>
     <email><![CDATA[382542165@qq.com]]></email>
@@ -15,38 +15,38 @@
   
   <entry>
     <title type="html"><![CDATA[音乐乐理:音符持续时间]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/09/06/yin-le-le-li-yin-fu-chi-xu-shi-jian/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/09/06/yin-le-le-li-yin-fu-chi-xu-shi-jian/"/>
     <updated>2016-09-06T16:12:20+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/09/06/yin-le-le-li-yin-fu-chi-xu-shi-jian</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/09/06/yin-le-le-li-yin-fu-chi-xu-shi-jian</id>
     <content type="html"><![CDATA[<div id="static">
 <ul>
-<li> 一个音符演奏的时间长度被称为它的音符时值，它是由音符的类型决定。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_20@2x.png" />
-<li> 该全音符在现代音乐最长的音符时值。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_40@2x.png" />
-<li> 二分音符具有全音符的一半的持续时间。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_60@2x.png" />
-<li> 两个半音符占据的时间相同为一体的全音符。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_80@2x.png" />
-<li> 四分音符为全音符的第四（或四分之一）。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_100@2x.png" />
-<li> 四个四分音符占据的时间相同为一体的全音符。两个四分音符等于一个半音符的持续时间。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_120@2x.png" />
-<li> 注意到，在持续时间小于四分音符有标志。每个标志减半音符的价值。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_140@2x.png" />
-<li> 八分音符有一个标志。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_160@2x.png" />
-<li> 因此，二个八分音符占用的时间相同数量的四分之一音符。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_180@2x.png" />
-<li> 一个十六分音符有两个标志，再减半值。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_200@2x.png" />
-<li> 两个十六分音符等于八分音符的持续时间。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_220@2x.png" />
-<li> 四个十六分音符占据的时间相同数量的四分之一音符。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_240@2x.png" />
-<li> 虽然可以有一个与三个或更多个标志音符，它们一般不使用。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_260@2x.png" />
-<li> 该图表显示在本节讨论的所有五种音符类型的关系。<br /><img src="http://ITMonkeyLife.github.io//images/music/lesson11_261@2x.png" />
+<li> 一个音符演奏的时间长度被称为它的音符时值，它是由音符的类型决定。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_20@2x.png" />
+<li> 该全音符在现代音乐最长的音符时值。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_40@2x.png" />
+<li> 二分音符具有全音符的一半的持续时间。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_60@2x.png" />
+<li> 两个半音符占据的时间相同为一体的全音符。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_80@2x.png" />
+<li> 四分音符为全音符的第四（或四分之一）。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_100@2x.png" />
+<li> 四个四分音符占据的时间相同为一体的全音符。两个四分音符等于一个半音符的持续时间。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_120@2x.png" />
+<li> 注意到，在持续时间小于四分音符有标志。每个标志减半音符的价值。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_140@2x.png" />
+<li> 八分音符有一个标志。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_160@2x.png" />
+<li> 因此，二个八分音符占用的时间相同数量的四分之一音符。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_180@2x.png" />
+<li> 一个十六分音符有两个标志，再减半值。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_200@2x.png" />
+<li> 两个十六分音符等于八分音符的持续时间。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_220@2x.png" />
+<li> 四个十六分音符占据的时间相同数量的四分之一音符。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_240@2x.png" />
+<li> 虽然可以有一个与三个或更多个标志音符，它们一般不使用。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_260@2x.png" />
+<li> 该图表显示在本节讨论的所有五种音符类型的关系。<br /><img src="http://ITMonkeyLife.github.io/Blog//images/music/lesson11_261@2x.png" />
 
 
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 </li></li></li></li></li></li></li></li></li></li></li></li></li></li></ul></div>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[音乐乐理:五线谱，谱号，加线]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/09/06/yin-le-le-li-wu-xian-pu-%2Cpu-hao-%2Cjia-xian/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/09/06/yin-le-le-li-wu-xian-pu-%2Cpu-hao-%2Cjia-xian/"/>
     <updated>2016-09-06T10:02:28+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/09/06/yin-le-le-li-wu-xian-pu-,pu-hao-,jia-xian</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/09/06/yin-le-le-li-wu-xian-pu-,pu-hao-,jia-xian</id>
     <content type="html"><![CDATA[<p>
 <code>五线谱</code>是对音符绘制的基础。现代的五线谱是由5根线和4个空间组成的。
 <br />
@@ -104,22 +104,22 @@ F谱是在这两个点之间的线上做的谱。
 </p>
 <p>
 <video width="800" height="300" controls="controls" preload="auto">
- <source src="http://ITMonkeyLife.github.io//videos/lesson10.mp4" type="video/mp4" />
+ <source src="http://ITMonkeyLife.github.io/Blog//videos/lesson10.mp4" type="video/mp4" />
 </video>
 <!-- <embed src="http://www.musictheory.net/vc/6/0/53481700c244fded30bde8b5683ebc08f0eaafe6/lesson10.swf"
 width="800" height="380"
 type="application/x-shockwave-flash"> &#8211;>
 </p>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[iOS 推送证书过期指南]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/09/05/ios-tui-song-zheng-shu-guo-qi-zhi-nan/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/09/05/ios-tui-song-zheng-shu-guo-qi-zhi-nan/"/>
     <updated>2016-09-05T12:30:46+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/09/05/ios-tui-song-zheng-shu-guo-qi-zhi-nan</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/09/05/ios-tui-song-zheng-shu-guo-qi-zhi-nan</id>
     <content type="html"><![CDATA[<p>  
 今天一早，运维部门同事，说咱们友盟上面推送证书已经到期了。那么到期了证书应该怎么样去更换新的证书呢。
 </p>
@@ -142,15 +142,15 @@ type="application/x-shockwave-flash"> &#8211;>
 4、生成证书后，只要替换Push证书就好了。
 </p>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[iOS开发锦囊]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/29/ioskai-fa-jin-nang/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/29/ioskai-fa-jin-nang/"/>
     <updated>2016-08-29T15:44:35+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/29/ioskai-fa-jin-nang</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/29/ioskai-fa-jin-nang</id>
     <content type="html"><![CDATA[<p>
 1、判断是不是AppStore版本
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
@@ -415,16 +415,16 @@ type="application/x-shockwave-flash"> &#8211;>
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 </p>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 </p></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Method Swizzling]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/26/method-swizzling/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/26/method-swizzling/"/>
     <updated>2016-08-26T09:43:31+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/26/method-swizzling</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/26/method-swizzling</id>
     <content type="html"><![CDATA[<p>
 在没有一个类的实现源码的情况下，想改变其中一个方法的实现，除了继承它重写、和借助类别重名方法暴力抢先之外，还有更加灵活的方法吗？在Objective-C编程中，如何实现hook呢？标题有点大，计划分几篇来总结。
 
@@ -821,15 +821,15 @@ debug时打出的backtrace，其中掺杂着被swizzle的方法名，一团糟�
 <hr />
 
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[敏感逻辑的保护方案]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an/"/>
     <updated>2016-08-25T15:13:53+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">24</span> <span class="title">敏感逻辑的保护方案</span></h1>
@@ -1010,15 +1010,15 @@ debug时打出的backtrace，其中掺杂着被swizzle的方法名，一团糟�
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Objective-C 代码混淆]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/objective-c-dai-ma-hun-yao/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/objective-c-dai-ma-hun-yao/"/>
     <updated>2016-08-25T15:09:37+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/objective-c-dai-ma-hun-yao</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/objective-c-dai-ma-hun-yao</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">23</span> <span class="title">Objective-C 代码混淆</span></h1>
@@ -1231,15 +1231,15 @@ seg2</p>
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[static 和被裁的符号表]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao/"/>
     <updated>2016-08-25T15:07:51+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">22</span> <span class="title">static 和被裁的符号表</span></h1>
@@ -1325,15 +1325,15 @@ seg2</p>
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[废除应用程序的 ASLR特性]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/"/>
     <updated>2016-08-25T15:02:16+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">21</span> <span class="title">废除应用程序的 ASLR 特性</span></h1>
@@ -1428,16 +1428,16 @@ seg2</p>
 
 
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 </p></div></div>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[越狱检测的攻与防]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/yue-yu-jian-ce-de-gong-yu-fang/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/yue-yu-jian-ce-de-gong-yu-fang/"/>
     <updated>2016-08-25T14:58:25+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/yue-yu-jian-ce-de-gong-yu-fang</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/yue-yu-jian-ce-de-gong-yu-fang</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">20</span> <span class="title">越狱检测的攻与防</span></h1>
@@ -1621,15 +1621,15 @@ seg2</p>
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[基于脚本实现动态库注入]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/ji-yu-jiao-ben-shi-xian-dong-tai-ku-zhu-ru/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/ji-yu-jiao-ben-shi-xian-dong-tai-ku-zhu-ru/"/>
     <updated>2016-08-25T14:51:36+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/ji-yu-jiao-ben-shi-xian-dong-tai-ku-zhu-ru</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/ji-yu-jiao-ben-shi-xian-dong-tai-ku-zhu-ru</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">19</span> <span class="title">基于脚本实现动态库注入</span></h1>
@@ -1754,16 +1754,16 @@ seg2</p>
 
 
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 </p></p></p></p></div></div>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[数据保护 API]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/shu-ju-bao-hu-api/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/shu-ju-bao-hu-api/"/>
     <updated>2016-08-25T14:48:07+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/shu-ju-bao-hu-api</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/shu-ju-bao-hu-api</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">18</span> <span class="title">数据保护 API</span></h1>
@@ -1774,7 +1774,7 @@ hackers 总是想象如果自己是开发者会怎么写，然后才能找到入
 
 <p>拿越狱检测这件事来说，起初大家只需判断有无安装<code> Cydia </code>就好了，hackers 们说好，那我就不安装<code> Cydia </code>也可以动手脚。开发者们又说，那你一定得用的上<code> MobileSubstrate </code>，<code>bash </code>，<code>ssh </code>吧，我去检测手机有没有安装这些工具。可是又有什么用呢？你判断什么我绕过去什么。</p>
 
-<p>当<code> class-dump </code>大肆流行，函数符号都被暴露，开发者想尽办法藏起自己的敏感函数代码。hackers 们也知道<code> class-dump </code>的死穴在哪里，于是新的检索办法油然而生。也就说，当一个防御手段成为流行，它就不会再是个让 hackers 大骂“真特么费劲”的防御手段了。比如之前介绍的一个小技巧：<a href="http://ITMonkeyLife.github.io//blog/2016/08/25/shu-ju-ca-chu/">内存数据擦除</a> ，hackers 知道开发者都去擦数据了，那我<code> hook memset </code>在你擦之前去读就好了。开发者说：我直接写硬盘上然后删除！hackers 说：难道你没听说过文件恢复？</p>
+<p>当<code> class-dump </code>大肆流行，函数符号都被暴露，开发者想尽办法藏起自己的敏感函数代码。hackers 们也知道<code> class-dump </code>的死穴在哪里，于是新的检索办法油然而生。也就说，当一个防御手段成为流行，它就不会再是个让 hackers 大骂“真特么费劲”的防御手段了。比如之前介绍的一个小技巧：<a href="http://ITMonkeyLife.github.io/Blog//blog/2016/08/25/shu-ju-ca-chu/">内存数据擦除</a> ，hackers 知道开发者都去擦数据了，那我<code> hook memset </code>在你擦之前去读就好了。开发者说：我直接写硬盘上然后删除！hackers 说：难道你没听说过文件恢复？</p>
 
 <div class="figure" id="figure-18-1">
     <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75ztnpoq2j202f031zk3.jpg" />
@@ -1899,15 +1899,15 @@ hackers 总是想象如果自己是开发者会怎么写，然后才能找到入
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Fish Hook]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/fish-hook/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/fish-hook/"/>
     <updated>2016-08-25T14:47:04+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/fish-hook</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/fish-hook</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">17</span> <span class="title">Fishhook</span></h1>
@@ -2120,15 +2120,15 @@ hackers 总是想象如果自己是开发者会怎么写，然后才能找到入
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[使用 introspy 追踪分析应用程序]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/shi-yong-introspy-zhui-zong-fen-xi-ying-yong-cheng-xu/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/shi-yong-introspy-zhui-zong-fen-xi-ying-yong-cheng-xu/"/>
     <updated>2016-08-25T12:01:59+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/shi-yong-introspy-zhui-zong-fen-xi-ying-yong-cheng-xu</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/shi-yong-introspy-zhui-zong-fen-xi-ying-yong-cheng-xu</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">16</span> <span class="title">使用 introspy 追踪分析应用程序</span></h1>
@@ -2207,15 +2207,15 @@ hackers 总是想象如果自己是开发者会怎么写，然后才能找到入
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[使用 iNalyzer 分析应用程序]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/shi-yong-inalyzer-fen-xi-ying-yong-cheng-xu/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/shi-yong-inalyzer-fen-xi-ying-yong-cheng-xu/"/>
     <updated>2016-08-25T11:59:04+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/shi-yong-inalyzer-fen-xi-ying-yong-cheng-xu</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/shi-yong-inalyzer-fen-xi-ying-yong-cheng-xu</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">15</span> <span class="title">使用 iNalyzer 分析应用程序</span></h1>
@@ -2332,19 +2332,19 @@ hackers 总是想象如果自己是开发者会怎么写，然后才能找到入
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Hack 实战——支付宝 App 手势密码校验欺骗]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian/"/>
     <updated>2016-08-25T11:57:48+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">14</span> <span class="title">Hack 实战——支付宝 App 手势密码校验欺骗</span></h1>
-    <p>在 <a href="http://ITMonkeyLife.github.io//blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">iOS 安全攻防（十一）：Hack实战——探究支付宝 app 手势密码</a>中，介绍了如何利用 gdb 分析 app ，确定了支付宝 app 的手势密码格式为字符串，9 个点分别对应 123456789。在 <a href="http://ITMonkeyLife.github.io//blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/">iOS 安全攻防（十二）：iOS7 的动态库注入</a>中，介绍了如果利用越狱大神们为我们开辟的 iOS7 动态库注入方法。</p>
+    <p>在 <a href="http://ITMonkeyLife.github.io/Blog//blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">iOS 安全攻防（十一）：Hack实战——探究支付宝 app 手势密码</a>中，介绍了如何利用 gdb 分析 app ，确定了支付宝 app 的手势密码格式为字符串，9 个点分别对应 123456789。在 <a href="http://ITMonkeyLife.github.io/Blog//blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/">iOS 安全攻防（十二）：iOS7 的动态库注入</a>中，介绍了如果利用越狱大神们为我们开辟的 iOS7 动态库注入方法。</p>
 
 <p>本文将继续深入 hack 实战，hook 支付宝手势密码校验操作，欺骗其通过任意手势输入。</p>
 
@@ -2517,15 +2517,15 @@ hackers 总是想象如果自己是开发者会怎么写，然后才能找到入
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[数据擦除]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/shu-ju-ca-chu/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/shu-ju-ca-chu/"/>
     <updated>2016-08-25T11:56:51+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/shu-ju-ca-chu</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/shu-ju-ca-chu</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">13</span> <span class="title">数据擦除</span></h1>
@@ -2602,15 +2602,15 @@ WipingMemory[2518:70b] final text =</pre>
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[iOS7 的动态库注入]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/"/>
     <updated>2016-08-25T11:56:02+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">12</span> <span class="title">iOS7 的动态库注入</span></h1>
@@ -2636,7 +2636,7 @@ sdk  :   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/
 
 <p>我们编写一个 hook 支付宝 app 程序中 ALPLauncherController  的 viewDidLoad 方法，具体方法是利用 Method Swizzling 。</p>
 
-<p>不熟悉 Method Swizzling 的话，可以参看我的这篇文章：<a href="http://ITMonkeyLife.github.io//blog/2016/08/26/method-swizzling/">Method Swizzling</a></p>
+<p>不熟悉 Method Swizzling 的话，可以参看我的这篇文章：<a href="http://ITMonkeyLife.github.io/Blog//blog/2016/08/26/method-swizzling/">Method Swizzling</a></p>
 
 <div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
@@ -2732,19 +2732,19 @@ Portal[3631] &lt;Warning&gt;: ----------------------- myViewDidLoad ------------
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Hack实战——探究支付宝 App 手势密码]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/"/>
     <updated>2016-08-25T11:49:41+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">11</span> <span class="title">Hack 实战——探究支付宝 App 手势密码</span></h1>
-    <p>在之前的 <a href="http://ITMonkeyLife.github.io//blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/">iOS安全攻防（七）：Hack实战——解除支付宝app手势解锁错误次数限制</a>中，留了一个问题，就是如何破解手势密码。</p>
+    <p>在之前的 <a href="http://ITMonkeyLife.github.io/Blog//blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/">iOS安全攻防（七）：Hack实战——解除支付宝app手势解锁错误次数限制</a>中，留了一个问题，就是如何破解手势密码。</p>
 
 <p>方法不唯一，本文介绍如何利用 gdb 分析破解 App 。</p>
 
@@ -2836,16 +2836,16 @@ Portal[3631] &lt;Warning&gt;: ----------------------- myViewDidLoad ------------
 
 
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 </p></p></p></div></div>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[二进制和资源文件自检]]></title>
-    <link href="http://ITMonkeyLife.github.io//blog/2016/08/25/er-jin-zhi-he-zi-yuan-wen-jian-zi-jian/"/>
+    <link href="http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/er-jin-zhi-he-zi-yuan-wen-jian-zi-jian/"/>
     <updated>2016-08-25T11:47:43+08:00</updated>
-    <id>http://ITMonkeyLife.github.io//blog/2016/08/25/er-jin-zhi-he-zi-yuan-wen-jian-zi-jian</id>
+    <id>http://ITMonkeyLife.github.io/Blog//Blog/blog/2016/08/25/er-jin-zhi-he-zi-yuan-wen-jian-zi-jian</id>
     <content type="html"><![CDATA[<div class="container">
 <div class="item chapter">
     <h1 class="title"><span class="label">10</span> <span class="title">二进制和资源文件自检</span></h1>
@@ -3009,7 +3009,7 @@ Portal[3631] &lt;Warning&gt;: ----------------------- myViewDidLoad ------------
 </div>
 </div>
 <p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/">http://ITMonkeyLife.github.io/</a></p>
+                        written by <a href="http://ITMonkeyLife.github.io/Blog/">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog/">http://ITMonkeyLife.github.io/Blog/</a></p>
 ]]></content>
   </entry>
   
