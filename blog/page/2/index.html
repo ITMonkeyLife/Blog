@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="20 越狱检测的攻与防 在应用开发过程中，我们希望知道设备是否越狱，正以什么权限运行程序，好对应采取一些防御和安全提示措施。 iOS7 相比之前版本的系统而言，升级了沙盒机制，封锁了几乎全部应用沙盒可以共享数据的入口。即使在越狱情况下，限制也非常多，大大增加了应用层攻击难度。比如，在 iOS7 &hellip;">
+	<meta name="description" content="21 废除应用程序的 ASLR 特性 ASLR (Address Space Layout Randomization)，即地址空间随机布局。大部分主流的操作系统都已实现了 ASLR，以防范对已知地址进行恶意攻击。iOS 从 4.3 开始支持 ASLR，Android 从 4.0 也支持了 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,137 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/">
+		
+			废除应用程序的 ASLR特性</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">21</span> <span class="title">废除应用程序的 ASLR 特性</span></h1>
+    <p>ASLR (Address Space Layout Randomization)，即地址空间随机布局。大部分主流的操作系统都已实现了 ASLR，以防范对已知地址进行恶意攻击。iOS 从 4.3 开始支持 ASLR，Android 从 4.0 也支持了 ASLR 机制。</p>
+
+<p>ASLR 的存在，给 iOS 系统越狱造成了很大的困难，某些不完美越狱方案就是因为攻破不了或者绕不开 ASLR ，所以每次重新启动后地址再度随机偏移，需要重新进行越狱操作。与此同时，ASLR 也给应用层攻击带来了一些困难，不同进程会造成不同的地址空间偏移，而且在运行时才可确定其偏移量，不易锁定攻击地址。</p>
+
+<p><code>Mach-O </code>文件的文件头会记录二进制的属性标识，有个 flag 叫做 PIE  (Position Independent Enable)。开启了 PIE 的二进制文件，在执行时会产生 ASLR 。</p>
+
+<p>我们可以使用<code> otool </code>工具，来查看任意应用程序二进制文件的属性，以支付宝为例：<br />
+<code>otool -hv Portal</code></p>
+
+<div class="figure" id="figure-21-1">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f7607zmgrxj216a032ju4.jpg" />
+
+    <p class="caption"><strong>图片 21.1</strong> aslr</p>
+</div>
+
+
+<p>有 PIE 标识，表示该程序在启动时会产生随机地址布局。</p>
+
+<div class="figure" id="figure-21-2">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f7608woa04j202m02s3yc.jpg" />
+
+    <p class="caption"><strong>图片 21.2</strong> aslr1</p>
+</div>
+<a href="https://github.com/peterfillmore/removePIE">removePIE</a> 是个去掉 PIE flag 的工具。
+
+<p>坏消息是，年久失修，它不支持 iOS7 。
+好消息是，我们还有 2 个变通方法可以走。<br />
+    - 利用<code> Theos </code>编译 removePIE<br />
+    - 改编一个 Mac 版的 MyRemovePIE</p>
+
+<p>非越狱开发者可能不熟悉 Theos ，低学习成本的做法是第二种，那么让我们来改编一个 Mac 版的 MyRemovePIE 吧。
+（懒得动手的可以直接到<a href="https://github.com/CarinaTT/MyRemovePIE">这里</a>下载 demo ）</p>
+
+<p>创建一个 Command Line Tool 工程，</p>
+
+<div class="figure" id="figure-21-3">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609flo73j214k0rgqac.jpg" />
+
+    <p class="caption"><strong>图片 21.3</strong> aslr2</p>
+</div>
+
+
+<p>然后复制 <a href="https://github.com/peterfillmore/removePIE/blob/master/removePIE.c">removePIE.c</a>  代码到 <code>main.c</code> 中，并且修改第 43 行：
+    <code>if(currentHeader.magic == MH_MAGIC){ //little endian</code></p>
+
+<p>添加 iOS7 的判断条件:
+    <code>if(currentHeader.magic == MH_MAGIC || currentHeader.magic == 0xbebafeca ){ //little endian</code></p>
+
+<p>编译后生成可执行文件 MyRemovePIE .</p>
+
+<p>利用我们编译生成的 MyRemovePIE 来处理应用程序：</p>
+
+<p><code>./MyRemovePIE Portal</code></p>
+
+<div class="figure" id="figure-21-4">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f76079jd97j20p409iad1.jpg" />
+
+    <p class="caption"><strong>图片 21.4</strong> aslr3</p>
+</div>
+
+
+<p>这样以后支付宝 Portal 再被启动执行就不会具有 ASLR 特性了</p>
+
+<div class="figure" id="figure-21-5">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609ztn5kj215y04egnk.jpg" />
+
+    <p class="caption"><strong>图片 21.5</strong> aslr4</p>
+</div>
+
+
+<p>如何验证一下结果呢？</p>
+
+<p>把处理过的 Portal 二进制拷贝回 iPhone ，启动支付宝钱包应用，然后 gdb 该进程，利用<code> info sh </code>命令查看偏移：</p>
+
+<div class="figure" id="figure-21-6">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760anz667j21kw066gri.jpg" />
+
+    <p class="caption"><strong>图片 21.6</strong> aslr5</p>
+</div>
+
+
+<p>偏移量为 0 ，嗯，这下就好了。一些手动处理的过程可以升级为自动了～ <div class="figure" id="figure-21-7">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760b57h2fj202j02ka9v.jpg" />
+
+    <p class="caption"><strong>图片 21.7</strong> aslr6</p>
+</div>
+
+
+
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</p></div></div>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1618,138 +1749,6 @@ Portal[3631] &lt;Warning&gt;: ----------------------- myViewDidLoad ------------
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">
-		
-			Hack实战——探究支付宝 App 手势密码</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">11</span> <span class="title">Hack 实战——探究支付宝 App 手势密码</span></h1>
-    <p>在之前的 <a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/">iOS安全攻防（七）：Hack实战——解除支付宝app手势解锁错误次数限制</a>中，留了一个问题，就是如何破解手势密码。</p>
-
-<p>方法不唯一，本文介绍如何利用 gdb 分析破解 App 。</p>
-
-<p>当没有程序源代码的情况下，我们如何利用 gdb 呢？</p>
-
-<p>为了确定应该如何设置断点，不得不反汇编程序来作为参考了。</p>
-
-<p>在前面的文章提到过，支付宝 app 的手势密码校验处理非常严谨，没有抛出 BOOL 判断的方法让我们可以直接修改返回值跳过验证，而是将全部操作封在了</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>于是，我反汇编了支付宝 app ，找到手势密码解锁的相关代码片段：</p>
-
-<div class="figure" id="figure-11-1">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75unaa1pzj20l90jyjw5.jpg" />
-
-    <p class="caption"><strong>图片 11.1</strong> guesture-password</p>
-</div>
-
-
-<p>红色箭头标注的地方，让人欣喜，这将是我们断点位置的最好选择。</p>
-
-<p>首先，查看一下相关程序段符号表：</p>
-
-<p><code>nm Portal | grep -i gestureinputview</code></p>
-
-<p>得到结果：</p>
-
-<p>nm Portal | grep -i getpassword</p>
-
-<p>得到结果：</p>
-
-<div class="figure" id="figure-11-2">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75unyvcgaj20fg04hwg4.jpg" />
-
-    <p class="caption"><strong>图片 11.2</strong> guesture-password2</p>
-</div>
-
-
-<p>确定了了关键函数的输出符号。</p>
-
-<p>启动支付宝 app ，并 gdb 该进程：
-<code>gdb -q -p 671</code></p>
-
-<p>在上述两个函数位置设置断点：
-<div class="figure" id="figure-11-3">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75up0u087j20hp02bgmb.jpg" />
-
-    <p class="caption"><strong>图片 11.3</strong> guesture-password3</p>
-</div>
-
-
-<p>可以通过 info breakpoints 查看断点：
-<div class="figure" id="figure-11-4">
-    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75uppyzbzj20pj034my3.jpg" />
-
-    <p class="caption"><strong>图片 11.4</strong> guesture-password4</p>
-</div>
-
-
-<p>continue 到 getPassword 位置，打印函数栈：
-<div class="figure" id="figure-11-5">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75uq86ydyj20kn09en0w.jpg" />
-
-    <p class="caption"><strong>图片 11.5</strong> guesture-password5</p>
-</div>
-
-
-<p>我们可以确定了 getPassword 的返回地址是 0x00becb36 ,  对该地址加断点：</p>
-
-<p><code>b * 0xbecb36</code></p>
-
-<p>然后继续 continue ，程序将卡在上面的断点上。</p>
-
-<p>从上面的反汇编代码，我们可以知道，用户输入的密码为存在 r8 上，原始密码为存在 r0 上，我们直接打印出这两个寄存器的值：</p>
-
-<div class="figure" id="figure-11-6">
-    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f75ur9u2hlj20mm07pmxu.jpg" />
-
-    <p class="caption"><strong>图片 11.6</strong> guesture-password6</p>
-</div>
-
-
-<p>正确密码是个 “Z” 手势图画，而当前输入为 “一” 手势图画。
-可以得出结论，支付宝 app 的手势密码和大多数 app 一样，手势密码格式是字符串，9 个点分别对应字符 123456789 。</p>
-
-
-
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</p></p></p></div></div>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

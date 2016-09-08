@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content=" written by Rick&nbsp;posted at http://ITMonkeyLife.github.io/Blog swift Comments ">
+	<meta name="description" content="React-Native 帮助在原生平台打造世界一流的应用体验，使用基于JavaSript和React的结合的开发经验。React-Native的宗旨是更有效的开发全平台的应用。 Native Components 在React-Native你能使用标准平台组件如： &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,119 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/03/23/react-native/">
+		
+			React Native</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+React-Native 帮助在原生平台打造世界一流的应用体验，使用基于<code>JavaSript</code>和React的结合的开发经验。React-Native的宗旨是更有效的开发全平台的应用。
+</p>
+
+<h2>Native Components</h2>
+<p>
+在React-Native你能使用标准平台组件如：iOS的<code>UITabBar</code>以及<code>Android</code>的<code>Drawer</code>。这个给了你APP标准统一的外观，使用这个平台的生态系统，去保持高质量。这些组件能轻易的嵌入到你的APP中使用，和React组件是差不多的，例如:<code>TabBariOS</code>和<code>DrawerLayoutAndroid</code>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// iOS</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">TabBarIOS</span><span class="p">,</span> <span class="nx">NavigatorIOS</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">TabBarIOS</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">TabBarIOS</span><span class="p">.</span><span class="nx">Item</span> <span class="nx">title</span><span class="o">=</span><span class="s2">&quot;React Native&quot;</span> <span class="nx">selected</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="nx">NavigatorIOS</span> <span class="nx">initialRoute</span><span class="o">=</span><span class="p"></span> <span class="o">/&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="err">/TabBarIOS.Item&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/TabBarIOS&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// Android</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-native&#39;</span><span class="p">);</span>
+</span><span class="line"><span class="kd">var</span> <span class="p">{</span> <span class="nx">DrawerLayoutAndroid</span><span class="p">,</span> <span class="nx">ProgressBarAndroid</span><span class="p">,</span> <span class="nx">Text</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">DrawerLayoutAndroid</span>
+</span><span class="line">        <span class="nx">renderNavigationView</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="nx">React</span> <span class="nx">Native</span><span class="o">&lt;</span><span class="err">/Text&gt;}&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">ProgressBarAndroid</span> <span class="o">/&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/DrawerLayoutAndroid&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+<h2>异步执行</h2>
+<p>
+所有的<code>Javascript</code>应用程序代码以及原生平台的操作都是异步的，并且原生模块也能够使用额外的线程。这意味着我们能关闭主线程的图像解码，后台把图片保存到磁盘，渲染文字和计算布局而不会阻塞UI。这样一来，React-Native应用自然流畅性和响应。通信也完全序列化，这使我们能够充分利用<code>Chrome</code>开发者工具来调试<code>Javascript</code>的运行时完整的应用程序，无论是模拟器还是真实设备。
+</p>
+
+		
+		<a href="/Blog/blog/2016/03/23/react-native/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React-Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/03/23/react-native/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -535,64 +648,6 @@ ABI涵盖了各个细节：
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/">
-		
-			从UIKit到APPKit</a>
-	</h2>
-	<div class="entry-content">
-		<p>Mac 不仅是一个强大的生产平台，也十分值得你<em>为其</em>开发一些东西。去年我们开始构建我们的第一款 <a href="http://decksetapp.com">Mac 应用</a>，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验，希望能启发你们去开发自己的第一个 Mac 应用。</p>
-
-<p>在这篇文章中，我们假定 OS X Yosemite 为我们默认使用的系统。今年，为了融合 iOS 和 OS X，苹果站在开发者的角度对 OS X 做出了巨大的改进。不过，我们会指出哪些特性仅适用于 Yosemite，而哪些特性也适用于之前的系统版本。</p>
-
-<h2>相似点</h2>
-
-<p>尽管 iOS 和 OS X 是两个独立的系统，它们却有很多共性。先就开发环境而言，它们使用同样的开发语言，同样的IDE。所以你会对这一切都感到非常熟悉。</p>
-
-<p>更重要的是，OS X 和你已经熟悉的 iOS 共用许多框架，像 Foundation，Core Data 和 Core Animation。今年，Apple 进一步整合两个平台，并给 Mac 带来了一些之前仅能在 iOS 上面使用的框架，其中一个例子就是 Multipeer Connectivity。在更底层的地方，你立刻可以看到你熟悉的 API：Core Graphics，Core Text，libdispatch 等等。</p>
-
-<p>真正开始有区别的是 UI 框架 — AppKit 早在 NeXT 时代就已面世并不断进化，而 UIKit 就像是简约版及现代版的 AppKit。出现这种情况的原因，是当 Apple 推出 iPhone 时可以从头开始，并吸取 AppKit 的经验：把已证实过可行的概念和部件拿过来用，并改进不够精良的设计。</p>
-
-<p>如果你对这个转换是怎么发生的感兴趣，请观看前 Apple iOS 应用总监 <a href="https://twitter.com/nitinganatra">Nitin Ganatra</a> 播客上的精彩剧集：<a href="http://www.imore.com/debug-39-nitin-ganatra-episode-i-system-7-carbon">System 7 to Carbon</a>，<a href="http://www.imore.com/debug-40-nitin-ganatra-episode-ii-os-x-ios">OS X to iOS</a>，以及 <a href="http://www.imore.com/debug-41-nitin-ganatra-episode-iii-iphone-ipad">iPhone to iPad</a>。</p>
-
-<p>考虑到这一点，也就不奇怪为什么 UIKit 和 AppKit 仍旧共享许多概念了。UI 是基于 window 和 view 构建起来的，消息像 iOS 一样通过响应者链传递。此外，<code>UIView</code> 是 <code>NSView</code>，<code>UIControl</code> 是 <code>NSControl</code>，<code>UIImage</code> 是 <code>NSImage</code>，<code>UIViewController</code> 是 <code>NSViewController</code>，<code>UITextView</code> 是 <code>NSTextView</code>&#8230;这样的例子不胜枚举。</p>
-
-<p>看起来就像你仅需把 <code>UI</code> 前缀替换为 <code>NS</code> 前缀，你就可以用同样的方法使用这些类。但事实是在很多情况下这并不奏效。它们在实现上并没有在概念上那么相似。你在 iOS 上的经验至多能帮你大致了解构建用户界面的基础，以及使用很多设计模式，比如代理，都是类似的。但是细节是魔鬼 — 你真的应该通过阅读文档来学习如果使用这些类。</p>
-
-<p>下一节，我们来看看那些常见的陷阱。</p>
-
-<h2>不同点</h2>
-
-<h3 id="windowwindowcontroller">Window 和 Window Controller</h3>
-
-		
-		<a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例， &hellip;">
+	<meta name="description" content="Mac 不仅是一个强大的生产平台，也十分值得你为其开发一些东西。去年我们开始构建我们的第一款 Mac 应用，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,64 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/">
+		
+			从UIKit到APPKit</a>
+	</h2>
+	<div class="entry-content">
+		<p>Mac 不仅是一个强大的生产平台，也十分值得你<em>为其</em>开发一些东西。去年我们开始构建我们的第一款 <a href="http://decksetapp.com">Mac 应用</a>，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验，希望能启发你们去开发自己的第一个 Mac 应用。</p>
+
+<p>在这篇文章中，我们假定 OS X Yosemite 为我们默认使用的系统。今年，为了融合 iOS 和 OS X，苹果站在开发者的角度对 OS X 做出了巨大的改进。不过，我们会指出哪些特性仅适用于 Yosemite，而哪些特性也适用于之前的系统版本。</p>
+
+<h2>相似点</h2>
+
+<p>尽管 iOS 和 OS X 是两个独立的系统，它们却有很多共性。先就开发环境而言，它们使用同样的开发语言，同样的IDE。所以你会对这一切都感到非常熟悉。</p>
+
+<p>更重要的是，OS X 和你已经熟悉的 iOS 共用许多框架，像 Foundation，Core Data 和 Core Animation。今年，Apple 进一步整合两个平台，并给 Mac 带来了一些之前仅能在 iOS 上面使用的框架，其中一个例子就是 Multipeer Connectivity。在更底层的地方，你立刻可以看到你熟悉的 API：Core Graphics，Core Text，libdispatch 等等。</p>
+
+<p>真正开始有区别的是 UI 框架 — AppKit 早在 NeXT 时代就已面世并不断进化，而 UIKit 就像是简约版及现代版的 AppKit。出现这种情况的原因，是当 Apple 推出 iPhone 时可以从头开始，并吸取 AppKit 的经验：把已证实过可行的概念和部件拿过来用，并改进不够精良的设计。</p>
+
+<p>如果你对这个转换是怎么发生的感兴趣，请观看前 Apple iOS 应用总监 <a href="https://twitter.com/nitinganatra">Nitin Ganatra</a> 播客上的精彩剧集：<a href="http://www.imore.com/debug-39-nitin-ganatra-episode-i-system-7-carbon">System 7 to Carbon</a>，<a href="http://www.imore.com/debug-40-nitin-ganatra-episode-ii-os-x-ios">OS X to iOS</a>，以及 <a href="http://www.imore.com/debug-41-nitin-ganatra-episode-iii-iphone-ipad">iPhone to iPad</a>。</p>
+
+<p>考虑到这一点，也就不奇怪为什么 UIKit 和 AppKit 仍旧共享许多概念了。UI 是基于 window 和 view 构建起来的，消息像 iOS 一样通过响应者链传递。此外，<code>UIView</code> 是 <code>NSView</code>，<code>UIControl</code> 是 <code>NSControl</code>，<code>UIImage</code> 是 <code>NSImage</code>，<code>UIViewController</code> 是 <code>NSViewController</code>，<code>UITextView</code> 是 <code>NSTextView</code>&#8230;这样的例子不胜枚举。</p>
+
+<p>看起来就像你仅需把 <code>UI</code> 前缀替换为 <code>NS</code> 前缀，你就可以用同样的方法使用这些类。但事实是在很多情况下这并不奏效。它们在实现上并没有在概念上那么相似。你在 iOS 上的经验至多能帮你大致了解构建用户界面的基础，以及使用很多设计模式，比如代理，都是类似的。但是细节是魔鬼 — 你真的应该通过阅读文档来学习如果使用这些类。</p>
+
+<p>下一节，我们来看看那些常见的陷阱。</p>
+
+<h2>不同点</h2>
+
+<h3 id="windowwindowcontroller">Window 和 Window Controller</h3>
+
+		
+		<a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -674,54 +732,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/">
-		
-			语言标签</a>
-	</h2>
-	<div class="entry-content">
-		<p>当我们处理自然语言（相对于程序语言而言）的时候会遇到一项挑战，即涵义模棱两可。程序语言是被设计成为有且只有一个可能解释的语言，而人类语言可能由于模糊性和不确定性衍生出很多问题。这是由于有时候你并不想确切地告诉别人你对某事物的想法。在社交场合这完全没有问题，但是当你试图使用计算机来处理人类语言的话，就会非常痛苦。</p>
-
-<p>词法标识（token）就是一个简单的例子。程序语言的词法分析对于标识表示什么，它是什么类型（语句分隔符，标识符，保留关键字等等）是什么有着明确的规则。而自然语言则远不能如此清晰可辩。<em>can’t</em> 是一个还是两个标识？并且根据你做出的判断，<em>cannot</em> 或者 <em>can not</em> 这两个应该是相同意思的词又各是几个标识呢？很多复合词都可以写成一个词（比如：<em>bookshelf</em>），或者两个词（比如：<em>lawn mower</em>），甚至还可以用连字符来连接（比如：<em>life-cycle</em>）。有些字符 （比如说连字符或者右肩单撇号），可以有很多种解释，而如何选择正确字符往往取决于上下文语言环境（撇号在一个单词的最后是表示所有格符号还是后单引号？）</p>
-
-<p>句子的情况同样不怎么好：如果简单认为句号是用来结束一个句子的话，在我们使用缩写或是序数的时候就悲剧了。虽然通常情况下，我们是可以解决这个问题的，但是对有些句子而言，除非将整个段落彻底分析，否则无法真正确定这些句子的意思。我们人类甚至也无法有意识地考虑这些问题。</p>
-
-<p>不过我们希望能够处理人类语言，因为在跟软件交流的时候，使用人类语言对用户更加友好。我们更愿意直接告诉计算机要做什么，让计算机为我们分析报纸文章，并对我们感兴趣的新闻做个总结，而不是通过敲击键盘或者点击小小的按钮（或者在小小的虚拟键盘上打字）来让计算机为我们做这些事。其中有些还在我们的能力范围之外（至少在苹果为我们提供与 Siri 交互的  API 之前）。但是有些已经成为可能，那就是 <code>NSLinguisticTagger</code>。</p>
-
-<p><code>NSLinguisticTagger</code> 是 Foundation 框架中命名极为不当的类之一，这是因为它远远不止是一个小小的词性 tagger，而是集词法分析，分词器，命名实体识别及词性标注为一体的类。换句话说，它几乎可以满足你处理某些计算机语言处理的全部要求。</p>
-
-<p>为了展示 <code>NSLinguisticTagger</code> 类的用法，我们会开发一个灵活的工具用来搜索。我们有一个充满了文本（比如新闻，电邮，或者其他的任意文本）的集合，然后我们输入一个单词，这个单词将返回所有包含这个单词的句子。我们会忽略功能词（比如 <em>the</em>，<em>of</em> 或者 <em>and</em>），因为它们在这个语言环境中太过于常见，没有什么用处。我们目前要实现的是第一步：从一个单独文件中提取相关单词。由此可以迅速地扩展到提供完整功能。</p>
-
-<p><a href="https://github.com/objcio/issue-7-linguistic-tagging">GitHub</a> 上有源代码和样本文本。这是《卫报》上一篇关于中英贸易的文章。当用软件分析这份文本时，你会发现，它并不是总是运行良好，不过，出现运行故障完全正常：人类语言和任何正式语言都不同，人类语言凌乱复杂，无法简单划归到整齐划一的规则系统。很多理论问题（哪怕就像词性一样基础的问题）在某种程度上是无法解决的，这是由于我们仍然对如何才能最好地描述语言还所知甚少。比如说，词的分类是以拉丁语为依据的，但这并不意味着就必定适合英语。它们充其量只是大概近似而已。不过从很多实际的目的来看，这样就已经足够了，不需要让人怎么担心了。</p>
-
-		
-		<a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

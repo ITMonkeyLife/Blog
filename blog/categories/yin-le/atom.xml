@@ -4,7 +4,7 @@
   <title><![CDATA[Category: 音乐 | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/yin-le/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-09-07T17:18:41+08:00</updated>
+  <updated>2016-09-08T16:54:07+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,34 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[音乐乐理:休止符]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/09/08/yin-le-le-li-xiu-zhi-fu/"/>
+    <updated>2016-09-08T14:55:44+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/09/08/yin-le-le-li-xiu-zhi-fu</id>
+    <content type="html"><![CDATA[<div id="static">
+<ul>
+<li>休止符标示在一个音节中沉默的时期。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_20.png" />
+<li>每种类型的休止符对应的同等类型的音符的持续时间。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_40.png" />
+<li>例如:这两个四分之一休止符和四分音符占用的时间是相同的。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_60.png" /><br />当音符发出声音时，休止符是沉默的。
+<li>为了证明这一点，让我们填写4/4时间的音节与四分音符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_80.png" /><br />当弹奏时，所有的音符都发出声音。
+<li>接下来，我们替换第二个音符为休止符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_100.png" /><br />当弹奏时，第二个没有声音。
+<li>接下来，我们讨论其他类型的休止符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_120.png" />
+<li>一个全休止符占据的时间是相同的全音符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_140.png" />
+<li>它被画成一个盒子从第四条五线谱向下。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_160.png" />
+<li>半休止符占有时间等同数量的一半音符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_180.png" />
+<li>它被画成一个盒子从中间线的五线谱升起。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_200.png" />
+<li>像音符，休止符可以有标志。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_220.png" />
+<li>与一个标志，八分休止符具有相同的持续时间作为一个八分音符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_240.png" />
+<li>有两个标志，十六休止符有相同的时间为十六分音符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_260.png" />
+<li>尽管罕见，休止符可以有三个或更多个标志。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_280.png" />
+<li>使用此图表，以供参考休止符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_281.png" />
+
+
+</li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></ul></div>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[音乐乐理:标准音与节拍]]></title>

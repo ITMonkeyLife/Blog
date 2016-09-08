@@ -7,7 +7,11 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="垂直的黑线将切分五线谱。 五线谱划分两个音符区。 节拍定义了每个区包含的不同种类的音符。 第一个区的节拍是 4/4 第二个区的节拍是 3/4 。 第一区 (4/4) 包含四个四分音符。 第二区(3/4) 包含三个四分音符。 接下来，我们将讨论非四分音符节拍。 6/8 包含了六个八分音符。 3/2 &hellip;">
+	<meta name="description" content="休止符标示在一个音节中沉默的时期。
+每种类型的休止符对应的同等类型的音符的持续时间。
+例如:这两个四分之一休止符和四分音符占用的时间是相同的。当音符发出声音时，休止符是沉默的。
+为了证明这一点，让我们填写4/4时间的音节与四分音符。当弹奏时，所有的音符都发出声音。
+接下来， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +79,63 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/09/08/yin-le-le-li-xiu-zhi-fu/">
+		
+			音乐乐理:休止符</a>
+	</h2>
+	<div class="entry-content">
+		<div id="static">
+<ul>
+<li>休止符标示在一个音节中沉默的时期。<br /><img src="/Blog/images/music/lesson13_20.png" />
+<li>每种类型的休止符对应的同等类型的音符的持续时间。<br /><img src="/Blog/images/music/lesson13_40.png" />
+<li>例如:这两个四分之一休止符和四分音符占用的时间是相同的。<br /><img src="/Blog/images/music/lesson13_60.png" /><br />当音符发出声音时，休止符是沉默的。
+<li>为了证明这一点，让我们填写4/4时间的音节与四分音符。<br /><img src="/Blog/images/music/lesson13_80.png" /><br />当弹奏时，所有的音符都发出声音。
+<li>接下来，我们替换第二个音符为休止符。<br /><img src="/Blog/images/music/lesson13_100.png" /><br />当弹奏时，第二个没有声音。
+<li>接下来，我们讨论其他类型的休止符。<br /><img src="/Blog/images/music/lesson13_120.png" />
+<li>一个全休止符占据的时间是相同的全音符。<br /><img src="/Blog/images/music/lesson13_140.png" />
+<li>它被画成一个盒子从第四条五线谱向下。<br /><img src="/Blog/images/music/lesson13_160.png" />
+<li>半休止符占有时间等同数量的一半音符。<br /><img src="/Blog/images/music/lesson13_180.png" />
+<li>它被画成一个盒子从中间线的五线谱升起。<br /><img src="/Blog/images/music/lesson13_200.png" />
+<li>像音符，休止符可以有标志。<br /><img src="/Blog/images/music/lesson13_220.png" />
+<li>与一个标志，八分休止符具有相同的持续时间作为一个八分音符。<br /><img src="/Blog/images/music/lesson13_240.png" />
+<li>有两个标志，十六休止符有相同的时间为十六分音符。<br /><img src="/Blog/images/music/lesson13_260.png" />
+<li>尽管罕见，休止符可以有三个或更多个标志。<br /><img src="/Blog/images/music/lesson13_280.png" />
+<li>使用此图表，以供参考休止符。<br /><img src="/Blog/images/music/lesson13_281.png" />
+
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></ul></div>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/yin-le/'>音乐</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/09/08/yin-le-le-li-xiu-zhi-fu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1319,137 +1380,6 @@ seg2</p>
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/">
-		
-			废除应用程序的 ASLR特性</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">21</span> <span class="title">废除应用程序的 ASLR 特性</span></h1>
-    <p>ASLR (Address Space Layout Randomization)，即地址空间随机布局。大部分主流的操作系统都已实现了 ASLR，以防范对已知地址进行恶意攻击。iOS 从 4.3 开始支持 ASLR，Android 从 4.0 也支持了 ASLR 机制。</p>
-
-<p>ASLR 的存在，给 iOS 系统越狱造成了很大的困难，某些不完美越狱方案就是因为攻破不了或者绕不开 ASLR ，所以每次重新启动后地址再度随机偏移，需要重新进行越狱操作。与此同时，ASLR 也给应用层攻击带来了一些困难，不同进程会造成不同的地址空间偏移，而且在运行时才可确定其偏移量，不易锁定攻击地址。</p>
-
-<p><code>Mach-O </code>文件的文件头会记录二进制的属性标识，有个 flag 叫做 PIE  (Position Independent Enable)。开启了 PIE 的二进制文件，在执行时会产生 ASLR 。</p>
-
-<p>我们可以使用<code> otool </code>工具，来查看任意应用程序二进制文件的属性，以支付宝为例：<br />
-<code>otool -hv Portal</code></p>
-
-<div class="figure" id="figure-21-1">
-    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f7607zmgrxj216a032ju4.jpg" />
-
-    <p class="caption"><strong>图片 21.1</strong> aslr</p>
-</div>
-
-
-<p>有 PIE 标识，表示该程序在启动时会产生随机地址布局。</p>
-
-<div class="figure" id="figure-21-2">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f7608woa04j202m02s3yc.jpg" />
-
-    <p class="caption"><strong>图片 21.2</strong> aslr1</p>
-</div>
-<a href="https://github.com/peterfillmore/removePIE">removePIE</a> 是个去掉 PIE flag 的工具。
-
-<p>坏消息是，年久失修，它不支持 iOS7 。
-好消息是，我们还有 2 个变通方法可以走。<br />
-    - 利用<code> Theos </code>编译 removePIE<br />
-    - 改编一个 Mac 版的 MyRemovePIE</p>
-
-<p>非越狱开发者可能不熟悉 Theos ，低学习成本的做法是第二种，那么让我们来改编一个 Mac 版的 MyRemovePIE 吧。
-（懒得动手的可以直接到<a href="https://github.com/CarinaTT/MyRemovePIE">这里</a>下载 demo ）</p>
-
-<p>创建一个 Command Line Tool 工程，</p>
-
-<div class="figure" id="figure-21-3">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609flo73j214k0rgqac.jpg" />
-
-    <p class="caption"><strong>图片 21.3</strong> aslr2</p>
-</div>
-
-
-<p>然后复制 <a href="https://github.com/peterfillmore/removePIE/blob/master/removePIE.c">removePIE.c</a>  代码到 <code>main.c</code> 中，并且修改第 43 行：
-    <code>if(currentHeader.magic == MH_MAGIC){ //little endian</code></p>
-
-<p>添加 iOS7 的判断条件:
-    <code>if(currentHeader.magic == MH_MAGIC || currentHeader.magic == 0xbebafeca ){ //little endian</code></p>
-
-<p>编译后生成可执行文件 MyRemovePIE .</p>
-
-<p>利用我们编译生成的 MyRemovePIE 来处理应用程序：</p>
-
-<p><code>./MyRemovePIE Portal</code></p>
-
-<div class="figure" id="figure-21-4">
-    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f76079jd97j20p409iad1.jpg" />
-
-    <p class="caption"><strong>图片 21.4</strong> aslr3</p>
-</div>
-
-
-<p>这样以后支付宝 Portal 再被启动执行就不会具有 ASLR 特性了</p>
-
-<div class="figure" id="figure-21-5">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609ztn5kj215y04egnk.jpg" />
-
-    <p class="caption"><strong>图片 21.5</strong> aslr4</p>
-</div>
-
-
-<p>如何验证一下结果呢？</p>
-
-<p>把处理过的 Portal 二进制拷贝回 iPhone ，启动支付宝钱包应用，然后 gdb 该进程，利用<code> info sh </code>命令查看偏移：</p>
-
-<div class="figure" id="figure-21-6">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760anz667j21kw066gri.jpg" />
-
-    <p class="caption"><strong>图片 21.6</strong> aslr5</p>
-</div>
-
-
-<p>偏移量为 0 ，嗯，这下就好了。一些手动处理的过程可以升级为自动了～ <div class="figure" id="figure-21-7">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760b57h2fj202j02ka9v.jpg" />
-
-    <p class="caption"><strong>图片 21.7</strong> aslr6</p>
-</div>
-
-
-
-
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</p></div></div>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

