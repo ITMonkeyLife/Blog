@@ -4,7 +4,7 @@
   <title><![CDATA[Category: 音乐 | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/yin-le/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-09-08T16:54:07+08:00</updated>
+  <updated>2016-09-08T17:35:37+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,30 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[音乐乐理:增强点和持续音]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/09/08/yin-le-le-li-dian-he-lian-xian/"/>
+    <updated>2016-09-08T16:56:40+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/09/08/yin-le-le-li-dian-he-lian-xian</id>
+    <content type="html"><![CDATA[<div id="static">
+<ul>
+<li> 增强点和持续音的关系有两种类型来改变一个音符的时间标记。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_20.png" />
+<li> 一个点了一大半增加持续时间。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_40.png" />
+<li> 由于八分音符的四分音符的1/2时间，我们将用它替换了1/2个符号。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_60.png" />
+<li> 正如你所看到的，一个点四分音符等于四分音符加上八分音符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_80.png" />
+<li> 一个点四分音符也可以等于3八分音符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_100.png" />
+<li> 连线持续合并相同间距的多个音符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_120.png" />
+<li> 它们被用来让穿过屏障（如本例中的音节）的音符，声音的持续时间。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_140.png" />
+<li> 第四和第五音符现在合并在一起。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_160.png" />
+<li> 如果音节分隔线都没有了，我们可以写一个半音符来代替。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_180.png" /><br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_200.png" />
+<li> 使用此图表参考增强点。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson14_220.png" /><br />完整的流程如下: <br />
+<embed src="http://ITMonkeyLife.github.io/Blog/videos/lesson14.swf" width="800" height="380" type="application/x-shockwave-flash" />
+
+
+</li></li></li></li></li></li></li></li></li></li></ul></div>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[音乐乐理:休止符]]></title>
@@ -34,7 +58,7 @@
 <li>与一个标志，八分休止符具有相同的持续时间作为一个八分音符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_240.png" />
 <li>有两个标志，十六休止符有相同的时间为十六分音符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_260.png" />
 <li>尽管罕见，休止符可以有三个或更多个标志。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_280.png" />
-<li>使用此图表，以供参考休止符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_281.png" />
+<li>使用此图表，以供参考休止符。<br /><img src="http://ITMonkeyLife.github.io/Blog/images/music/lesson13_281.png" /> 
 
 
 </li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></ul></div>

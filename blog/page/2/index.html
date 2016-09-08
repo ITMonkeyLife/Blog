@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="21 废除应用程序的 ASLR 特性 ASLR (Address Space Layout Randomization)，即地址空间随机布局。大部分主流的操作系统都已实现了 ASLR，以防范对已知地址进行恶意攻击。iOS 从 4.3 开始支持 ASLR，Android 从 4.0 也支持了 &hellip;">
+	<meta name="description" content="22 static 和被裁的符号表 为了不让攻击者理清自己程序的敏感业务逻辑，于是我们想方设法提高逆向门槛。 本文就介绍一个防御技巧——利用 static 关键字裁掉函数符号。 原理 如果函数属性为 static ，那么编译时该函数符号就会被解析为 local 符号。 在发布 release &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,127 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao/">
+		
+			Static 和被裁的符号表</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">22</span> <span class="title">static 和被裁的符号表</span></h1>
+    <p>为了不让攻击者理清自己程序的敏感业务逻辑，于是我们想方设法提高逆向门槛。</p>
+
+<p>本文就介绍一个防御技巧——利用 static 关键字裁掉函数符号。</p>
+
+<h3>原理</h3>
+
+<p>如果函数属性为 static ，那么编译时该函数符号就会被解析为 local 符号。</p>
+
+<p>在发布 release 程序时（用 Xcode 打包编译二进制）默认会 strip 裁掉这些函数符号，无疑给逆向者加大了工作难度。</p>
+
+<h3>验证</h3>
+
+<p>写个 demo 验证一下上述理论，以一段创建 Button 的代码为例，对应补充一个 static 版本。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">id</span> <span class="nf">createBtn</span><span class="p">()</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIButton</span> <span class="o">*</span><span class="n">btn</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIButton</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithFrame:</span><span class="n">CGRectZero</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">btn</span> <span class="nl">setFrame:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">btn</span> <span class="nl">setBackgroundColor:</span><span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">btn</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">cornerRadius</span> <span class="o">=</span> <span class="mf">7.0f</span><span class="p">;</span>
+</span><span class="line">    <span class="n">btn</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">masksToBounds</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">btn</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">id</span> <span class="nf">static_createBtn</span><span class="p">()</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIButton</span> <span class="o">*</span><span class="n">btn</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIButton</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithFrame:</span><span class="n">CGRectZero</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">btn</span> <span class="nl">setFrame:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">btn</span> <span class="nl">setBackgroundColor:</span><span class="p">[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">btn</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">cornerRadius</span> <span class="o">=</span> <span class="mf">7.0f</span><span class="p">;</span>
+</span><span class="line">    <span class="n">btn</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">masksToBounds</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">btn</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>再来看一下反编的结果，对于 createBtn() 方法，我们可以得到它的伪代码：</p>
+
+<div class="figure" id="figure-22-1">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f760d9iqmfj20ns10aakb.jpg" />
+
+    <p class="caption"><strong>图片 22.1</strong> static</p>
+</div>
+
+
+<p>函数名虽然面目全非，但是基本操作还是清晰的。</p>
+
+<p>对于<code>static_createBtn() </code>方法呢，我们已经无法看到它任何直观的有价值信息了。</p>
+
+<h3>局限</h3>
+
+<p>当然这种方法也有局限性。正如你所知道的，<code>static </code>函数，只在本文件可见。</p>
+
+<h3>打破局限</h3>
+
+<p>怎么让别的文件也能调到本文件的<code> static </code>方法呢？</p>
+
+<p>在本文件建造一个结构体，结构体里包含函数指针。把<code> static </code>函数的函数指针都赋在这个结构体里，再把这个结构体抛出去。</p>
+
+<p>这样做的好处是，既隐藏了函数代码也丰富了调用方式。</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1592,163 +1713,6 @@ WipingMemory[2518:70b] final text =</pre>
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/25/shu-ju-ca-chu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/">
-		
-			iOS7 的动态库注入</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">12</span> <span class="title">iOS7 的动态库注入</span></h1>
-    <p>iOS 系统不断升级，结构不断调整，所以我们可以利用的动态库注入方法也根据系统版本的不同而不同。</p>
-
-<p>在此之前，我们可以利用环境变量 <code>DYLD_INSERT_LIBRARY</code> 来添加动态库，iOS7 被成功越狱后，我们需要自己去探索实践 iOS7 动态库注入的方式。</p>
-
-<p>本文将在 iOS7.0.4 环境下，以 hook 支付宝 app 程序中 <code> ALPLauncherController </code>的视图加载方法为例，介绍在 iOS7 下，如何实现动态库注入攻击。</p>
-
-<h3>相关工具位置信息</h3>
-
-<p>先总结罗列一下相关编译、链接工具的位置路径信息，在各位自行下载的 iOS SDK中</p>
-
-<div class="code code">
-<pre class="code">clang :    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
-gcc :    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2
-ld :   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ld
-                /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld
-sdk  :   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/</pre>
-</div>
-
-<h3>动态库源程序</h3>
-
-<p>我们编写一个 hook 支付宝 app 程序中 ALPLauncherController  的 viewDidLoad 方法，具体方法是利用 Method Swizzling 。</p>
-
-<p>不熟悉 Method Swizzling 的话，可以参看我的这篇文章：<a href="/Blog/blog/2016/08/26/method-swizzling/">Method Swizzling</a></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;UIKit/UIKit.h&gt;  </span>
-</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">objc</span><span class="o">/</span><span class="n">runtime</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">UIViewController</span> <span class="nl">(HookPortal)</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">myViewDidLoad</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;----------------------- myViewDidLoad ----------------------&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="nf">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span> <span class="n">initialize</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;======================= initialize ========================&quot;</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">Class</span> <span class="n">class</span> <span class="o">=</span> <span class="n">objc_getClass</span><span class="p">(</span><span class="s">&quot;ALPLauncherController&quot;</span><span class="p">);</span>
-</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method</span> <span class="o">=</span>  <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">viewDidLoad</span><span class="p">));</span>
-</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">myViewDidLoad</span><span class="p">));</span>
-</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">,</span> <span class="n">my_Method</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>编译 dylib</h3>
-
-<p>我们可以利用 xcode 直接帮忙编译 .o，或者自己手动使用 clang 编译，然后手动 ld ：</p>
-
-<div class="code code">
-<pre class="code">ld -dylib -lsystem -lobjc  -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/ -o libwq.dylib xxx.o</pre>
-</div>
-
-<h3>安置、验证 dylib</h3>
-
-<p>将编译好的 libwq.dylib 拷贝到 iPhone 文件系统中 <code>/Library/MobileSubstrate/DynamicLibraries/</code> 下</p>
-
-<p>如果不放心库是否能正常工作，可以加一步验证操作，写一个 demo 尝试打开自己的库：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">voidvoid</span> <span class="o">*</span><span class="n">handle</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="n">dlopen</span><span class="p">(</span><span class="s">&quot;/Library/MobileSubstrate/DynamicLibraries/libwq.dylib&quot;</span><span class="p">,</span> <span class="mh">0x2</span><span class="p">);</span>
-</span><span class="line"><span class="n">handle</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s">&quot;myViewDidLoad&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;++++&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span><span class="k">else</span><span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;----&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>运行检验效果</h3>
-
-<p>到了验证效果的时候，重启设备后者执行：
-<code>killall SpringBoard</code></p>
-
-<p>启动支付宝 app，然后观察 log 信息：</p>
-
-<div class="code code">
-<pre class="code">Portal[3631] &lt;Notice&gt;: MS:Notice: Injecting: com.alipay.iphoneclient `[Portal] (847.21)`  
-Portal[3631] &lt;Notice&gt;: MS:Notice: Loading: /Library/MobileSubstrate/DynamicLibraries/libwq.dylib  
-Portal[3631] &lt;Warning&gt;: ======================= initialize ========================  
-Portal[3631] &lt;Warning&gt;: ----------------------- myViewDidLoad ----------------------</pre>
-</div>
-
-<p>证明我们的动态库已经被加载， 我们的 Hook 也成功了。
-剩下的就要自己去思考了，除了加句无聊的 Log，我们还可以做点什么呢？</p>
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

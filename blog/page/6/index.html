@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Mac 不仅是一个强大的生产平台，也十分值得你为其开发一些东西。去年我们开始构建我们的第一款 Mac 应用，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验 &hellip;">
+	<meta name="description" content="　　本文是《Programming iOS5》中Drawing一章的翻译，考虑到主题完整性，翻译版本中加入了一些书中未涉及到的内容。希望本文能够对你有所帮助。 &nbsp; &nbsp; &nbsp; Core Graphics Framework是一套基于C的API框架， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,76 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/">
+		
+			iOS绘图详细解析</a>
+	</h2>
+	<div class="entry-content">
+		<div id="cnblogs_post_body"><p><span style="font-family: 'comic sans ms', sans-serif;">　　本文是《<a href="http://www.amazon.com/Programming-iOS-Fundamentals-iPhone-Development/dp/1449319343/ref=sr_1_3?ie=UTF8&amp;qid=1357784362&amp;sr=8-3&amp;keywords=ios" target="_blank">Programming iOS5</a>》中Drawing一章的翻译，考虑到主题完整性，翻译版本中加入了一些书中未涉及到的内容。希望本文能够对你有所帮助。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">
+<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; Core Graphics Framework是一套基于C的API框架，使用了Quartz作为绘图引擎。它提供了低级别、轻量级、高保真度的2D渲染。该框架可以用于基于路径的绘图、变换、颜色管理、脱屏渲染，模板、渐变、遮蔽、图像数据管理、图像的创建、遮罩以及PDF文档的创建、显示和分析。为了从感官上对这些概念做一个入门的认识，你可以运行一下官方的<a href="http://developer.apple.com/library/ios/samplecode/QuartzDemo/Introduction/Intro.html#//apple_ref/doc/uid/DTS40007531">example code</a>。<span><br />
+</span></span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp;iOS支持两套图形API族：Core Graphics/QuartZ 2D 和OpenGL ES。OpenGL ES是跨平台的图形API，属于OpenGL的一个简化版本。QuartZ 2D是苹果公司开发的一套API，它是Core Graphics Framework的一部分。需要注意的是：OpenGL ES是应用程序编程接口，该接口描述了方法、结构、函数应具有的行为以及应该如何被使用的语义。也就是说它只定义了一套规范，具体的实现由设备制造商根据规范去做。而往往很多人对接口和实现存在误解。举一个不恰当的比喻：上发条的时钟和装电池的时钟都有相同的可视行为，但两者的内部<strong>实现</strong>截然不同。因为制造商可以自由的实现Open GL ES，所以不同系统实现的OpenGL ES也存在着巨大的性能差异。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; &nbsp;Core Graphics API所有的操作都在上下文中进行。所以在绘图之前需要获取该上下文并传入执行渲染的函数内。如果你正在渲染一副在内存中的图片，此时就需要传入图片所属的上下文。获得一个图形上下文是我们完成绘图任务的第一步，你可以将图形上下文理解为一块画布。如果你没有得到这块画布，那么你就无法完成任何绘图操作。有许多方式获得一个图形上下文，这里我介绍两种最为常用的获取方法。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　第一种方法就是创建一个图片类型的上下文。调用<strong>UIGraphicsBeginImageContextWithOptions</strong>函数就可获得用来处理图片的图形上下文。利用该上下文，你就可以在其上进行绘图，并生成图片。调用<strong>UIGraphicsGetImageFromCurrentImageContext</strong>函数可从当前上下文中获取一个UIImage对象。记住在你所有的绘图操作后别忘了调用<strong>UIGraphicsEndImageContext</strong>函数关闭图形上下文。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　第二种方法是利用cocoa为你生成的图形上下文。当你子类化了一个UIView并实现了自己的<strong>drawRect：</strong>方法后，一旦<strong>drawRect</strong>：方法被调用，Cocoa就会为你创建一个图形上下文，此时你对图形上下文的所有绘图操作都会显示在UIView上。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　判断一个上下文是否为当前图形上下文需要注意的几点：</span></p>
+<ul>
+     <li><span style="font-family: 'comic sans ms', sans-serif;"><strong>UIGraphicsBeginImageContextWithOptions</strong>函数不仅仅是创建了一个适用于图形操作的上下文，并且该上下文也属于当前上下文。</span></li>
+     <li><span style="font-family: 'comic sans ms', sans-serif;">当<strong>drawRect</strong>方法被调用时，UIView的绘图上下文属于当前图形上下文。</span></li>
+     <li><span style="font-family: 'comic sans ms', sans-serif;">回调方法所持有的context：参数并不会让任何上下文成为当前图形上下文。此参数仅仅是对一个图形上下文的引用罢了。</span></li>
+</ul>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　作为初学者，很容易被UIKit和Core Graphics两个支持绘图的框架迷惑。</span></p>
+<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　UIKit</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　像UIImage、NSString（绘制文本）、UIBezierPath（绘制形状）、UIColor都知道如何绘制自己。这些类提供了功能有限但使用方便的方法来让我们完成绘图任务。一般情况下，UIKit就是我们所需要的。</span></p>
+<p>使用UiKit，<span style="color: #ff0000;">你只能在当前上下文中绘图</span>，所以如果你当前处于</p>
+<p><strong>UIGraphicsBeginImageContextWithOptions</strong>函数或<strong>drawRect</strong>：方法中，你就可以直接使用UIKit提供的方法进行绘图。如果你持有一个context：参数，那么使用UIKit提供的方法之前，必须将该上下文参数转化为当前上下文。幸运的是，调用<strong>UIGraphicsPushContext</strong> 函数可以方便的将context：参数转化为当前上下文，记住最后别忘了调用<strong>UIGraphicsPopContext函数</strong>恢复上下文环境。</p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　Core Graphics</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　这是一个绘图专用的API族，它经常被称为QuartZ或QuartZ 2D。Core Graphics是iOS上所有绘图功能的基石，包括UIKit。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　使用Core Graphics之前需要指定一个用于绘图的图形上下文（CGContextRef），这个图形上下文会在每个绘图函数中都会被用到。如果你持有一个图形上下文context：参数，那么你等同于有了一个图形上下文，这个上下文也许就是你需要用来绘图的那个。如果你当前处于<strong>UIGraphicsBeginImageContextWithOptions函数</strong>或<strong>drawRect：</strong>方法中，并没有引用一个上下文。为了使用Core Graphics，你可以调用<strong>UIGraphicsGetCurrentContext</strong>函数获得当前的图形上下文。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　至此，我们有了两大绘图框架的支持以及三种获得图形上下文的方法（<strong>drawRect:</strong><strong>、drawRect: inContext:、</strong><strong>UIGraphicsBeginImageContextWithOptions</strong><strong>）</strong>。那么我们就有6种绘图的形式。如果你有些困惑了，不用怕，我接下来将说明这6种情况。无需担心还没有具体的绘图命令，你只需关注上下文如何被创建以及我们是在使用UIKit还是Core Graphics。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　第一种绘图形式：在UIView的子类方法drawRect：中绘制一个蓝色圆，使用<strong>UIKit</strong>在Cocoa为我们提供的当前上下文中完成绘图任务。</span></p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">drawRect:</span> <span class="p">(</span><span class="n">CGRect</span><span class="p">)</span> <span class="n">rect</span> <span class="p">{</span>
+</span><span class="line">	<span class="n">UIBezierPath</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="nl">UIBezierPathbezierPathWithOvalInRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">)];</span>
+</span><span class="line">	<span class="p">[[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span> <span class="n">setFill</span><span class="p">];</span>
+</span><span class="line">	<span class="p">[</span><span class="n">p</span> <span class="n">fill</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -670,68 +740,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/">
-		
-			消息传递机制</a>
-	</h2>
-	<div class="entry-content">
-		<p>每个应用或多或少都由一些需要相互传递消息的对象结合起来以完成任务。在这篇文章里，我们将介绍所有可用的消息传递机制，并通过例子来介绍怎样在苹果的框架里使用。我们还会选择一些最佳范例来介绍什么时候该用什么机制。</p>
-
-<p>虽然这一期的主题是关于 Foundation 框架的，但是我们会超出 Foundation 的消息传递机制 (KVO 和 通知) 来讲一讲 delegation，block 和 target-action 几种机制。</p>
-
-<p>当然，有些情况下该使用什么机制没有唯一的答案，所以应该按照自己的喜好去试试。另外大多数情况下该使用什么机制应该是很清楚的。</p>
-
-<p>本文中，我们会常常提及“接收者”和“发送者”。它们在消息传递中的意思可以通过以下的例子解释：一个 table view 是发送者，它的 delegate 就是接收者。Core Data managed object context 是它所发出的 notification 的发送者，获取 notification 的就是接收者。一个滑块 (slider) 是 action 消息的发送者，而实现这个 action （方法）的是它的接收者。任何修改一个支持 KVO 的对象的对象是发送者，这个 KVO 对象的观察者就是接收者。明白精髓了吗？</p>
-
-<h2>几种消息传递机制</h2>
-
-<p>首先我们来看看每种机制的具体特点。在这个基础上，下一节我们会画一个流程图来帮我们在具体情况下正确选择应该使用的机制。最后，我们会介绍一些苹果框架里的例子并且解释为什么在那些用例中会选择这样的机制。</p>
-
-<h3 id="kvo">KVO</h3>
-
-<p>KVO 是提供对象属性被改变时的通知的机制。KVO 的实现在 Foundation 中，很多基于 Foundation 的框架都依赖它。想要了解更多有关 KVO 的最佳实践，请阅读本期 Daniel 写的 <a href="http://objccn.io/issue-7-3">KVO 和 KVC 文章</a>。</p>
-
-<p>如果只对某个对象的值的改变感兴趣的话，就可以使用 KVO 消息传递。不过有一些前提：第一，接收者（接收对象改变的通知的对象）需要知道发送者 （值会改变的对象）；第二，接收者需要知道发送者的生命周期，因为它需要在发送者被销毁前注销观察者身份。如果这两个要去符合的话，这个消息传递机制可以一对多（多个观察者可以注册观察同一个对象的变化）</p>
-
-<p>If you plan to use KVO on Core Data objects, you have to know that things work a bit differently here. This has to do with Core Data&#8217;s faulting mechanism. Once a managed object turns into a fault, it will fire the observers on its properties although their values haven&#8217;t changed.</p>
-
-<p>如果要在 Core Data 上使用 KVO 的话，方法会有些许差别。这和 Core Data 的 faulting 机制有关。一旦一个 managed object 被 faulting 处理的话，即使它的属性没有被改变，它还是会触发相应的观察者。</p>
-
-<blockquote>
-  <span class="secondary radius label">编者注</span> 把属性值先取入缓存中，在对象需要的时候再进行一次访问，这在 Core Data 中是默认行为，这种技术称为 Faulting。这么做可以避免降低内存开销，但是如果你确定将访问结果对象的具体属性值时，可以禁用 Faults 以提高获取性能。关于这个技术更多的情况，请移步<a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreData/Articles/cdFaultingUniquing.html">官方文档</a>
-</blockquote>
-
-<h3>通知</h3>
-
-		
-		<a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="当 iOS 7 刚发布的时候，全世界的苹果开发人员都立马尝试着去编译他们的 app，接着再花上数月的时间来修复任何出现的错误，甚至从头开始重建这个 app。这样的结果，使得人们根本无暇去探究 iOS 7 所带来的新思想。除开一些明显而细微的更新，比如说 NSArray 的 firstObject &hellip;">
+	<meta name="description" content="iOS 7 的发布给开发者的案头带来了很多新工具。其中一个就是 TextKit。TextKit 由许多新的 UIKit 类组成，顾名思义，这些类就是用来处理文本的。在这里，我们将介绍 TextKit 的来由、它的组成，以及通过几个例子解释开发者怎样将它派上大用场。 但是首先我们得先阐明一个观点： &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,72 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/10/textviewde-zhuan-you-ku-textkit/">
+		
+			TextView的专有库TextKit</a>
+	</h2>
+	<div class="entry-content">
+		<p>iOS 7 的发布给开发者的案头带来了很多新工具。其中一个就是 <em>TextKit</em>。TextKit 由许多新的 UIKit 类组成，顾名思义，这些类就是用来处理文本的。在这里，我们将介绍 TextKit 的来由、它的组成，以及通过几个例子解释开发者怎样将它派上大用场。</p>
+
+<p>但是首先我们得先阐明一个观点：TextKit 可能是近期对 UIKit <em>最重要</em>的补充了。iOS 7 的新界面用纯文本按钮替换了大量的图标和边框。总的来说，文本和文本布局在新 OS 系统的视觉效果中所占有的重要性大大提高了。iOS7 的重新设计完全是被文本驱动，这样说也许并不夸张——而文本全部是 TextKit 来处理的。</p>
+
+<p>告诉你这个变动到底有多大吧：iOS7 之前的所有版本，（几乎）所有的文本都是 WebKit 来处理的。对：WebKit，web 浏览器引擎。所有 <code>UILabel</code>、<code>UITextField</code>，以及 <code>UITextView</code> 都在后台以某种方式使用 web views 来进行文本布局和渲染。为了新的界面风格，它们全都被重新设计以使用 TextKit。</p>
+
+<h2 id="ios">iOS 上文本的简短历史</h2>
+
+<p>这些新类并不是用来替换开发者以前使用的类。对 SDK 来说，TextKit 提供的是全新的功能。iOS 7 之前，TextKit 提供的功能必须都手动完成。这是现有框架缺失的功能。</p>
+
+<p>长期以来，只有一个基本的文本布局和渲染框架：<em>CoreText</em>。同样也只有一个途径读取用户的键盘输入：<code>UITextInput</code> 协议。在 iOS6 中，为了简单地获取系统的文本选择，也只有一个选择：继承 <code>UITextView</code>。</p>
+
+<p>（这可能就是为什么我要公开自己十年开发文本编辑器的经验的原因了）在渲染文本和读取键盘输入之间存在着巨大（跟我读：巨大）的缺口。这个缺口可能也是导致很少有富文本或者语法高亮编辑器的原因了——毫无疑问，开发一个好用的文本编辑器得耗费几个月的时间。</p>
+
+<p>就这样——如下是 iOS 文本（不那么）简短历史的简短概要：</p>
+
+<p><strong>iOS 2</strong>：这是第一个公开的 SDK，包括一个简单的文本显示组件（<code>UILabel</code>），一个简单的文本输入组件（<code>UITextField</code>），以及一个简单的、可滚动、可编辑的并且支持更大量文本的组件：<code>UITextView</code>。这些组件都只支持纯文本，没有文本选择支持（仅支持插入点），除了设置字体和文本颜色外几乎没有其他可定制功能。</p>
+
+<p><strong>iOS 3</strong>：新特性有复制和粘贴，以及复制粘贴所需要的文本选择功能。数据探测器（Data Detector）为文本视图提供了一个高亮电话号码和链接的方法。然而，除了打开或关闭这些特性外，开发者基本上没有什么别的事情可以做。</p>
+
+<p><strong>iOS 3.2</strong>：iPad 的出现带来了 CoreText，也就是前面提到的低级文本布局和渲染引擎（从Mac OS X 10.5 移植过来的），以及 <code>UITextInput</code>，就是前面也提到的键盘存取协议。Apple 将 Pages 作为移动设备上文本编辑功能的样板工程[^1]。然而，由于我前面提到的框架缺口，只有很少的应用使用它们。</p>
+
+<p><strong>iOS 4</strong>：iOS 3.2 发布仅仅几个月后就发布了，文本方面没有一丁点新功能。<em>（个人经历：在 WWDC，我走近工程师们，告诉他们我想要一个完善的 iOS 文本布局系统。回答是：“哦…提交个请求。”不出所料…）</em></p>
+
+<p><strong>iOS 5</strong>：文本方面没啥变化。<em>（个人经历：在 WWDC，我和工程师们谈及 iOS 上文本系统。回答是：“我们没有看到太多这方面的请求…” 靠！）</em></p>
+
+<p><strong>iOS 6</strong>：有些动作了：属性文本编辑被加入了 <code>UITextView</code>。很不幸的是，它很难定制。默认的 UI 有粗体、斜体和下划线。用户可以设置字体大小和颜色。粗看起来相当不错，但还是没法控制布局或者提供一个便利的途径来定制文本属性。然而对于（文本编辑）开发者，有一个大的新功能：可以继承 <code>UITextView</code> 了，这样的话，除了以前版本提供的键盘输入外，开发者可以“免费”获得文本选择功能。而在这以前，开发者必须实现一个完全自定义的文本选择功能，这可能是很多非纯文本工具的开发半途而废的原因。<em>（个人经历：我，WWDC，工程师们。我想要一个 iOS 的文本系统。回答：“嗯。吖。是的。也许？看，它只是不执行…” 所以毕竟还是有希望，对吧？）</em></p>
+
+<p><strong>iOS 7</strong>：终于来了，TextKit。</p>
+
+<h2>功能</h2>
+
+		
+		<a href="/Blog/blog/2014/04/10/textviewde-zhuan-you-ku-textkit/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/10/textviewde-zhuan-you-ku-textkit/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -715,66 +781,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/">
-		
-			绘制像素到屏幕</a>
-	</h2>
-	<div class="entry-content">
-		<p>一个像素是如何绘制到屏幕上去的？有很多种方式将一些东西映射到显示屏上，他们需要调用不同的框架、许多功能和方法的结合体。这里我们大概的看一下屏幕之后发生的事情。当你想要弄清楚什么时候、怎么去查明并解决问题时，我希望这篇文章能帮助你理解哪一个 API 可以更好的帮你解决问题。我们将聚焦于 iOS，然而我讨论的大多数问题也同样适用于 OS X。</p>
-
-<h2>图形堆栈</h2>
-
-<p>当像素映射到屏幕上的时候，后台发生了很多事情。但一旦他们显示到屏幕上，每一个像素均由三个颜色组件构成：红，绿，蓝。三个独立的颜色单元会根据给定的颜色显示到一个像素上。在 iPhone5 的<a href="https://zh.wikipedia.org/wiki/%E6%A9%AB%E5%90%91%E9%9B%BB%E5%A0%B4%E6%95%88%E6%87%89%E9%A1%AF%E7%A4%BA%E6%8A%80%E8%A1%93">液晶显示器</a>上有1,136×640=727,040个像素，因此有2,181,120个颜色单元。在15寸视网膜屏的 MacBook Pro 上，这一数字达到15.5百万以上。所有的图形堆栈一起工作以确保每次正确的显示。当你滚动整个屏幕的时候，数以百万计的颜色单元必须以每秒60次的速度刷新，这是一个很大的工作量。</p>
-
-<h2>软件组成</h2>
-
-<p>从简单的角度来看，软件堆栈看起来有点像这样：</p>
-
-<p><img src="http://img.objccn.io/issue-3/pixels-software-stack.png" alt="软件堆栈" title="" /></p>
-
-<p>Display 的上一层便是图形处理单元 GPU，GPU 是一个专门为图形高迸发计算而量身定做的处理单元。这也是为什么它能同时更新所有的像素，并呈现到显示器上。它迸发的本性让它能高效的将不同纹理合成起来。我们将有一小块内容来更详细的讨论图形合成。关键的是，GPU 是非常专业的，因此在某些工作上非常高效。比如，GPU 非常快，并且比 CPU 使用更少的电来完成工作。通常 CPU 都有一个普遍的目的，它可以做很多不同的事情，但是合成图像在 CPU 上却显得比较慢。</p>
-
-<p>GPU Driver 是直接和 GPU 交流的代码块。不同的GPU是不同的性能怪兽，但是驱动使他们在下一个层级上显示的更为统一，典型的驱动有 OpenGL/OpenGL ES.</p>
-
-<p>OpenGL(<a href="http://zh.wikipedia.org/wiki/OpenGL">Open Graphics Library</a>) 是一个提供了 2D 和 3D 图形渲染的 API。GPU 是一块非常特殊的硬件，OpenGL  和 GPU 密切的工作以提高GPU的能力，并实现硬件加速渲染。对大多数人来说，OpenGL 看起来非常底层，但是当它在1992年第一次发布的时候(20多年前的事了)是第一个和图形硬件(GPU)交流的标准化方式，这是一个重大的飞跃，程序员不再需要为每个GPU重写他们的应用了。</p>
-
-<p>OpenGL 之上扩展出很多东西。在 iOS 上，几乎所有的东西都是通过 Core Animation 绘制出来，然而在 OS X 上，绕过 Core Animation 直接使用 Core Graphics 绘制的情况并不少见。对于一些专门的应用，尤其是游戏，程序可能直接和 OpenGL/OpenGL ES 交流。事情变得使人更加困惑，因为 Core Animation 使用 Core Graphics 来做一些渲染。像 AVFoundation，Core Image 框架，和其他一些混合的入口。</p>
-
-<p>要记住一件事情，GPU 是一个非常强大的图形硬件，并且在显示像素方面起着核心作用。它连接到 CPU。从硬件上讲两者之间存在某种类型的<a href="https://zh.wikipedia.org/wiki/I/O%E6%80%BB%E7%BA%BF">总线</a>，并且有像 OpenGL，Core Animation 和 Core Graphics 这样的框架来在 GPU 和 CPU 之间精心安排数据的传输。为了将像素显示到屏幕上，一些处理将在 CPU 上进行。然后数据将会传送到 GPU，这也需要做一些相应的操作，最终像素显示到屏幕上。</p>
-
-<p>这个过程的每一部分都有各自的挑战，并且许多时候需要做出折中的选择。</p>
-
-<h2>硬件参与者</h2>
-
-		
-		<a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/08/UIView-%E7%BB%98%E5%88%B6%E5%83%8F%E7%B4%A0%E5%88%B0%E5%B1%8F%E5%B9%95/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
