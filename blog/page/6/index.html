@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="　　本文是《Programming iOS5》中Drawing一章的翻译，考虑到主题完整性，翻译版本中加入了一些书中未涉及到的内容。希望本文能够对你有所帮助。 &nbsp; &nbsp; &nbsp; Core Graphics Framework是一套基于C的API框架， &hellip;">
+	<meta name="description" content="在写任何东西之前我需要承认我是带有偏见的：我爱 Swift。我认为这是从我开始接触 Cocoa 生态系统以来这个平台上发生的最好的事情。我想通过分享我在 Swift，Objective-C 和 Haskell 上的经验让大家知道我为何这样认为。写这篇文章并不是为了介绍一些最好的实践 ( &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,124 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/">
+		
+			Swift的强大之处</a>
+	</h2>
+	<div class="entry-content">
+		<p>在写任何东西之前我需要承认我是带有偏见的：我爱 Swift。我认为这是从我开始接触 Cocoa 生态系统以来这个平台上发生的最好的事情。我想通过分享我在 Swift，Objective-C 和 Haskell 上的经验让大家知道我为何这样认为。写这篇文章并不是为了介绍一些最好的实践 (写这些的时候 Swift 还太年轻，还没最好实践被总结出来)，而是举几个关于 Swift 强大之处的例子。</p>
+
+<p>给大家一些我的个人背景：在成为全职 iOS/Mac 工程师之前我花了几年的时间做 Haskell (包括一些其他函数式编程语言) 开发。我仍然认为 Haskell 是我所有使用过的语言中最棒的之一。然而我转战到了 Objective-C，是因为我相信 iOS 是最令人激动的平台。刚开始接触 Objective-C 的时候我有些许沮丧，但我慢慢地学会了欣赏它。</p>
+
+<p>当苹果在 WWDC 发布 Swift 的时候我非常的激动。我已经很久没有对新技术的发布感的如此兴奋了。在看过文档之后我意识到 Swift 使我们能够将现有的函数式编程知识和 Cocoa API 无缝地整合到一起。我觉得这两者的组合非常独特：没有任何其他的语言将它们融合地如此完美。就拿 Haskell 来说，想要用它来使用 Objective-C API 相当的困难。同样，想用 Objective-C 去做函数式编程也是十分困难的。</p>
+
+<p>在 Utrecht 大学期间我学会了函数式编程。因为是在很学术的环境下学习所以并没有觉得很多复杂的术语 (moands，applicative functors 以及很多其他的东西) 有多么难懂。我觉得对很多想学习函数式编程的人来说这些名称是一个很大的阻碍。</p>
+
+<p>不仅仅名称很不同，风格也不一样。作为 Objective-C 程序员，我们很习惯于面向对象编程。而且因为大多数语言不是面对对象编程就是与之类似，我们可以看懂很多不同语言的代码。阅读函数式编程语言的时候则大不相同 &#8211; 如果你没有习惯的话看起来简直莫名其妙。</p>
+
+<p>那么，为什么你要使用函数式编程呢？它很奇怪，很多人都不习惯而且学习它要花费大量的时间。并且对于大多数问题面向对象编程都能解决，所以没有必要去学习任何新的东西对吧？</p>
+
+<p>对于我来说，函数式编程只是工具箱中的一件工具。它是一个改变了我对编程的理解的强大工具。在解决问题的时候它非常强大。对于大多数问题面向对象编程都很棒，但是对于其他一些问题应用函数式编程会给你带来巨大的时间/精力的节省。</p>
+
+<p>开始学习函数式编程或许有些痛苦。第一，你必须放手一些老的模式。而因为我们很多人常年用面对对象的方式去思考，做到这一点是很困难的。在函数式编程当中你想的是不变的数据结构以及那些转换它们的函数。在面对对象编程当中你考虑的是互相发送信息的对象。如果你没有马上理解函数式编程，这是一个好的信号。你的大脑很可能已经完全适应了用面对对象的方法来解决问题。</p>
+
+<h2>例子</h2>
+
+		
+		<a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/">
+		
+			Swift的函数式API</a>
+	</h2>
+	<div class="entry-content">
+		<p>在过去的时间里，人们对于设计 API 总结了很多通用的模式和最佳实践方案。一般情况下，我们总是可以从苹果的 Foundation、Cocoa、Cocoa Touch 和很多其他框架中总结出一些开发中的范例。毫无疑问，对于“特定情境下的 API 应该如何设计”这个问题，不同的人总是有着不同的意见，对于这个问题有很大的讨论空间。不过对于很多 Objective-C 的开发者来说，对于那些常用的模式早已习以为常。</p>
+
+<p>随着 Swift 的出现，设计 API 引起了更多的问题。绝大多数情况下，我们只能继续做着手头的工作，然后把现有的方法翻译成 Swift 版本。不过，这对于 Swift 来说并不公平，因为和 Objective-C 相比，Swift 添加了很多新的特性。引用 Swift 创始人 <a href="https://twitter.com/clattner_llvm">Chris Lattner</a> 的一段话：</p>
+
+<blockquote>
+  <p>Swift 引入了泛型和函数式编程的思想，极大地扩展了设计的空间。</p>
+</blockquote>
+
+<p>在这篇文章里，我们将会围绕 <code>Core Image</code> 进行 API 封装，以此为例，探索如何在 API 设计中使用这些新的工具。 <code>Core Image</code> 是一个功能强大的图像处理框架，但是它的 API 有时有点笨重。 <code>Core Image</code> 的 API 是弱类型的 - 它通过键值对 (key-value) 设置图像滤镜。这样在设置参数的类型和名字时很容易失误，会导致运行时错误。新的 API 将会十分的安全和模块化，通过使用类型而不是键值对来规避这样的运行时错误。</p>
+
+<h2>目标</h2>
+
+<p>我们的目标是构建一个 API ，让我们可以简单安全的组装自定义滤镜。举个例子，在文章的结尾，我们可以这样写：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">let</span> <span class="n">myFilter</span> <span class="o">=</span> <span class="n">blur</span><span class="p">(</span><span class="n">blurRadius</span><span class="p">)</span> <span class="o">&gt;|&gt;</span> <span class="n">colorOverlay</span><span class="p">(</span><span class="n">overlayColor</span><span class="p">)</span>
+</span><span class="line"><span class="n">let</span> <span class="n">result</span> <span class="o">=</span> <span class="n">myFilter</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面构建了一个自定义的滤镜，先模糊图像，然后再添加一个颜色蒙版。为了达到这个目标，我们将充分利用 Swift 函数是一等公民这一特性。项目源码可以在 Github 上的这个<a href="https://github.com/objcio/issue-16-functional-apis">示例项目</a>中下载。</p>
+
+<h2 id="filter">Filter 类型</h2>
+
+<p><code>CIFilter</code> 是 <code>Core Image</code> 中的一个核心类，用来创建图像滤镜。当实例化一个 <code>CIFilter</code> 对象之后，你 (几乎) 总是通过 <code>kCIInputImageKey</code> 来输入图像，然后通过 <code>kCIOutputImageKey</code> 获取返回的图像，返回的结果可以作为下一个滤镜的参数输入。</p>
+
+<p>在我们即将开发的 API 里，我们会把这些键值对 (key-value) 对应的真实内容抽离出来，为用户提供一个安全的强类型 API。我们定义了自己的滤镜类型 <code>Filter</code>，它是一个可以传入图片作为参数的函数，并且返回一个新的图片。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">typealias</span> <span class="n">Filter</span> <span class="o">=</span> <span class="n">CIImage</span> <span class="o">-&gt;</span> <span class="n">CIImage</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -576,170 +694,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/">
-		
-			iOS动画解释</a>
-	</h2>
-	<div class="entry-content">
-		<p>我们写的应用程序往往都不是静态的，因为它们需要适应用户的需求以及为执行各种任务而改变状态。</p>
-
-<p>在这些状态之间转换时，清晰的揭示正在发生什么是非常重要的。而不是在页面之间跳跃，动画帮助我们解释用户从哪里来，要到哪里去。</p>
-
-<p>键盘在 view 中滑进滑出给了我们一个错觉，让我们以为它是简单的被隐藏在屏幕下方的，并且是手机很自然的一个部分。View controller 转场加强了我们的应用程序的导航结构，并且给了用户正在移向哪个方向的提示。微妙的反弹和碰撞使界面栩栩如生，并且激发出了物理的质感。要是没有这些的话，我们就只有一个没有视觉修饰的干巴巴环境了。</p>
-
-<p>动画是叙述你的应用的故事的绝佳方式，在了解动画背后的基本原理之后，设计它们会轻松很多。</p>
-
-<h2>首要任务</h2>
-
-<p>在这篇文章 (以及这个话题中其余大多数文章) 中，我们将特别地针对 Core Animation 进行探讨。虽然你将看到的很多东西也可以用更高层级的 UIKit 的方法来完成，但是 Core Animation 将会让你更好的理解正在发生什么。它以一种更明确的方式来描述动画，这对这篇文章读者以及你自己的代码的读者来说都非常有用。</p>
-
-<p>在看动画如何与我们在屏幕上看到的内容交互之前，我们需要快速浏览一下 Core Animation 的 <code>CALayer</code>，这是动画产生作用的地方。</p>
-
-<p>你大概知道 <code>UIView</code> 实例，以及 layer-backed 的 <code>NSView</code>，修改它们的 <code>layer</code> 来委托强大的 Core Graphics 框架来进行渲染。然而，你务必要理解，当把动画添加到一个 layer 时，是不直接修改它的属性的。</p>
-
-<p>取而代之，Core Animation 维护了两个平行 layer 层次结构： <em>model layer tree（模型层树）</em> 和 <em>presentation layer tree（表示层树）</em>。前者中的 layers 反映了我们能直接看到的 layers 的状态，而后者的 layers 则是动画正在表现的值的近似。</p>
-
-<blockquote>
-  <p>实际上还有所谓的第三个 layer 树，叫做 <em>rendering tree（渲染树）</em>。因为它对 Core Animation 而言是私有的，所以我们在这里不讨论它。</p>
-</blockquote>
-
-<p>考虑在 view 上增加一个渐出动画。如果在动画中的任意时刻，查看 layer 的 <code>opacity</code> 值，你是得不到与屏幕内容对应的透明度的。取而代之，你需要查看 presentation layer 以获得正确的结果。</p>
-
-<p>虽然你可能不会去直接设置 presentation layer 的属性，但是使用它的当前值来创建新的动画或者在动画发生时与 layers 交互是非常有用的。</p>
-
-<p>通过使用 <code>-[CALayer presentationLayer]</code> 和 <code>-[CALayer modelLayer]</code>，你可以在两个 layer 之间轻松切换。</p>
-
-<h2>基本动画</h2>
-
-<p>可能最常见的情况是将一个 view 的属性从一个值改变为另一个值，考虑下面这个例子：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/rocket-linear.gif" width="400px" /></center></p>
-
-<p>在这里，我们让红色小火箭的 x-position 从 <code>77.0</code> 变为 <code>455.0</code>，刚好超过它的 parent view 的边。为了填充所有路径，我们需要确定我们的火箭在任意时刻所到达的位置。这通常使用线性插值法来完成：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/lerp.png" width="135" /></center></p>
-
-<p>也就是说，对于动画给定的一个分数 <code>t</code>，火箭的 x 坐标就是起始点的 x 坐标 <code>77</code>，加上一个到终点的距离 <code>∆x = 378</code> 乘以该分数的值。</p>
-
-<p>使用 <code>CABasicAnimation</code>，我们可以如下实现这个动画：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">77</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">455</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/">
-		
-			自定义Formatters</a>
-	</h2>
-	<div class="entry-content">
-		<p>我们希望有一种快速的一次性的解决方案，可以把数据格式化为一种易读的格式。Foundation 框架中的就有 <code>NSFormatter</code> 可以很好地胜任这个工作。另外，在 Mac 上，Appkit 已经内建了 <code>NSFormatter</code> 的支持。</p>
-
-<h2>内建格式器</h2>
-
-<p>Foundation 框架中的 <code>NSFormatter</code> 是一个抽象类，它有两个已经实现的子类：<code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code>。现在我们先跳过这些，来实现我们自己的子类。</p>
-
-<p>如果你想了解更多的相关知识，我推荐阅读 <a href="http://nshipster.com/nsformatter/">NSHipster</a>。</p>
-
-<h2>介绍</h2>
-
-<p><code>NSFormatter</code> 除了抛出错误，其它什么事也不做。我还不知道有人想要用这个，当然如果它对你有用，就去用它吧。</p>
-
-<p>因为我们不喜欢错误，我们在此实现一个 <code>NSFormatter</code> 的子类，它可以把 <code>UIColor</code> 实例转换成可读的名字。例如，以下代码可以返回字符串“Blue”:</p>
-
-<pre><code>KPAColorFormatter *colorFormatter = [[KPAColorFormatter alloc] init];
-[colorFormatter stringForObjectValue:[UIColor blueColor]] // Blue
-</code></pre>
-
-<p><code>NSFormatter</code> 的子类化有两个方法需要实现：<code>stringForObjectValue:</code> 与 <code>getObjectValue:ForString:errorDescription:</code>。我们先开始介绍第一个方法，因为这个方法更常用。第二个方法，就我所知，经常用于 OS X 上，并且通常不是很有用，我们将稍后介绍。</p>
-
-<h2>初始化</h2>
-
-<p>首先，我们需要做些初始化的工作。由于没有事先定义好的字典可以把颜色映射至名字，这些工作将由我们来完成。为了简化，这些工作将在初始化方法中完成：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span> <span class="nl">initWithColors:</span><span class="err">@</span><span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Red&quot;</span><span class="p">,</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Blue&quot;</span><span class="p">,</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">greenColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Green&quot;</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

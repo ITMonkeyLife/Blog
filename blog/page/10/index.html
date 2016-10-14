@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="一个像素是如何绘制到屏幕上去的？有很多种方式将一些东西映射到显示屏上，他们需要调用不同的框架、许多功能和方法的结合体。这里我们大概的看一下屏幕之后发生的事情。当你想要弄清楚什么时候、怎么去查明并解决问题时，我希望这篇文章能帮助你理解哪一个 API 可以更好的帮你解决问题。我们将聚焦于 iOS， &hellip;">
+	<meta name="description" content="本文主要探讨一些常用后台任务的最佳实践。我们将会看看如何并发地使用 Core Data ，如何并行绘制 UI ，如何做异步网络请求等。最后我们将研究如何异步处理大型文件，以保持较低的内存占用。  因为在异步编程中非常容易犯错误，所以，本文中的例子都将使用很简单的方式。 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,119 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/">
+		
+			常见iOS后台技术</a>
+	</h2>
+	<div class="entry-content">
+		<p>本文主要探讨一些常用后台任务的最佳实践。我们将会看看如何并发地使用 Core Data ，如何并行绘制 UI ，如何做异步网络请求等。最后我们将研究如何异步处理大型文件，以保持较低的内存占用。  因为在异步编程中非常容易犯错误，所以，本文中的例子都将使用很简单的方式。因为使用简单的结构可以帮助我们看透代码，抓住问题本质。如果你最后把代码写成了复杂的嵌套回调的话，那么你很可能应该重新考虑自己当初的设计选择了。</p>
+
+<h2 id="operationqueuesgcd">操作队列 (Operation Queues) 还是 GCD ?</h2>
+
+<p>目前在 iOS 和 OS X 中有两套先进的同步 API 可供我们使用：<a href="http://developer.apple.com/library/ios/#documentation/Cocoa/Reference/NSOperationQueue_class/Reference/Reference.html">操作队列</a>和 <a href="https://developer.apple.com/library/ios/#documentation/Performance/Reference/GCD_libdispatch_Ref/Reference/reference.html">GCD</a> 。其中 GCD 是基于 C 的底层的 API ，而操作队列则是 GCD 实现的 Objective-C API。关于我们可以使用的并行 API 的更加全面的总览，可以参见 <a href="http://www.objc.io/issue-2-1/">并发编程：API 及挑战</a>。</p>
+
+<p>操作队列提供了在 GCD 中不那么容易复制的有用特性。其中最重要的一个就是可以取消在任务处理队列中的任务，在稍后的例子中我们会看到这个。而且操作队列在管理操作间的依赖关系方面也容易一些。另一面，GCD 给予你更多的控制权力以及操作队列中所不能使用的底层函数。详细介绍可以参考<a href="http://www.objc.io/issue-2-3/">底层并发 API</a> 这篇文章。</p>
+
+<p>扩展阅读：</p>
+
+<ul>
+<li><a href="http://stackoverflow.com/questions/10373331/nsoperation-vs-grand-central-dispatch">StackOverflow: NSOperation vs. Grand Central Dispatch</a></li>
+<li><a href="http://eschatologist.net/blog/?p=232">Blog: When to use NSOperation vs. GCD</a></li>
+</ul>
+
+<h3 id="coredata">后台的 Core Data</h3>
+
+<p>在着手 Core Data 的并行处理之前，最好先打一些基础。我们强烈建议通读苹果的官方文档 <a href="https://developer.apple.com/library/mac/#documentation/cocoa/conceptual/CoreData/Articles/cdConcurrency.html">Concurrency with Core Data guide</a> 。这个文档中罗列了基本规则，比如绝对不要在线程间传递 managed objects等。这并不单是说你绝不应该在另一个线程中去更改某个其他线程的 managed object ，甚至是读取其中的属性都是不能做的。要想传递这样的对象，正确做法是通过传递它的 object ID ，然后从其他对应线程所绑定的 context 中去获取这个对象。</p>
+
+<p>其实只要你遵循那些规则，并使用这篇文章里所描述的方法的话，处理 Core Data 的并行编程还是比较容易的。</p>
+
+<p>Xcode 所提供的 Core Data 标准模版中，所设立的是运行在主线程中的一个存储调度 (persistent store coordinator)和一个托管对象上下文 (managed object context) 的方式。在很多情况下，这种模式可以运行良好。创建新的对象和修改已存在的对象开销都非常小，也都能在主线程中没有困难滴完成。然后，如果你想要做大量的处理，那么把它放到一个后台上下文来做会比较好。一个典型的应用场景是将大量数据导入到 Core Data 中。</p>
+
+<p>我们的方式非常简单，并且可以被很好地描述：</p>
+
+		
+		<a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/">
+		
+			并发编程：API以及挑战</a>
+	</h2>
+	<div class="entry-content">
+		<p><a href="http://en.wikipedia.org/wiki/Concurrency_%28computer_science%29">并发</a>所描述的概念就是同时运行多个任务。这些任务可能是以在单核 CPU 上<a href="http://en.wikipedia.org/wiki/Preemption_%28computing%29">分时（时间共享）</a>的形式同时运行，也可能是在多核 CPU 上以真正的并行方式来运行。</p>
+
+<p>OS X 和 iOS 提供了几种不同的 API 来支持并发编程。每一个 API 都具有不同的功能和使用限制，这使它们适合不同的任务。同时，这些 API 处在不同的抽象层级上。我们有可能用其进行非常深入底层的操作，但是这也意味着背负起将任务进行良好处理的巨大责任。</p>
+
+<p>实际上，并发编程是一个很有挑战的主题，它有许多错综复杂的问题和陷阱。当开发者在使用类似 <code>Grand Central Dispatch</code>（GCD）或 <code>NSOperationQueue</code> 的 API 时，很容易遗忘这些问题和陷阱。本文首先对 OS X 和 iOS 中不同的并发编程 API 进行一些介绍，然后再深入了解并发编程中独立于与你所使用的特定 API 的一些内在挑战。</p>
+
+<h2 id="osxios">OS X 和 iOS 中的并发编程</h2>
+
+<p>苹果的移动和桌面操作系统中提供了相同的并发编程API。 本文会介绍 <code>pthread</code> 、 <code>NSThread</code> 、<code>GCD</code> 、<code>NSOperationQueue</code>，以及 <code>NSRunLoop</code>。实际上把 run loop 也列在其中是有点奇怪，因为它并不能实现真正的并行，不过因为它与并发编程有莫大的关系，因此值得我们进行一些深入了解。</p>
+
+<p>由于高层 API 是基于底层 API 构建的，所以我们首先将从底层的 API 开始介绍，然后逐步扩展到高层 API。不过在具体编程中，选择 API 的顺序刚好相反：因为大多数情况下，选择高层的 API 不仅可以完成底层 API 能完成的任务，而且能够让并发模型变得简单。</p>
+
+<p>如果你对我们为何坚持推荐使用高抽象层级以及简单的并行代码有所疑问的话，那么你可以看看这篇文章的第二部分<a href="#challenges">并发编程中面临的挑战</a>，以及 Peter Steinberger 写的关于<a href="http://objccn.io/issue-2-4/">线程安全</a>的文章。</p>
+
+<h3>线程</h3>
+
+<p><a href="http://zh.wikipedia.org/wiki/线程">线程</a>（thread）是组成进程的子单元，操作系统的调度器可以对线程进行单独的调度。实际上，所有的并发编程 API 都是构建于线程之上的 —— 包括 GCD 和操作队列（operation queues）。</p>
+
+<p>多线程可以在单核 CPU 上同时（或者至少看作同时）运行。操作系统将小的时间片分配给每一个线程，这样就能够让用户感觉到有多个任务在同时进行。如果 CPU 是多核的，那么线程就可以真正的以并发方式被执行，从而减少了完成某项操作所需要的总时间。</p>
+
+		
+		<a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">

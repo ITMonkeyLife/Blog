@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="每个应用或多或少都由一些需要相互传递消息的对象结合起来以完成任务。在这篇文章里，我们将介绍所有可用的消息传递机制，并通过例子来介绍怎样在苹果的框架里使用。我们还会选择一些最佳范例来介绍什么时候该用什么机制。 虽然这一期的主题是关于 Foundation 框架的，但是我们会超出 &hellip;">
+	<meta name="description" content="我们写的应用程序往往都不是静态的，因为它们需要适应用户的需求以及为执行各种任务而改变状态。 在这些状态之间转换时，清晰的揭示正在发生什么是非常重要的。而不是在页面之间跳跃，动画帮助我们解释用户从哪里来，要到哪里去。 键盘在 view 中滑进滑出给了我们一个错觉， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,170 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/">
+		
+			iOS动画解释</a>
+	</h2>
+	<div class="entry-content">
+		<p>我们写的应用程序往往都不是静态的，因为它们需要适应用户的需求以及为执行各种任务而改变状态。</p>
+
+<p>在这些状态之间转换时，清晰的揭示正在发生什么是非常重要的。而不是在页面之间跳跃，动画帮助我们解释用户从哪里来，要到哪里去。</p>
+
+<p>键盘在 view 中滑进滑出给了我们一个错觉，让我们以为它是简单的被隐藏在屏幕下方的，并且是手机很自然的一个部分。View controller 转场加强了我们的应用程序的导航结构，并且给了用户正在移向哪个方向的提示。微妙的反弹和碰撞使界面栩栩如生，并且激发出了物理的质感。要是没有这些的话，我们就只有一个没有视觉修饰的干巴巴环境了。</p>
+
+<p>动画是叙述你的应用的故事的绝佳方式，在了解动画背后的基本原理之后，设计它们会轻松很多。</p>
+
+<h2>首要任务</h2>
+
+<p>在这篇文章 (以及这个话题中其余大多数文章) 中，我们将特别地针对 Core Animation 进行探讨。虽然你将看到的很多东西也可以用更高层级的 UIKit 的方法来完成，但是 Core Animation 将会让你更好的理解正在发生什么。它以一种更明确的方式来描述动画，这对这篇文章读者以及你自己的代码的读者来说都非常有用。</p>
+
+<p>在看动画如何与我们在屏幕上看到的内容交互之前，我们需要快速浏览一下 Core Animation 的 <code>CALayer</code>，这是动画产生作用的地方。</p>
+
+<p>你大概知道 <code>UIView</code> 实例，以及 layer-backed 的 <code>NSView</code>，修改它们的 <code>layer</code> 来委托强大的 Core Graphics 框架来进行渲染。然而，你务必要理解，当把动画添加到一个 layer 时，是不直接修改它的属性的。</p>
+
+<p>取而代之，Core Animation 维护了两个平行 layer 层次结构： <em>model layer tree（模型层树）</em> 和 <em>presentation layer tree（表示层树）</em>。前者中的 layers 反映了我们能直接看到的 layers 的状态，而后者的 layers 则是动画正在表现的值的近似。</p>
+
+<blockquote>
+  <p>实际上还有所谓的第三个 layer 树，叫做 <em>rendering tree（渲染树）</em>。因为它对 Core Animation 而言是私有的，所以我们在这里不讨论它。</p>
+</blockquote>
+
+<p>考虑在 view 上增加一个渐出动画。如果在动画中的任意时刻，查看 layer 的 <code>opacity</code> 值，你是得不到与屏幕内容对应的透明度的。取而代之，你需要查看 presentation layer 以获得正确的结果。</p>
+
+<p>虽然你可能不会去直接设置 presentation layer 的属性，但是使用它的当前值来创建新的动画或者在动画发生时与 layers 交互是非常有用的。</p>
+
+<p>通过使用 <code>-[CALayer presentationLayer]</code> 和 <code>-[CALayer modelLayer]</code>，你可以在两个 layer 之间轻松切换。</p>
+
+<h2>基本动画</h2>
+
+<p>可能最常见的情况是将一个 view 的属性从一个值改变为另一个值，考虑下面这个例子：</p>
+
+<p><center><img src="http://img.objccn.io/issue-12/rocket-linear.gif" width="400px" /></center></p>
+
+<p>在这里，我们让红色小火箭的 x-position 从 <code>77.0</code> 变为 <code>455.0</code>，刚好超过它的 parent view 的边。为了填充所有路径，我们需要确定我们的火箭在任意时刻所到达的位置。这通常使用线性插值法来完成：</p>
+
+<p><center><img src="http://img.objccn.io/issue-12/lerp.png" width="135" /></center></p>
+
+<p>也就是说，对于动画给定的一个分数 <code>t</code>，火箭的 x 坐标就是起始点的 x 坐标 <code>77</code>，加上一个到终点的距离 <code>∆x = 378</code> 乘以该分数的值。</p>
+
+<p>使用 <code>CABasicAnimation</code>，我们可以如下实现这个动画：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
+</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
+</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">77</span><span class="p">;</span>
+</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">455</span><span class="p">;</span>
+</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="p">[</span><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/">
+		
+			自定义Formatters</a>
+	</h2>
+	<div class="entry-content">
+		<p>我们希望有一种快速的一次性的解决方案，可以把数据格式化为一种易读的格式。Foundation 框架中的就有 <code>NSFormatter</code> 可以很好地胜任这个工作。另外，在 Mac 上，Appkit 已经内建了 <code>NSFormatter</code> 的支持。</p>
+
+<h2>内建格式器</h2>
+
+<p>Foundation 框架中的 <code>NSFormatter</code> 是一个抽象类，它有两个已经实现的子类：<code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code>。现在我们先跳过这些，来实现我们自己的子类。</p>
+
+<p>如果你想了解更多的相关知识，我推荐阅读 <a href="http://nshipster.com/nsformatter/">NSHipster</a>。</p>
+
+<h2>介绍</h2>
+
+<p><code>NSFormatter</code> 除了抛出错误，其它什么事也不做。我还不知道有人想要用这个，当然如果它对你有用，就去用它吧。</p>
+
+<p>因为我们不喜欢错误，我们在此实现一个 <code>NSFormatter</code> 的子类，它可以把 <code>UIColor</code> 实例转换成可读的名字。例如，以下代码可以返回字符串“Blue”:</p>
+
+<pre><code>KPAColorFormatter *colorFormatter = [[KPAColorFormatter alloc] init];
+[colorFormatter stringForObjectValue:[UIColor blueColor]] // Blue
+</code></pre>
+
+<p><code>NSFormatter</code> 的子类化有两个方法需要实现：<code>stringForObjectValue:</code> 与 <code>getObjectValue:ForString:errorDescription:</code>。我们先开始介绍第一个方法，因为这个方法更常用。第二个方法，就我所知，经常用于 OS X 上，并且通常不是很有用，我们将稍后介绍。</p>
+
+<h2>初始化</h2>
+
+<p>首先，我们需要做些初始化的工作。由于没有事先定义好的字典可以把颜色映射至名字，这些工作将由我们来完成。为了简化，这些工作将在初始化方法中完成：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span><span class="p">;</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span> <span class="nl">initWithColors:</span><span class="err">@</span><span class="p">{</span>
+</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Red&quot;</span><span class="p">,</span>
+</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Blue&quot;</span><span class="p">,</span>
+</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">greenColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Green&quot;</span>
+</span><span class="line">    <span class="p">}];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -634,115 +798,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/25/si-yue-yue-du-zong-jie-da-hui/">
-		
-			四月月度总结大会</a>
-	</h2>
-	<div class="entry-content">
-		<p>整体而言，这月份算是历经风波的一个月份，心中有着很沉重的感觉，然而焦虑急躁却又同时伴随着。这段日子和他人产生摩擦而有纷争，尽量控制自己的脾气，以避免伤了和气！</p>
-
-<p>有关事业工作方面的话：接踵而至的事项太多了，自己又有很多酝酿已久的想法和计划，缓慢脚步中时而被催促，略显无奈的敷衍过去，又要配合东配合西的，真是使人感到烦透了。本身很坚持的点，如今都要配合别人，妥协的滋味却必须吞不下去，心里觉得百般不愿意。</p>
-
-<p>个人问题：抱憾原本的机缘过去了和对方是互相喜欢的，怎无奈就会感到很多牵制，要配合对方使得积怨产生，时常想要爆发开来，或者感情就这样越来越淡了。</p>
-
-<p>想太多而要配合天时地利人和，是有困难的，会因为这样延迟而拖过去了，遇到沟通的机会好好把握，一小步一小步的慢慢来。收入方面有一定数量了，那么用钱方面在做些规划，省下些钱和基金都没问题的。</p>
-<hr />
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/za-wen/'>杂文</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/25/si-yue-yue-du-zong-jie-da-hui/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/23/wei-ios7zhong-xin-she-ji-app/">
-		
-			为 iOS7重新设计App</a>
-	</h2>
-	<div class="entry-content">
-		<p>在 WWDC 上看到 iOS 7 系统的发布后，我们重新审视了自己的应用 <a href="http://appstore.com/grocerylistpx">Grocery List</a>，并且意识到：iOS 7 对于开发者来说是一个全新的开始，就像七年前 iPhone 首次发布一样。现在仅仅简单地改变设计是不够的，我们不得不重新思考并重构整个 app，从而让它适合 iOS 7 全新的环境。我们也的确是这么做的。</p>
-
-<p>根据用户的反馈和我们自己的使用情况，我们意识到，虽然不能改变 app 基本的操作，但是应该对软件的操作流程进行一些优化。比如在旧版本中，添加产品的数量和单位是一个多步骤的操作过程，需要在多个 controller 之间进行导航。在 <em>Grocery List 2</em> 中，用户不用离开当前屏幕就能在恰当的位置设置数值。</p>
-
-<p>在实现这个目标的过程中，遇到了一些我们觉得值得分享的问题。我们将会从动画和手势开始讲起，然后是界面、色彩以及字体等问题。接下来，为了吸引用户打开 app，我们将不得不思考如何针对 iOS 7 重新设计 app 的图标。最后，我们将分享在我们看来，苹果这次更新的意义何在。</p>
-
-<h2>动画</h2>
-
-<p>现在随着更新换代，移动设备的性能正变得越来越强大。与此同时，由于可以实时计算物品的物理属性，动画效果也变得愈加真实。在 iOS 7 中，我们不需要在界面中使用阴影和渐变这些效果了，而是应该更关注用户的感觉、手势以及交互的影响。凭借 iOS 7，你可以创建一个新世界而不是模仿旧有的世界。</p>
-
-<p>新 SDK 可以让你简单地创建并使用自定义的动画效果。在 iOS 7 之前，开发者需要做大量额外的工作才能改变 view controller 之间的转场效果。iOS 7 可以让你简单地添加自己的动画，以帮助用户在不同屏幕之间切换的同时还不会丢失关注焦点。</p>
-
-<p>在 <em>Grocery List</em> 中，我们在显示一个 modal view controller 时使用了轻度定制的转场动画。但是大部分的动画和转场效果都是使用系统默认的。我们本可以使用新的 API 来给 <em>Grocery List 2</em> 添加更多自定义的动画，但其实苹果提供的默认转场动画对于大多数情况来说已经是个不错的解决方案了，这也是为什么我们 app 中的不同 view controller 之间的转场效果和苹果官方的 app 是一样的。正如前边提到的那样，我们 app 的部分操作流程已经明显地发生了改变。所以，我们将会使用自定义动画从而更好地保持用户的关注焦点。</p>
-
-<p><img alt="Comparison of the Grocery List and the default view controller push" src="http://img.objccn.io/issue-5/redesign-animations.gif" /></p>
-
-<p>大多数用户对于 iOS 7 上默认的动画的感觉，是既新鲜又自然，你不需要做很多工作就可以使用这些动画来取悦用户。但是在合适的地方添加一些自定义动画将会提高整个 app 的用户体验。只是请小心不要使用过度。</p>
-
-<h2>手势</h2>
-
-<p>在拥有了数年的触屏设备的经验后，苹果发现大量使用手势对于用户来说正变得愈加自然。所以在 iOS 7 中，对手势的广泛使用比以前有了更多的可能性。比如在 table view cell 上滑动来显示隐藏的菜单，或者从左向右滑动来返回先前的 view controller，这些手势操作我们已经非常熟悉了，以至于如果一款应用不支持这些手势的话，我们马上就会非常想念它们。在合适的地方，这些直接的手势操作可以帮助用户更高效地完成任务而不会失去关注焦点。</p>
-
-<p>在 <em>Grocery List</em> 中，我们并没有使用任何自定义手势，但是为了在下个版本中改进用户的操作流程，我们支持在 cell 上进行左右两个方向的滑动来分别展示产品的不同选项。你可以简单地从屏幕的右边缘向左滑动来快速访问菜单以进行列表或者模版的相关设置，而不用在导航栏一层层地返回。</p>
-
-<p><img alt="Grocery List 2 gestures" src="http://img.objccn.io/issue-5/redesign-gestures.png" /></p>
-
-<p>按钮和链接对于用户来说是可见的，也是可识别的，但手势不是。如果你打算用手势来实现某个功能，很好！但是如果 app 中那些依赖手势的功能没有一个等效的可见的控件，那要为用户提供一个好的方法来发现这些手势。一个好的用户界面通常应当是不言自明的。如果你需要一个类似使用说明一样的界面或者视频来描述 app 中的基本功能，那这里面很可能就有问题了。</p>
-
-<h2>界面</h2>
-
-		
-		<a href="/Blog/blog/2014/04/23/wei-ios7zhong-xin-she-ji-app/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/23/wei-ios7zhong-xin-she-ji-app/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

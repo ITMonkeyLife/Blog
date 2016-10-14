@@ -7,7 +7,32 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="任何语言的核心都会描述这门语言的最基本的工作原理。而描述的内容又涉及到这门语言的语法、操作符、数据类型、内置功能等用于构建复杂解决方案的基本概念。 语法 区分大小写 标识符 written by Rick&nbsp;posted at http://ITMonkeyLife.github.io/ &hellip;">
+	<meta name="description" content="最近开始记录下自己开发遇到的问题，如果解决了就会记录下来，以便自己日后回顾工作。 测试妹子给我提了一个问题是视图遮挡了，我一看，确实会遮挡，我就加了下面的这段代码
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +100,136 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu/">
+		
+			iOS小技巧</a>
+	</h2>
+	<div class="entry-content">
+		<p>最近开始记录下自己开发遇到的问题，如果解决了就会记录下来，以便自己日后回顾工作。
+</p>
+<p>测试妹子给我提了一个问题是视图遮挡了，我一看，确实会遮挡，我就加了下面的这段代码
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIView</span><span class="o">*</span><span class="p">)</span><span class="nf">keyboardView</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span> <span class="n">windows</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="n">windows</span><span class="p">];</span>
+</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">UIWindow</span> <span class="o">*</span> <span class="n">window</span> <span class="k">in</span> <span class="p">[</span><span class="n">windows</span> <span class="n">reverseObjectEnumerator</span><span class="p">])</span>
+</span><span class="line">    <span class="p">{</span>
+</span><span class="line">        <span class="k">for</span> <span class="p">(</span><span class="n">UIView</span> <span class="o">*</span> <span class="n">view</span> <span class="k">in</span> <span class="p">[</span><span class="n">window</span> <span class="n">subviews</span><span class="p">])</span>
+</span><span class="line">        <span class="p">{</span>
+</span><span class="line">            <span class="c1">// UIPeripheralHostView is used from iOS 4.0, UIKeyboard was used in previous versions,UIInputSetContainerView was used iOS 8.0</span>
+</span><span class="line">            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIPeripheralHostView&quot;</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIKeyboard&quot;</span><span class="p">)</span> <span class="o">||</span>
+</span><span class="line">                <span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIInputSetContainerView&quot;</span><span class="p">))</span>
+</span><span class="line">            <span class="p">{</span>
+</span><span class="line">                <span class="k">return</span> <span class="n">view</span><span class="p">;</span>
+</span><span class="line">            <span class="p">}</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIView</span><span class="o">*</span><span class="p">)</span><span class="nf">keyboardViewForView:</span><span class="p">(</span><span class="n">UIView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIView</span> <span class="o">*</span> <span class="n">keyboardView</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">keyboardView</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">keyboardView</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">view</span> <span class="o">=</span> <span class="n">keyboardView</span><span class="p">.</span><span class="n">superview</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">view</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+这样我们在调用下面的方法keyboardViewForView就能显示出来了。问题得到了解决。
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/04/07/git-control-version/">
+		
+			Git Control Version</a>
+	</h2>
+	<div class="entry-content">
+		<hr />
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/04/07/git-control-version/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -514,124 +669,6 @@ ABI涵盖了各个细节：
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2015/01/14/zhe-xie-nian-wo-de-bu-zu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/">
-		
-			Swift的强大之处</a>
-	</h2>
-	<div class="entry-content">
-		<p>在写任何东西之前我需要承认我是带有偏见的：我爱 Swift。我认为这是从我开始接触 Cocoa 生态系统以来这个平台上发生的最好的事情。我想通过分享我在 Swift，Objective-C 和 Haskell 上的经验让大家知道我为何这样认为。写这篇文章并不是为了介绍一些最好的实践 (写这些的时候 Swift 还太年轻，还没最好实践被总结出来)，而是举几个关于 Swift 强大之处的例子。</p>
-
-<p>给大家一些我的个人背景：在成为全职 iOS/Mac 工程师之前我花了几年的时间做 Haskell (包括一些其他函数式编程语言) 开发。我仍然认为 Haskell 是我所有使用过的语言中最棒的之一。然而我转战到了 Objective-C，是因为我相信 iOS 是最令人激动的平台。刚开始接触 Objective-C 的时候我有些许沮丧，但我慢慢地学会了欣赏它。</p>
-
-<p>当苹果在 WWDC 发布 Swift 的时候我非常的激动。我已经很久没有对新技术的发布感的如此兴奋了。在看过文档之后我意识到 Swift 使我们能够将现有的函数式编程知识和 Cocoa API 无缝地整合到一起。我觉得这两者的组合非常独特：没有任何其他的语言将它们融合地如此完美。就拿 Haskell 来说，想要用它来使用 Objective-C API 相当的困难。同样，想用 Objective-C 去做函数式编程也是十分困难的。</p>
-
-<p>在 Utrecht 大学期间我学会了函数式编程。因为是在很学术的环境下学习所以并没有觉得很多复杂的术语 (moands，applicative functors 以及很多其他的东西) 有多么难懂。我觉得对很多想学习函数式编程的人来说这些名称是一个很大的阻碍。</p>
-
-<p>不仅仅名称很不同，风格也不一样。作为 Objective-C 程序员，我们很习惯于面向对象编程。而且因为大多数语言不是面对对象编程就是与之类似，我们可以看懂很多不同语言的代码。阅读函数式编程语言的时候则大不相同 &#8211; 如果你没有习惯的话看起来简直莫名其妙。</p>
-
-<p>那么，为什么你要使用函数式编程呢？它很奇怪，很多人都不习惯而且学习它要花费大量的时间。并且对于大多数问题面向对象编程都能解决，所以没有必要去学习任何新的东西对吧？</p>
-
-<p>对于我来说，函数式编程只是工具箱中的一件工具。它是一个改变了我对编程的理解的强大工具。在解决问题的时候它非常强大。对于大多数问题面向对象编程都很棒，但是对于其他一些问题应用函数式编程会给你带来巨大的时间/精力的节省。</p>
-
-<p>开始学习函数式编程或许有些痛苦。第一，你必须放手一些老的模式。而因为我们很多人常年用面对对象的方式去思考，做到这一点是很困难的。在函数式编程当中你想的是不变的数据结构以及那些转换它们的函数。在面对对象编程当中你考虑的是互相发送信息的对象。如果你没有马上理解函数式编程，这是一个好的信号。你的大脑很可能已经完全适应了用面对对象的方法来解决问题。</p>
-
-<h2>例子</h2>
-
-		
-		<a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/">
-		
-			Swift的函数式API</a>
-	</h2>
-	<div class="entry-content">
-		<p>在过去的时间里，人们对于设计 API 总结了很多通用的模式和最佳实践方案。一般情况下，我们总是可以从苹果的 Foundation、Cocoa、Cocoa Touch 和很多其他框架中总结出一些开发中的范例。毫无疑问，对于“特定情境下的 API 应该如何设计”这个问题，不同的人总是有着不同的意见，对于这个问题有很大的讨论空间。不过对于很多 Objective-C 的开发者来说，对于那些常用的模式早已习以为常。</p>
-
-<p>随着 Swift 的出现，设计 API 引起了更多的问题。绝大多数情况下，我们只能继续做着手头的工作，然后把现有的方法翻译成 Swift 版本。不过，这对于 Swift 来说并不公平，因为和 Objective-C 相比，Swift 添加了很多新的特性。引用 Swift 创始人 <a href="https://twitter.com/clattner_llvm">Chris Lattner</a> 的一段话：</p>
-
-<blockquote>
-  <p>Swift 引入了泛型和函数式编程的思想，极大地扩展了设计的空间。</p>
-</blockquote>
-
-<p>在这篇文章里，我们将会围绕 <code>Core Image</code> 进行 API 封装，以此为例，探索如何在 API 设计中使用这些新的工具。 <code>Core Image</code> 是一个功能强大的图像处理框架，但是它的 API 有时有点笨重。 <code>Core Image</code> 的 API 是弱类型的 - 它通过键值对 (key-value) 设置图像滤镜。这样在设置参数的类型和名字时很容易失误，会导致运行时错误。新的 API 将会十分的安全和模块化，通过使用类型而不是键值对来规避这样的运行时错误。</p>
-
-<h2>目标</h2>
-
-<p>我们的目标是构建一个 API ，让我们可以简单安全的组装自定义滤镜。举个例子，在文章的结尾，我们可以这样写：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">let</span> <span class="n">myFilter</span> <span class="o">=</span> <span class="n">blur</span><span class="p">(</span><span class="n">blurRadius</span><span class="p">)</span> <span class="o">&gt;|&gt;</span> <span class="n">colorOverlay</span><span class="p">(</span><span class="n">overlayColor</span><span class="p">)</span>
-</span><span class="line"><span class="n">let</span> <span class="n">result</span> <span class="o">=</span> <span class="n">myFilter</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>上面构建了一个自定义的滤镜，先模糊图像，然后再添加一个颜色蒙版。为了达到这个目标，我们将充分利用 Swift 函数是一等公民这一特性。项目源码可以在 Github 上的这个<a href="https://github.com/objcio/issue-16-functional-apis">示例项目</a>中下载。</p>
-
-<h2 id="filter">Filter 类型</h2>
-
-<p><code>CIFilter</code> 是 <code>Core Image</code> 中的一个核心类，用来创建图像滤镜。当实例化一个 <code>CIFilter</code> 对象之后，你 (几乎) 总是通过 <code>kCIInputImageKey</code> 来输入图像，然后通过 <code>kCIOutputImageKey</code> 获取返回的图像，返回的结果可以作为下一个滤镜的参数输入。</p>
-
-<p>在我们即将开发的 API 里，我们会把这些键值对 (key-value) 对应的真实内容抽离出来，为用户提供一个安全的强类型 API。我们定义了自己的滤镜类型 <code>Filter</code>，它是一个可以传入图片作为参数的函数，并且返回一个新的图片。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">typealias</span> <span class="n">Filter</span> <span class="o">=</span> <span class="n">CIImage</span> <span class="o">-&gt;</span> <span class="n">CIImage</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

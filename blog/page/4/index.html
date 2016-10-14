@@ -7,8 +7,19 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content=" 题记
-不知不觉，来沪一周年。特发此文，总结来沪一周年的收获。 written by Rick&nbsp;posted at http://ITMonkeyLife.github.io/Blog 感悟 Comments ">
+	<meta name="description" content="4 阻止 GDB 依附 GDB 是大多数 hackers 的首选，阻止 GDB 依附到应用的常规办法是： 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+#import &lt;sys/ptrace.h&gt; int main(int argc, charchar *argv[])
+{ # &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -76,6 +87,220 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/rezu-zhi-gdb-yi-fu/">
+		
+			阻止 GDB 依附</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">4</span> <span class="title">阻止 GDB 依附</span></h1>
+    <p>GDB 是大多数 hackers 的首选，阻止 GDB 依附到应用的常规办法是：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;sys/ptrace.h&gt;  </span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="n">charchar</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line"> <span class="err">#</span><span class="n">ifndef</span> <span class="n">DEBUG</span>
+</span><span class="line">    <span class="n">ptrace</span><span class="p">(</span><span class="n">PT_DENY_ATTACH</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+</span><span class="line"> <span class="err">#</span><span class="n">endif</span>
+</span><span class="line">    <span class="err">@</span><span class="n">autoreleasepool</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">UIApplicationMain</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="nb">nil</span><span class="p">,</span> <span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">WQMainPageAppDelegate</span> <span class="n">class</span><span class="p">]));</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>但遗憾的是，iPhone 真实的运行环境是没有 sys/ptrace.h 抛出的。虽然 ptrace 方法没有被抛出, 但是不用担心，我们可以通过 dlopen 拿到它。</p>
+
+<p>dlopen： 当 path 参数为 0 是,他会自动查找<br />
+<code>$LD_LIBRARY_PATH, $DYLD_LIBRARY_PATH,  $DYLD_FALLBACK_LIBRARY_PATH</code> 和当前工作目录中的动态链接库。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;dlfcn.h&gt;  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">sys</span><span class="o">/</span><span class="n">types</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">typedef</span> <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">ptrace_ptr_t</span><span class="p">)(</span><span class="kt">int</span> <span class="n">_request</span><span class="p">,</span> <span class="n">pid_t</span> <span class="n">_pid</span><span class="p">,</span> <span class="n">caddr_t</span> <span class="n">_addr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">_data</span><span class="p">);</span>
+</span><span class="line"> <span class="err">#</span><span class="k">if</span> <span class="o">!</span><span class="n">defined</span><span class="p">(</span><span class="n">PT_DENY_ATTACH</span><span class="p">)</span>
+</span><span class="line"> <span class="err">#</span><span class="n">define</span> <span class="n">PT_DENY_ATTACH</span> <span class="mi">31</span>
+</span><span class="line"> <span class="err">#</span><span class="n">endif</span>  <span class="c1">// !defined(PT_DENY_ATTACH)  </span>
+</span><span class="line">
+</span><span class="line"><span class="kt">void</span> <span class="n">disable_gdb</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">void</span><span class="o">*</span> <span class="n">handle</span> <span class="o">=</span> <span class="n">dlopen</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">RTLD_GLOBAL</span> <span class="o">|</span> <span class="n">RTLD_NOW</span><span class="p">);</span>
+</span><span class="line">    <span class="n">ptrace_ptr_t</span> <span class="n">ptrace_ptr</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s">&quot;ptrace&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">ptrace_ptr</span><span class="p">(</span><span class="n">PT_DENY_ATTACH</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class="line">    <span class="n">dlclose</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="n">charchar</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line"> <span class="err">#</span><span class="n">ifndef</span> <span class="n">DEBUG</span>
+</span><span class="line">    <span class="n">disable_gdb</span><span class="p">();</span>
+</span><span class="line"> <span class="err">#</span><span class="n">endif</span>
+</span><span class="line">    <span class="err">@</span><span class="n">autoreleasepool</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">return</span> <span class="n">UIApplicationMain</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="nb">nil</span><span class="p">,</span> <span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">WQMainPageAppDelegate</span> <span class="n">class</span><span class="p">]));</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/rezu-zhi-gdb-yi-fu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/revealcha-kan-app-ui/">
+		
+			Reveal查看APP UI</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">3</span> <span class="title">使用 Reveal 分析他人 App</span></h1>
+    <h3>准备工作</h3>
+
+<p>1）已越狱的设备，并且已安装了 OpenSSH , MobileSubstrate 等实用工具( Cydia 源里安装)</p>
+
+<p>2）本地已安装了 Reveal</p>
+
+<h3>操作步骤</h3>
+
+<h4>拷贝 framework 和 dylib 到越狱机</h4>
+
+<div class="code code">
+<pre class="code">&nbsp;
+scp -r /Applications/Reveal.app/Contents/SharedSupport/iOS-Libraries/Reveal.framework root@192.168.0.X:/System/Library/Frameworks
+scp /Applications/Reveal.app/Contents/SharedSupport/iOS-Libraries/libReveal.dylib root@192.168.0.X:/Library/MobileSubstrate/DynamicLibraries</pre>
+</div>
+
+<h4>编辑 libReveal.plist</h4>
+
+<p>a.可以 ssh 登录到越狱机上，并且越狱机已安装了编辑器工具例如 nano，在 /Library/MobileSubstrate/DynamicLibraries/ 下创建文件 libReveal.plist ，指定 app 的 Bundle ，可以指定多个</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">Filter</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">         <span class="n">Bundles</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;com.apple.AppStore&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="p">};</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>b.也可以在本地创建好 libReveal.plist 在 scp 到指定位置 /Library/MobileSubstrate/DynamicLibraries/ 下</p>
+
+<h4>重启越狱机</h4>
+
+<p>a.执行 killall SpringBoard</p>
+
+<p>b.也可以重启设备</p>
+
+<p>然后就可以到 Reveal 看看别人的 app 怎么布局的了，苹果的appstore：</p>
+
+<div class="figure" id="figure-3-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75tvj27y1j21040s3woe.jpg" />
+
+    <p class="caption"><strong>图片 3.1</strong> reveal</p>
+</div>
+
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/revealcha-kan-app-ui/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1058,136 +1283,6 @@ case&#8217;s data type, or is empty if the case has no data type.</p>
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu/">
-		
-			iOS小技巧</a>
-	</h2>
-	<div class="entry-content">
-		<p>最近开始记录下自己开发遇到的问题，如果解决了就会记录下来，以便自己日后回顾工作。
-</p>
-<p>测试妹子给我提了一个问题是视图遮挡了，我一看，确实会遮挡，我就加了下面的这段代码
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIView</span><span class="o">*</span><span class="p">)</span><span class="nf">keyboardView</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span> <span class="n">windows</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="n">windows</span><span class="p">];</span>
-</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">UIWindow</span> <span class="o">*</span> <span class="n">window</span> <span class="k">in</span> <span class="p">[</span><span class="n">windows</span> <span class="n">reverseObjectEnumerator</span><span class="p">])</span>
-</span><span class="line">    <span class="p">{</span>
-</span><span class="line">        <span class="k">for</span> <span class="p">(</span><span class="n">UIView</span> <span class="o">*</span> <span class="n">view</span> <span class="k">in</span> <span class="p">[</span><span class="n">window</span> <span class="n">subviews</span><span class="p">])</span>
-</span><span class="line">        <span class="p">{</span>
-</span><span class="line">            <span class="c1">// UIPeripheralHostView is used from iOS 4.0, UIKeyboard was used in previous versions,UIInputSetContainerView was used iOS 8.0</span>
-</span><span class="line">            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIPeripheralHostView&quot;</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIKeyboard&quot;</span><span class="p">)</span> <span class="o">||</span>
-</span><span class="line">                <span class="o">!</span><span class="n">strcmp</span><span class="p">(</span><span class="n">object_getClassName</span><span class="p">(</span><span class="n">view</span><span class="p">),</span> <span class="s">&quot;UIInputSetContainerView&quot;</span><span class="p">))</span>
-</span><span class="line">            <span class="p">{</span>
-</span><span class="line">                <span class="k">return</span> <span class="n">view</span><span class="p">;</span>
-</span><span class="line">            <span class="p">}</span>
-</span><span class="line">        <span class="p">}</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="nb">nil</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">UIView</span><span class="o">*</span><span class="p">)</span><span class="nf">keyboardViewForView:</span><span class="p">(</span><span class="n">UIView</span> <span class="o">*</span><span class="p">)</span><span class="nv">view</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">UIView</span> <span class="o">*</span> <span class="n">keyboardView</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">keyboardView</span><span class="p">];</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">keyboardView</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">view</span> <span class="o">=</span> <span class="n">keyboardView</span><span class="p">.</span><span class="n">superview</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">view</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-这样我们在调用下面的方法keyboardViewForView就能显示出来了。问题得到了解决。
-</p>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/05/04/zhuan-zhi-ioskai-fa-xi-lie-jie-jue-jian-pan-zhe-dang-shi-tu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/04/07/git-control-version/">
-		
-			Git Control Version</a>
-	</h2>
-	<div class="entry-content">
-		<hr />
-
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/04/07/git-control-version/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

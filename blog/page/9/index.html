@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="iOS 7 的发布给开发者的案头带来了很多新工具。其中一个就是 TextKit。TextKit 由许多新的 UIKit 类组成，顾名思义，这些类就是用来处理文本的。在这里，我们将介绍 TextKit 的来由、它的组成，以及通过几个例子解释开发者怎样将它派上大用场。 但是首先我们得先阐明一个观点： &hellip;">
+	<meta name="description" content="当我真正开始爱自己， 我才认识到，所有的痛苦和情感的折磨， 都只是提醒我：活着，不要违背自己的本心。 今天我明白了，这叫做 『真实』。 当我真正开始爱自己， 我才懂得，把自己的愿望强加于人， 是多么的无礼，就算我知道，时机并不成熟， 那人也还没有做好准备， 就算那个人就是我自己， 今天我明白了， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,219 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/10/dang-wo-zhen-zheng-kai-shi-ai-zi-ji/">
+		
+			当我真正开始爱自己</a>
+	</h2>
+	<div class="entry-content">
+		<p><img src="http://ww1.sinaimg.cn/large/626e5d69gw1efahu2mtk8j20e60aadh6.jpg" alt="" /></p>
+<p>当我真正开始爱自己，</p>
+
+<p>我才认识到，所有的痛苦和情感的折磨，</p>
+
+<p>都只是提醒我：活着，不要违背自己的本心。</p>
+
+<p>今天我明白了，这叫做</p>
+
+<p>『真实』。</p>
+
+<p>当我真正开始爱自己，</p>
+
+<p>我才懂得，把自己的愿望强加于人，</p>
+
+<p>是多么的无礼，就算我知道，时机并不成熟，</p>
+
+<p>那人也还没有做好准备，</p>
+
+<p>就算那个人就是我自己，</p>
+
+<p>今天我明白了，这叫做</p>
+
+<p>『尊重』。</p>
+
+
+		
+		<a href="/Blog/blog/2014/04/10/dang-wo-zhen-zheng-kai-shi-ai-zi-ji/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/shi-ge/'>诗歌</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/10/dang-wo-zhen-zheng-kai-shi-ai-zi-ji/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/">
+		
+			UIKit-Dynamics基于物理引擎新特性</a>
+	</h2>
+	<div class="entry-content">
+		<p>UIKit Dynamics 是 iOS 7 中基于物理动画引擎的一个新功能&#8211;它被特别设计使其能很好地与 collection views 配合工作，而后者是在 iOS 6 中才被引入的新特性。接下来，我们要好好看看如何将这两个特性结合在一起。 </p>
+
+<p>这篇文章将讨论两个结合使用 UIkit Dynamics 和 collection view 的例子。第一个例子展示了如何去实现像 iOS 7 里信息 app 中的消息泡泡的弹簧动效，然后再进一步结合平铺机制来实现布局的可伸缩性。第二个例子展现了如何用 UIKit Dynamics 来模拟<a href="http://zh.wikipedia.org/wiki/牛顿摆">牛顿摆</a>，这个例子中物体可以一个个地加入到 collection view 中，并和其他物体发生相互作用。</p>
+
+<p>在我们开始之前，我假定你们对 <code>UICollectionView</code> 是如何工作是有基本的了解——查看<a href="http://www.objccn.io/issue-3-3/">这篇 objc.io 文章</a>会有你想要的所有细节。我也假定你已经理解了 <code>UIKit Dynamics</code> 的工作原理&#8211;阅读这篇<a href="http://www.teehanlax.com/blog/introduction-to-uikit-dynamics/">博客</a>，可以了解更多 UIKit Dynamics 的知识。</p>
+
+<blockquote>
+  <p><span class="secondary radius label">编者注</span> 如果您阅读本篇文章感觉有点吃力的话，可以先来看看 <a href="http://im.onevcat.com">@onevcat</a> 的<a href="http://onevcat.com/2012/06/introducing-collection-views/">《UICollectionView 入门》</a> 和<a href="http://onevcat.com/2013/06/uikit-dynamics-started/">《UIKit Dynamics 入门》</a>这两篇入门文章，帮助您快速补充相关知识。</p>
+</blockquote>
+
+<p>文章中的两个例子项目都已经在 GitHub 中:</p>
+
+<ul>
+<li><a href="https://github.com/objcio/issue-5-springy-collection-view">ASHSpringyCollectionView</a>（基于 <a href="https://github.com/TeehanLax/UICollectionView-Spring-Demo">UICollectionView Spring Demo</a>）</li>
+<li><a href="https://github.com/objcio/issue-5-newtonian-collection-view">Newtownian UICollectionView</a></li>
+</ul>
+
+<h2 id="uidynamicanimator">关于 UIDynamicAnimator</h2>
+
+<p>支持 <code>UICollectionView</code> 实现 UIKit Dynamics 的最关键部分就是 <code>UIDynamicAnimator</code>。要实现这样的 UIKit Dynamics 的效果，我们需要自己自定义一个继承于 <code>UICollectionViewFlowLayout</code> 的子类，并且在这个子类对象里面持有一个 UIDynamicAnimator 的对象。</p>
+
+<p>当我们创建自定义的 dynamic animator 时，我们不会使用常用的初始化方法 <code>-initWithReferenceView:</code> ，因为我们不需要把这个 dynamic animator 关联一个 view ，而是给它关联一个 collection view layout。所以我们使用 <code>-initWithCollectionViewLayout:</code> 这个初始化方法，并把 collection view layout 作为参数传入。这很关键，当的 animator 的 behavior item 的属性应该被更新的时候，它必须能够确保 collection view 的 layout 失效。换句话说，dynamic animator 将会经常使旧的 layout 失效。</p>
+
+<p>我们很快就能看到这些事情是怎么连接起来的，但是在概念上理解 collection view 如何与 dynamic animator 相互作用是很重要的。</p>
+
+<p>Collection view layout 将会为 collection view 中的每个 <code>UICollectionViewLayoutAttributes</code> 添加 behavior（稍后我们会讨论平铺它们）。在将这些 behaviors 添加到 dynamic animator 之后，UIKit 将会向 collection view layout 询问 atrribute 的状态。我们此时可以直接将由 dynamic animator 所提供的 items 返回，而不需要自己做任何计算。Animator 将在模拟时禁用 layout。这会导致 UIKit 再次查询 layout，这个过程会一直持续到模拟满足设定条件而结束。</p>
+
+<p>所以重申一下，layout 创建了 dynamic animator，并且为其中每个 item 的 layout attribute 添加对应的 behaviors。当 collection view 需要 layout 信息时，由 dynamic animator 来提供需要的信息。</p>
+
+<h2 id="uicollectionviewflowlayout">继承 UICollectionViewFlowLayout</h2>
+
+<p>我们将要创建一个简单的例子来展示如何使用一个带 UIkit Dynamic 的 collection view layout。当然，我们需要做的第一件事就是，创建一个数据源去驱动我们的 collection view。我知道以你的能力完全可以独立实现一个数据源，但是为了完整性，我还是提供了一个给你:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">ASHCollectionViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span> <span class="n">CellIdentifier</span> <span class="o">=</span> <span class="s">@&quot;CellIdentifier&quot;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">viewDidLoad</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionView</span> <span class="nl">registerClass:</span><span class="p">[</span><span class="n">UICollectionViewCell</span> <span class="n">class</span><span class="p">]</span>
+</span><span class="line">            <span class="nl">forCellWithReuseIdentifier:</span><span class="n">CellIdentifier</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">UIStatusBarStyle</span><span class="p">)</span><span class="nf">preferredStatusBarStyle</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">UIStatusBarStyleLightContent</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">animated</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="nl">viewDidAppear:</span><span class="n">animated</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">collectionViewLayout</span> <span class="n">invalidateLayout</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="cp">#pragma mark - UICollectionView Methods</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nf">collectionView:</span><span class="p">(</span><span class="n">UICollectionView</span> <span class="o">*</span><span class="p">)</span><span class="nv">collectionView</span>
+</span><span class="line">    <span class="nf">numberOfItemsInSection:</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">section</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="mi">120</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="n">UICollectionViewCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">collectionView:</span><span class="p">(</span><span class="n">UICollectionView</span> <span class="o">*</span><span class="p">)</span><span class="nv">collectionView</span>
+</span><span class="line">                 <span class="nf">cellForItemAtIndexPath:</span><span class="p">(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UICollectionViewCell</span> <span class="o">*</span><span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">collectionView</span>
+</span><span class="line">        <span class="nl">dequeueReusableCellWithReuseIdentifier:</span><span class="n">CellIdentifier</span>
+</span><span class="line">                                  <span class="nl">forIndexPath:</span><span class="n">indexPath</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">cell</span><span class="p">.</span><span class="n">backgroundColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="n">orangeColor</span><span class="p">];</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/10/uikit-dynamicsji-yu-wu-li-yin-qing-xin-te-xing/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -668,119 +881,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/">
-		
-			常见iOS后台技术</a>
-	</h2>
-	<div class="entry-content">
-		<p>本文主要探讨一些常用后台任务的最佳实践。我们将会看看如何并发地使用 Core Data ，如何并行绘制 UI ，如何做异步网络请求等。最后我们将研究如何异步处理大型文件，以保持较低的内存占用。  因为在异步编程中非常容易犯错误，所以，本文中的例子都将使用很简单的方式。因为使用简单的结构可以帮助我们看透代码，抓住问题本质。如果你最后把代码写成了复杂的嵌套回调的话，那么你很可能应该重新考虑自己当初的设计选择了。</p>
-
-<h2 id="operationqueuesgcd">操作队列 (Operation Queues) 还是 GCD ?</h2>
-
-<p>目前在 iOS 和 OS X 中有两套先进的同步 API 可供我们使用：<a href="http://developer.apple.com/library/ios/#documentation/Cocoa/Reference/NSOperationQueue_class/Reference/Reference.html">操作队列</a>和 <a href="https://developer.apple.com/library/ios/#documentation/Performance/Reference/GCD_libdispatch_Ref/Reference/reference.html">GCD</a> 。其中 GCD 是基于 C 的底层的 API ，而操作队列则是 GCD 实现的 Objective-C API。关于我们可以使用的并行 API 的更加全面的总览，可以参见 <a href="http://www.objc.io/issue-2-1/">并发编程：API 及挑战</a>。</p>
-
-<p>操作队列提供了在 GCD 中不那么容易复制的有用特性。其中最重要的一个就是可以取消在任务处理队列中的任务，在稍后的例子中我们会看到这个。而且操作队列在管理操作间的依赖关系方面也容易一些。另一面，GCD 给予你更多的控制权力以及操作队列中所不能使用的底层函数。详细介绍可以参考<a href="http://www.objc.io/issue-2-3/">底层并发 API</a> 这篇文章。</p>
-
-<p>扩展阅读：</p>
-
-<ul>
-<li><a href="http://stackoverflow.com/questions/10373331/nsoperation-vs-grand-central-dispatch">StackOverflow: NSOperation vs. Grand Central Dispatch</a></li>
-<li><a href="http://eschatologist.net/blog/?p=232">Blog: When to use NSOperation vs. GCD</a></li>
-</ul>
-
-<h3 id="coredata">后台的 Core Data</h3>
-
-<p>在着手 Core Data 的并行处理之前，最好先打一些基础。我们强烈建议通读苹果的官方文档 <a href="https://developer.apple.com/library/mac/#documentation/cocoa/conceptual/CoreData/Articles/cdConcurrency.html">Concurrency with Core Data guide</a> 。这个文档中罗列了基本规则，比如绝对不要在线程间传递 managed objects等。这并不单是说你绝不应该在另一个线程中去更改某个其他线程的 managed object ，甚至是读取其中的属性都是不能做的。要想传递这样的对象，正确做法是通过传递它的 object ID ，然后从其他对应线程所绑定的 context 中去获取这个对象。</p>
-
-<p>其实只要你遵循那些规则，并使用这篇文章里所描述的方法的话，处理 Core Data 的并行编程还是比较容易的。</p>
-
-<p>Xcode 所提供的 Core Data 标准模版中，所设立的是运行在主线程中的一个存储调度 (persistent store coordinator)和一个托管对象上下文 (managed object context) 的方式。在很多情况下，这种模式可以运行良好。创建新的对象和修改已存在的对象开销都非常小，也都能在主线程中没有困难滴完成。然后，如果你想要做大量的处理，那么把它放到一个后台上下文来做会比较好。一个典型的应用场景是将大量数据导入到 Core Data 中。</p>
-
-<p>我们的方式非常简单，并且可以被很好地描述：</p>
-
-		
-		<a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/chang-jian-ioshou-tai-ji-zhu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/">
-		
-			并发编程：API以及挑战</a>
-	</h2>
-	<div class="entry-content">
-		<p><a href="http://en.wikipedia.org/wiki/Concurrency_%28computer_science%29">并发</a>所描述的概念就是同时运行多个任务。这些任务可能是以在单核 CPU 上<a href="http://en.wikipedia.org/wiki/Preemption_%28computing%29">分时（时间共享）</a>的形式同时运行，也可能是在多核 CPU 上以真正的并行方式来运行。</p>
-
-<p>OS X 和 iOS 提供了几种不同的 API 来支持并发编程。每一个 API 都具有不同的功能和使用限制，这使它们适合不同的任务。同时，这些 API 处在不同的抽象层级上。我们有可能用其进行非常深入底层的操作，但是这也意味着背负起将任务进行良好处理的巨大责任。</p>
-
-<p>实际上，并发编程是一个很有挑战的主题，它有许多错综复杂的问题和陷阱。当开发者在使用类似 <code>Grand Central Dispatch</code>（GCD）或 <code>NSOperationQueue</code> 的 API 时，很容易遗忘这些问题和陷阱。本文首先对 OS X 和 iOS 中不同的并发编程 API 进行一些介绍，然后再深入了解并发编程中独立于与你所使用的特定 API 的一些内在挑战。</p>
-
-<h2 id="osxios">OS X 和 iOS 中的并发编程</h2>
-
-<p>苹果的移动和桌面操作系统中提供了相同的并发编程API。 本文会介绍 <code>pthread</code> 、 <code>NSThread</code> 、<code>GCD</code> 、<code>NSOperationQueue</code>，以及 <code>NSRunLoop</code>。实际上把 run loop 也列在其中是有点奇怪，因为它并不能实现真正的并行，不过因为它与并发编程有莫大的关系，因此值得我们进行一些深入了解。</p>
-
-<p>由于高层 API 是基于底层 API 构建的，所以我们首先将从底层的 API 开始介绍，然后逐步扩展到高层 API。不过在具体编程中，选择 API 的顺序刚好相反：因为大多数情况下，选择高层的 API 不仅可以完成底层 API 能完成的任务，而且能够让并发模型变得简单。</p>
-
-<p>如果你对我们为何坚持推荐使用高抽象层级以及简单的并行代码有所疑问的话，那么你可以看看这篇文章的第二部分<a href="#challenges">并发编程中面临的挑战</a>，以及 Peter Steinberger 写的关于<a href="http://objccn.io/issue-2-4/">线程安全</a>的文章。</p>
-
-<h3>线程</h3>
-
-<p><a href="http://zh.wikipedia.org/wiki/线程">线程</a>（thread）是组成进程的子单元，操作系统的调度器可以对线程进行单独的调度。实际上，所有的并发编程 API 都是构建于线程之上的 —— 包括 GCD 和操作队列（operation queues）。</p>
-
-<p>多线程可以在单核 CPU 上同时（或者至少看作同时）运行。操作系统将小的时间片分配给每一个线程，这样就能够让用户感觉到有多个任务在同时进行。如果 CPU 是多核的，那么线程就可以真正的以并发方式被执行，从而减少了完成某项操作所需要的总时间。</p>
-
-		
-		<a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-bian-cheng-%3Aapiyi-ji-tiao-zhan/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
