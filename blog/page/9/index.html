@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="当我真正开始爱自己， 我才认识到，所有的痛苦和情感的折磨， 都只是提醒我：活着，不要违背自己的本心。 今天我明白了，这叫做 『真实』。 当我真正开始爱自己， 我才懂得，把自己的愿望强加于人， 是多么的无礼，就算我知道，时机并不成熟， 那人也还没有做好准备， 就算那个人就是我自己， 今天我明白了， &hellip;">
+	<meta name="description" content="近些日子我们被宠坏了 &#8211; 我们只需要单击 Xcode 中的一个按钮（这个按钮看起来有点像是在播放一些音乐的动作），过几秒钟之后，我们的程序就会运行起来了，直到遇到一些错误，这非常的神奇。 在本文中，我们将从更高级别的角度来解读 Build 过程，并探索一下在 Xcode &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,91 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/">
+		
+			Xcode编译你所不知道的细节</a>
+	</h2>
+	<div class="entry-content">
+		<p>近些日子我们被宠坏了 &#8211; 我们只需要单击 Xcode 中的一个按钮（这个按钮看起来有点像是在播放一些音乐的动作），过几秒钟之后，我们的程序就会运行起来了，直到遇到一些错误，这非常的神奇。</p>
+
+<p>在本文中，我们将从更高级别的角度来解读 Build 过程，并探索一下在 Xcode 界面中暴露出的 project setting 信息与 Build 过程有什么关系。为了更加深入的探索 Build 过程中，每一步实际执行的工作，我都会在本文中引入一些别的文章。</p>
+
+<h2 id="build">解密 Build 日志</h2>
+
+<p>为了了解 Xcode build 过程的内部工作原理，我们首先把突破口瞄准完整的 log 文件上。打开 Log Navigator ，从列表中选择一个 Build ，Xcode 会将 log 文件很完美的展现出来。</p>
+
+<p><img src="http://img.objccn.io/issue-6/build-log.png" alt="Xcode build log navigator" /></p>
+
+<p>默认情况下，上面的 Xcode 界面中隐藏了大量的信息，我们通过选择任务，然后点击右边的展开按钮，就能看到每个任务的详细信息。另外一种可选的方案就是选中列表中的一个或者多个任务，然后选择组合键 Cmd-C，这将会把所有的纯文本信息拷贝至粘贴板。最后，我们还可以选择 Editor 菜单中的 &#8220;Copy transcript for shown results&#8221;，以此将所有的 log 信息拷贝到粘贴板中。</p>
+
+<p>本文给出的示例中，log 信息将近有 10,000 行（其实大多数的 log 信息是编译 OpenSSL 时生成的，并不是我们自己所写的代码生成的）。下面我们就开始吧！</p>
+
+<p>注意观察输出的 log 信息，首先会发现 log 信息被分为不同的几大块，它们与我们工程中的targets相互对应着：</p>
+
+<pre><code>Build target Pods-SSZipArchive
+...
+Build target Makefile-openssl
+...
+Build target Pods-AFNetworking
+...
+Build target crypto
+...
+Build target Pods
+...
+Build target ssl
+...
+Build target objcio
+</code></pre>
+
+<p>本文涉及到的工程有几个依赖项：其中 AFNetworking 和 SSZipArchive 包含在 Pods 中，而 OpenSSL 则以子工程的形式包含在工程中。</p>
+
+<p>针对工程中的每个 target，Xcode 都会执行一系列的操作，将相关的源码，根据所选定的平台，转换为机器可读的二进制文件。下面我们详细的了解一下第一个 target：SSZipArchive。</p>
+
+<p>在针对这个 target 输出的 log 信息中，我们可以看到每个任务被执行的详细情况。例如第一个任务是处理一个预编译头文件（为了增强 log 信息的可读性，我省略了许多细节）：</p>
+<pre><code>(1) ProcessPCH /.../Pods-SSZipArchive-prefix.pch.pch Pods-SSZipArchive-prefix.pch normal armv7 objective-c com.apple.compilers.llvm.clang.1_0.compiler
+(2) cd /.../Dev/objcio/Pods
+	setenv LANG en_US.US-ASCII
+	setenv PATH "..."
+(3) /.../Xcode.app/.../clang 
+(4) -x objective-c-header 
+(5) -arch armv7 
+... configuration and warning flags ...
+(6) -DDEBUG=1 -DCOCOAPODS=1 
+... include paths and more ...
+(7) -c 
+(8) /.../Pods-SSZipArchive-prefix.pch 
+(9) -o /.../Pods-SSZipArchive-prefix.pch.pch
+</code></pre>
+
+		
+		<a href="/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -806,81 +891,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/09/xian-cheng-an-quan/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/">
-		
-			底层并发API</a>
-	</h2>
-	<div class="entry-content">
-		<p>这篇文章里，我们将会讨论一些 iOS 和 OS X 都可以使用的底层 API。除了 <code>dispatch_once</code> ，我们一般不鼓励使用其中的任何一种技术。</p>
-
-<p>但是我们想要揭示出表面之下深层次的一些可利用的方面。这些底层的 API 提供了大量的灵活性，随之而来的是大量的复杂度和更多的责任。在我们的文章<a href="http:/objccn.io/issue-2-2/">常见的后台实践</a>中提到的高层的 API 和模式能够让你专注于手头的任务并且免于大量的问题。通常来说，高层的 API 会提供更好的性能，除非你能承受起使用底层 API 带来的纠结于调试代码的时间和努力。</p>
-
-<p>尽管如此，了解深层次下的软件堆栈工作原理还是有很有帮助的。我们希望这篇文章能够让你更好的了解这个平台，同时，让你更加感谢这些高层的 API。</p>
-
-<p>首先，我们将会分析大多数组成 <em>Grand Central Dispatch</em> 的部分。它已经存在了好几年，并且苹果公司持续添加功能并且改善它。现在苹果已经将其开源，这意味着它对其他平台也是可用的了。最后，我们将会看一下<a href="#atomic_operations">原子操作</a>——另外的一种底层代码块的集合。</p>
-
-<p>或许关于并发编程最好的书是 <em>M. Ben-Ari</em> 写的《Principles of Concurrent Programming》,<a href="https://en.wikipedia.org/wiki/Special:BookSources/0-13-701078-8">ISBN 0-13-701078-8</a>。如果你正在做任何与并发编程有关的事情，你需要读一下这本书。这本书已经30多年了，仍然非常卓越。书中简洁的写法，优秀的例子和练习，带你领略并发编程中代码块的基本原理。这本书现在已经绝版了，但是它的一些复印版依然广为流传。有一个新版书，名字叫《Principles of Concurrent and Distributed Programming》,<a href="https://en.wikipedia.org/wiki/Special:BookSources/0-321-31283-X">ISBN 0-321-31283-X</a>,好像有很多相同的地方，不过我还没有读过。</p>
-
-<h2>从前&#8230;</h2>
-
-<p>或许GCD中使用最多并且被滥用功能的就是 <code>dispatch_once</code> 了。正确的用法看起来是这样的：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">UIColor</span> <span class="o">*</span><span class="p">)</span><span class="nf">boringColor</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">static</span> <span class="n">UIColor</span> <span class="o">*</span><span class="n">color</span><span class="p">;</span>
-</span><span class="line">    <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
-</span><span class="line">    <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
-</span><span class="line">        <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="nl">colorWithRed:</span><span class="mf">0.380f</span> <span class="nl">green:</span><span class="mf">0.376f</span> <span class="nl">blue:</span><span class="mf">0.376f</span> <span class="nl">alpha:</span><span class="mf">1.000f</span><span class="p">];</span>
-</span><span class="line">    <span class="p">});</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">color</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>上面的 block 只会运行一次。并且在连续的调用中，这种检查是很高效的。你能使用它来初始化全局数据比如单例。要注意的是，使用 <code>dispatch_once_t</code> 会使得测试变得非常困难（单例和测试不是很好配合）。</p>
-
-<p>要确保 <code>onceToken</code> 被声明为 <code>static</code> ，或者有全局作用域。任何其他的情况都会导致无法预知的行为。换句话说，<strong>不要</strong>把 <code>dispatch_once_t</code> 作为一个对象的成员变量，或者类似的情形。</p>
-
-<p>退回到远古时代（其实也就是几年前），人们会使用 <code>pthread_once</code> ，因为 <code>dispatch_once_t</code> 更容易使用并且不易出错，所以你永远都不会再用到 <code>pthread_once</code> 了。</p>
-
-<h2>延后执行</h2>
-
-		
-		<a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/09/di-ceng-bing-fa-api/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

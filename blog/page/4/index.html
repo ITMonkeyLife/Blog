@@ -7,19 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="4 阻止 GDB 依附 GDB 是大多数 hackers 的首选，阻止 GDB 依附到应用的常规办法是： 1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-#import &lt;sys/ptrace.h&gt; int main(int argc, charchar *argv[])
-{ # &hellip;">
+	<meta name="description" content="5 使用 Cycript 修改支付宝 App 运行时 Cycript: Objective-JavaScript ，它懂 Objective-C，也懂javascript 。 我们能够借助 Cycript 使用 Objective-C 或者 javascript ，给某个正在运行的进程的 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -87,6 +75,120 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/zu-zhi-gdb-yi-fu/">
+		
+			使用 Cycript 修改支付宝 App 运行时</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">5</span> <span class="title">使用 Cycript 修改支付宝 App 运行时</span></h1>
+    <p>Cycript: Objective-JavaScript ，它懂 Objective-C，也懂javascript 。</p>
+
+<p>我们能够借助 Cycript 使用 Objective-C 或者 javascript ，给某个正在运行的进程的 runtime 发送消息。</p>
+
+<p>本文以修改支付宝 app 界面为例，介绍 Cycript 的使用方法。</p>
+
+<h4>安装 Cycript</h4>
+
+<p>到 Cycript 官方网站下载资源工具，然后推进已越狱的 iPhone 中，进行安装：</p>
+
+<div class="code code">
+<pre class="code">dpkg -i cycript_0.9.461_iphoneos-arm.deb  
+dpkg -i libffi_1-3.0.10-5_iphoneos-arm.deb</pre>
+</div>
+
+<h4>确定支付宝进程</h4>
+
+<p>运行支付宝 app，然后获取它的进程号：</p>
+
+<div class="code code">
+<pre class="code">Primer:/ root# ps aux | grep Portal  
+&nbsp;
+mobile     479   0.6  4.3   590776  44956   ??  Ss    5:14PM   0:09.58 /var/mobile/Applications/8723004E-9E54-4B37-856D-86292780E958/Portal.app/Portal  
+root       497   0.0  0.0   329252    176 s000  R+    5:21PM   0:00.00 grep Portal</pre>
+</div>
+
+<h4>Cycript 钩住支付宝进程</h4>
+
+<div class="code code">
+<pre class="code">Primer:/ root# cycript -p 479  
+cy#</pre>
+</div>
+
+<h4>获取当前界面的 viewController 并修改背景色</h4>
+
+<div class="code code">
+<pre class="code">cy# var app = [UIApplication sharedApplication]  
+@&quot;&lt;DFApplication: 0x16530660&gt;&quot;  
+&nbsp;
+cy# app.delegate  
+@&quot;&lt;DFClientDelegate: 0x165384d0&gt;&quot;  
+&nbsp;
+cy# var keyWindow = app.keyWindow  
+@&quot;&lt;UIWindow: 0x1654abb0; frame = (0 0; 320 568); gestureRecognizers = &lt;NSArray: 0x1654b190&gt;; layer = &lt;UIWindowLayer: 0x1654ace0&gt;&gt;&quot;  
+&nbsp;
+cy# var rootController = keyWindow.rootViewController  
+@&quot;&lt;DFNavigationController: 0x1654b6c0&gt;&quot;  
+&nbsp;
+cy# var visibleController = rootController.visibleViewController  
+@&quot;&lt;ALPLauncherController: 0x166acfb0&gt;&quot;  
+&nbsp;
+cy# visibleController.childViewControllers  
+@[&quot;&lt;HPHomeWidgetGroup: 0x166afbc0&gt;&quot;,&quot;&lt;ADWRootViewController: 0x165745c0&gt;&quot;,&quot;&lt;ALPAssetsRootViewController: 0x16577250&gt;&quot;,&quot;&lt;SWSecurityWidgetGroup: 0x166bd940&gt;&quot;]  
+&nbsp;
+cy# var assetsController = new Instance(0x16577250)  
+@&quot;&lt;ALPAssetsRootViewController: 0x16577250&gt;&quot;  
+&nbsp;
+cy# assetsController.view.backgroundColor = [UIColor blueColor]  
+@&quot;UIDeviceRGBColorSpace 0 0 1 1&quot;</pre>
+</div>
+
+<div class="figure" id="figure-5-1">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75u2jk7lsj208w0fsjs3.jpg" />
+
+    <p class="caption"><strong>图片 5.1</strong> cycrypt</p>
+</div>
+
+
+<p>当然，只是修改个背景色好没意思……</p>
+
+<p>想修改更多信息，还得介绍一下另一个利器： class-dump 。下篇再总结～</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/zu-zhi-gdb-yi-fu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1227,62 +1329,6 @@ case&#8217;s data type, or is empty if the case has no data type.</p>
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/06/12/dong-hua-xiang-jie/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/">
-		
-			React-Native 资源整理</a>
-	</h2>
-	<div class="entry-content">
-		<p>
-最近在学习React-Native过程中整理了一些学习的资源。
-</p>
-
-<h2 id="section">教程</h2>
-
-<p><a href="http://facebook.github.io/react-native/docs/getting-started.html">react-native 官方api文档</a>.</p>
-
-<p><a href="https://github.com/jondot/awesome-react-native">Awesome React-Native</a>.</p>
-
-<p><a href="https://github.com/ecomfe/react-native-cn">react-native 中文api文档 (翻译中)</a>.</p>
-
-<p><a href="http://reactjs.cn/">react.js中文文档</a>.</p>
-
-<p><a href="http://hulufei.gitbooks.io/react-tutorial/content/introduction.html">react.js入门教程(gitbook)</a>.</p>
-
-<p><a href="http://www.ruanyifeng.com/blog/2015/03/react.html">react.js快速入门教程</a>.</p>
-
-<p><a href="http://react.nodejs-china.org/t/reactjszhong-wen-shi-pin-jiao-cheng-bai-du-wang-pan/584">react.js视频教程</a>.</p>
-
-<p><a href="http://html-js.com/article/2783">react-native第一课</a>.
-
-		
-		<a href="/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/react-native/'>React-Native</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

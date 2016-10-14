@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="24 敏感逻辑的保护方案 Objective-C 代码容易被 hook，暴露信息太赤裸裸，为了安全，改用 C 来写吧！ 图片 24.1 sensitive1 当然不是全部代码都要 C 来写，我指的是敏感业务逻辑代码。 本文就介绍一种低学习成本的，简易的，Objective-C 逻辑代码重写为 C &hellip;">
+	<meta name="description" content="在没有一个类的实现源码的情况下，想改变其中一个方法的实现，除了继承它重写、和借助类别重名方法暴力抢先之外，还有更加灵活的方法吗？在Objective-C编程中，如何实现hook呢？标题有点大，计划分几篇来总结。 本文主要介绍针对selector的hook，主角被标题剧透了———— Method &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,136 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/26/method-swizzling/">
+		
+			Method Swizzling</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+在没有一个类的实现源码的情况下，想改变其中一个方法的实现，除了继承它重写、和借助类别重名方法暴力抢先之外，还有更加灵活的方法吗？在Objective-C编程中，如何实现hook呢？标题有点大，计划分几篇来总结。
+
+本文主要介绍针对selector的hook，主角被标题剧透了———— Method Swizzling
+</p>
+<h2>Method Swizzling 原理</h2>
+<p>在Objective-C中调用一个方法，其实是向一个对象发送消息，查找消息的唯一依据是selector的名字。利用Objective-C的动态特性，可以实现在运行时偷换selector对应的方法实现，达到给方法挂钩的目的。</p>
+<p>每个类都有一个方法列表，存放着selector的名字和方法实现的映射关系。IMP有点类似函数指针，指向具体的Method实现。</p>
+<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1f76wrdzvssj214y0dcmxy.jpg" /></p>
+<p>
+我们可以利用 method_exchangeImplementations 来交换2个方法中的IMP，
+
+我们可以利用 class_replaceMethod 来修改类，
+
+我们可以利用 method_setImplementation 来直接设置某个方法的IMP，
+……
+归根结底，都是偷换了selector的IMP，如下图所示：
+</p>
+<p><img src="http://ww2.sinaimg.cn/large/626e5d69gw1f76wshrop2j20kf09mt95.jpg" /></p>
+<h2>Method Swizzling 实践</h2>
+<p>
+
+举个例子好了，我想钩一下NSArray的lastObject 方法，只需两个步骤。
+第一步：给NSArray加一个我自己的lastObject
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &quot;NSArray+Swizzle.h&quot;  </span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">NSArray</span> <span class="nl">(Swizzle)</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">myLastObject</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="kt">id</span> <span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">myLastObject</span><span class="p">];</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;**********  myLastObject *********** &quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+乍一看，这不递归了么？别忘记这是我们准备调换IMP的selector，[self myLastObject] 将会执行真的 [self lastObject] 。
+</p>
+<p>
+第二步：调换IMP
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;objc/runtime.h&gt;  </span>
+</span><span class="line"><span class="cp">#import &quot;NSArray+Swizzle.h&quot;  </span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="err">@</span><span class="n">autoreleasepool</span> <span class="p">{</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">Method</span> <span class="n">ori_Method</span> <span class="o">=</span>  <span class="n">class_getInstanceMethod</span><span class="p">([</span><span class="n">NSArray</span> <span class="n">class</span><span class="p">],</span> <span class="k">@selector</span><span class="p">(</span><span class="n">lastObject</span><span class="p">));</span>
+</span><span class="line">        <span class="n">Method</span> <span class="n">my_Method</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">([</span><span class="n">NSArray</span> <span class="n">class</span><span class="p">],</span> <span class="k">@selector</span><span class="p">(</span><span class="n">myLastObject</span><span class="p">));</span>
+</span><span class="line">        <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">,</span> <span class="n">my_Method</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">        <span class="n">NSArray</span><span class="o">*</span> <span class="n">array</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span><span class="s">@&quot;0&quot;</span><span class="p">,</span><span class="s">@&quot;1&quot;</span><span class="p">,</span><span class="s">@&quot;2&quot;</span><span class="p">,</span><span class="s">@&quot;3&quot;</span><span class="p">];</span>
+</span><span class="line">        <span class="n">NSString</span><span class="o">*</span> <span class="n">string</span> <span class="o">=</span> <span class="p">[</span><span class="n">array</span> <span class="n">lastObject</span><span class="p">];</span>
+</span><span class="line">        <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;TEST RESULT : %@&quot;</span><span class="p">,</span><span class="n">string</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+		
+		<a href="/Blog/blog/2016/08/26/method-swizzling/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/26/method-swizzling/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1701,158 +1831,6 @@ hackers 总是想象如果自己是开发者会怎么写，然后才能找到入
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/25/shi-yong-introspy-zhui-zong-fen-xi-ying-yong-cheng-xu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/shi-yong-inalyzer-fen-xi-ying-yong-cheng-xu/">
-		
-			使用 iNalyzer 分析应用程序</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">15</span> <span class="title">使用 iNalyzer 分析应用程序</span></h1>
-    <p>好想用<code> doxygen </code>画 iOS app 的<code> class </code>继承关系。</p>
-
-<p>有没有比 class-dump-z 更直观的分析工具？
-利器<code> iNalyzer </code>隆重登场～</p>
-
-<h3>iNalyzer 的安装</h3>
-
-<p>在 iPhone 端：</p>
-
-<p>1）进入<code> cydia </code>添加源 http://appsec-labs.com/cydia/</p>
-
-<p>2）搜索<code> iNalyzer </code>并安装</p>
-
-<h3>Doxygen 和 Graphviz 的安装</h3>
-
-<p>在 Mac 端：<br />
-<code>brew install oxygen graphviz</code></p>
-
-<h3>解密支付宝 App</h3>
-
-<h4>查看可解密的 App</h4>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">cd /Applications/iNalyzer5.app  
-</span><span class="line">./iNalyzer5   
-</span><span class="line">
-</span><span class="line">usage: ./iNalyzer5 [application name] [...]  
-</span><span class="line">Applications available: Portal Tenpay</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h4>解密支付宝 App</h4>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">./iNalyzer5 Portal  
-</span><span class="line">
-</span><span class="line">got params /var/mobile/Applications/4763A8A5-2E1D-4DC2-8376-6CB7A8B98728/Portal.app/ Portal.app 800 iNalyzer is iNalyzing Portal...  
-</span><span class="line">iNalyzer:crack_binary got /var/mobile/Applications/4763A8A5-2E1D-4DC2-8376-6CB7A8B98728/Portal.app/Portal /tmp/iNalyzer5_3f0d8773/Payload/Portal.app/Portal Dumping binary...helloooo polis?  
-</span><span class="line">helloooo polis?  
-</span><span class="line">iNalyzer:Creating SnapShot into ClientFiles  
-</span><span class="line">iNalyzer:SnapShot Done  
-</span><span class="line">iNalyzer:Population Done  
-</span><span class="line">iNalyzer:Dumping Headers  
-</span><span class="line">iNalyzer:Patching Headers  
-</span><span class="line">/bin/sh: /bin/ls: Argument list too long  
-</span><span class="line">ls: cannot access *_fixed: No such file or directory  
-</span><span class="line">    /var/root/Documents/iNalyzer/支付宝钱包-v8.0.0.ipa</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>将解密后的 ipa 拷贝到本地</p>
-
-<h3>修改 doxMe.sh 脚本</h3>
-
-<p>解压 ipa, cd 到 <code>/支付宝钱包-v8.0.0/Payload/Doxygen</code> 下找到<code> doxMe.sh</code></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">#!/bin/sh  
-</span><span class="line">
-</span><span class="line">/Applications/Doxygen.app/Contents/Resources/doxygen dox.template &amp;&amp; open ./html/index.html</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>我们是通过<code> brew </code>安装的<code> doxygen </code>，所以修改脚本为：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-</pre></td><td class="code"><pre><code class=""><span class="line">#!/bin/sh  
-</span><span class="line">
-</span><span class="line">doxygen dox.template &amp;&amp; open ./html/index.html</span></code></pre></td></tr></table></div></figure></notextile></div>
-<h3>执行 doxMe.sh 脚本</h3>
-
-<p><code>./doxMe.sh</code></p>
-
-<p>完成后浏览器会自动 open 生成的<code>html</code>文件</p>
-
-<h3>查看信息</h3>
-
-<p>通过 index.html 我们可以直观的查看到<code> Strings analysis </code>，<code> ViewControllers </code>，<code>Classes </code>等几大类的信息。</p>
-
-<div class="figure" id="figure-15-1">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75uwh8b9kj218u126al5.jpg" />
-
-    <p class="caption"><strong>图片 15.1</strong> inalyzer1</p>
-</div>
-
-
-<p>在 Classes-&gt;Class Hierarchy 可以查看到类继承图示。
-支付宝 app<code> class Hierarchy </code>结果冰山一角：</p>
-
-<div class="figure" id="figure-15-2">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75uxns81yj20nm0ke0uo.jpg" />
-
-    <p class="caption"><strong>图片 15.2</strong> inalyzer2</p>
-</div>
-
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/shi-yong-inalyzer-fen-xi-ying-yong-cheng-xu/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

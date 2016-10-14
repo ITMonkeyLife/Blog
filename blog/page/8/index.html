@@ -7,7 +7,9 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="整体而言，这月份算是历经风波的一个月份，心中有着很沉重的感觉，然而焦虑急躁却又同时伴随着。这段日子和他人产生摩擦而有纷争，尽量控制自己的脾气，以避免伤了和气！ 有关事业工作方面的话：接踵而至的事项太多了，自己又有很多酝酿已久的想法和计划，缓慢脚步中时而被催促，略显无奈的敷衍过去， &hellip;">
+	<meta name="description" content="目录 CocoaPods是什么？
+如何下载和安装CocoaPods？
+如何使用CocoaPods？ 场景1：利用CocoaPods，在项目中导入AFNetworking类库 场景2：如何正确编译运行一个包含CocoPods类库的项目 CocoaPods是什么？ 当你开发iOS应用时， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +77,66 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/">
+		
+			CocoaPods安装和使用教程</a>
+	</h2>
+	<div class="entry-content">
+		<h2>目录</h2>
+
+<ul>
+<li><a href="#cocoapods">CocoaPods是什么？</a></li>
+<li><a href="#install">如何下载和安装CocoaPods？</a></li>
+<li><a href="#usage">如何使用CocoaPods？</a>
+
+    <ul>
+        <li><a href="#usage1">场景1：利用CocoaPods，在项目中导入AFNetworking类库</a></li>
+        <li><a href="#usage2">场景2：如何正确编译运行一个包含CocoPods类库的项目</a></li>
+    </ul>
+</li>
+</ul>
+
+<h2 id="cocoapods">CocoaPods是什么？</h2>
+
+<p>当你开发iOS应用时，会经常使用到很多第三方开源类库，比如JSONKit，AFNetWorking等等。可能某个类库又用到其他类库，所以要使用它，必须得另外下载其他类库，而其他类库又用到其他类库，“子子孙孙无穷尽也”，这也许是比较特殊的情况。总之小编的意思就是，手动一个个去下载所需类库十分麻烦。另外一种常见情况是，你项目中用到的类库有更新，你必须得重新下载新版本，重新加入到项目中，十分麻烦。如果能有什么工具能解决这些恼人的问题，那将“善莫大焉”。所以，你需要 CocoaPods。</p>
+
+<p>CocoaPods应该是iOS最常用最有名的类库管理工具了，上述两个烦人的问题，通过cocoaPods，只需要一行命令就可以完全解决，当然前提是你必须正确设置它。重要的是，绝大部分有名的开源类库，都支持CocoaPods。所以，作为iOS程序员的我们，掌握CocoaPods的使用是必不可少的基本技能了。</p>
+
+<h2 id="install">如何下载和安装CocoaPods？</h2>
+
+<p>在安装CocoaPods之前，首先要在本地安装好Ruby环境。至于如何在Mac中安装好Ruby环境，请google一下，本文不再涉及。</p>
+
+<p>假如你在本地已经安装好Ruby环境，那么下载和安装CocoaPods将十分简单，只需要一行命令。在Terminator（也就是终端）中输入以下命令（注意，本文所有命令都是在终端中输入并运行的。什么，你不知道什么是终端？那请小编吃饭，小编告诉你）：</p>
+
+		
+		<a href="/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/05/08/cocoapodsan-zhuang-he-shi-yong-jiao-cheng/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -680,91 +742,6 @@ Link Layer -- e.g. IEEE 802.2
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/10/ti-gao-xcodebian-yi-qi-xiao-lu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/">
-		
-			Xcode编译你所不知道的细节</a>
-	</h2>
-	<div class="entry-content">
-		<p>近些日子我们被宠坏了 &#8211; 我们只需要单击 Xcode 中的一个按钮（这个按钮看起来有点像是在播放一些音乐的动作），过几秒钟之后，我们的程序就会运行起来了，直到遇到一些错误，这非常的神奇。</p>
-
-<p>在本文中，我们将从更高级别的角度来解读 Build 过程，并探索一下在 Xcode 界面中暴露出的 project setting 信息与 Build 过程有什么关系。为了更加深入的探索 Build 过程中，每一步实际执行的工作，我都会在本文中引入一些别的文章。</p>
-
-<h2 id="build">解密 Build 日志</h2>
-
-<p>为了了解 Xcode build 过程的内部工作原理，我们首先把突破口瞄准完整的 log 文件上。打开 Log Navigator ，从列表中选择一个 Build ，Xcode 会将 log 文件很完美的展现出来。</p>
-
-<p><img src="http://img.objccn.io/issue-6/build-log.png" alt="Xcode build log navigator" /></p>
-
-<p>默认情况下，上面的 Xcode 界面中隐藏了大量的信息，我们通过选择任务，然后点击右边的展开按钮，就能看到每个任务的详细信息。另外一种可选的方案就是选中列表中的一个或者多个任务，然后选择组合键 Cmd-C，这将会把所有的纯文本信息拷贝至粘贴板。最后，我们还可以选择 Editor 菜单中的 &#8220;Copy transcript for shown results&#8221;，以此将所有的 log 信息拷贝到粘贴板中。</p>
-
-<p>本文给出的示例中，log 信息将近有 10,000 行（其实大多数的 log 信息是编译 OpenSSL 时生成的，并不是我们自己所写的代码生成的）。下面我们就开始吧！</p>
-
-<p>注意观察输出的 log 信息，首先会发现 log 信息被分为不同的几大块，它们与我们工程中的targets相互对应着：</p>
-
-<pre><code>Build target Pods-SSZipArchive
-...
-Build target Makefile-openssl
-...
-Build target Pods-AFNetworking
-...
-Build target crypto
-...
-Build target Pods
-...
-Build target ssl
-...
-Build target objcio
-</code></pre>
-
-<p>本文涉及到的工程有几个依赖项：其中 AFNetworking 和 SSZipArchive 包含在 Pods 中，而 OpenSSL 则以子工程的形式包含在工程中。</p>
-
-<p>针对工程中的每个 target，Xcode 都会执行一系列的操作，将相关的源码，根据所选定的平台，转换为机器可读的二进制文件。下面我们详细的了解一下第一个 target：SSZipArchive。</p>
-
-<p>在针对这个 target 输出的 log 信息中，我们可以看到每个任务被执行的详细情况。例如第一个任务是处理一个预编译头文件（为了增强 log 信息的可读性，我省略了许多细节）：</p>
-<pre><code>(1) ProcessPCH /.../Pods-SSZipArchive-prefix.pch.pch Pods-SSZipArchive-prefix.pch normal armv7 objective-c com.apple.compilers.llvm.clang.1_0.compiler
-(2) cd /.../Dev/objcio/Pods
-	setenv LANG en_US.US-ASCII
-	setenv PATH "..."
-(3) /.../Xcode.app/.../clang 
-(4) -x objective-c-header 
-(5) -arch armv7 
-... configuration and warning flags ...
-(6) -DDEBUG=1 -DCOCOAPODS=1 
-... include paths and more ...
-(7) -c 
-(8) /.../Pods-SSZipArchive-prefix.pch 
-(9) -o /.../Pods-SSZipArchive-prefix.pch.pch
-</code></pre>
-
-		
-		<a href="/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/10/xcodebian-yi-ni-suo-bu-zhi-dao-de-xi-jie/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
