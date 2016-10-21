@@ -7,7 +7,8 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content=" written by Rick&nbsp;posted at http://ITMonkeyLife.github.io/Blog Comments ">
+	<meta name="description" content="OO Programming
+Java中的编程主要基于构建数据类型。 这种编程风格被称为面向对象编程，因为它围绕着对象的概念，对象是一个保存数据类型值的实体。 对于Java的原始类型，我们主要局限于对数字进行操作的程序，但是对于引用类型，我们可以编写操作字符串，图片， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -76,8 +77,42 @@
 	
 	<div id="content" class="inner"><article class="post">
 	<h2 class="title">面向对象之数据抽象</h2>
-	<div class="entry-content"><p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+	<div class="entry-content"><h3 id="oo-programming">OO Programming</h3>
+<p>Java中的编程主要基于构建数据类型。 这种编程风格被称为面向对象编程，因为它围绕着对象的概念，对象是一个保存数据类型值的实体。 对于Java的原始类型，我们主要局限于对数字进行操作的程序，但是对于引用类型，我们可以编写操作字符串，图片，声音或者在Java标准库中或在我们的书站上可用的数百个其他抽象中的任何一个 。 比预定义数据类型的库更重要的是，Java编程中可用的数据类型范围是开放式的，因为您可以定义自己的数据类型。
+1. 数据类型。 数据类型是一组值和一组对这些值的操作。
+2. 抽象数据类型。 抽象数据类型是其内部表示对客户端隐藏的数据类型。
+3. 对象。 对象是可以接受数据类型值的实体。 对象的特征在于三个基本属性：对象的状态是来自其数据类型的值; 对象的身份将一个对象与另一个对象区分开; 对象的行为是数据类型操作的影响。 在Java中，引用是访问对象的机制。
+4. 应用程序编程接口（API）。 为了指定抽象数据类型的行为，我们使用一个应用程序编程接口（API），它是构造函数和实例方法（操作）的列表，并对每个函数的效果进行非正式描述，如本计数器的API一样：
+<br /><img src="/Blog/images/algorithms/alogrithms_1.2_counter-api.png" /><br />
+5. 客户。 客户端是使用数据类型的程序。
+6. 实现。 实现是实现API中指定的数据类型的代码。</p>
+
+<h3 id="section">使用抽象数据类型。</h3>
+<p>客户端不需要知道数据类型是如何实现的，以便能够使用它。
+1. 创建对象。 每个数据类型值存储在对象中。 要创建（或实例化）单个对象，我们使用关键字new调用构造函数。 每次客户端使用new时，系统为对象分配内存空间，初始化其值，并返回对对象的引用。
+<br /><img src="/Blog/images/algorithms/alogrithms_1.2_constructor.png" /><br />
+2. 调用实例方法。 实例方法的目的是对数据类型值进行操作。 实例方法具有静态方法的所有属性：参数通过值传递，方法名称可以重载，它们可能具有返回值，并且它们可能导致副作用。 他们有一个额外的属性，表征他们：每个调用与一个对象相关联。
+<br /><img src="/Blog/images/algorithms/alogrithms_1.2_instance-method.png" /><br />
+3. 使用对象。 声明给了我们可以在代码中使用的对象的变量名。 要使用给定的数据类型，我们：
+	* 声明类型的变量，用于引用对象
+  * 使用关键字new来调用创建类型对象的构造函数
+  * 使用对象名称来调用实例方法，作为语句或表达式
+例如，<a href="http://algs4.cs.princeton.edu/12oop/Flips.java.html">Flips.java</a>是一个<a href="http://algs4.cs.princeton.edu/12oop/Counter.java.html">Counter.java</a>客户端，它接受命令行参数T并模拟T硬币翻转。
+4. 分配语句。 具有引用类型的赋值语句创建引用的副本（并且不创建新对象）。 这种情况称为别名：两个变量都指向相同的对象。 别名是Java程序中常见的错误来源，如以下示例所示：
+&lt;div class=&#8217;bogus-wrapper&#8217;&gt;<notextile><figure class="code">&lt;figcaption&gt;<span></span>&lt;/figcaption&gt;&lt;div class=&#8221;highlight&#8221;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#8221;gutter&#8221;&gt;&lt;pre class=&#8221;line-numbers&#8221;&gt;<span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#8217;code&#8217;&gt;&lt;pre&gt;<code class="java"><span class="line"><span class="n">Counter</span> <span class="n">c1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Counter</span><span class="o">(</span><span class="s">&quot;ones&quot;</span><span class="o">);</span>
+</span><span class="line"><span class="n">c1</span><span class="o">.</span><span class="na">increment</span><span class="o">();</span>
+</span><span class="line"><span class="n">Counter</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">c1</span><span class="o">;</span>
+</span><span class="line"><span class="n">c2</span><span class="o">.</span><span class="na">increment</span><span class="o">();</span>
+</span><span class="line"><span class="n">StdOut</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">c1</span><span class="o">);</span>
+</span></code>&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/div&gt;</figure></notextile>&lt;/div&gt;
+代码打印字符串“2 ones”。
+&lt;p class=&#8217;post-footer&#8217;&gt;
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a> posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a>&lt;/p&gt;</p>
 </div>
 
 
@@ -89,6 +124,10 @@
 
 </div>
 	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/java/'>Java</a>
+
 
 </div>
 	
