@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Java | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/java/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-10-25T10:25:28+08:00</updated>
+  <updated>2016-10-25T11:16:36+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -39,15 +39,19 @@
   * 使用关键字new来调用创建类型对象的构造函数
   * 使用对象名称来调用实例方法，作为语句或表达式
 例如，<a href="http://algs4.cs.princeton.edu/12oop/Flips.java.html">Flips.java</a>是一个<a href="http://algs4.cs.princeton.edu/12oop/Counter.java.html">Counter.java</a>客户端，它接受命令行参数T并模拟T硬币翻转。
-4. 分配语句。 具有引用类型的赋值语句创建引用的副本（并且不创建新对象）。 这种情况称为别名：两个变量都指向相同的对象。 别名是Java程序中常见的错误来源，如以下示例所示：
-<code>java
+4. 分配语句。 具有引用类型的赋值语句创建引用的副本（并且不创建新对象）。 这种情况称为别名：两个变量都指向相同的对象。 别名是Java程序中常见的错误来源，如以下示例所示：</p>
+<p>
+```java
 Counter c1 = new Counter("ones");
 c1.increment();
 Counter c2 = c1;
 c2.increment();
 StdOut.println(c1);
-</code>
-代码打印字符串“2 ones”。</p>
+```
+</p>
+<p>代码打印字符串“2 ones”。</p>
+<hr />
+
 ]]></content>
   </entry>
   

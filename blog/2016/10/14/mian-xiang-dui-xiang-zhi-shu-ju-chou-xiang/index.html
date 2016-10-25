@@ -98,21 +98,25 @@ Java中的编程主要基于构建数据类型。 这种编程风格被称为面
   * 使用关键字new来调用创建类型对象的构造函数
   * 使用对象名称来调用实例方法，作为语句或表达式
 例如，<a href="http://algs4.cs.princeton.edu/12oop/Flips.java.html">Flips.java</a>是一个<a href="http://algs4.cs.princeton.edu/12oop/Counter.java.html">Counter.java</a>客户端，它接受命令行参数T并模拟T硬币翻转。
-4. 分配语句。 具有引用类型的赋值语句创建引用的副本（并且不创建新对象）。 这种情况称为别名：两个变量都指向相同的对象。 别名是Java程序中常见的错误来源，如以下示例所示：
-&lt;div class=&#8217;bogus-wrapper&#8217;&gt;<notextile><figure class="code">&lt;figcaption&gt;<span></span>&lt;/figcaption&gt;&lt;div class=&#8221;highlight&#8221;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&#8221;gutter&#8221;&gt;&lt;pre class=&#8221;line-numbers&#8221;&gt;<span class="line-number">1</span>
+4. 分配语句。 具有引用类型的赋值语句创建引用的副本（并且不创建新对象）。 这种情况称为别名：两个变量都指向相同的对象。 别名是Java程序中常见的错误来源，如以下示例所示：</p>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
 <span class="line-number">2</span>
 <span class="line-number">3</span>
 <span class="line-number">4</span>
 <span class="line-number">5</span>
-&lt;/pre&gt;&lt;/td&gt;&lt;td class=&#8217;code&#8217;&gt;&lt;pre&gt;<code class="java"><span class="line"><span class="n">Counter</span> <span class="n">c1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Counter</span><span class="o">(</span><span class="s">&quot;ones&quot;</span><span class="o">);</span>
+</pre></td><td class="code"><pre><code class="java"><span class="line"><span class="n">Counter</span> <span class="n">c1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Counter</span><span class="o">(</span><span class="s">&quot;ones&quot;</span><span class="o">);</span>
 </span><span class="line"><span class="n">c1</span><span class="o">.</span><span class="na">increment</span><span class="o">();</span>
 </span><span class="line"><span class="n">Counter</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">c1</span><span class="o">;</span>
 </span><span class="line"><span class="n">c2</span><span class="o">.</span><span class="na">increment</span><span class="o">();</span>
 </span><span class="line"><span class="n">StdOut</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">c1</span><span class="o">);</span>
-</span></code>&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/div&gt;</figure></notextile>&lt;/div&gt;
-代码打印字符串“2 ones”。
-&lt;p class=&#8217;post-footer&#8217;&gt;
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a> posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a>&lt;/p&gt;</p>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<p>代码打印字符串“2 ones”。</p>
+<hr />
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 </div>
 
 
