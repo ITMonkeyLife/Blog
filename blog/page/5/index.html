@@ -7,7 +7,37 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="最近在学习React-Native过程中整理了一些学习的资源。 教程 react-native 官方api文档. Awesome React-Native. react-native 中文api文档 (翻译中). react.js中文文档. react.js入门教程(gitbook). &hellip;">
+	<meta name="description" content="最近发现自己对iOS的动画理解很肤浅，于是执行了一段相对复杂的动画，加深自己对CAKeyframeAnimation关键帧动画的理解。
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +105,140 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/06/12/dong-hua-xiang-jie/">
+		
+			动画详解</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+最近发现自己对iOS的动画理解很肤浅，于是执行了一段相对复杂的动画，加深自己对CAKeyframeAnimation关键帧动画的理解。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line">    <span class="c1">//执行事件</span>
+</span><span class="line">    <span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">positionAnimation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="n">animation</span><span class="p">];</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position&quot;</span><span class="p">;</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">values</span> <span class="o">=</span> <span class="err">@</span><span class="p">[[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)],</span> <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="o">-</span><span class="mi">110</span><span class="p">,</span> <span class="mi">73</span><span class="p">)],</span> <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="o">-</span><span class="mi">167</span><span class="p">,</span> <span class="mi">116</span><span class="p">)],</span> <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCGPoint:</span><span class="n">CGPointMake</span><span class="p">(</span><span class="o">-</span><span class="mi">189</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">133</span><span class="o">+</span><span class="mi">30</span><span class="p">)]];</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">keyTimes</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mi">0</span><span class="p">,</span> <span class="err">@</span><span class="p">(</span><span class="mi">11</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="p">(</span><span class="mi">22</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="mi">1</span><span class="p">];</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">;</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">removedOnCompletion</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">additive</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">timingFunctions</span> <span class="o">=</span> <span class="err">@</span><span class="p">[[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">],</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">],</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">],</span> <span class="p">[</span><span class="n">CAMediaTimingFunction</span> <span class="nl">functionWithName:</span><span class="n">kCAMediaTimingFunctionLinear</span><span class="p">]];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">autoreverses</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="n">positionAnimation</span><span class="p">.</span><span class="n">calculationMode</span> <span class="o">=</span> <span class="n">kCAAnimationLinear</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">    <span class="p">[</span><span class="n">_meteroStar</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">positionAnimation</span> <span class="nl">forKey:</span><span class="s">@&quot;PositionAnimation&quot;</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">//    Alpha</span>
+</span><span class="line">    <span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">alphaAnimation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="s">@&quot;opacity&quot;</span><span class="p">];</span>
+</span><span class="line">    <span class="n">alphaAnimation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">;</span>
+</span><span class="line">    <span class="n">alphaAnimation</span><span class="p">.</span><span class="n">values</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mf">0.0</span><span class="p">,</span> <span class="err">@</span><span class="mf">1.0</span><span class="p">,</span> <span class="err">@</span><span class="mf">0.5</span><span class="p">,</span> <span class="err">@</span><span class="mf">0.4</span><span class="p">];</span>
+</span><span class="line">    <span class="n">alphaAnimation</span><span class="p">.</span><span class="n">keyTimes</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mi">0</span><span class="p">,</span> <span class="err">@</span><span class="p">(</span><span class="mi">11</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="p">(</span><span class="mi">22</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="mi">1</span><span class="p">];</span>
+</span><span class="line">    <span class="n">alphaAnimation</span><span class="p">.</span><span class="n">autoreverses</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="n">alphaAnimation</span><span class="p">.</span><span class="n">removedOnCompletion</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">_meteroStar</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">alphaAnimation</span> <span class="nl">forKey:</span><span class="s">@&quot;alphaPositionAnimation&quot;</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// Transform</span>
+</span><span class="line">    <span class="n">CAKeyframeAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CAKeyframeAnimation</span> <span class="nl">animationWithKeyPath:</span><span class="s">@&quot;transform&quot;</span><span class="p">];</span>
+</span><span class="line">         <span class="n">CATransform3D</span> <span class="n">scale1</span> <span class="o">=</span> <span class="n">CATransform3DMakeScale</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line">         <span class="n">CATransform3D</span> <span class="n">scale2</span> <span class="o">=</span> <span class="n">CATransform3DMakeScale</span><span class="p">(</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line">         <span class="n">CATransform3D</span> <span class="n">scale3</span> <span class="o">=</span> <span class="n">CATransform3DMakeScale</span><span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line">         <span class="n">CATransform3D</span> <span class="n">scale4</span> <span class="o">=</span> <span class="n">CATransform3DMakeScale</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">NSArray</span> <span class="o">*</span><span class="n">frameValues</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSArray</span> <span class="nl">arrayWithObjects:</span>
+</span><span class="line">                                  <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCATransform3D:</span><span class="n">scale1</span><span class="p">],</span>
+</span><span class="line">                                  <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCATransform3D:</span><span class="n">scale2</span><span class="p">],</span>
+</span><span class="line">                                  <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCATransform3D:</span><span class="n">scale3</span><span class="p">],</span>
+</span><span class="line">                                  <span class="p">[</span><span class="n">NSValue</span> <span class="nl">valueWithCATransform3D:</span><span class="n">scale4</span><span class="p">],</span>
+</span><span class="line">                                                               <span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">animation</span> <span class="nl">setValues:</span><span class="n">frameValues</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">keyTimes</span> <span class="o">=</span> <span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="mi">0</span><span class="p">,</span> <span class="err">@</span><span class="p">(</span><span class="mi">11</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="p">(</span><span class="mi">22</span> <span class="o">/</span> <span class="mf">30.0</span><span class="p">),</span> <span class="err">@</span><span class="mi">1</span><span class="p">];</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">fillMode</span> <span class="o">=</span> <span class="n">kCAFillModeForwards</span><span class="p">;</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">autoreverses</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="n">animation</span><span class="p">.</span><span class="n">removedOnCompletion</span> <span class="o">=</span> <span class="n">NO</span><span class="p">;</span>
+</span><span class="line">    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">meteroStar</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;PopUpAnimation&quot;</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/06/12/dong-hua-xiang-jie/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -616,52 +780,6 @@ React-Native 帮助在原生平台打造世界一流的应用体验，使用基�
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2015/12/16/bian-xie-gao-zhi-liang-de-swiftdai-ma/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/">
-		
-			Swift 的 ABI</a>
-	</h2>
-	<div class="entry-content">
-		<p>
-随着Swift的开源，苹果开发者迎来了新的开端。其实这个是我一直想要表达的，随着对Swift这个语言的深入了解，越发感觉到Swift的魅力。Swift是系统编程语言，现在C语言之所以能统治底层开发的最重要原因是C规范统一的ABI，使其能做到与汇编程序无缝衔接。而Swift的ABI兼容C（并不包括name mangling部分）。基于强大的llvm生成具体平台代码。不仅仅作为Objective-C的翻译。
-</p>
-<p>
-通过开发Swift，了解到Swift文件的中间编译结果（介于Swift代码合llvm ir）是SIL。SIL我下一章着重介绍。这张暂时把焦点放在Swift的ABI。那么什么是ABI，你一定很陌生吧，那么对于API呢，你是不是明白了什么？
-</p>
-<p>
-ABI的全称是Application Binary Interface。翻译过来就是应用二进制接口，描述了应用程序和操作系统或其他应用程序之间的低级接口。
-</p>
-<p>
-ABI涵盖了各个细节：
-
-		
-		<a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2015/12/11/swift-2-dot-2-yuan-ma-jie-du/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
