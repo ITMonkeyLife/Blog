@@ -116,7 +116,7 @@
 </span><span class="line">  DYLD_INSERT_LIBRARIES=dumpdecrypted.dylib /var/mobile/Applications/20EC6C4E-F75C-4FA5-8457-DFF4C2C4E9BC/WeChat.app/WeChat</span></code></pre></td></tr></table></div></figure></notextile></div>
 </p>
 <p>5、砸开
-  class-dump –arch armv7 WeChat.decrypted
+  class-dump –arch armv7 WeChat.decrypted -S -s -H -o /Users/Rick/Documents/ios/isere/WeChatHeader
 <br /></p>
 <p>
 <div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
