@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="16 使用 introspy 追踪分析应用程序 如果你已阅读了《 iOS 安全攻防》系列专栏之前的文章，一定已经对静态以及运行时分析 App 有了一定的了解。 我们可以借助的分析工具很多，工具和工具之间一般没有什么优劣比较性，完全看个人习惯什么擅长什么。 多个工具多条路， &hellip;">
+	<meta name="description" content="17 Fishhook 众所周知，Objective-C 的首选 hook 方案为 Method Swizzle，于是大家纷纷表示核心内容应该用 C 写。 接下来进阶说说 iOS 下 C 函数的 hook 方案，先介绍第一种方案&#8212; fishhook . 什么是 fishhook &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,254 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/fish-hook/">
+		
+			Fish Hook</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">17</span> <span class="title">Fishhook</span></h1>
+    <p>众所周知，<code>Objective-C </code>的首选<code> hook </code>方案为<code> Method Swizzle</code>，于是大家纷纷表示核心内容应该用 C 写。</p>
+
+<p>接下来进阶说说 <code>iOS</code> 下 C 函数的<code> hook </code>方案，先介绍第一种方案&#8212; <a href="https://github.com/facebook/fishhook">fishhook</a> .</p>
+
+<h3>什么是 fishhook</h3>
+
+<p><code>fishhook </code>是 facebook 提供的一个动态修改链接<code> Mach-O </code>符号表的开源工具。</p>
+
+<h3>什么是<code> Mach-O</code></h3>
+
+<p><code>Mach-O </code>为 Mach Object 文件格式的缩写,也是用于 <code>iOS </code>可执行文件，目标代码，动态库，内核转储的文件格式。</p>
+
+<p><code>Mach-O </code>有自己的<code> dylib </code>规范。</p>
+
+<h3>fishhook 的原理</h3>
+
+<p>详见官方的 How it works，这里我作个简要说明。</p>
+
+<p><code>dyld </code>链接 2 种符号，<code>lazy </code>和<code> non-lazy </code>，fishhook 可以重新链接/替换本地符号。</p>
+
+<div class="figure" id="figure-17-1">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75zprz6wrj20jo0pcgo0.jpg" />
+
+    <p class="caption"><strong>图片 17.1</strong> fishhook1</p>
+</div>
+
+
+<p>如图所示，<code>__DATA</code>区有两个 section 和动态符号链接相关：<code>__nl_symbol_ptr</code>、<code>__la_symbol_ptr</code>。<code>__nl_symbol_ptr</code> 为一个指针数组，直接对应<code> non-lazy </code>绑定数据。<code>__la_symbol_ptr</code> 也是一个指针数组，通过<code>dyld_stub_binder</code> 辅助链接。<code>&lt;mach-o/loader.h&gt;</code>的 section 头提供符号表的偏移量。</p>
+
+<p>图示中，1061 是间接符号表的偏移量，*（偏移量+间接符号地址）=16343，即符号表偏移量。符号表中每一个结构都是一个<code> nlist </code>结构体，其中包含字符表偏移量。通过字符表偏移量最终确定函数指针。</p>
+
+<p>fishhook 就是对间接符号表的偏移量动的手脚，提供一个假的<code> nlist </code>结构体，从而达到 hook 的目的。</p>
+
+<p>fishhook 替换符号函数：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">int</span> <span class="nf">rebind_symbols</span><span class="p">(</span><span class="k">struct</span> <span class="n">rebinding</span> <span class="n">rebindings</span><span class="p">[],</span> <span class="n">size_t</span> <span class="n">rebindings_nel</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="kt">int</span> <span class="n">retval</span> <span class="o">=</span> <span class="n">prepend_rebindings</span><span class="p">(</span><span class="n">rebindings</span><span class="p">,</span> <span class="n">rebindings_nel</span><span class="p">);</span>
+</span><span class="line">  <span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line">  <span class="c1">// If this was the first call, register callback for image additions (which is also invoked for  </span>
+</span><span class="line">  <span class="c1">// existing images, otherwise, just run on existing images  </span>
+</span><span class="line">  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">rebindings_head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">_dyld_register_func_for_add_image</span><span class="p">(</span><span class="n">rebind_symbols_for_image</span><span class="p">);</span>
+</span><span class="line">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">uint32_t</span> <span class="n">c</span> <span class="o">=</span> <span class="n">_dyld_image_count</span><span class="p">();</span>
+</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">uint32_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">c</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">      <span class="n">rebind_symbols_for_image</span><span class="p">(</span><span class="n">_dyld_get_image_header</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">_dyld_get_image_vmaddr_slide</span><span class="p">(</span><span class="n">i</span><span class="p">));</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line">  <span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>关键函数是 <code>_dyld_register_func_for_add_image</code>，这个函数是用来注册回调，当 dyld 链接符号时，调用此回调函数。 <code>rebind_symbols_for_image</code> 做了具体的替换和填充。</p>
+
+<h3>fishhook 替换<code> Core Foundation </code>函数的例子</h3>
+
+<p>以下是官方提供的替换<code> Core Foundation </code>中 open 和 close 函数的实例代码</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">dlfcn</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">UIKit</span><span class="o">/</span><span class="n">UIKit</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="s">&quot;AppDelegate.h&quot;</span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="s">&quot;fishhook.h&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">orig_close</span><span class="p">)(</span><span class="kt">int</span><span class="p">);</span>
+</span><span class="line"><span class="k">static</span> <span class="nf">int</span> <span class="p">(</span><span class="o">*</span><span class="n">orig_open</span><span class="p">)(</span><span class="k">const</span> <span class="n">charchar</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="p">...);</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">void</span> <span class="nf">save_original_symbols</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">orig_close</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">RTLD_DEFAULT</span><span class="p">,</span> <span class="s">&quot;close&quot;</span><span class="p">);</span>
+</span><span class="line">  <span class="n">orig_open</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">RTLD_DEFAULT</span><span class="p">,</span> <span class="s">&quot;open&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">my_close</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Calling real close(%d)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">fd</span><span class="p">);</span>
+</span><span class="line">  <span class="k">return</span> <span class="n">orig_close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">my_open</span><span class="p">(</span><span class="k">const</span> <span class="n">charchar</span> <span class="o">*</span><span class="n">path</span><span class="p">,</span> <span class="kt">int</span> <span class="n">oflag</span><span class="p">,</span> <span class="p">...)</span> <span class="p">{</span>
+</span><span class="line">  <span class="n">va_list</span> <span class="n">ap</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span><span class="line">  <span class="n">mode_t</span> <span class="n">mode</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line">  <span class="k">if</span> <span class="p">((</span><span class="n">oflag</span> <span class="o">&amp;</span> <span class="n">O_CREAT</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="c1">// mode only applies to O_CREAT  </span>
+</span><span class="line">    <span class="n">va_start</span><span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="n">oflag</span><span class="p">);</span>
+</span><span class="line">    <span class="n">mode</span> <span class="o">=</span> <span class="n">va_arg</span><span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="kt">int</span><span class="p">);</span>
+</span><span class="line">    <span class="n">va_end</span><span class="p">(</span><span class="n">ap</span><span class="p">);</span>
+</span><span class="line">    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Calling real open(&#39;%s&#39;, %d, %d)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">oflag</span><span class="p">,</span> <span class="n">mode</span><span class="p">);</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">orig_open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">oflag</span><span class="p">,</span> <span class="n">mode</span><span class="p">);</span>
+</span><span class="line">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Calling real open(&#39;%s&#39;, %d)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">oflag</span><span class="p">);</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">orig_open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">oflag</span><span class="p">,</span> <span class="n">mode</span><span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="n">charchar</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">  <span class="err">@</span><span class="n">autoreleasepool</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">save_original_symbols</span><span class="p">();</span>
+</span><span class="line">    <span class="c1">//fishhook用法  </span>
+</span><span class="line">    <span class="n">rebind_symbols</span><span class="p">((</span><span class="k">struct</span> <span class="n">rebinding</span><span class="p">[</span><span class="mi">2</span><span class="p">]){</span>
+</span><span class="line">      <span class="p">{</span><span class="s">&quot;close&quot;</span><span class="p">,</span> <span class="n">my_close</span><span class="p">},</span>
+</span><span class="line">      <span class="p">{</span><span class="s">&quot;open&quot;</span><span class="p">,</span> <span class="n">my_open</span><span class="p">}},</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// Open our own binary and print out first 4 bytes (which is the same  </span>
+</span><span class="line">    <span class="c1">// for all Mach-O binaries on a given architecture)  </span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+</span><span class="line">    <span class="n">uint32_t</span> <span class="n">magic_number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">    <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">magic_number</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+</span><span class="line">    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Mach-O Magic Number: %x </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">magic_number</span><span class="p">);</span>
+</span><span class="line">    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">UIApplicationMain</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="nb">nil</span><span class="p">,</span> <span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">AppDelegate</span> <span class="n">class</span><span class="p">]));</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// fishhook 用法处:</span>
+</span><span class="line"><span class="n">rebind_symbols</span><span class="p">((</span><span class="k">struct</span> <span class="n">rebinding</span><span class="p">[</span><span class="mi">2</span><span class="p">]){</span>
+</span><span class="line">  <span class="p">{</span><span class="s">&quot;close&quot;</span><span class="p">,</span> <span class="n">my_close</span><span class="p">},</span>
+</span><span class="line">  <span class="p">{</span><span class="s">&quot;open&quot;</span><span class="p">,</span> <span class="n">my_open</span><span class="p">}</span>
+</span><span class="line">  <span class="p">},</span> <span class="mi">2</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>传入 rebind_symbols 的第一个参数是一个结构体数组，大括号中为对应数组内容。</p>
+
+<p>不得不说，facebook 忒 NB 。</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/fish-hook/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1524,172 +1772,6 @@ Primer:/private/var/Keychains root# chmod +r keychain-2.db</pre>
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/25/jian-pan-huan-cun-yu-an-quan-jian-pan/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/">
-		
-			Hack 实战——解除支付宝手势解锁次数限制</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">7</span> <span class="title">Hack 实战——解除支付宝 App 手势解锁错误次数限制</span></h1>
-    <p>之前仅仅介绍了工具的使用，本文将实践一下如何利用 cycript 结合 class-dump 结果 hack，还要牺牲一下支付宝 App 。</p>
-
-<p>首先，老套路，取到手势解锁界面的 View Controller:</p>
-
-<div class="code code">
-<pre class="code">cy# var app = [UIApplication sharedApplication]  
-@&quot;&lt;DFApplication: 0x1666c960&gt;&quot;  
-cy# var keyWindow = app.keyWindow  
-@&quot;&lt;UIWindow: 0x16591bd0; frame = (0 0; 320 568); gestureRecognizers = &lt;NSArray: 0x1b047000&gt;; layer = &lt;UIWindowLayer: 0x165d0650&gt;&gt;&quot;  
-cy# var root = keyWindow.rootViewController  
-@&quot;&lt;UINavigationController: 0x179779a0&gt;&quot;  
-cy# var visible = root.visibleViewController  
-@&quot;&lt;GestureUnlockViewController: 0x165de090&gt;&quot;</pre>
-</div>
-
-<p>然后，对照 class-dump-z 结果，来分析 GestureUnlockViewController 有什么利用价值 ：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">GestureUnlockViewController</span> : <span class="nc">DTViewController</span> <span class="o">&lt;</span><span class="n">UIAlertViewDelegate</span><span class="p">,</span> <span class="n">GestureHeadImageViewDelegate</span><span class="o">&gt;</span> <span class="p">{</span>
-</span><span class="line"><span class="k">@private</span>
-</span><span class="line">    <span class="n">GestureHeadImageView</span><span class="o">*</span> <span class="n">_headImageView</span><span class="p">;</span>
-</span><span class="line">    <span class="n">GestureTipLabel</span><span class="o">*</span> <span class="n">_tipLabel</span><span class="p">;</span>
-</span><span class="line">    <span class="n">GestureInputView</span><span class="o">*</span> <span class="n">_inputView</span><span class="p">;</span>
-</span><span class="line">    <span class="n">DTButton</span><span class="o">*</span> <span class="n">_forgetButton</span><span class="p">;</span>
-</span><span class="line">    <span class="n">DTButton</span><span class="o">*</span> <span class="n">_changeAccountButton</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">_retryCount</span><span class="p">;</span>
-</span><span class="line">    <span class="n">UIView</span><span class="o">*</span> <span class="n">_guideView</span><span class="p">;</span>
-</span><span class="line">    <span class="kt">id</span><span class="o">&lt;</span><span class="n">GestrueViewControllerDelegate</span><span class="o">&gt;</span> <span class="n">_delegate</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line"><span class="k">@property</span><span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">__weak</span> <span class="kt">id</span><span class="o">&lt;</span><span class="n">GestrueViewControllerDelegate</span><span class="o">&gt;</span> <span class="n">delegate</span><span class="p">;</span>
-</span><span class="line"><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">).</span><span class="n">cxx_destruct</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">shouldAutorotateToInterfaceOrientation:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">interfaceOrientation</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">headClicked</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputViewFirstEffectiveTouch:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">touch</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">alertView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">clickedButtonAtIndex:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">index</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">actionChangeAccountToLogin</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">actionResetPswBtnClick</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">resetCurrentUser</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">resetPsw</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewWillDisappear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">view</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">notifyFaceToFacePayReceivedData:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">facePayReceivedData</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewWillAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">view</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">breakFirstRun</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isFirstRun</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">guideViewClicked:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">clicked</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewDidLoad</span><span class="p">;</span>
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">viewWillLayoutSubviews</span><span class="p">;</span>
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>目测 <code>_tipLabel</code> 是写账户名和提示操作的 label ，上篇文章我提到过：@private 限制不了 keyPath ，现在我们来修改一下支付宝登录页的用户名信息：</p>
-
-<div class="code code">
-<pre class="code">cy# [visible setValue:@&quot;Test By yiyaaixuexi&quot; forKeyPath:@&quot;_tipLabel.text&quot;]</pre>
-</div>
-
-<div class="figure" id="figure-7-1">
-    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f75ua3yb6aj208w0fsmys.jpg" />
-
-    <p class="caption"><strong>图片 7.1</strong> hack-practice</p>
-</div>
-
-
-<p>支付宝手势密码解锁有尝试次数限制，连续错 5 次就要重新登录。
-我想解除重试解锁次数的限制，发现了记录解锁次数的类型是 int ，<code>int _retryCount</code> ，这一点让我很不开心，因为我无法通过 KVC 来修改其值了。</p>
-
-<p>但是没有关系，我可以通过指针访问：</p>
-
-<div class="code code">
-<pre class="code">cy# visible-&gt;_retryCount = 0  
-0</pre>
-</div>
-
-<p>这样我就能无限制的用程序暴力破解手势密码了，来计算一下有多少种可能呢？</p>
-
-<div class="figure" id="figure-7-2">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75uaz3e83j20lk01aaam.jpg" />
-
-    <p class="caption"><strong>图片 7.2</strong> hack-practice2</p>
-</div>
-
-
-<p>这个数字对我来说有点大，可是对 iPhone5 的 CPU 来说就是小菜一碟了～</p>
-
-<p>等一下，密码格式是什么呢？</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>id 类型的密码，很严谨，又给 hack 带来不少麻烦呀～
-不过没关系，我们可以利用 Method Swizzling 来打出 password 到底是什么，不过呢，貌似可以再写一篇新文章去介绍了……</p>
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="这篇文章将专注于实用技巧，设计模式，以及对于写出线程安全类和使用 GCD 来说所特别需要注意的一些反面模式。 线程安全 Apple 的框架 首先让我们来看看 Apple 的框架。一般来说除非特别声明，大多数的类默认都不是线程安全的。对于其中的一些类来说，这是很合理的， &hellip;">
+	<meta name="description" content="在开发高质量应用程序的过程中，测试是一个很重要的工具。在过去，当并发并不是应用程序架构中重要组成部分的时候，测试就相对简单。随着这几年的发展，使用并发设计模式已愈发重要了，想要测试好并发应用程序，已成了一个不小的挑战。 测试并发代码最主要的困难在于程序或信息流不是反映在调用堆栈上。 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,70 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/">
+		
+			并发程序开发测试</a>
+	</h2>
+	<div class="entry-content">
+		<p>在开发高质量应用程序的过程中，测试是一个很重要的工具。在过去，当并发并不是应用程序架构中重要组成部分的时候，测试就相对简单。随着这几年的发展，使用并发设计模式已愈发重要了，想要测试好并发应用程序，已成了一个不小的挑战。</p>
+
+<p>测试并发代码最主要的困难在于程序或信息流不是反映在调用堆栈上。函数并不会立即返回结果给调用者，而是通过回调函数，Block，通知或者一些类似的机制，这些使得测试变得更加困难。</p>
+
+<p>然而，测试异步代码也会带来一些好处，比如可以揭露较差的程序设计，让最终的实现变得更加清晰。</p>
+
+<h2>异步测试的问题</h2>
+
+<p>首先，我们来看一个简单的同步单元测试例子。两个数求和的方法：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">add:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">a</span> <span class="nf">to:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">b</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>测试这个方法很简单，只需要比较该方法返回的值是否与期望的值相同，如果不相同，则测试失败。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">testAddition</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">Calculator</span> <span class="nl">add:</span><span class="mi">2</span> <span class="nl">to:</span><span class="mi">2</span><span class="p">];</span>
+</span><span class="line">    <span class="n">STAssertEquals</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="nb">nil</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/bing-fa-cheng-xu-kai-fa-ce-shi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -682,67 +746,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/03/24/%E4%BD%A0%E7%9C%9F%E7%9A%84%E6%87%82GCD%E5%90%97%3F/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/">
-		
-			iOS设备信息收集</a>
-	</h2>
-	<div class="entry-content">
-		<p>收集iOS设备的信息，包含设备系统版本，设备型号，手机型号，屏幕分辨率，当地所在时区，CPU 型号，系统语言，网络环境，应用名称以及应用版本，还有判断设备是否，应用是否被破解</p>
-<p>需要的头文件</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &quot;ISSMobileClick.h&quot;</span>
-</span><span class="line"><span class="cp">#import &quot;AppInfoModel.h&quot;</span>
-</span><span class="line"><span class="cp">#import &lt;CoreLocation/CoreLocation.h&gt;</span>
-</span><span class="line"><span class="cp">#import &lt;CoreTelephony/CTCarrier.h&gt;</span>
-</span><span class="line"><span class="cp">#import &lt;CoreTelephony/CTTelephonyNetworkInfo.h&gt;</span>
-</span><span class="line"><span class="cp">#import &lt;objc/runtime.h&gt;</span>
-</span><span class="line"><span class="cp">#include &lt;sys/types.h&gt;</span>
-</span><span class="line"><span class="cp">#include &lt;sys/sysctl.h&gt;</span>
-</span><span class="line"><span class="cp">#include &lt;mach/machine.h&gt;</span>
-</span><span class="line"><span class="cp">#include &lt;sys/types.h&gt;</span>
-</span><span class="line"><span class="cp">#import &quot;ITTNetworkTrafficManager.h&quot;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-<p>实现方法，我使用类方法方便调用，无需实例化，直接类调用</p>
-
-		
-		<a href="/Blog/blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

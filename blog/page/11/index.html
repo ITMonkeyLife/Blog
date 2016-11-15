@@ -7,10 +7,20 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="作为一款「写作软件」在诞生之初就支持了 Markdown，Markdown 是一种「电子邮件」风格的「标记语言」，我强烈推荐所有写作者学习和掌握该语言。
-在此，总结 Markdown 的优点如下： 纯文本，所以兼容性极强，可以用所有文本编辑器打开。
-让你专注于文字而不是排版。
-格式转换方便， &hellip;">
+	<meta name="description" content="收集iOS设备的信息，包含设备系统版本，设备型号，手机型号，屏幕分辨率，当地所在时区，CPU 型号，系统语言，网络环境，应用名称以及应用版本，还有判断设备是否，应用是否被破解
+需要的头文件
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+#import &quot;ISSMobileClick. &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -78,6 +88,67 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/">
+		
+			iOS设备信息收集</a>
+	</h2>
+	<div class="entry-content">
+		<p>收集iOS设备的信息，包含设备系统版本，设备型号，手机型号，屏幕分辨率，当地所在时区，CPU 型号，系统语言，网络环境，应用名称以及应用版本，还有判断设备是否，应用是否被破解</p>
+<p>需要的头文件</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &quot;ISSMobileClick.h&quot;</span>
+</span><span class="line"><span class="cp">#import &quot;AppInfoModel.h&quot;</span>
+</span><span class="line"><span class="cp">#import &lt;CoreLocation/CoreLocation.h&gt;</span>
+</span><span class="line"><span class="cp">#import &lt;CoreTelephony/CTCarrier.h&gt;</span>
+</span><span class="line"><span class="cp">#import &lt;CoreTelephony/CTTelephonyNetworkInfo.h&gt;</span>
+</span><span class="line"><span class="cp">#import &lt;objc/runtime.h&gt;</span>
+</span><span class="line"><span class="cp">#include &lt;sys/types.h&gt;</span>
+</span><span class="line"><span class="cp">#include &lt;sys/sysctl.h&gt;</span>
+</span><span class="line"><span class="cp">#include &lt;mach/machine.h&gt;</span>
+</span><span class="line"><span class="cp">#include &lt;sys/types.h&gt;</span>
+</span><span class="line"><span class="cp">#import &quot;ITTNetworkTrafficManager.h&quot;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>实现方法，我使用类方法方便调用，无需实例化，直接类调用</p>
+
+		
+		<a href="/Blog/blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/03/21/iOS%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">

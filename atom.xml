@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-11-02T10:03:11+08:00</updated>
+  <updated>2016-11-15T16:09:04+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,383 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[在现有iOS工程加入React-Native]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/15/zai-xian-you-iosgong-cheng-jia-ru-react-native/"/>
+    <updated>2016-11-15T14:52:23+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/15/zai-xian-you-iosgong-cheng-jia-ru-react-native</id>
+    <content type="html"><![CDATA[<h2>
+React-Native在iOS工程的集成
+</h2>
+<p>
+当我们想在现有的iOS开发工程中加入React-Native这个模块的时候，我们需要做一些准备工作。<我假设已经安装了homebrew>安装需要的工具：npm
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">brew install npm</span></code></pre></td></tr></table></div></figure></notextile></div>
+一般来说只要有这个就可以，但是鉴于npm 每次都要npm install React-Native并且时间很慢，我们可以辅助使用Yarn，这个工具也是Facebook出品的，这个打React-Native的效率比<code>npm install </code>高很多。
+安装好了npm之后，我们创建一个package.json文件,内容如下
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+</pre></td><td class="code"><pre><code class="json"><span class="line"><span class="p">{</span>
+</span><span class="line">  <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;honer&quot;</span><span class="p">,</span>
+</span><span class="line">  <span class="nt">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
+</span><span class="line">  <span class="nt">&quot;private&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+</span><span class="line">  <span class="nt">&quot;scripts&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nt">&quot;update&quot;</span><span class="p">:</span> <span class="s2">&quot;echo &#39;{\&quot;presets\&quot;:[\&quot;react-native\&quot;],\&quot;plugins\&quot;:[\&quot;transform-decorators-legacy\&quot;,[\&quot;react-native-css-class\&quot;,{\&quot;pragma\&quot;:\&quot;CSS\&quot;}]]}&#39; &gt; .babelrc &amp;&amp; mkdir bundle &amp;&amp; npm i&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;start&quot;</span><span class="p">:</span> <span class="s2">&quot;node node_modules/react-native/local-cli/cli.js start&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;build&quot;</span><span class="p">:</span> <span class="s2">&quot;rm -rf ./bundle/* &amp;&amp; react-native bundle --platform ios --entry-file ./ReactComponent/index.ios.js --bundle-output ./bundle/main.jsbundle --assets-dest ./bundle/  --dev false&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;jest&quot;</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nt">&quot;dependencies&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nt">&quot;react&quot;</span><span class="p">:</span> <span class="s2">&quot;15.3.2&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;react-native&quot;</span><span class="p">:</span> <span class="s2">&quot;0.36.1&quot;</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nt">&quot;jest&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nt">&quot;preset&quot;</span><span class="p">:</span> <span class="s2">&quot;jest-react-native&quot;</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nt">&quot;devDependencies&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nt">&quot;babel-jest&quot;</span><span class="p">:</span> <span class="s2">&quot;16.0.0&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;babel-plugin-react-native-css-class&quot;</span><span class="p">:</span> <span class="s2">&quot;git+https://github.com/qq4647805/babel-plugin-react-native-css-class.git&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;babel-plugin-transform-decorators-legacy&quot;</span><span class="p">:</span> <span class="s2">&quot;^1.3.4&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;babel-plugin-transform-runtime&quot;</span><span class="p">:</span> <span class="s2">&quot;^6.15.0&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;babel-preset-react-native&quot;</span><span class="p">:</span> <span class="s2">&quot;1.9.0&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;jest&quot;</span><span class="p">:</span> <span class="s2">&quot;16.0.2&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;jest-react-native&quot;</span><span class="p">:</span> <span class="s2">&quot;16.1.0&quot;</span><span class="p">,</span>
+</span><span class="line">    <span class="nt">&quot;react-test-renderer&quot;</span><span class="p">:</span> <span class="s2">&quot;15.3.2&quot;</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+通过终端进入工程根目录下，如果这时安装了Yarn。在终端输入<code>yarn</code>，回车一按，自动查找需要安装的packages
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="json"><span class="line"><span class="err">RickdeMacBook-Pro:xueba_ios_</span><span class="mi">2016</span> <span class="err">Wenba$</span> <span class="err">yarn</span>
+</span><span class="line"><span class="err">yarn</span> <span class="err">install</span> <span class="err">v</span><span class="mf">0.16</span><span class="err">.</span><span class="mi">1</span>
+</span><span class="line"><span class="err">info</span> <span class="err">No</span> <span class="err">lockfile</span> <span class="err">found.</span>
+</span><span class="line"><span class="p">[</span><span class="mi">1</span><span class="err">/</span><span class="mi">4</span><span class="p">]</span> <span class="err">🔍</span>  <span class="err">Resolving</span> <span class="err">packages...</span>
+</span><span class="line"><span class="err">warning</span> <span class="err">jest</span> <span class="err">&gt;</span> <span class="err">jest-cli</span> <span class="err">&gt;</span> <span class="err">istanbul-api</span> <span class="err">&gt;</span> <span class="err">fileset</span> <span class="err">&gt;</span> <span class="err">minimatch@</span><span class="mf">2.0</span><span class="err">.</span><span class="mi">10</span><span class="err">:</span> <span class="err">Please</span> <span class="err">update</span> <span class="err">to</span> <span class="err">minimatch</span> <span class="mf">3.0</span><span class="err">.</span><span class="mi">2</span> <span class="err">or</span> <span class="err">higher</span> <span class="err">to</span> <span class="err">avoid</span> <span class="err">a</span> <span class="err">RegExp</span> <span class="err">DoS</span> <span class="err">issue</span>
+</span><span class="line"><span class="p">[</span><span class="mi">2</span><span class="err">/</span><span class="mi">4</span><span class="p">]</span> <span class="err">🚚</span>  <span class="err">Fetching</span> <span class="err">packages...</span>
+</span><span class="line"><span class="p">[</span><span class="mi">3</span><span class="err">/</span><span class="mi">4</span><span class="p">]</span> <span class="err">🔗</span>  <span class="err">Linking</span> <span class="err">dependencies...</span>
+</span><span class="line"><span class="err">warning</span> <span class="err">Unmet</span> <span class="err">peer</span> <span class="err">dependency</span> <span class="s2">&quot;whatwg-fetch@^1.0.0&quot;</span><span class="err">.</span>
+</span><span class="line"><span class="p">[</span><span class="mi">4</span><span class="err">/</span><span class="mi">4</span><span class="p">]</span> <span class="err">📃</span>  <span class="err">Building</span> <span class="err">fresh</span> <span class="err">packages...</span>
+</span><span class="line"><span class="err">success</span> <span class="err">Saved</span> <span class="err">lockfile.</span>
+</span><span class="line"><span class="err">✨</span>  <span class="err">Done</span> <span class="err">in</span> <span class="mf">19.62</span><span class="err">s.</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+如果没有安装Yarn，安装了npm的话，只要键入 npm install 就会安装packages
+
+然后我们去修改iOS工程的podfile文件，在所在的target多增加这个pod
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="ruby"><span class="line"><span class="n">pod</span> <span class="s1">&#39;React&#39;</span><span class="p">,</span> <span class="ss">:path</span> <span class="o">=&gt;</span> <span class="s1">&#39;./node_modules/react-native&#39;</span><span class="p">,</span> <span class="ss">:subspecs</span> <span class="o">=&gt;</span> <span class="o">[</span>
+</span><span class="line">  <span class="s1">&#39;Core&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="s1">&#39;RCTImage&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="s1">&#39;RCTNetwork&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="s1">&#39;RCTText&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="s1">&#39;RCTWebSocket&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="c1"># Add any other subspecs you want to use in your project</span>
+</span><span class="line"><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+在iOS工程目录下执行<code>Pod install</code>。等待安装完成。此时React-Native模块已经加入到我们iOS的工程里了。
+
+
+<h2>
+在iOS工程使用React-Native。
+</h2>
+<p>
+在工程新建一个ReactView。用于展示React-Native
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@implementation</span> <span class="nc">ReactView</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithFrame:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">frame</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nl">initWithFrame:</span><span class="n">frame</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="n">NSURL</span> <span class="o">*</span><span class="n">jsCodeLocation</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="nl">URLForResource:</span><span class="s">@&quot;bundle/main&quot;</span> <span class="nl">withExtension:</span><span class="s">@&quot;jsbundle&quot;</span><span class="p">];</span>
+</span><span class="line">        <span class="cm">/*</span>
+</span><span class="line"><span class="cm">         For production use, this `NSURL` could instead point to a pre-bundled file on disk:</span>
+</span><span class="line">
+</span><span class="line"><span class="cm">         NSURL *jsCodeLocation = [[NSBundle mainBundle] URLForResource:@&quot;main&quot; withExtension:@&quot;jsbundle&quot;];</span>
+</span><span class="line">
+</span><span class="line"><span class="cm">         To generate that file, run the curl command and add the output to your main Xcode build target:</span>
+</span><span class="line">
+</span><span class="line"><span class="cm">         curl http://localhost:8081/index.ios.bundle -o main.jsbundle</span>
+</span><span class="line"><span class="cm">         */</span>
+</span><span class="line">        <span class="n">_rootView</span> <span class="o">=</span> <span class="p">[[</span><span class="n">RCTRootView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithBundleURL:</span><span class="n">jsCodeLocation</span> <span class="nl">moduleName:</span><span class="s">@&quot;honer&quot;</span> <span class="nl">initialProperties:</span><span class="nb">nil</span> <span class="nl">launchOptions:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="nl">addSubview:</span><span class="n">_rootView</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">layoutSubviews</span> <span class="p">{</span>
+</span><span class="line">    <span class="p">[</span><span class="n">super</span> <span class="n">layoutSubviews</span><span class="p">];</span>
+</span><span class="line">    <span class="n">_rootView</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="cm">/*</span>
+</span><span class="line"><span class="cm">// Only override drawRect: if you perform custom drawing.</span>
+</span><span class="line"><span class="cm">// An empty implementation adversely affects performance during animation.</span>
+</span><span class="line"><span class="cm">- (void)drawRect:(CGRect)rect {</span>
+</span><span class="line"><span class="cm">    // Drawing code</span>
+</span><span class="line"><span class="cm">}</span>
+</span><span class="line"><span class="cm">*/</span><span class="err">``</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+在终端输入 <code>(JS_DIR=`pwd`/ReactComponent;cd node_modules/react-native; npm run start -- --root $JS_DIR)</code> 启动React-Native服务
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">RickdeMacBook</span><span class="o">-</span><span class="nl">Pro:</span><span class="n">BestNote</span> <span class="n">Wenba$</span> <span class="p">(</span><span class="n">JS_DIR</span><span class="o">=</span><span class="err">`</span><span class="n">pwd</span><span class="err">`</span><span class="o">/</span><span class="n">ReactComponent</span><span class="p">;</span><span class="n">cd</span> <span class="n">node_modules</span><span class="o">/</span><span class="n">react</span><span class="o">-</span><span class="n">native</span><span class="p">;</span> <span class="n">npm</span> <span class="n">run</span> <span class="n">start</span> <span class="o">--</span> <span class="o">--</span><span class="n">root</span> <span class="n">$JS_DIR</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&gt;</span> <span class="n">react</span><span class="o">-</span><span class="n">native</span><span class="err">@</span><span class="mf">0.36.1</span> <span class="n">start</span> <span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">Rick</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="n">Work</span><span class="o">/</span><span class="n">ChatDemo</span><span class="o">/</span><span class="n">ReactNative</span><span class="o">/</span><span class="n">BestNote</span><span class="o">/</span><span class="n">node_modules</span><span class="o">/</span><span class="n">react</span><span class="o">-</span><span class="n">native</span>
+</span><span class="line"><span class="o">&gt;</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">env</span> <span class="n">bash</span> <span class="o">-</span><span class="n">c</span> <span class="err">&#39;</span><span class="p">.</span><span class="o">/</span><span class="n">packager</span><span class="o">/</span><span class="n">packager</span><span class="p">.</span><span class="n">sh</span> <span class="s">&quot;$@&quot;</span> <span class="o">||</span> <span class="n">true</span><span class="err">&#39;</span> <span class="o">--</span> <span class="s">&quot;--root&quot;</span> <span class="s">&quot;/Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/ReactComponent&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="p">(</span><span class="nl">node:</span><span class="mi">14754</span><span class="p">)</span> <span class="nl">DeprecationWarning:</span> <span class="n">os</span><span class="p">.</span><span class="n">tmpDir</span><span class="p">()</span> <span class="n">is</span> <span class="n">deprecated</span><span class="p">.</span> <span class="n">Use</span> <span class="n">os</span><span class="p">.</span><span class="n">tmpdir</span><span class="p">()</span> <span class="n">instead</span><span class="p">.</span>
+</span><span class="line"><span class="p">(</span><span class="nl">node:</span><span class="mi">14754</span><span class="p">)</span> <span class="nl">DeprecationWarning:</span> <span class="n">Using</span> <span class="n">Buffer</span> <span class="n">without</span> <span class="err">`</span><span class="n">new</span><span class="err">`</span> <span class="n">will</span> <span class="n">soon</span> <span class="n">stop</span> <span class="n">working</span><span class="p">.</span> <span class="n">Use</span> <span class="err">`</span><span class="n">new</span> <span class="n">Buffer</span><span class="p">()</span><span class="err">`</span><span class="p">,</span> <span class="n">or</span> <span class="n">preferably</span> <span class="err">`</span><span class="n">Buffer</span><span class="p">.</span><span class="n">from</span><span class="p">()</span><span class="err">`</span><span class="p">,</span> <span class="err">`</span><span class="n">Buffer</span><span class="p">.</span><span class="n">allocUnsafe</span><span class="p">()</span><span class="err">`</span> <span class="n">or</span> <span class="err">`</span><span class="n">Buffer</span><span class="p">.</span><span class="n">alloc</span><span class="p">()</span><span class="err">`</span> <span class="n">instead</span><span class="p">.</span>
+</span><span class="line"><span class="n">Scanning</span> <span class="mi">717</span> <span class="n">folders</span> <span class="k">for</span> <span class="n">symlinks</span> <span class="k">in</span> <span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">Rick</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="n">Work</span><span class="o">/</span><span class="n">ChatDemo</span><span class="o">/</span><span class="n">ReactNative</span><span class="o">/</span><span class="n">BestNote</span><span class="o">/</span><span class="n">node_modules</span> <span class="p">(</span><span class="mi">9</span><span class="n">ms</span><span class="p">)</span>
+</span><span class="line"> <span class="err">┌────────────────────────────────────────────────────────────────────────────┐</span>
+</span><span class="line"> <span class="err">│</span>  <span class="n">Running</span> <span class="n">packager</span> <span class="n">on</span> <span class="n">port</span> <span class="mf">8081.</span>                                            <span class="err">│</span>
+</span><span class="line"> <span class="err">│</span>                                                                            <span class="err">│</span>
+</span><span class="line"> <span class="err">│</span>  <span class="n">Keep</span> <span class="n">this</span> <span class="n">packager</span> <span class="n">running</span> <span class="k">while</span> <span class="n">developing</span> <span class="n">on</span> <span class="n">any</span> <span class="n">JS</span> <span class="n">projects</span><span class="p">.</span> <span class="n">Feel</span>      <span class="err">│</span>
+</span><span class="line"> <span class="err">│</span>  <span class="n">free</span> <span class="n">to</span> <span class="n">close</span> <span class="n">this</span> <span class="n">tab</span> <span class="n">and</span> <span class="n">run</span> <span class="n">your</span> <span class="n">own</span> <span class="n">packager</span> <span class="n">instance</span> <span class="k">if</span> <span class="n">you</span>          <span class="err">│</span>
+</span><span class="line"> <span class="err">│</span>  <span class="n">prefer</span><span class="p">.</span>                                                                   <span class="err">│</span>
+</span><span class="line"> <span class="err">│</span>                                                                            <span class="err">│</span>
+</span><span class="line"> <span class="err">│</span>  <span class="nl">https:</span><span class="c1">//github.com/facebook/react-native                                  │</span>
+</span><span class="line"> <span class="err">│</span>                                                                            <span class="err">│</span>
+</span><span class="line"> <span class="err">└────────────────────────────────────────────────────────────────────────────┘</span>
+</span><span class="line"><span class="n">Looking</span> <span class="k">for</span> <span class="n">JS</span> <span class="n">files</span> <span class="k">in</span>
+</span><span class="line">   <span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">Rick</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="n">Work</span><span class="o">/</span><span class="n">ChatDemo</span><span class="o">/</span><span class="n">ReactNative</span><span class="o">/</span><span class="n">BestNote</span>
+</span><span class="line">   <span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">Rick</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="n">Work</span><span class="o">/</span><span class="n">ChatDemo</span><span class="o">/</span><span class="n">ReactNative</span><span class="o">/</span><span class="n">BestNote</span><span class="o">/</span><span class="n">ReactComponent</span>
+</span><span class="line">
+</span><span class="line"><span class="p">[</span><span class="n">Hot</span> <span class="n">Module</span> <span class="n">Replacement</span><span class="p">]</span> <span class="n">Server</span> <span class="n">listening</span> <span class="n">on</span> <span class="o">/</span><span class="n">hot</span>
+</span><span class="line">
+</span><span class="line"><span class="n">React</span> <span class="n">packager</span> <span class="n">ready</span><span class="p">.</span>
+</span><span class="line">
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="o">:</span><span class="mi">50</span><span class="o">:</span><span class="mi">38</span> <span class="n">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">START</span><span class="o">&gt;</span> <span class="n">Initializing</span> <span class="n">Packager</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="o">:</span><span class="mi">50</span><span class="o">:</span><span class="mi">38</span> <span class="n">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">START</span><span class="o">&gt;</span> <span class="n">Building</span> <span class="k">in</span><span class="o">-</span><span class="n">memory</span> <span class="n">fs</span> <span class="k">for</span> <span class="n">JavaScript</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="o">:</span><span class="mi">50</span><span class="o">:</span><span class="mi">38</span> <span class="n">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">END</span><span class="o">&gt;</span>   <span class="n">Building</span> <span class="k">in</span><span class="o">-</span><span class="n">memory</span> <span class="n">fs</span> <span class="k">for</span> <span class="n">JavaScript</span> <span class="p">(</span><span class="mi">173</span><span class="n">ms</span><span class="p">)</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="o">:</span><span class="mi">50</span><span class="o">:</span><span class="mi">38</span> <span class="n">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">START</span><span class="o">&gt;</span> <span class="n">Building</span> <span class="n">Haste</span> <span class="n">Map</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="o">:</span><span class="mi">50</span><span class="o">:</span><span class="mi">39</span> <span class="n">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">END</span><span class="o">&gt;</span>   <span class="n">Building</span> <span class="n">Haste</span> <span class="n">Map</span> <span class="p">(</span><span class="mi">124</span><span class="n">ms</span><span class="p">)</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="o">:</span><span class="mi">50</span><span class="o">:</span><span class="mi">39</span> <span class="n">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">END</span><span class="o">&gt;</span>   <span class="n">Initializing</span> <span class="n">Packager</span> <span class="p">(</span><span class="mi">365</span><span class="n">ms</span><span class="p">)</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="o">:</span><span class="mi">50</span><span class="o">:</span><span class="mi">42</span> <span class="n">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">START</span><span class="o">&gt;</span> <span class="n">Requesting</span> <span class="nl">bundle:</span> <span class="p">{</span><span class="s">&quot;url&quot;</span><span class="o">:</span><span class="s">&quot;/index.ios.bundle?platform=ios&quot;</span><span class="p">}</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">1</span><span class="o">:</span><span class="mi">50</span><span class="o">:</span><span class="mi">42</span> <span class="n">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">START</span><span class="o">&gt;</span> <span class="n">Transforming</span> <span class="n">modules</span>
+</span><span class="line"><span class="n">transformed</span> <span class="mi">662</span><span class="o">/</span><span class="mi">662</span> <span class="p">(</span><span class="mi">100</span><span class="o">%</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<code>NSURL *jsCodeLocation = [NSURL URLWithString:@"http://10.88.1.90:8081/index.ios.bundle?platform=ios"];</code>这个IP是开启服务的电脑IP。<code>(JS_DIR=`pwd`/ReactComponent;cd node_modules/react-native; npm run start -- --root $JS_DIR)</code>定义的JSDir会在这两个目录下去查找js文件
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line">   <span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">Rick</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="n">Work</span><span class="o">/</span><span class="n">ChatDemo</span><span class="o">/</span><span class="n">ReactNative</span><span class="o">/</span><span class="n">BestNote</span>
+</span><span class="line">   <span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">Rick</span><span class="o">/</span><span class="n">Documents</span><span class="o">/</span><span class="n">Work</span><span class="o">/</span><span class="n">ChatDemo</span><span class="o">/</span><span class="n">ReactNative</span><span class="o">/</span><span class="n">BestNote</span><span class="o">/</span><span class="n">ReactComponent</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+我们在<code>ReactComponent</code>这个目录下放入index.ios.js文件。文件内容如下
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+</span><span class="line"><span class="kr">import</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">AppRegistry</span><span class="p">,</span>
+</span><span class="line">  <span class="nx">Text</span>
+</span><span class="line"><span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-native&#39;</span><span class="p">;</span>
+</span><span class="line"><span class="kr">import</span> <span class="nx">Main</span> <span class="nx">from</span> <span class="s1">&#39;./src/main.js&#39;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">myhonor</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">Main</span><span class="o">&gt;&lt;</span><span class="err">/Main&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="nx">AppRegistry</span><span class="p">.</span><span class="nx">registerComponent</span><span class="p">(</span><span class="s1">&#39;honer&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">myhonor</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+在这里注册组件honer，我们在ReactView类中找到这个honer模块去使用。
+此时我们运行我们的工程会发现运行ok的
+</p>
+<br /><img src="http://ITMonkeyLife.github.io/Blog/images/develop/honer.png" />
+<h2>
+离线包
+</h2>
+<p>
+加载需要时间，此时页面是空白，不好，建议将资源以及页面都打包成离线包，这样不用每次都连网去请求页面。如果有新的页面更换，可以先加载旧的页面，在渲染成新页面。
+</p>
+<br /><img src="http://ITMonkeyLife.github.io/Blog/images/develop/package_honer.png" />
+<p>
+我们在终端输入
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="nx">react</span><span class="o">-</span><span class="kr">native</span> <span class="nx">bundle</span> <span class="o">\</span>
+</span><span class="line"><span class="o">--</span><span class="nx">platform</span> <span class="nx">ios</span> <span class="o">\</span>
+</span><span class="line"><span class="o">--</span><span class="nx">entry</span><span class="o">-</span><span class="nx">file</span> <span class="nx">index</span><span class="p">.</span><span class="nx">ios2</span><span class="p">.</span><span class="nx">js</span> <span class="o">\</span>
+</span><span class="line"><span class="o">--</span><span class="nx">bundle</span><span class="o">-</span><span class="nx">output</span> <span class="p">.</span><span class="o">/</span><span class="nx">main</span><span class="p">.</span><span class="nx">jsbundle</span> <span class="o">\</span>
+</span><span class="line"><span class="o">--</span><span class="nx">assets</span><span class="o">-</span><span class="nx">dest</span> <span class="p">.</span><span class="o">/</span> <span class="o">\</span>
+</span><span class="line"><span class="o">--</span><span class="nx">dev</span> <span class="kc">true</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="nx">RickdeMacBook</span><span class="o">-</span><span class="nx">Pro</span><span class="o">:</span><span class="nx">BestNote</span> <span class="nx">Wenba$</span> <span class="nx">react</span><span class="o">-</span><span class="kr">native</span> <span class="nx">bundle</span> <span class="o">--</span><span class="nx">platform</span> <span class="nx">ios</span> <span class="o">--</span><span class="nx">dev</span> <span class="kc">false</span> <span class="o">--</span><span class="nx">entry</span><span class="o">-</span><span class="nx">file</span> <span class="p">.</span><span class="o">/</span><span class="nx">ReactComponent</span><span class="o">/</span><span class="nx">index</span><span class="p">.</span><span class="nx">ios</span><span class="p">.</span><span class="nx">js</span> <span class="o">--</span><span class="nx">bundle</span><span class="o">-</span><span class="nx">output</span> <span class="nx">main</span><span class="p">.</span><span class="nx">jsbundle</span> <span class="o">--</span><span class="nx">assets</span><span class="o">-</span><span class="nx">dest</span> <span class="p">.</span><span class="o">/</span><span class="nx">Bundle</span>
+</span><span class="line"><span class="p">(</span><span class="nx">node</span><span class="o">:</span><span class="mi">16763</span><span class="p">)</span> <span class="nx">DeprecationWarning</span><span class="o">:</span> <span class="nx">os</span><span class="p">.</span><span class="nx">tmpDir</span><span class="p">()</span> <span class="nx">is</span> <span class="nx">deprecated</span><span class="p">.</span> <span class="nx">Use</span> <span class="nx">os</span><span class="p">.</span><span class="nx">tmpdir</span><span class="p">()</span> <span class="nx">instead</span><span class="p">.</span>
+</span><span class="line"><span class="p">(</span><span class="nx">node</span><span class="o">:</span><span class="mi">16763</span><span class="p">)</span> <span class="nx">DeprecationWarning</span><span class="o">:</span> <span class="nx">Using</span> <span class="nx">Buffer</span> <span class="nx">without</span> <span class="err">`</span><span class="k">new</span><span class="err">`</span> <span class="nx">will</span> <span class="nx">soon</span> <span class="nx">stop</span> <span class="nx">working</span><span class="p">.</span> <span class="nx">Use</span> <span class="err">`</span><span class="k">new</span> <span class="nx">Buffer</span><span class="p">()</span><span class="err">`</span><span class="p">,</span> <span class="nx">or</span> <span class="nx">preferably</span> <span class="err">`</span><span class="nx">Buffer</span><span class="p">.</span><span class="nx">from</span><span class="p">()</span><span class="err">`</span><span class="p">,</span> <span class="err">`</span><span class="nx">Buffer</span><span class="p">.</span><span class="nx">allocUnsafe</span><span class="p">()</span><span class="err">`</span> <span class="nx">or</span> <span class="err">`</span><span class="nx">Buffer</span><span class="p">.</span><span class="nx">alloc</span><span class="p">()</span><span class="err">`</span> <span class="nx">instead</span><span class="p">.</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">2</span><span class="o">:</span><span class="mi">28</span><span class="o">:</span><span class="mi">17</span> <span class="nx">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="nx">START</span><span class="o">&gt;</span> <span class="nx">Initializing</span> <span class="nx">Packager</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">2</span><span class="o">:</span><span class="mi">28</span><span class="o">:</span><span class="mi">17</span> <span class="nx">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="nx">START</span><span class="o">&gt;</span> <span class="nx">Building</span> <span class="k">in</span><span class="o">-</span><span class="nx">memory</span> <span class="nx">fs</span> <span class="k">for</span> <span class="nx">JavaScript</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">2</span><span class="o">:</span><span class="mi">28</span><span class="o">:</span><span class="mi">17</span> <span class="nx">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="nx">END</span><span class="o">&gt;</span>   <span class="nx">Building</span> <span class="k">in</span><span class="o">-</span><span class="nx">memory</span> <span class="nx">fs</span> <span class="k">for</span> <span class="nx">JavaScript</span> <span class="p">(</span><span class="mi">165</span><span class="nx">ms</span><span class="p">)</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">2</span><span class="o">:</span><span class="mi">28</span><span class="o">:</span><span class="mi">17</span> <span class="nx">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="nx">START</span><span class="o">&gt;</span> <span class="nx">Building</span> <span class="nx">Haste</span> <span class="nx">Map</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">2</span><span class="o">:</span><span class="mi">28</span><span class="o">:</span><span class="mi">17</span> <span class="nx">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="nx">END</span><span class="o">&gt;</span>   <span class="nx">Building</span> <span class="nx">Haste</span> <span class="nx">Map</span> <span class="p">(</span><span class="mi">226</span><span class="nx">ms</span><span class="p">)</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">2</span><span class="o">:</span><span class="mi">28</span><span class="o">:</span><span class="mi">17</span> <span class="nx">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="nx">END</span><span class="o">&gt;</span>   <span class="nx">Initializing</span> <span class="nx">Packager</span> <span class="p">(</span><span class="mi">463</span><span class="nx">ms</span><span class="p">)</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">2</span><span class="o">:</span><span class="mi">28</span><span class="o">:</span><span class="mi">17</span> <span class="nx">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="nx">START</span><span class="o">&gt;</span> <span class="nx">Transforming</span> <span class="nx">modules</span>
+</span><span class="line"><span class="p">[</span><span class="mi">11</span><span class="o">/</span><span class="mi">15</span><span class="o">/</span><span class="mi">2016</span><span class="p">,</span> <span class="mi">2</span><span class="o">:</span><span class="mi">28</span><span class="o">:</span><span class="mi">25</span> <span class="nx">PM</span><span class="p">]</span> <span class="o">&lt;</span><span class="nx">END</span><span class="o">&gt;</span>   <span class="nx">Transforming</span> <span class="nx">modules</span> <span class="p">(</span><span class="mi">7758</span><span class="nx">ms</span><span class="p">)</span>
+</span><span class="line"><span class="nx">bundle</span><span class="o">:</span> <span class="nx">start</span>
+</span><span class="line"><span class="nx">bundle</span><span class="o">:</span> <span class="nx">finish</span>
+</span><span class="line"><span class="nx">bundle</span><span class="o">:</span> <span class="nx">Writing</span> <span class="nx">bundle</span> <span class="nx">output</span> <span class="nx">to</span><span class="o">:</span> <span class="nx">main</span><span class="p">.</span><span class="nx">jsbundle</span>
+</span><span class="line"><span class="nx">bundle</span><span class="o">:</span> <span class="nx">Done</span> <span class="nx">writing</span> <span class="nx">bundle</span> <span class="nx">output</span>
+</span><span class="line"><span class="nx">bundle</span><span class="o">:</span> <span class="nx">Copying</span> <span class="mi">15</span> <span class="nx">asset</span> <span class="nx">files</span>
+</span><span class="line"><span class="nx">bundle</span><span class="o">:</span> <span class="nx">Done</span> <span class="nx">copying</span> <span class="nx">assets</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+将我们的js文件打包成bundle，同事将资源文件也打包起来，如果&#8211;assets-dest ./ 这个参数不加，会导致我们页面的img图片资源缺失。这个有点坑。
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</我假设已经安装了homebrew></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[破壳微信之旅]]></title>
@@ -4301,227 +4678,6 @@ hackers 总是想象如果自己是开发者会怎么写，然后才能找到入
     <p class="caption"><strong>图片 18.2</strong> data-erase2</p>
 </div>
 
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Fish Hook]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/fish-hook/"/>
-    <updated>2016-08-25T14:47:04+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/fish-hook</id>
-    <content type="html"><![CDATA[<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">17</span> <span class="title">Fishhook</span></h1>
-    <p>众所周知，<code>Objective-C </code>的首选<code> hook </code>方案为<code> Method Swizzle</code>，于是大家纷纷表示核心内容应该用 C 写。</p>
-
-<p>接下来进阶说说 <code>iOS</code> 下 C 函数的<code> hook </code>方案，先介绍第一种方案&#8212; <a href="https://github.com/facebook/fishhook">fishhook</a> .</p>
-
-<h3>什么是 fishhook</h3>
-
-<p><code>fishhook </code>是 facebook 提供的一个动态修改链接<code> Mach-O </code>符号表的开源工具。</p>
-
-<h3>什么是<code> Mach-O</code></h3>
-
-<p><code>Mach-O </code>为 Mach Object 文件格式的缩写,也是用于 <code>iOS </code>可执行文件，目标代码，动态库，内核转储的文件格式。</p>
-
-<p><code>Mach-O </code>有自己的<code> dylib </code>规范。</p>
-
-<h3>fishhook 的原理</h3>
-
-<p>详见官方的 How it works，这里我作个简要说明。</p>
-
-<p><code>dyld </code>链接 2 种符号，<code>lazy </code>和<code> non-lazy </code>，fishhook 可以重新链接/替换本地符号。</p>
-
-<div class="figure" id="figure-17-1">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75zprz6wrj20jo0pcgo0.jpg" />
-
-    <p class="caption"><strong>图片 17.1</strong> fishhook1</p>
-</div>
-
-
-<p>如图所示，<code>__DATA</code>区有两个 section 和动态符号链接相关：<code>__nl_symbol_ptr</code>、<code>__la_symbol_ptr</code>。<code>__nl_symbol_ptr</code> 为一个指针数组，直接对应<code> non-lazy </code>绑定数据。<code>__la_symbol_ptr</code> 也是一个指针数组，通过<code>dyld_stub_binder</code> 辅助链接。<code>&lt;mach-o/loader.h&gt;</code>的 section 头提供符号表的偏移量。</p>
-
-<p>图示中，1061 是间接符号表的偏移量，*（偏移量+间接符号地址）=16343，即符号表偏移量。符号表中每一个结构都是一个<code> nlist </code>结构体，其中包含字符表偏移量。通过字符表偏移量最终确定函数指针。</p>
-
-<p>fishhook 就是对间接符号表的偏移量动的手脚，提供一个假的<code> nlist </code>结构体，从而达到 hook 的目的。</p>
-
-<p>fishhook 替换符号函数：</p>
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">int</span> <span class="nf">rebind_symbols</span><span class="p">(</span><span class="k">struct</span> <span class="n">rebinding</span> <span class="n">rebindings</span><span class="p">[],</span> <span class="n">size_t</span> <span class="n">rebindings_nel</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">  <span class="kt">int</span> <span class="n">retval</span> <span class="o">=</span> <span class="n">prepend_rebindings</span><span class="p">(</span><span class="n">rebindings</span><span class="p">,</span> <span class="n">rebindings_nel</span><span class="p">);</span>
-</span><span class="line">  <span class="k">if</span> <span class="p">(</span><span class="n">retval</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
-</span><span class="line">  <span class="p">}</span>
-</span><span class="line">  <span class="c1">// If this was the first call, register callback for image additions (which is also invoked for  </span>
-</span><span class="line">  <span class="c1">// existing images, otherwise, just run on existing images  </span>
-</span><span class="line">  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">rebindings_head</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">_dyld_register_func_for_add_image</span><span class="p">(</span><span class="n">rebind_symbols_for_image</span><span class="p">);</span>
-</span><span class="line">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">uint32_t</span> <span class="n">c</span> <span class="o">=</span> <span class="n">_dyld_image_count</span><span class="p">();</span>
-</span><span class="line">    <span class="k">for</span> <span class="p">(</span><span class="n">uint32_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">c</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">      <span class="n">rebind_symbols_for_image</span><span class="p">(</span><span class="n">_dyld_get_image_header</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">_dyld_get_image_vmaddr_slide</span><span class="p">(</span><span class="n">i</span><span class="p">));</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">  <span class="p">}</span>
-</span><span class="line">  <span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>关键函数是 <code>_dyld_register_func_for_add_image</code>，这个函数是用来注册回调，当 dyld 链接符号时，调用此回调函数。 <code>rebind_symbols_for_image</code> 做了具体的替换和填充。</p>
-
-<h3>fishhook 替换<code> Core Foundation </code>函数的例子</h3>
-
-<p>以下是官方提供的替换<code> Core Foundation </code>中 open 和 close 函数的实例代码</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-<span class="line-number">50</span>
-<span class="line-number">51</span>
-<span class="line-number">52</span>
-<span class="line-number">53</span>
-<span class="line-number">54</span>
-<span class="line-number">55</span>
-<span class="line-number">56</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">dlfcn</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
-</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">UIKit</span><span class="o">/</span><span class="n">UIKit</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="s">&quot;AppDelegate.h&quot;</span>
-</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="s">&quot;fishhook.h&quot;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">static</span> <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">orig_close</span><span class="p">)(</span><span class="kt">int</span><span class="p">);</span>
-</span><span class="line"><span class="k">static</span> <span class="nf">int</span> <span class="p">(</span><span class="o">*</span><span class="n">orig_open</span><span class="p">)(</span><span class="k">const</span> <span class="n">charchar</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="p">...);</span>
-</span><span class="line">
-</span><span class="line"><span class="kt">void</span> <span class="nf">save_original_symbols</span><span class="p">()</span> <span class="p">{</span>
-</span><span class="line">  <span class="n">orig_close</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">RTLD_DEFAULT</span><span class="p">,</span> <span class="s">&quot;close&quot;</span><span class="p">);</span>
-</span><span class="line">  <span class="n">orig_open</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">RTLD_DEFAULT</span><span class="p">,</span> <span class="s">&quot;open&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="kt">int</span> <span class="nf">my_close</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Calling real close(%d)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">fd</span><span class="p">);</span>
-</span><span class="line">  <span class="k">return</span> <span class="n">orig_close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="kt">int</span> <span class="nf">my_open</span><span class="p">(</span><span class="k">const</span> <span class="n">charchar</span> <span class="o">*</span><span class="n">path</span><span class="p">,</span> <span class="kt">int</span> <span class="n">oflag</span><span class="p">,</span> <span class="p">...)</span> <span class="p">{</span>
-</span><span class="line">  <span class="n">va_list</span> <span class="n">ap</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
-</span><span class="line">  <span class="n">mode_t</span> <span class="n">mode</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">  <span class="k">if</span> <span class="p">((</span><span class="n">oflag</span> <span class="o">&amp;</span> <span class="n">O_CREAT</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="c1">// mode only applies to O_CREAT  </span>
-</span><span class="line">    <span class="n">va_start</span><span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="n">oflag</span><span class="p">);</span>
-</span><span class="line">    <span class="n">mode</span> <span class="o">=</span> <span class="n">va_arg</span><span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="kt">int</span><span class="p">);</span>
-</span><span class="line">    <span class="n">va_end</span><span class="p">(</span><span class="n">ap</span><span class="p">);</span>
-</span><span class="line">    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Calling real open(&#39;%s&#39;, %d, %d)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">oflag</span><span class="p">,</span> <span class="n">mode</span><span class="p">);</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">orig_open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">oflag</span><span class="p">,</span> <span class="n">mode</span><span class="p">);</span>
-</span><span class="line">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Calling real open(&#39;%s&#39;, %d)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">oflag</span><span class="p">);</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">orig_open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">oflag</span><span class="p">,</span> <span class="n">mode</span><span class="p">);</span>
-</span><span class="line">  <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="n">charchar</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">  <span class="err">@</span><span class="n">autoreleasepool</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">save_original_symbols</span><span class="p">();</span>
-</span><span class="line">    <span class="c1">//fishhook用法  </span>
-</span><span class="line">    <span class="n">rebind_symbols</span><span class="p">((</span><span class="k">struct</span> <span class="n">rebinding</span><span class="p">[</span><span class="mi">2</span><span class="p">]){</span>
-</span><span class="line">      <span class="p">{</span><span class="s">&quot;close&quot;</span><span class="p">,</span> <span class="n">my_close</span><span class="p">},</span>
-</span><span class="line">      <span class="p">{</span><span class="s">&quot;open&quot;</span><span class="p">,</span> <span class="n">my_open</span><span class="p">}},</span> <span class="mi">2</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="c1">// Open our own binary and print out first 4 bytes (which is the same  </span>
-</span><span class="line">    <span class="c1">// for all Mach-O binaries on a given architecture)  </span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">O_RDONLY</span><span class="p">);</span>
-</span><span class="line">    <span class="n">uint32_t</span> <span class="n">magic_number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line">    <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">magic_number</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
-</span><span class="line">    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Mach-O Magic Number: %x </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">magic_number</span><span class="p">);</span>
-</span><span class="line">    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">return</span> <span class="n">UIApplicationMain</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="nb">nil</span><span class="p">,</span> <span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">AppDelegate</span> <span class="n">class</span><span class="p">]));</span>
-</span><span class="line">  <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">// fishhook 用法处:</span>
-</span><span class="line"><span class="n">rebind_symbols</span><span class="p">((</span><span class="k">struct</span> <span class="n">rebinding</span><span class="p">[</span><span class="mi">2</span><span class="p">]){</span>
-</span><span class="line">  <span class="p">{</span><span class="s">&quot;close&quot;</span><span class="p">,</span> <span class="n">my_close</span><span class="p">},</span>
-</span><span class="line">  <span class="p">{</span><span class="s">&quot;open&quot;</span><span class="p">,</span> <span class="n">my_open</span><span class="p">}</span>
-</span><span class="line">  <span class="p">},</span> <span class="mi">2</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>传入 rebind_symbols 的第一个参数是一个结构体数组，大括号中为对应数组内容。</p>
-
-<p>不得不说，facebook 忒 NB 。</p>
 
 </div>
 </div>

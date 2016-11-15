@@ -4,7 +4,7 @@
   <title><![CDATA[Category: React-Native | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/react-native/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-11-02T10:03:11+08:00</updated>
+  <updated>2016-11-15T16:09:04+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,235 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[在现有iOS工程加入React-Native]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/15/zai-xian-you-iosgong-cheng-jia-ru-react-native/"/>
+    <updated>2016-11-15T14:52:23+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/15/zai-xian-you-iosgong-cheng-jia-ru-react-native</id>
+    <content type="html"><![CDATA[<h2>
+React-Native在iOS工程的集成
+</h2>
+<p>
+当我们想在现有的iOS开发工程中加入React-Native这个模块的时候，我们需要做一些准备工作。<我假设已经安装了homebrew>安装需要的工具：npm
+```
+brew install npm
+```
+一般来说只要有这个就可以，但是鉴于npm 每次都要npm install React-Native并且时间很慢，我们可以辅助使用Yarn，这个工具也是Facebook出品的，这个打React-Native的效率比<code>npm install </code>高很多。
+安装好了npm之后，我们创建一个package.json文件,内容如下
+```json
+{
+  "name": "honer",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "update": "echo '{\"presets\":[\"react-native\"],\"plugins\":[\"transform-decorators-legacy\",[\"react-native-css-class\",{\"pragma\":\"CSS\"}]]}' &gt; .babelrc &amp;&amp; mkdir bundle &amp;&amp; npm i",
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "build": "rm -rf ./bundle/* &amp;&amp; react-native bundle --platform ios --entry-file ./ReactComponent/index.ios.js --bundle-output ./bundle/main.jsbundle --assets-dest ./bundle/  --dev false",
+    "test": "jest"
+  },
+  "dependencies": {
+    "react": "15.3.2",
+    "react-native": "0.36.1"
+  },
+  "jest": {
+    "preset": "jest-react-native"
+  },
+  "devDependencies": {
+    "babel-jest": "16.0.0",
+    "babel-plugin-react-native-css-class": "git+https://github.com/qq4647805/babel-plugin-react-native-css-class.git",
+    "babel-plugin-transform-decorators-legacy": "^1.3.4",
+    "babel-plugin-transform-runtime": "^6.15.0",
+    "babel-preset-react-native": "1.9.0",
+    "jest": "16.0.2",
+    "jest-react-native": "16.1.0",
+    "react-test-renderer": "15.3.2"
+  }
+}
+```
+通过终端进入工程根目录下，如果这时安装了Yarn。在终端输入<code>yarn</code>，回车一按，自动查找需要安装的packages
+```
+RickdeMacBook-Pro:xueba_ios_2016 Wenba$ yarn
+yarn install v0.16.1
+info No lockfile found.
+[1/4] 🔍  Resolving packages...
+warning jest &gt; jest-cli &gt; istanbul-api &gt; fileset &gt; minimatch@2.0.10: Please update to minimatch 3.0.2 or higher to avoid a RegExp DoS issue
+[2/4] 🚚  Fetching packages...
+[3/4] 🔗  Linking dependencies...
+warning Unmet peer dependency "whatwg-fetch@^1.0.0".
+[4/4] 📃  Building fresh packages...
+success Saved lockfile.
+✨  Done in 19.62s.
+```
+
+如果没有安装Yarn，安装了npm的话，只要键入 npm install 就会安装packages
+
+然后我们去修改iOS工程的podfile文件，在所在的target多增加这个pod
+```ruby
+    pod 'React', :path =&gt; './node_modules/react-native', :subspecs =&gt; [
+      'Core',
+      'RCTImage',
+      'RCTNetwork',
+      'RCTText',
+      'RCTWebSocket',
+      # Add any other subspecs you want to use in your project
+    ]
+```
+在iOS工程目录下执行<code>Pod install</code>。等待安装完成。此时React-Native模块已经加入到我们iOS的工程里了。
+
+
+<h2>
+在iOS工程使用React-Native。
+</h2>
+<p>
+在工程新建一个ReactView。用于展示React-Native
+```objc
+@implementation ReactView
+
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        NSURL *jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"bundle/main" withExtension:@"jsbundle"];
+        /*
+         For production use, this `NSURL` could instead point to a pre-bundled file on disk:
+
+         NSURL *jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+
+         To generate that file, run the curl command and add the output to your main Xcode build target:
+
+         curl http://localhost:8081/index.ios.bundle -o main.jsbundle
+         */
+        _rootView = [[RCTRootView alloc] initWithBundleURL:jsCodeLocation moduleName:@"honer" initialProperties:nil launchOptions:nil];
+        [self addSubview:_rootView];
+    }
+
+    return self;
+}
+
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    _rootView.frame = self.bounds;
+}
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/``
+
+@end
+```
+在终端输入 <code>(JS_DIR=`pwd`/ReactComponent;cd node_modules/react-native; npm run start -- --root $JS_DIR)</code> 启动React-Native服务
+```
+
+RickdeMacBook-Pro:BestNote Wenba$ (JS_DIR=`pwd`/ReactComponent;cd node_modules/react-native; npm run start -- --root $JS_DIR)
+
+&gt; react-native@0.36.1 start /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/node_modules/react-native
+&gt; /usr/bin/env bash -c './packager/packager.sh "$@" || true' -- "--root" "/Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/ReactComponent"
+
+(node:14754) DeprecationWarning: os.tmpDir() is deprecated. Use os.tmpdir() instead.
+(node:14754) DeprecationWarning: Using Buffer without `new` will soon stop working. Use `new Buffer()`, or preferably `Buffer.from()`, `Buffer.allocUnsafe()` or `Buffer.alloc()` instead.
+Scanning 717 folders for symlinks in /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/node_modules (9ms)
+ ┌────────────────────────────────────────────────────────────────────────────┐
+ │  Running packager on port 8081.                                            │
+ │                                                                            │
+ │  Keep this packager running while developing on any JS projects. Feel      │
+ │  free to close this tab and run your own packager instance if you          │
+ │  prefer.                                                                   │
+ │                                                                            │
+ │  https://github.com/facebook/react-native                                  │
+ │                                                                            │
+ └────────────────────────────────────────────────────────────────────────────┘
+Looking for JS files in
+   /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote
+   /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/ReactComponent
+
+[Hot Module Replacement] Server listening on /hot
+
+React packager ready.
+
+[11/15/2016, 1:50:38 PM] <start> Initializing Packager
+[11/15/2016, 1:50:38 PM] <start> Building in-memory fs for JavaScript
+[11/15/2016, 1:50:38 PM] <end>   Building in-memory fs for JavaScript (173ms)
+[11/15/2016, 1:50:38 PM] <start> Building Haste Map
+[11/15/2016, 1:50:39 PM] <end>   Building Haste Map (124ms)
+[11/15/2016, 1:50:39 PM] <end>   Initializing Packager (365ms)
+[11/15/2016, 1:50:42 PM] <start> Requesting bundle: {"url":"/index.ios.bundle?platform=ios"}
+[11/15/2016, 1:50:42 PM] <start> Transforming modules
+transformed 662/662 (100%)
+
+```
+
+<code>NSURL *jsCodeLocation = [NSURL URLWithString:@"http://10.88.1.90:8081/index.ios.bundle?platform=ios"];</code>这个IP是开启服务的电脑IP。<code>(JS_DIR=`pwd`/ReactComponent;cd node_modules/react-native; npm run start -- --root $JS_DIR)</code>定义的JSDir会在这两个目录下去查找js文件
+```
+   /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote
+   /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/ReactComponent
+```
+我们在<code>ReactComponent</code>这个目录下放入index.ios.js文件。文件内容如下
+```javascript
+import React, { Component } from 'react'
+import {
+  AppRegistry,
+  Text
+} from 'react-native';
+import Main from './src/main.js'
+
+class myhonor extends Component {
+  render() {
+    return (
+      <main />
+    );
+  }
+}
+AppRegistry.registerComponent('honer', () =&gt; myhonor);
+```
+在这里注册组件honer，我们在ReactView类中找到这个honer模块去使用。
+此时我们运行我们的工程会发现运行ok的
+
+<br /><img src="http://ITMonkeyLife.github.io/Blog/images/develop/honer.png" />
+<h2>
+离线包
+</h2>
+<p>
+加载需要时间，此时页面是空白，不好，建议将资源以及页面都打包成离线包，这样不用每次都连网去请求页面。如果有新的页面更换，可以先加载旧的页面，在渲染成新页面。
+</p>
+<br /><img src="http://ITMonkeyLife.github.io/Blog/images/develop/package_honer.png" />
+<p>
+我们在终端输入
+```
+react-native bundle \
+--platform ios \
+--entry-file index.ios2.js \
+--bundle-output ./main.jsbundle \
+--assets-dest ./ \
+--dev true
+```
+```
+RickdeMacBook-Pro:BestNote Wenba$ react-native bundle --platform ios --dev false --entry-file ./ReactComponent/index.ios.js --bundle-output main.jsbundle --assets-dest ./Bundle
+(node:16763) DeprecationWarning: os.tmpDir() is deprecated. Use os.tmpdir() instead.
+(node:16763) DeprecationWarning: Using Buffer without `new` will soon stop working. Use `new Buffer()`, or preferably `Buffer.from()`, `Buffer.allocUnsafe()` or `Buffer.alloc()` instead.
+[11/15/2016, 2:28:17 PM] <start> Initializing Packager
+[11/15/2016, 2:28:17 PM] <start> Building in-memory fs for JavaScript
+[11/15/2016, 2:28:17 PM] <end>   Building in-memory fs for JavaScript (165ms)
+[11/15/2016, 2:28:17 PM] <start> Building Haste Map
+[11/15/2016, 2:28:17 PM] <end>   Building Haste Map (226ms)
+[11/15/2016, 2:28:17 PM] <end>   Initializing Packager (463ms)
+[11/15/2016, 2:28:17 PM] <start> Transforming modules
+[11/15/2016, 2:28:25 PM] <end>   Transforming modules (7758ms)
+bundle: start
+bundle: finish
+bundle: Writing bundle output to: main.jsbundle
+bundle: Done writing bundle output
+bundle: Copying 15 asset files
+bundle: Done copying assets
+```
+将我们的js文件打包成bundle，同事将资源文件也打包起来，如果--assets-dest ./ 这个参数不加，会导致我们页面的img图片资源缺失。这个有点坑。
+
+</end></start></end></end></start></end></start></start></p></start></start></end></end></start></end></start></start></p></我假设已经安装了homebrew></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[React-Native 资源整理]]></title>
