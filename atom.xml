@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-11-15T16:09:04+08:00</updated>
+  <updated>2016-11-15T16:44:32+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -131,7 +131,7 @@ React-Native在iOS工程的集成
 </span></code></pre></td></tr></table></div></figure></notextile></div>
 在iOS工程目录下执行<code>Pod install</code>。等待安装完成。此时React-Native模块已经加入到我们iOS的工程里了。
 
-
+<!--more-->
 <h2>
 在iOS工程使用React-Native。
 </h2>
@@ -2415,7 +2415,7 @@ Java的int有一个32位的表示; Java的double类型具有64位表示。 Java�
 </ul>
 <br />
 </p>
-
+<!--more-->
 <p><h2>语句</h2>Java程序由语句组成，语句通过创建和操作变量，为其分配数据类型值以及控制这些操作的执行流程来定义计算。
 <ul>
 <li>声明创建指定类型的变量，并用标识符命名它们。 Java是一种强类型语言，因为Java编译器检查一致性。 变量的范围是定义它的程序的一部分。</li>
