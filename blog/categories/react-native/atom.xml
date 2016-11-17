@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: React-Native | IT Monkey Life]]></title>
+  <title><![CDATA[Category: React Native | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/react-native/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-11-15T16:44:32+08:00</updated>
+  <updated>2016-11-17T19:47:30+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -14,720 +14,362 @@
 
   
   <entry>
-    <title type="html"><![CDATA[在现有iOS工程加入React-Native]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/15/zai-xian-you-iosgong-cheng-jia-ru-react-native/"/>
-    <updated>2016-11-15T14:52:23+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/15/zai-xian-you-iosgong-cheng-jia-ru-react-native</id>
-    <content type="html"><![CDATA[<h2>
-React-Native在iOS工程的集成
-</h2>
+    <title type="html"><![CDATA[React Native开发Redux]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/17/react-nativekai-fa-redux/"/>
+    <updated>2016-11-17T14:52:37+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/17/react-nativekai-fa-redux</id>
+    <content type="html"><![CDATA[<p>
+Redux是一个可预测的javascript应用程序的状态容器。
+
+它可以帮助您编写行为一致，在不同环境（客户端，服务器和本机）中运行的应用程序，并且易于测试。 此外，它提供了一个伟大的开发者体验，如实时代码编辑结合一个时间旅行调试器。
+</p>
 <p>
-当我们想在现有的iOS开发工程中加入React-Native这个模块的时候，我们需要做一些准备工作。<我假设已经安装了homebrew>安装需要的工具：npm
+您可以与React或任何其他视图库一起使用<a href="https://facebook.github.io/react/">Redux</a>。
+它是微小的（2kB，包括依赖）。
+从其创建者学习Redux：<a href="https://egghead.io/series/getting-started-with-redux">Redux学习入门</a>
+</p>
+<h3>
+开发经验
+</h3>
+<p>
+我在工作在我的React Europe谈话时写了Redux，名为“Hot Reloading with Time Travel”。 我的目标是创建一个状态管理库，具有最少的API，但完全可预测的行为，所以可以实现日志记录，热重新加载，时间旅行，通用应用程序，记录和重放，没有任何从开发人员买入。
+</p>
+<h3>
+影响
+</h3>
+<p>
+Redux演化了<a href="http://facebook.github.io/flux/">Flux</a>的想法，但通过从<a href="https://github.com/evancz/elm-architecture-tutorial/">Elm</a>提取线索来避免其复杂性。
+无论您是否使用过它们，Redux只需要几分钟的时间就可以开始使用。
+</p>
+<h3>
+安装
+</h3>
+<p>
+安装稳定版本：
 ```
-brew install npm
+npm install --save redux
 ```
-一般来说只要有这个就可以，但是鉴于npm 每次都要npm install React-Native并且时间很慢，我们可以辅助使用Yarn，这个工具也是Facebook出品的，这个打React-Native的效率比<code>npm install </code>高很多。
-安装好了npm之后，我们创建一个package.json文件,内容如下
-```json
-{
-  "name": "honer",
-  "version": "0.0.1",
-  "private": true,
-  "scripts": {
-    "update": "echo '{\"presets\":[\"react-native\"],\"plugins\":[\"transform-decorators-legacy\",[\"react-native-css-class\",{\"pragma\":\"CSS\"}]]}' &gt; .babelrc &amp;&amp; mkdir bundle &amp;&amp; npm i",
-    "start": "node node_modules/react-native/local-cli/cli.js start",
-    "build": "rm -rf ./bundle/* &amp;&amp; react-native bundle --platform ios --entry-file ./ReactComponent/index.ios.js --bundle-output ./bundle/main.jsbundle --assets-dest ./bundle/  --dev false",
-    "test": "jest"
-  },
-  "dependencies": {
-    "react": "15.3.2",
-    "react-native": "0.36.1"
-  },
-  "jest": {
-    "preset": "jest-react-native"
-  },
-  "devDependencies": {
-    "babel-jest": "16.0.0",
-    "babel-plugin-react-native-css-class": "git+https://github.com/qq4647805/babel-plugin-react-native-css-class.git",
-    "babel-plugin-transform-decorators-legacy": "^1.3.4",
-    "babel-plugin-transform-runtime": "^6.15.0",
-    "babel-preset-react-native": "1.9.0",
-    "jest": "16.0.2",
-    "jest-react-native": "16.1.0",
-    "react-test-renderer": "15.3.2"
+这假设你使用<a href="https://www.npmjs.com/">npm</a>作为你的包管理器。
+
+最常见的是人们使用Redux作为<a href="http://webpack.github.io/docs/commonjs.html">CommonJS</a>模块的集合。 这些模块是在<a href="http://webpack.github.io/">Webpack</a>，<a href="http://browserify.org/">Browserify</a>或Node环境中导入redux时得到的。 如果你喜欢生活在边缘，使用<a href="http://rollupjs.org/">Rollup</a>，我们也支持。
+
+如果你不使用模块bundler，它也没关系。 <code>redux</code> npm包包括在<a href="https://unpkg.com/redux/dist/">dist文件夹</a>中预编译的生产和开发<a href="https://github.com/umdjs/umd">UMD</a>版本。 它们可以直接使用而无需捆绑器，因此与许多流行的javascript模块加载器和环境兼容。 例如，可以将UMD构建作为<a href="https://unpkg.com/redux/dist/redux.js">script标记</a>放在页面上，或者告诉<a href="https://github.com/reactjs/redux/pull/1181#issuecomment-167361975">Bower安装它</a>。 UMD构建使Redux可用作<code>window.Redux</code>全局变量。
+
+Redux源代码是在ES2015中编写的，但我们将CommonJS和UMD构建预编译为ES5，因此它们可在<a href="http://caniuse.com/#feat=es5">任何现代浏览器</a>中使用。 您不需要使用Babel或模块捆绑包来<a href="https://github.com/reactjs/redux/blob/master/examples/counter-vanilla/index.html">开始使用Redux</a>。
+</p>
+<h3>
+互补包
+</h3>
+<p>
+很可能，您还需要<a href="https://github.com/reactjs/react-redux">React绑定</a>和<a href="https://github.com/gaearon/redux-devtools">开发人员工具</a>。
+```
+npm install --save react-redux
+npm install --save-dev redux-devtools
+```
+
+请注意，与Redux本身不同，Redux生态系统中的许多软件包不提供UMD构建，因此我们建议使用<a href="http://webpack.github.io/"> Webpack </a>和<a href="http://browserify.org/">Browserify</a>之类的CommonJS模块捆绑软件，以获得最舒适的开发体验。
+</p>
+<h3>
+要点
+</h3>
+<p>
+应用程序的整个状态存储在单个存储中的对象树中。
+改变状态树的唯一方法是发出一个动作，一个描述发生了什么的对象。
+要指定动作如何转换状态树，您需要编写纯reducer。
+```javascript
+import { createStore } from 'redux'
+
+/**
+ * This is a reducer, a pure function with (state, action) =&gt; state signature.
+ * It describes how an action transforms the state into the next state.
+ *
+ * The shape of the state is up to you: it can be a primitive, an array, an object,
+ * or even an Immutable.js data structure. The only important part is that you should
+ * not mutate the state object, but return a new object if the state changes.
+ *
+ * In this example, we use a `switch` statement and strings, but you can use a helper that
+ * follows a different convention (such as function maps) if it makes sense for your
+ * project.
+ */
+function counter(state = 0, action) {
+  switch (action.type) {
+  case 'INCREMENT':
+    return state + 1
+  case 'DECREMENT':
+    return state - 1
+  default:
+    return state
   }
 }
-```
-通过终端进入工程根目录下，如果这时安装了Yarn。在终端输入<code>yarn</code>，回车一按，自动查找需要安装的packages
-```
-RickdeMacBook-Pro:xueba_ios_2016 Wenba$ yarn
-yarn install v0.16.1
-info No lockfile found.
-[1/4] 🔍  Resolving packages...
-warning jest &gt; jest-cli &gt; istanbul-api &gt; fileset &gt; minimatch@2.0.10: Please update to minimatch 3.0.2 or higher to avoid a RegExp DoS issue
-[2/4] 🚚  Fetching packages...
-[3/4] 🔗  Linking dependencies...
-warning Unmet peer dependency "whatwg-fetch@^1.0.0".
-[4/4] 📃  Building fresh packages...
-success Saved lockfile.
-✨  Done in 19.62s.
-```
 
-如果没有安装Yarn，安装了npm的话，只要键入 npm install 就会安装packages
+// Create a Redux store holding the state of your app.
+// Its API is { subscribe, dispatch, getState }.
+let store = createStore(counter)
 
-然后我们去修改iOS工程的podfile文件，在所在的target多增加这个pod
-```ruby
-    pod 'React', :path =&gt; './node_modules/react-native', :subspecs =&gt; [
-      'Core',
-      'RCTImage',
-      'RCTNetwork',
-      'RCTText',
-      'RCTWebSocket',
-      # Add any other subspecs you want to use in your project
-    ]
+// You can use subscribe() to update the UI in response to state changes.
+// Normally you'd use a view binding library (e.g. React Redux) rather than subscribe() directly.
+// However it can also be handy to persist the current state in the localStorage.
+
+store.subscribe(() =&gt;
+  console.log(store.getState())
+)
+
+// The only way to mutate the internal state is to dispatch an action.
+// The actions can be serialized, logged or stored and later replayed.
+store.dispatch({ type: 'INCREMENT' })
+// 1
+store.dispatch({ type: 'INCREMENT' })
+// 2
+store.dispatch({ type: 'DECREMENT' })
+// 1
 ```
-在iOS工程目录下执行<code>Pod install</code>。等待安装完成。此时React-Native模块已经加入到我们iOS的工程里了。
-
 <!--more-->
+而不是直接改变状态，你指定你想要发生的变异称为动作的简单对象的突变。 然后，您编写一个称为reducer的特殊函数来决定每个操作如何转换整个应用程序的状态。
+
+如果你来自Flux，有一个重要的区别，你需要了解。 Redux没有Dispatcher或者支持很多商店。 相反，只有一个存储具有单个根减少功能。 随着应用程序的增长，而不是添加商店，您将根还原器分割成更小的reducer独立操作在状态树的不同部分。 这就像在React应用程序中只有一个根组件，但是它由许多小组件组成。
+
+这个架构可能看起来像一个计数器应用程序的过分，但这种模式的美丽是它扩展到大型和复杂的应用程序。 它还支持非常强大的开发工具，因为可以跟踪每个突变到导致它的操作。 您可以记录用户会话，并通过重播每个操作重现它们。
+
+
+<a href="https://egghead.io/series/getting-started-with-redux">Redux入门</a>是一个视频课程，由30个视频组成，由Dan Abramov（Redux的作者）讲述。 它旨在补充文档的“基础”部分，同时提供关于不可变性，测试，Redux最佳实践以及使用Redux与React的更多见解。 本课程是免费的，将永远是。
+</p>
+<h3>
+附录
+</h3>
+<p>
+<a href="http://redux.js.org/docs/basics/">http://redux.js.org/docs/basics/</a>
+</p>
+
+<h3>
+动机
+</h3>
+<p>
+由于对javascript单页应用程序的要求变得越来越复杂，我们的代码必须管理更多的状态。 此状态可以包括服务器响应和缓存数据，以及尚未保留到服务器的本地创建的数据。 UI状态也越来越复杂，因为我们需要管理活动路由，选定的选项卡，是否显示微调框，是否应显示分页控件等。
+
+管理这种不断变化的状态是很困难的。 如果模型可以更新另一个模型，则视图可以更新模型，该模型更新另一个模型，这反过来可能导致另一个视图更新。 在某些时候，你不再理解你的应用程序发生了什么，因为你失去了对状态的时间，原因和方式的控制。 当系统不透明和非确定性时，很难再现错误或添加新功能。
+
+好像这还不够，考虑新的需求在前端产品开发中变得普遍。 作为开发人员，我们需要处理乐观更新，服务器端呈现，在执行路由转换之前获取数据，等等。 我们发现自己试图管理我们从来没有处理的复杂性，我们不可避免地提出这个问题：是时候放弃了吗？ 答案是不。
+
+这种复杂性很难处理，因为我们混合了两个对人类思想很难理解的概念：变异和异步性。 我叫他们<a href="https://en.wikipedia.org/wiki/Diet_Coke_and_Mentos_eruption">Mentos和Coke</a>。 两者都可以伟大的分离，但在一起，他们创造了一团糟。 像React这样的库试图通过同时删除异步和直接DOM操作来解决视图层中的这个问题。 但是，管理数据的状态取决于您。 这是Redux进入的地方。
+
+在Flux，<a href="http://martinfowler.com/bliki/CQRS.html">CQRS</a>和<a href="http://martinfowler.com/eaaDev/EventSourcing.html">Event Sourcing</a>的步骤中，Redux试图通过对可能发生更新的方式和时间施加某些限制来使状态突变可预测。 这些限制反映在Redux的三个原则中。
+
+CQRS代表命令查询责任分离。 这是我第一次听到格雷格·杨描述的模式。 其核心是这样的概念：您可以使用不同的模型来更新信息，而不是用于读取信息的模型。 在某些情况下，这种分离是有价值的，但要注意对于大多数系统，CQRS增加了复杂性。
+
+我们可以查询应用程序的状态以找出世界的当前状态，这回答了许多问题。然而，有时我们不只是想看看我们在哪里，我们也想知道我们如何到达那里。
+
+事件源采购确保对应用程序状态的所有更改都存储为事件序列。我们不仅可以查询这些事件，还可以使用事件日志来重建过去的状态，并作为自动调整状态以应对追溯变化的基础。
+
+Event Sourcing的基本思想是确保每个对应用程序状态的更改都捕获在事件对象中，并且这些事件对象本身按应用程序状态本身的相同生命周期存储在序列中。
+
+让我们考虑一个关于运送通知的简单示例。在这个例子中，我们在公海上有许多船只，我们需要知道它们在哪里。一个简单的方法是让跟踪应用程序具有方法，以允许我们告知船舶何时到达或离开港口。
+
+在这种情况下，当调用服务时，它会找到相关的船并更新其位置。船舶对象记录船舶的当前已知状态。
+
+Event Sourcing简介为此过程增加了一个步骤。现在服务创建一个事件对象来记录更改并处理它以更新船。
+
+看看刚才的处理，这只是一个不必要的间接级别。有趣的区别是，当我们看看在几个更改后应用程序中存在什么。让我们想象一些简单的变化：
+
+使用基本服务，我们只看到船对象捕获的最终状态。我将这个称为应用程序状态。
+
+使用事件源，我们还捕获每个事件。如果我们使用持久存储，事件将被持久化，就像船对象一样。我认为我们坚持两种不同的东西应用程序状态和事件日志是有用的。
+</p>
 <h2>
-在iOS工程使用React-Native。
+三个原则
 </h2>
 <p>
-在工程新建一个ReactView。用于展示React-Native
-```objc
-@implementation ReactView
+Redux可以用三个基本原则来描述：
+</p>
+<h3>
+事实唯一性
+</h3>
+<p>
+整个应用程序的状态存储在单个存储中的对象树中。
 
-- (instancetype)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        NSURL *jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"bundle/main" withExtension:@"jsbundle"];
-        /*
-         For production use, this `NSURL` could instead point to a pre-bundled file on disk:
+这使得创建通用应用程序变得容易，因为来自服务器的状态可以被序列化并转化到客户端，而无需额外的编码工作。 单个状态树还使得更容易调试或内测应用程序; 它还使您能够坚持您的应用程序的状态在开发中，以更快的开发周期。 一些传统上很难实现的功能 - 例如撤消/重做 - 如果你的所有状态都存储在一棵树中，那么它可能突然变得不重要。
+```javascript
+console.log(store.getState())
 
-         NSURL *jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
-
-         To generate that file, run the curl command and add the output to your main Xcode build target:
-
-         curl http://localhost:8081/index.ios.bundle -o main.jsbundle
-         */
-        _rootView = [[RCTRootView alloc] initWithBundleURL:jsCodeLocation moduleName:@"honer" initialProperties:nil launchOptions:nil];
-        [self addSubview:_rootView];
+/* Prints
+{
+  visibilityFilter: 'SHOW_ALL',
+  todos: [
+    {
+      text: 'Consider using Redux',
+      completed: true,
+    },
+    {
+      text: 'Keep all state in a single tree',
+      completed: false
     }
-
-    return self;
+  ]
 }
-
-
-- (void)layoutSubviews {
-    [super layoutSubviews];
-    _rootView.frame = self.bounds;
-}
-/*
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect {
-    // Drawing code
-}
-*/``
-
-@end
-```
-在终端输入 <code>(JS_DIR=`pwd`/ReactComponent;cd node_modules/react-native; npm run start -- --root $JS_DIR)</code> 启动React-Native服务
-```
-
-RickdeMacBook-Pro:BestNote Wenba$ (JS_DIR=`pwd`/ReactComponent;cd node_modules/react-native; npm run start -- --root $JS_DIR)
-
-&gt; react-native@0.36.1 start /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/node_modules/react-native
-&gt; /usr/bin/env bash -c './packager/packager.sh "$@" || true' -- "--root" "/Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/ReactComponent"
-
-(node:14754) DeprecationWarning: os.tmpDir() is deprecated. Use os.tmpdir() instead.
-(node:14754) DeprecationWarning: Using Buffer without `new` will soon stop working. Use `new Buffer()`, or preferably `Buffer.from()`, `Buffer.allocUnsafe()` or `Buffer.alloc()` instead.
-Scanning 717 folders for symlinks in /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/node_modules (9ms)
- ┌────────────────────────────────────────────────────────────────────────────┐
- │  Running packager on port 8081.                                            │
- │                                                                            │
- │  Keep this packager running while developing on any JS projects. Feel      │
- │  free to close this tab and run your own packager instance if you          │
- │  prefer.                                                                   │
- │                                                                            │
- │  https://github.com/facebook/react-native                                  │
- │                                                                            │
- └────────────────────────────────────────────────────────────────────────────┘
-Looking for JS files in
-   /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote
-   /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/ReactComponent
-
-[Hot Module Replacement] Server listening on /hot
-
-React packager ready.
-
-[11/15/2016, 1:50:38 PM] <start> Initializing Packager
-[11/15/2016, 1:50:38 PM] <start> Building in-memory fs for JavaScript
-[11/15/2016, 1:50:38 PM] <end>   Building in-memory fs for JavaScript (173ms)
-[11/15/2016, 1:50:38 PM] <start> Building Haste Map
-[11/15/2016, 1:50:39 PM] <end>   Building Haste Map (124ms)
-[11/15/2016, 1:50:39 PM] <end>   Initializing Packager (365ms)
-[11/15/2016, 1:50:42 PM] <start> Requesting bundle: {"url":"/index.ios.bundle?platform=ios"}
-[11/15/2016, 1:50:42 PM] <start> Transforming modules
-transformed 662/662 (100%)
+*/
 
 ```
-
-<code>NSURL *jsCodeLocation = [NSURL URLWithString:@"http://10.88.1.90:8081/index.ios.bundle?platform=ios"];</code>这个IP是开启服务的电脑IP。<code>(JS_DIR=`pwd`/ReactComponent;cd node_modules/react-native; npm run start -- --root $JS_DIR)</code>定义的JSDir会在这两个目录下去查找js文件
-```
-   /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote
-   /Users/Rick/Documents/Work/ChatDemo/ReactNative/BestNote/ReactComponent
-```
-我们在<code>ReactComponent</code>这个目录下放入index.ios.js文件。文件内容如下
+</p>
+<h3>
+状态只读
+</h3>
+<p>
+改变状态的唯一方法是发出一个动作，一个描述发生了什么的对象。
+这确保视图和网络回调都不会直接写入状态。 相反，他们表达了改变状态的意图。 因为所有的变化是集中的，并以严格的顺序一个接一个地发生，没有微妙的竞争条件值得注意。 由于操作只是普通对象，它们可以被记录，序列化，存储，并且随后被重放以用于调试或测试目的。
 ```javascript
-import React, { Component } from 'react'
-import {
-  AppRegistry,
-  Text
-} from 'react-native';
-import Main from './src/main.js'
+store.dispatch({
+  type: 'COMPLETE_TODO',
+  index: 1
+})
 
-class myhonor extends Component {
-  render() {
-    return (
-      <main />
-    );
+store.dispatch({
+  type: 'SET_VISIBILITY_FILTER',
+  filter: 'SHOW_COMPLETED'
+})
+
+```
+</p>
+<h3>
+使用纯函数进行更改
+</h3>
+<p>
+要指定如何通过操作转换状态树，可以编写纯reducer。
+
+减少者只是纯函数，它采取前一个状态和一个动作，并返回下一个状态。 记住返回新的状态对象，而不是改变之前的状态。 你可以从一个单一的reducer开始，随着你的应用程序的增长，把它拆分成更小的reducer，它管理状态树的特定部分。 因为reducers只是函数，你可以控制它们被调用的顺序，传递额外的数据，甚至为普通任务（如分页）创建可重用的reducers。
+```javascript
+function visibilityFilter(state = 'SHOW_ALL', action) {
+  switch (action.type) {
+    case 'SET_VISIBILITY_FILTER':
+      return action.filter
+    default:
+      return state
   }
 }
-AppRegistry.registerComponent('honer', () =&gt; myhonor);
-```
-在这里注册组件honer，我们在ReactView类中找到这个honer模块去使用。
-此时我们运行我们的工程会发现运行ok的
 
-<br /><img src="http://ITMonkeyLife.github.io/Blog/images/develop/honer.png" />
+function todos(state = [], action) {
+  switch (action.type) {
+    case 'ADD_TODO':
+      return [
+        ...state,
+        {
+          text: action.text,
+          completed: false
+        }
+      ]
+    case 'COMPLETE_TODO':
+      return state.map((todo, index) =&gt; {
+        if (index === action.index) {
+          return Object.assign({}, todo, {
+            completed: true
+          })
+        }
+        return todo
+      })
+    default:
+      return state
+  }
+}
+
+import { combineReducers, createStore } from 'redux'
+let reducer = combineReducers({ visibilityFilter, todos })
+let store = createStore(reducer)
+```
+</p>
 <h2>
-离线包
+现有技术
 </h2>
 <p>
-加载需要时间，此时页面是空白，不好，建议将资源以及页面都打包成离线包，这样不用每次都连网去请求页面。如果有新的页面更换，可以先加载旧的页面，在渲染成新页面。
+Redux有一个混合遗产。 它类似于一些模式和技术，但也有重要的方面与他们不同。 我们将探讨一些相似之处和下面的差异。
 </p>
-<br /><img src="http://ITMonkeyLife.github.io/Blog/images/develop/package_honer.png" />
+<h3>
+Flux
+</h3>
 <p>
-我们在终端输入
-```
-react-native bundle \
---platform ios \
---entry-file index.ios2.js \
---bundle-output ./main.jsbundle \
---assets-dest ./ \
---dev true
-```
-```
-RickdeMacBook-Pro:BestNote Wenba$ react-native bundle --platform ios --dev false --entry-file ./ReactComponent/index.ios.js --bundle-output main.jsbundle --assets-dest ./Bundle
-(node:16763) DeprecationWarning: os.tmpDir() is deprecated. Use os.tmpdir() instead.
-(node:16763) DeprecationWarning: Using Buffer without `new` will soon stop working. Use `new Buffer()`, or preferably `Buffer.from()`, `Buffer.allocUnsafe()` or `Buffer.alloc()` instead.
-[11/15/2016, 2:28:17 PM] <start> Initializing Packager
-[11/15/2016, 2:28:17 PM] <start> Building in-memory fs for JavaScript
-[11/15/2016, 2:28:17 PM] <end>   Building in-memory fs for JavaScript (165ms)
-[11/15/2016, 2:28:17 PM] <start> Building Haste Map
-[11/15/2016, 2:28:17 PM] <end>   Building Haste Map (226ms)
-[11/15/2016, 2:28:17 PM] <end>   Initializing Packager (463ms)
-[11/15/2016, 2:28:17 PM] <start> Transforming modules
-[11/15/2016, 2:28:25 PM] <end>   Transforming modules (7758ms)
-bundle: start
-bundle: finish
-bundle: Writing bundle output to: main.jsbundle
-bundle: Done writing bundle output
-bundle: Copying 15 asset files
-bundle: Done copying assets
-```
-将我们的js文件打包成bundle，同事将资源文件也打包起来，如果--assets-dest ./ 这个参数不加，会导致我们页面的img图片资源缺失。这个有点坑。
+可以将Redux视为Flux实现吗？
 
-</end></start></end></end></start></end></start></start></p></start></start></end></end></start></end></start></start></p></我假设已经安装了homebrew></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[React-Native 资源整理]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li/"/>
-    <updated>2016-05-26T16:20:13+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/05/26/react-native-zi-yuan-zheng-li</id>
-    <content type="html"><![CDATA[<p>
-最近在学习React-Native过程中整理了一些学习的资源。
+是的，没有。
+
+（不要担心，Flux的创作者赞成它，如果这是你想知道的。）
+
+Redux的灵感来自于Flux的几个重要特性。 像Flux一样，Redux规定您将模型更新逻辑集中在应用程序的某个层（“Flux”中的“商店”，Redux中的“reducer”）。 不是让应用程序代码直接变换数据，而是告诉你将每个变量描述为一个称为“动作”的简单对象。
+
+与Flux不同，Redux没有Dispatcher的概念。 这是因为它依赖于纯函数而不是事件发射器，而纯函数很容易构成，并且不需要另外的实体来管理它们。 根据您查看Flux的方式，您可能会将此视为偏差或实施详细信息。 Flux经常被描述为(state, action) =&gt; state。 在这个意义上，Redux是真正的Flux架构，但由于纯函数使它更简单。
+
+与Flux的另一个重要区别是Redux假设你从不改变你的数据。 你可以使用简单的对象和数组为你的状态很好，但是在reducer内变异他们是强烈不鼓励。 你应该总是返回一个新的对象，这是很容易与对象扩展运算符建议，或与像Immutable的库。
+
+虽然在技术上可能编写不确定的缩减器，为性能角点突变数据，但我们积极阻止您这样做。 时间旅行，记录/重放或热重新加载等开发功能将会中断。 此外，似乎不可变性似乎在大多数真实应用程序中造成性能问题，因为，正如<a href="https://github.com/omcljs/om">Om</a>所示，即使你失去了对象分配，你仍然通过避免昂贵的重新渲染和重新计算赢得，因为你知道什么 改变由于减速器的纯度。
 </p>
-
-<h2 id="section">教程</h2>
-
-<p><a href="http://facebook.github.io/react-native/docs/getting-started.html">react-native 官方api文档</a>.</p>
-
-<p><a href="https://github.com/jondot/awesome-react-native">Awesome React-Native</a>.</p>
-
-<p><a href="https://github.com/ecomfe/react-native-cn">react-native 中文api文档 (翻译中)</a>.</p>
-
-<p><a href="http://reactjs.cn/">react.js中文文档</a>.</p>
-
-<p><a href="http://hulufei.gitbooks.io/react-tutorial/content/introduction.html">react.js入门教程(gitbook)</a>.</p>
-
-<p><a href="http://www.ruanyifeng.com/blog/2015/03/react.html">react.js快速入门教程</a>.</p>
-
-<p><a href="http://react.nodejs-china.org/t/reactjszhong-wen-shi-pin-jiao-cheng-bai-du-wang-pan/584">react.js视频教程</a>.</p>
-
-<p><a href="http://html-js.com/article/2783">react-native第一课</a>.
-<!-- more -->
-<a href="http://zhuanlan.zhihu.com/FrontendMagazine/19996445">深入浅出 React Native：使用 JavaScript 构建原生应用</a>.</p>
-
-<p><a href="http://blog.cnbang.net/tech/2698/">React Native通信机制详解</a>.</p>
-
-<p><a href="http://segmentfault.com/a/1190000002658374">React Native布局篇</a>.</p>
-
-<p><a href="http://segmentfault.com/a/1190000002645929">React Native 基础练习指北（一)</a>.</p>
-
-<p><a href="http://segmentfault.com/a/1190000002647733">React Native 基础练习指北（二）</a>.</p>
-
-<p><a href="http://www.逍遥仙.cn/archives/235#6838470-tsina-1-17436-6a377b1a66595f9ede646cf5c012734c">构建一个简单的列表页和2页导航</a>.</p>
-
-<p><a href="http://herman.asia/building-a-flashcard-app-with-react-native">Diary of Building an iOS App with React Native</a>.</p>
-
-<p><a href="http://blog-en.leapoahead.com/post/use-react-native-in-existing-ios-app">Use React Native in Existing iOS App</a>.</p>
-
-<p><a href="http://react.rocks/example/tcomb-form-native">tcomb-form-native使用视频教程(需翻墙)</a>.</p>
-
-<h2 id="app">开源APP</h2>
-
+<h3>
+Elm
+</h3>
 <p>
-研究源码也是很好的方式去掌握React-Native
+&lt;a href="http://elm-lang.org/"Elm是一个由Haskell启发的函数式编程语言，由Evan Czaplicki创建。 它强制执行“模型视图更新”架构，其中更新具有以下签名：（action，state）=&gt; state。 Elm“updaters”与Redux中的reducer具有相同的目的。
+
+与Redux不同，Elm是一种语言，因此它可以从诸如强制纯度，静态类型，开箱不可变性和模式匹配（使用case表达式）等许多方面受益。 即使你不打算使用Elm，你应该阅读关于Elm架构，并玩它。 有一个有趣的javascript库操场实现类似的想法。 我们应该看看Redux的灵感！ 我们可以更接近Elm的静态类型的一种方法是使用渐进打字解决方案，如Flow。
 </p>
-<p><a href="https://github.com/facebook/react-native/tree/master/Examples">官方演示App</a>.</p>
-
-<p><a href="https://github.com/henter/ReactNativeRubyChina">ReactNativeRubyChina</a>.</p>
-
-<p><a href="https://github.com/iSimar/HackerNews-React-Native">HackerNews-React-Native</a>.</p>
-
-<p><a href="https://github.com/tabalt/ReactNativeNews">React-Native新闻客户端</a>.</p>
-
-<p><a href="https://github.com/bradoyler/newswatch-react-native">newswatch(新闻客户端)</a>.</p>
-
-<p><a href="https://github.com/appintheair/react-native-buyscreen">buyscreen(购买页面)</a>.</p>
-
-<p><a href="https://github.com/samuel1112/v2er">V2EX客户端</a>.</p>
-
-<p><a href="https://github.com/joemaddalone/react-native-todo">react-native-todo</a>.</p>
-
-<p><a href="https://github.com/muratsu/react-native-beer">react-native-beer</a>.</p>
-
-<p><a href="https://github.com/86/react-native-stars">react-native-stars</a>.</p>
-
-<p><a href="https://github.com/baofen14787/react-native-demo">模仿天猫首页的app</a>.</p>
-
-<p><a href="https://github.com/csarsam/ReactNativeChess">ReactNativeChess</a>.</p>
-
-<p><a href="https://github.com/Johnqing/miumiu">react native 编写的音乐软件</a>.</p>
-
-<p><a href="https://github.com/ababol/react-native-pokedex">react-native-pokedex</a>.</p>
-
-<p><a href="https://github.com/SFantasy/CNode-React-Native">CNode-React-Native</a>.</p>
-
-<p><a href="https://github.com/voronianski/EightTracksReactNative">8tracks电台客户端</a>.</p>
-
-<p><a href="https://github.com/yoxisem544/Calculator-using-React-Native">React-Native实现的计算器</a>.</p>
-
-<p><a href="https://github.com/jawee/react-native-PropertyFinder">房产搜索app</a>.</p>
-
-<p><a href="https://github.com/LeezQ/react-native-zhihu-app">知乎专栏app</a>.</p>
-
-<p><a href="https://github.com/peralmq/ForeignExchangeApp">ForeignExchangeApp</a>.</p>
-
-<p><a href="https://github.com/peralmq/ForeignExchangeApp">ForeignExchangeApp</a>.</p>
-
-<p><a href="https://github.com/fakefish/sf-react-native">Segmentfault 客户端</a>.</p>
-
-<p><a href="https://github.com/stormhouse/QiuShiReactNative">糗事百科app</a>.</p>
-
-<p><a href="https://github.com/Hi-Rube/baoz-ReactNative">孢子社区app</a>.</p>
-
-<p><a href="https://github.com/fraserxu/shenjs">深JS app</a>.</p>
-
-<p><a href="https://github.com/asamiller/den">Den - 房屋销售app</a>.</p>
-
-<p><a href="https://github.com/soliury/noder-react-native">Noder-cnodejs客户端</a>.</p>
-
-<p><a href="https://github.com/race604/ZhiHuDaily-React-Native">知乎日报Android版</a>.</p>
-
-<p><a href="https://github.com/sonnylazuardi/ziliun-react-native">ziliun-react-native</a>.</p>
-
-<p><a href="https://github.com/shevawen/react-native-weather-app">react-native-weather-app</a>.</p>
-
-<p><a href="https://github.com/taskrabbit/ReactNativeSampleApp">React Native Sample App(Navigation,Flux)</a>.</p>
-
-<p><a href="https://github.com/qddegtya/A-ReactNative-TesterHome">TesterHome社区app</a>.</p>
-
-<p><a href="https://github.com/7kfpun/FinanceReactNative">Finance - 股票报价app</a>.</p>
-
-<p><a href="https://github.com/bigsui/shopping-react-native">shopping - 购物app</a>.</p>
-
-<p><a href="https://github.com/kazaff/ZhuiYuanDemo">zhuiyuan - 追源cms app</a></p>
-
-<p><a href="https://github.com/just4fun/uestc-bbs-react-native">uestc-bbs-react-native - UESTC清水河畔RN客户端(with Redux)</a>.</p>
-
-<p><a href="https://github.com/benoitvallon/react-native-nw-react-calculator">react-native-nw-react-calculator(iOS/Android、Web、桌面多端)</a>.</p>
-
-<p><a href="https://github.com/wwayne/react-native-nba-app">react-native-nba-app</a>.</p>
-
-<p><a href="http://git.oschina.net/rplees/react-native-gitosc">开源中国的Git@OSC客户端</a>.</p>
-
-<p><a href="https://github.com/liuchungui/rn_bycloud">rn_bycloud 帮瀛律师端app</a>.</p>
-
-<h2 id="section-1">工具</h2>
-
-<p><a href="https://github.com/Shrugs/react-native-snippets">react-native-snippets(代码提示)</a>.</p>
-
-<p><a href="https://github.com/roman01la/react-native-babel">react-native-babel(使用ES6+)</a>.</p>
-
-<p><a href="https://github.com/almost/react-native-sqlite">sqlite for react-native</a>.</p>
-
-<p><a href="https://github.com/soliury/gulp-react-native-css">gulp-react-native-css(就像写css一样写React Style)</a>.</p>
-
-<p><a href="https://github.com/rnpm/rnpm">rnpm(React Native Package Manager)</a>.</p>
-
-<p><a href="https://github.com/futurice/pepperoni-app-kit">Pepperoni - React Native项目初始化套件</a>.</p>
-
-<p><a href="https://www.decosoftware.com/">Deco IDE - React Native IDE</a>.</p>
-
-<h2 id="section-2">资源文件</h2>
-
-<p><a href="http://facebook.github.io/react-native/">React-native官网</a>.</p>
-
-<p><a href="http://react-china.org/">React-China社区</a>.</p>
-
-<p><a href="http://react.parts/">React-native组件库（比较全的组件库）</a>.</p>
-
-<p><a href="http://reactnativemodules.com/">React Native Modules</a>.</p>
-
-<p><a href="http://www.oschina.net/news/61214/11-react-native-ui-components">11款React Native开源移动 UI 组件</a>.</p>
-
-<hr />
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[React Native]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/03/23/react-native/"/>
-    <updated>2016-03-23T11:46:49+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/03/23/react-native</id>
-    <content type="html"><![CDATA[<p>
-React-Native 帮助在原生平台打造世界一流的应用体验，使用基于<code>JavaSript</code>和React的结合的开发经验。React-Native的宗旨是更有效的开发全平台的应用。
-</p>
-
-<h2>Native Components</h2>
+<h3>
+Immutable
+</h3>
 <p>
-在React-Native你能使用标准平台组件如：iOS的<code>UITabBar</code>以及<code>Android</code>的<code>Drawer</code>。这个给了你APP标准统一的外观，使用这个平台的生态系统，去保持高质量。这些组件能轻易的嵌入到你的APP中使用，和React组件是差不多的，例如:<code>TabBariOS</code>和<code>DrawerLayoutAndroid</code>
+ <a href="https://facebook.github.io/immutable-js">Immutable</a>是一个实现持久数据结构的javascript库。 它是性能和有一个惯用的javascript API。
 
+Immutable的和最相似的库与Redux正交。 随意使用它们在一起！
+
+Redux不关心你如何存储状态 - 它可以是一个简单的对象，一个Immutable的对象，或任何其他。 你可能想要一个（de）序列化机制，用于编写通用应用程序和从服务器转化化它们的状态，但除此之外，你可以使用任何数据存储库，只要它支持Immutable。 例如，将Backbone用于Redux状态没有意义，因为Backbone模型是可变的。
+
+请注意，即使您的Immutable库支持光标，您不应在Redux应用程序中使用它们。 整个状态树应该被认为是只读的，你应该使用Redux来更新状态，并订阅更新。 因此，通过光标写入对于Redux没有意义。 如果您对光标的唯一用例是从UI树中解耦状态树并逐渐细化光标，则应查看选择器。 选择器是可组合的getter函数。 看到重选的一个真正伟大和简洁的可组合选择器的实现。
+</p>
+<h3>
+Baobab
+</h3>
+<p>
+<a href="https://github.com/Yomguithereal/baobab">Baobab</a>是另一个流行的库，用于实现不可变的API，用于更新纯javascript对象。 虽然你可以使用它与Redux，但是没有什么好处在一起使用它们。
+
+Baobab提供的大多数功能都与使用游标更新数据相关，但Redux强制更新数据的唯一方法是调度操作。 因此，他们不同地解决相同的问题，并且不互补。
+
+与Immutable不同，Baobab还没有实现任何特殊的高效数据结构，所以你不会真正赢得任何东西，使用它和Redux一起使用。 在这种情况下，更容易使用纯对象。
+</p>
+<h3>
+Rx
+</h3>
+<p>
+<a href="https://github.com/Reactive-Extensions/RxJS">Reactive </a>扩展（以及它们正在进行的现代重写）是管理异步应用程序的复杂性的极好方法。 实际上，有一种努力来创建一个将人机交互作为相互依赖的可观察者的库。
+
+与Rx一起使用Redux有意义吗？ 当然！ 他们一起工作。 例如，很容易将Redux存储暴露为可观察者：
 ```javascript
-// iOS
-
-var React = require('react-native');
-var { TabBarIOS, NavigatorIOS } = React;
-
-var App = React.createClass({
-  render: function() {
-    return (
-      <tabbarios>
-        &lt;TabBarIOS.Item title="React Native" selected={true}&gt;
-          &lt;NavigatorIOS initialRoute= /&gt;
-        
-      </tabbarios>
-    );
-  },
-});
-```
-```javascript
-// Android
-
-var React = require('react-native');
-var { DrawerLayoutAndroid, ProgressBarAndroid, Text } = React;
-
-var App = React.createClass({
-  render: function() {
-    return (
-      &lt;DrawerLayoutAndroid
-        renderNavigationView={() =&gt; <text>React Native</text>}&gt;
-        <progressbarandroid />
-      
-    );
-  },
-});
-```
-</p>
-
-<h2>异步执行</h2>
-<p>
-所有的<code>Javascript</code>应用程序代码以及原生平台的操作都是异步的，并且原生模块也能够使用额外的线程。这意味着我们能关闭主线程的图像解码，后台把图片保存到磁盘，渲染文字和计算布局而不会阻塞UI。这样一来，React-Native应用自然流畅性和响应。通信也完全序列化，这使我们能够充分利用<code>Chrome</code>开发者工具来调试<code>Javascript</code>的运行时完整的应用程序，无论是模拟器还是真实设备。
-</p>
-<!-- more-->
-<h2>触摸处理</h2>
-<p>
-React-Native实现了一个功能强大的系统解决触摸在复杂的视图层次中，并且提供高层级的组件，例如：<code>TouchableHighlight</code>和滚动视图和其他元素融合在一起，不需要额外的配置。
-```javascript
-// iOS &amp; Android
-
-var React = require('react-native');
-var { ScrollView, TouchableHighlight, Text } = React;
-
-var TouchDemo = React.createClass({
-  render: function() {
-    return (
-      <scrollview>
-        &lt;TouchableHighlight onPress={() =&gt; console.log('pressed')}&gt;
-          <text>Proper Touch Handling</text>
-        
-      </scrollview>
-    );
-  },
-});
-```
-</p>
-
-<h2>Flexbox和样式</h2>
-<p>
-视图布局应该很容易，这就是为什么我们把<code>Flexbox</code>的布局模型从web带到了React-Native。Flexbox让构建大部分公共部分的UI布局更简单，例如用<code>margin</code>和<code>padding</code>堆叠和嵌套的Box。React-Native也支持公共的网页样式，如：<code>fontWeight</code>和<code>StyleSheet</code>抽象提供了一个优化的机制来声明所有的样式和布局正确一起使用它们和内联应用它们的组件
-```javascript
-// iOS &amp; Android
-
-var React = require('react-native');
-var { Image, StyleSheet, Text, View } = React;
-
-var ReactNative = React.createClass({
-  render: function() {
-    return (
-      &lt;View style={styles.row}&gt;
-        &lt;Image
-          source=
-          style={styles.image}
-        /&gt;
-        &lt;View style={styles.text}&gt;
-          &lt;Text style={styles.title}&gt;
-            React Native
-          
-          &lt;Text style={styles.subtitle}&gt;
-            Build high quality mobile apps using React
-          
-        
-      
-    );
-  },
-});
-var styles = StyleSheet.create({
-  row: { flexDirection: 'row', margin: 40 },
-  image: { width: 40, height: 40, marginRight: 10 },
-  text: { flex: 1, justifyContent: 'center'},
-  title: { fontSize: 11, fontWeight: 'bold' },
-  subtitle: { fontSize: 10 },
-});
-```
-</p>
-
-<h2>开源</h2>
-<p>
-React-Native集中于改变视图代码编写的方式，至于剩下的，我们期待在网络的普遍标准和在恰当情况下填充那些API。你能使用npm安装<code>JavaSript</code>库拷贝到React-Native运行。如:<code>XMLHttpRequest</code>,window.requestAnimationFrame,navigator.geolocation。我们努力扩展可用的API，并且很高兴为开源贡献力量。
-```javascript
-// iOS (Android support for geolocation coming)
-
-var React = require('react-native');
-var { Text } = React;
-
-var GeoInfo = React.createClass({
-  getInitialState: function() {
-    return { position: 'unknown' };
-  },
-  componentDidMount: function() {
-    navigator.geolocation.getCurrentPosition(
-      (position) =&gt; this.setState({position}),
-      (error) =&gt; console.error(error)
-    );
-  },
-  render: function() {
-    return (
-      <text>
-        Position: {JSON.stringify(this.state.position)}
-      </text>
-    );
-  },
-});
-```
-</p>
-
-<h2>可扩展性</h2>
-<p>
-React-Native可用来开发一个伟大的APP而不用写一行原生代码，但是React-Native的设计也与自定义原生的视图和模块的扩展，这意味着你开源复用任何你之前已经构建过的，也能导入使用你喜欢的原生库。
-</p>
-
-<h3>创建iOS模块</h3>
-<p>
-创建一个简单的iOS模块，创建一个新的类来实现<code>RCTBridgeModule</code>协议,包含函数实现JavaSript在RCT_EXPORT_METHOD的功能。额外，这个类自身必须明确的导出RCT_EXPORT_MODULE();。
-```objc
-#import "RCTBridgeModule.h"
-
-@interface MyCustomModule : NSObject <rctbridgemodule>
-@end
-
-@implementation MyCustomModule
-
-RCT_EXPORT_MODULE();
-
-// Available as NativeModules.MyCustomModule.processString
-
-RCT_EXPORT_METHOD(processString:(NSString * )input callback:(RCTResponseSenderBlock)callback)
-{
-  callback(@[[input stringByReplacingOccurrencesOfString:@"Goodbye" withString:@"Hello"]]);
-}
-@end
-```
-```javascript
-var React = require('react-native');
-var { NativeModules, Text } = React;
-
-var Message = React.createClass({
-  getInitialState() {
-    return { text: 'Goodbye World.' };
-  },
-  componentDidMount() {
-    NativeModules.MyCustomModule.processString(this.state.text, (text) =&gt; {
-      this.setState({text});
-    });
-  },
-  render: function() {
-    return (
-      <text>{this.state.text}</text>
-    );
-  }
-});
-```
-
-
-<h3>创建iOS视图</h3>
-<p>
-自定义的iOS视图能被导出，继承于<code>RCTViewManager</code>,实现-(UIView*)view方法，并且导出属性通过<code>RCT_EXPORT_VIEW_PROPERTY</code>这个宏。
-```objc
-#import "RCTViewManager.h"
-
-@interface MyCustomViewManager : RCTViewManager
-@end
-
-@implementation MyCustomViewManager
-
-RCT_EXPORT_MODULE()
-
-- (UIView * )view
-{
-  return [[MyCustomView alloc] init];
-}
-
-RCT_EXPORT_VIEW_PROPERTY(myCustomProperty, NSString);
-@end
-```
-```javascript
-
-var React = require('react-native');
-var { requireNativeComponent } = React;
-
-class MyCustomView extends React.Component {
-  render() {
-    return &lt;NativeMyCustomView {...this.props} /&gt;;
-  }
-}
-MyCustomView.propTypes = {
-  myCustomProperty: React.PropTypes.oneOf(['a', 'b']),
-};
-
-var NativeMyCustomView = requireNativeComponent('MyCustomView', MyCustomView);
-module.exports = MyCustomView;
-```
-</p>
-
-<h3>创建安卓模块</h3>
-<p>
-同样，安卓也支持自定义扩展，这些方法只是略有不同。
-</p>
-<p>
-要在Android的一个简单的模块，创建一个扩展<code>ReactContextBaseJavaModule</code>类的新类和注释，你要提供给<code>JavaScript</code>与@ReactMethod功能。此外，类本身必须的<code>ReactPackage</code>注册您的React-Native程序。
-```java
-public class MyCustomModule extends ReactContextBaseJavaModule {
-
-// Available as NativeModules.MyCustomModule.processString
-  @ReactMethod
-  public void processString(String input, Callback callback) {
-    callback.invoke(input.replace("Goodbye", "Hello"));
-  }
-}
-```
-```javascript
-var React = require('react-native');
-var { NativeModules, Text } = React;
-var Message = React.createClass({
-  getInitialState() {
-    return { text: 'Goodbye World.' };
-  },
-  componentDidMount() {
-    NativeModules.MyCustomModule.processString(this.state.text, (text) =&gt; {
-      this.setState({text});
-    });
-  },
-  render: function() {
-    return (
-      <text>{this.state.text}</text>
-    );
-  }
-});
-```
-</p>
-
-<h3>创建安卓视图</h3>
-<p>
-定制安卓视图能通过<code>SimpleViewManager</code>扩展，实现一个创建视图实例并且返货函数名称的方法，并与@UIProp标记导出属性被暴露。
-```java
-
-public class MyCustomViewManager extends SimpleViewManager<mycustomview> {
-
-  private static final String REACT_CLASS = "MyCustomView";
-
-  @UIProp(UIProp.Type.STRING)
-  public static final String PROP_MY_CUSTOM_PROPERTY = "myCustomProperty";
-
-  @Override
-  public String getName() {
-    return REACT_CLASS;
-  }
-
-  @Override
-  protected MyCustomView createViewInstance(ThemedReactContext reactContext) {
-    return new MyCustomView(reactContext);
-  }
-
-  @Override
-  public void updateView(MyCustomView view, ReactStylesDiffMap props) {
-    super.updateView(view, props);
-
-    if (props.hasKey(PROP_MY_CUSTOM_PROPERTY)) {
-      view.setMyCustomProperty(props.getString(PROP_MY_CUSTOM_PROPERTY));
+function toObservable(store) {
+  return {
+    subscribe({ onNext }) {
+      let dispose = store.subscribe(() =&gt; onNext(store.getState()))
+      onNext(store.getState())
+      return { dispose }
     }
   }
 }
 ```
-```javascript
-var React = require('react-native');
-var { requireNativeComponent } = React;
 
-class MyCustomView extends React.Component {
-  render() {
-    return &lt;NativeMyCustomView {...this.props} /&gt;;
-  }
-}
-MyCustomView.propTypes = {
-  myCustomProperty: React.PropTypes.oneOf(['a', 'b']),
-};
+类似地，您可以组合不同的异步流，将它们转换为动作，然后将它们提供给store.dispatch（）。
 
-var NativeMyCustomView = requireNativeComponent('MyCustomView', MyCustomView);
-module.exports = MyCustomView;
-```
+问题是：如果你已经使用Rx，你真的需要Redux吗？ 也许不会。 在<a href="https://github.com/jas-chen/rx-redux">Rx中重新实现Redux</a>并不困难。 有人说这是一个两线程使用Rx.scan（）方法。 它可能很好！
 
-<hr />
-</mycustomview></p></rctbridgemodule></p>
+如果你有疑问，请查看Redux源代码（没有太多的事情），以及它的生态系统（例如，<a href="https://github.com/gaearon/redux-devtools">开发工具</a>）。 如果你不太关心它，并且希望与反应数据流一路走，你可能想要探索类似于<a href="https://cycle.js.org/">Cycle</a>的东西，或者甚至将它与Redux组合。 让我们知道它怎么回事！
+</p>
+
+<h2>
+生态系统
+</h2>
+<p>
+Redux是一个很小的库，但它的合同和API被仔细选择，以产生一个工具和扩展的生态系统。
+
+有关与Redux相关的一切的广泛列表，我们建议<a href="https://github.com/xgrommx/awesome-redux">Awesome Redux</a>。 它包含示例，模板，中间件，实用程序库等。<a href="https://github.com/markerikson/react-redux-links"> React / Redux链接</a>包含任何学习React或Redux的教程和其他有用的资源，<a href="https://github.com/markerikson/redux-ecosystem-links">Redux Ecosystem Links</a>列出了许多与Redux相关的库和插件。
+
+在本页上，我们将只介绍Redux维护者已亲自审核的几个。 不要让这不鼓励你尝试其余的！ 生态系统正在增长太快，我们有限的时间来看待一切。 考虑这些“职员选择”，如果你用Redux构建了一些奇妙的东西，不要犹豫提交PR。
+</p>
+
+<h2>
+学习Redux
+</h2>
+<h3>
+
+</h3>
 ]]></content>
   </entry>
   

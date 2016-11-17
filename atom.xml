@@ -4,7 +4,7 @@
   <title><![CDATA[IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-11-15T16:44:32+08:00</updated>
+  <updated>2016-11-17T19:46:30+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,476 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[React Native开发Redux]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/17/react-nativekai-fa-redux/"/>
+    <updated>2016-11-17T14:52:37+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/17/react-nativekai-fa-redux</id>
+    <content type="html"><![CDATA[<p>
+Redux是一个可预测的javascript应用程序的状态容器。
+
+它可以帮助您编写行为一致，在不同环境（客户端，服务器和本机）中运行的应用程序，并且易于测试。 此外，它提供了一个伟大的开发者体验，如实时代码编辑结合一个时间旅行调试器。
+</p>
+<p>
+您可以与React或任何其他视图库一起使用<a href="https://facebook.github.io/react/">Redux</a>。
+它是微小的（2kB，包括依赖）。
+从其创建者学习Redux：<a href="https://egghead.io/series/getting-started-with-redux">Redux学习入门</a>
+</p>
+<h3>
+开发经验
+</h3>
+<p>
+我在工作在我的React Europe谈话时写了Redux，名为“Hot Reloading with Time Travel”。 我的目标是创建一个状态管理库，具有最少的API，但完全可预测的行为，所以可以实现日志记录，热重新加载，时间旅行，通用应用程序，记录和重放，没有任何从开发人员买入。
+</p>
+<h3>
+影响
+</h3>
+<p>
+Redux演化了<a href="http://facebook.github.io/flux/">Flux</a>的想法，但通过从<a href="https://github.com/evancz/elm-architecture-tutorial/">Elm</a>提取线索来避免其复杂性。
+无论您是否使用过它们，Redux只需要几分钟的时间就可以开始使用。
+</p>
+<h3>
+安装
+</h3>
+<p>
+安装稳定版本：
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">npm install --save redux</span></code></pre></td></tr></table></div></figure></notextile></div>
+这假设你使用<a href="https://www.npmjs.com/">npm</a>作为你的包管理器。
+
+最常见的是人们使用Redux作为<a href="http://webpack.github.io/docs/commonjs.html">CommonJS</a>模块的集合。 这些模块是在<a href="http://webpack.github.io/">Webpack</a>，<a href="http://browserify.org/">Browserify</a>或Node环境中导入redux时得到的。 如果你喜欢生活在边缘，使用<a href="http://rollupjs.org/">Rollup</a>，我们也支持。
+
+如果你不使用模块bundler，它也没关系。 <code>redux</code> npm包包括在<a href="https://unpkg.com/redux/dist/">dist文件夹</a>中预编译的生产和开发<a href="https://github.com/umdjs/umd">UMD</a>版本。 它们可以直接使用而无需捆绑器，因此与许多流行的javascript模块加载器和环境兼容。 例如，可以将UMD构建作为<a href="https://unpkg.com/redux/dist/redux.js">script标记</a>放在页面上，或者告诉<a href="https://github.com/reactjs/redux/pull/1181#issuecomment-167361975">Bower安装它</a>。 UMD构建使Redux可用作<code>window.Redux</code>全局变量。
+
+Redux源代码是在ES2015中编写的，但我们将CommonJS和UMD构建预编译为ES5，因此它们可在<a href="http://caniuse.com/#feat=es5">任何现代浏览器</a>中使用。 您不需要使用Babel或模块捆绑包来<a href="https://github.com/reactjs/redux/blob/master/examples/counter-vanilla/index.html">开始使用Redux</a>。
+</p>
+<h3>
+互补包
+</h3>
+<p>
+很可能，您还需要<a href="https://github.com/reactjs/react-redux">React绑定</a>和<a href="https://github.com/gaearon/redux-devtools">开发人员工具</a>。
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">npm install --save react-redux
+</span><span class="line">npm install --save-dev redux-devtools</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+请注意，与Redux本身不同，Redux生态系统中的许多软件包不提供UMD构建，因此我们建议使用<a href="http://webpack.github.io/"> Webpack </a>和<a href="http://browserify.org/">Browserify</a>之类的CommonJS模块捆绑软件，以获得最舒适的开发体验。
+</p>
+<h3>
+要点
+</h3>
+<p>
+应用程序的整个状态存储在单个存储中的对象树中。
+改变状态树的唯一方法是发出一个动作，一个描述发生了什么的对象。
+要指定动作如何转换状态树，您需要编写纯reducer。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">createStore</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;redux&#39;</span>
+</span><span class="line">
+</span><span class="line"><span class="cm">/**</span>
+</span><span class="line"><span class="cm"> * This is a reducer, a pure function with (state, action) =&gt; state signature.</span>
+</span><span class="line"><span class="cm"> * It describes how an action transforms the state into the next state.</span>
+</span><span class="line"><span class="cm"> *</span>
+</span><span class="line"><span class="cm"> * The shape of the state is up to you: it can be a primitive, an array, an object,</span>
+</span><span class="line"><span class="cm"> * or even an Immutable.js data structure. The only important part is that you should</span>
+</span><span class="line"><span class="cm"> * not mutate the state object, but return a new object if the state changes.</span>
+</span><span class="line"><span class="cm"> *</span>
+</span><span class="line"><span class="cm"> * In this example, we use a `switch` statement and strings, but you can use a helper that</span>
+</span><span class="line"><span class="cm"> * follows a different convention (such as function maps) if it makes sense for your</span>
+</span><span class="line"><span class="cm"> * project.</span>
+</span><span class="line"><span class="cm"> */</span>
+</span><span class="line"><span class="kd">function</span> <span class="nx">counter</span><span class="p">(</span><span class="nx">state</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">action</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">switch</span> <span class="p">(</span><span class="nx">action</span><span class="p">.</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">case</span> <span class="s1">&#39;INCREMENT&#39;</span><span class="o">:</span>
+</span><span class="line">    <span class="k">return</span> <span class="nx">state</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span class="line">  <span class="k">case</span> <span class="s1">&#39;DECREMENT&#39;</span><span class="o">:</span>
+</span><span class="line">    <span class="k">return</span> <span class="nx">state</span> <span class="o">-</span> <span class="mi">1</span>
+</span><span class="line">  <span class="k">default</span><span class="o">:</span>
+</span><span class="line">    <span class="k">return</span> <span class="nx">state</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// Create a Redux store holding the state of your app.</span>
+</span><span class="line"><span class="c1">// Its API is { subscribe, dispatch, getState }.</span>
+</span><span class="line"><span class="kd">let</span> <span class="nx">store</span> <span class="o">=</span> <span class="nx">createStore</span><span class="p">(</span><span class="nx">counter</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// You can use subscribe() to update the UI in response to state changes.</span>
+</span><span class="line"><span class="c1">// Normally you&#39;d use a view binding library (e.g. React Redux) rather than subscribe() directly.</span>
+</span><span class="line"><span class="c1">// However it can also be handy to persist the current state in the localStorage.</span>
+</span><span class="line">
+</span><span class="line"><span class="nx">store</span><span class="p">.</span><span class="nx">subscribe</span><span class="p">(()</span> <span class="o">=&gt;</span>
+</span><span class="line">  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">store</span><span class="p">.</span><span class="nx">getState</span><span class="p">())</span>
+</span><span class="line"><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// The only way to mutate the internal state is to dispatch an action.</span>
+</span><span class="line"><span class="c1">// The actions can be serialized, logged or stored and later replayed.</span>
+</span><span class="line"><span class="nx">store</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;INCREMENT&#39;</span> <span class="p">})</span>
+</span><span class="line"><span class="c1">// 1</span>
+</span><span class="line"><span class="nx">store</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;INCREMENT&#39;</span> <span class="p">})</span>
+</span><span class="line"><span class="c1">// 2</span>
+</span><span class="line"><span class="nx">store</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;DECREMENT&#39;</span> <span class="p">})</span>
+</span><span class="line"><span class="c1">// 1</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<!--more-->
+而不是直接改变状态，你指定你想要发生的变异称为动作的简单对象的突变。 然后，您编写一个称为reducer的特殊函数来决定每个操作如何转换整个应用程序的状态。
+
+如果你来自Flux，有一个重要的区别，你需要了解。 Redux没有Dispatcher或者支持很多商店。 相反，只有一个存储具有单个根减少功能。 随着应用程序的增长，而不是添加商店，您将根还原器分割成更小的reducer独立操作在状态树的不同部分。 这就像在React应用程序中只有一个根组件，但是它由许多小组件组成。
+
+这个架构可能看起来像一个计数器应用程序的过分，但这种模式的美丽是它扩展到大型和复杂的应用程序。 它还支持非常强大的开发工具，因为可以跟踪每个突变到导致它的操作。 您可以记录用户会话，并通过重播每个操作重现它们。
+
+
+<a href="https://egghead.io/series/getting-started-with-redux">Redux入门</a>是一个视频课程，由30个视频组成，由Dan Abramov（Redux的作者）讲述。 它旨在补充文档的“基础”部分，同时提供关于不可变性，测试，Redux最佳实践以及使用Redux与React的更多见解。 本课程是免费的，将永远是。
+</p>
+<h3>
+附录
+</h3>
+<p>
+<a href="http://redux.js.org/docs/basics/">http://redux.js.org/docs/basics/</a>
+</p>
+
+<h3>
+动机
+</h3>
+<p>
+由于对javascript单页应用程序的要求变得越来越复杂，我们的代码必须管理更多的状态。 此状态可以包括服务器响应和缓存数据，以及尚未保留到服务器的本地创建的数据。 UI状态也越来越复杂，因为我们需要管理活动路由，选定的选项卡，是否显示微调框，是否应显示分页控件等。
+
+管理这种不断变化的状态是很困难的。 如果模型可以更新另一个模型，则视图可以更新模型，该模型更新另一个模型，这反过来可能导致另一个视图更新。 在某些时候，你不再理解你的应用程序发生了什么，因为你失去了对状态的时间，原因和方式的控制。 当系统不透明和非确定性时，很难再现错误或添加新功能。
+
+好像这还不够，考虑新的需求在前端产品开发中变得普遍。 作为开发人员，我们需要处理乐观更新，服务器端呈现，在执行路由转换之前获取数据，等等。 我们发现自己试图管理我们从来没有处理的复杂性，我们不可避免地提出这个问题：是时候放弃了吗？ 答案是不。
+
+这种复杂性很难处理，因为我们混合了两个对人类思想很难理解的概念：变异和异步性。 我叫他们<a href="https://en.wikipedia.org/wiki/Diet_Coke_and_Mentos_eruption">Mentos和Coke</a>。 两者都可以伟大的分离，但在一起，他们创造了一团糟。 像React这样的库试图通过同时删除异步和直接DOM操作来解决视图层中的这个问题。 但是，管理数据的状态取决于您。 这是Redux进入的地方。
+
+在Flux，<a href="http://martinfowler.com/bliki/CQRS.html">CQRS</a>和<a href="http://martinfowler.com/eaaDev/EventSourcing.html">Event Sourcing</a>的步骤中，Redux试图通过对可能发生更新的方式和时间施加某些限制来使状态突变可预测。 这些限制反映在Redux的三个原则中。
+
+CQRS代表命令查询责任分离。 这是我第一次听到格雷格·杨描述的模式。 其核心是这样的概念：您可以使用不同的模型来更新信息，而不是用于读取信息的模型。 在某些情况下，这种分离是有价值的，但要注意对于大多数系统，CQRS增加了复杂性。
+
+我们可以查询应用程序的状态以找出世界的当前状态，这回答了许多问题。然而，有时我们不只是想看看我们在哪里，我们也想知道我们如何到达那里。
+
+事件源采购确保对应用程序状态的所有更改都存储为事件序列。我们不仅可以查询这些事件，还可以使用事件日志来重建过去的状态，并作为自动调整状态以应对追溯变化的基础。
+
+Event Sourcing的基本思想是确保每个对应用程序状态的更改都捕获在事件对象中，并且这些事件对象本身按应用程序状态本身的相同生命周期存储在序列中。
+
+让我们考虑一个关于运送通知的简单示例。在这个例子中，我们在公海上有许多船只，我们需要知道它们在哪里。一个简单的方法是让跟踪应用程序具有方法，以允许我们告知船舶何时到达或离开港口。
+
+在这种情况下，当调用服务时，它会找到相关的船并更新其位置。船舶对象记录船舶的当前已知状态。
+
+Event Sourcing简介为此过程增加了一个步骤。现在服务创建一个事件对象来记录更改并处理它以更新船。
+
+看看刚才的处理，这只是一个不必要的间接级别。有趣的区别是，当我们看看在几个更改后应用程序中存在什么。让我们想象一些简单的变化：
+
+使用基本服务，我们只看到船对象捕获的最终状态。我将这个称为应用程序状态。
+
+使用事件源，我们还捕获每个事件。如果我们使用持久存储，事件将被持久化，就像船对象一样。我认为我们坚持两种不同的东西应用程序状态和事件日志是有用的。
+</p>
+<h2>
+三个原则
+</h2>
+<p>
+Redux可以用三个基本原则来描述：
+</p>
+<h3>
+事实唯一性
+</h3>
+<p>
+整个应用程序的状态存储在单个存储中的对象树中。
+
+这使得创建通用应用程序变得容易，因为来自服务器的状态可以被序列化并转化到客户端，而无需额外的编码工作。 单个状态树还使得更容易调试或内测应用程序; 它还使您能够坚持您的应用程序的状态在开发中，以更快的开发周期。 一些传统上很难实现的功能 - 例如撤消/重做 - 如果你的所有状态都存储在一棵树中，那么它可能突然变得不重要。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">store</span><span class="p">.</span><span class="nx">getState</span><span class="p">())</span>
+</span><span class="line">
+</span><span class="line"><span class="cm">/* Prints</span>
+</span><span class="line"><span class="cm">{</span>
+</span><span class="line"><span class="cm">  visibilityFilter: &#39;SHOW_ALL&#39;,</span>
+</span><span class="line"><span class="cm">  todos: [</span>
+</span><span class="line"><span class="cm">    {</span>
+</span><span class="line"><span class="cm">      text: &#39;Consider using Redux&#39;,</span>
+</span><span class="line"><span class="cm">      completed: true,</span>
+</span><span class="line"><span class="cm">    },</span>
+</span><span class="line"><span class="cm">    {</span>
+</span><span class="line"><span class="cm">      text: &#39;Keep all state in a single tree&#39;,</span>
+</span><span class="line"><span class="cm">      completed: false</span>
+</span><span class="line"><span class="cm">    }</span>
+</span><span class="line"><span class="cm">  ]</span>
+</span><span class="line"><span class="cm">}</span>
+</span><span class="line"><span class="cm">*/</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h3>
+状态只读
+</h3>
+<p>
+改变状态的唯一方法是发出一个动作，一个描述发生了什么的对象。
+这确保视图和网络回调都不会直接写入状态。 相反，他们表达了改变状态的意图。 因为所有的变化是集中的，并以严格的顺序一个接一个地发生，没有微妙的竞争条件值得注意。 由于操作只是普通对象，它们可以被记录，序列化，存储，并且随后被重放以用于调试或测试目的。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="nx">store</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;COMPLETE_TODO&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="nx">index</span><span class="o">:</span> <span class="mi">1</span>
+</span><span class="line"><span class="p">})</span>
+</span><span class="line">
+</span><span class="line"><span class="nx">store</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;SET_VISIBILITY_FILTER&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="nx">filter</span><span class="o">:</span> <span class="s1">&#39;SHOW_COMPLETED&#39;</span>
+</span><span class="line"><span class="p">})</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h3>
+使用纯函数进行更改
+</h3>
+<p>
+要指定如何通过操作转换状态树，可以编写纯reducer。
+
+减少者只是纯函数，它采取前一个状态和一个动作，并返回下一个状态。 记住返回新的状态对象，而不是改变之前的状态。 你可以从一个单一的reducer开始，随着你的应用程序的增长，把它拆分成更小的reducer，它管理状态树的特定部分。 因为reducers只是函数，你可以控制它们被调用的顺序，传递额外的数据，甚至为普通任务（如分页）创建可重用的reducers。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">function</span> <span class="nx">visibilityFilter</span><span class="p">(</span><span class="nx">state</span> <span class="o">=</span> <span class="s1">&#39;SHOW_ALL&#39;</span><span class="p">,</span> <span class="nx">action</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">switch</span> <span class="p">(</span><span class="nx">action</span><span class="p">.</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">case</span> <span class="s1">&#39;SET_VISIBILITY_FILTER&#39;</span><span class="o">:</span>
+</span><span class="line">      <span class="k">return</span> <span class="nx">action</span><span class="p">.</span><span class="nx">filter</span>
+</span><span class="line">    <span class="k">default</span><span class="o">:</span>
+</span><span class="line">      <span class="k">return</span> <span class="nx">state</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">function</span> <span class="nx">todos</span><span class="p">(</span><span class="nx">state</span> <span class="o">=</span> <span class="p">[],</span> <span class="nx">action</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">switch</span> <span class="p">(</span><span class="nx">action</span><span class="p">.</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">case</span> <span class="s1">&#39;ADD_TODO&#39;</span><span class="o">:</span>
+</span><span class="line">      <span class="k">return</span> <span class="p">[</span>
+</span><span class="line">        <span class="p">...</span><span class="nx">state</span><span class="p">,</span>
+</span><span class="line">        <span class="p">{</span>
+</span><span class="line">          <span class="nx">text</span><span class="o">:</span> <span class="nx">action</span><span class="p">.</span><span class="nx">text</span><span class="p">,</span>
+</span><span class="line">          <span class="nx">completed</span><span class="o">:</span> <span class="kc">false</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">      <span class="p">]</span>
+</span><span class="line">    <span class="k">case</span> <span class="s1">&#39;COMPLETE_TODO&#39;</span><span class="o">:</span>
+</span><span class="line">      <span class="k">return</span> <span class="nx">state</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">todo</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class="line">        <span class="k">if</span> <span class="p">(</span><span class="nx">index</span> <span class="o">===</span> <span class="nx">action</span><span class="p">.</span><span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">          <span class="k">return</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="nx">todo</span><span class="p">,</span> <span class="p">{</span>
+</span><span class="line">            <span class="nx">completed</span><span class="o">:</span> <span class="kc">true</span>
+</span><span class="line">          <span class="p">})</span>
+</span><span class="line">        <span class="p">}</span>
+</span><span class="line">        <span class="k">return</span> <span class="nx">todo</span>
+</span><span class="line">      <span class="p">})</span>
+</span><span class="line">    <span class="k">default</span><span class="o">:</span>
+</span><span class="line">      <span class="k">return</span> <span class="nx">state</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">combineReducers</span><span class="p">,</span> <span class="nx">createStore</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;redux&#39;</span>
+</span><span class="line"><span class="kd">let</span> <span class="nx">reducer</span> <span class="o">=</span> <span class="nx">combineReducers</span><span class="p">({</span> <span class="nx">visibilityFilter</span><span class="p">,</span> <span class="nx">todos</span> <span class="p">})</span>
+</span><span class="line"><span class="kd">let</span> <span class="nx">store</span> <span class="o">=</span> <span class="nx">createStore</span><span class="p">(</span><span class="nx">reducer</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h2>
+现有技术
+</h2>
+<p>
+Redux有一个混合遗产。 它类似于一些模式和技术，但也有重要的方面与他们不同。 我们将探讨一些相似之处和下面的差异。
+</p>
+<h3>
+Flux
+</h3>
+<p>
+可以将Redux视为Flux实现吗？
+
+是的，没有。
+
+（不要担心，Flux的创作者赞成它，如果这是你想知道的。）
+
+Redux的灵感来自于Flux的几个重要特性。 像Flux一样，Redux规定您将模型更新逻辑集中在应用程序的某个层（“Flux”中的“商店”，Redux中的“reducer”）。 不是让应用程序代码直接变换数据，而是告诉你将每个变量描述为一个称为“动作”的简单对象。
+
+与Flux不同，Redux没有Dispatcher的概念。 这是因为它依赖于纯函数而不是事件发射器，而纯函数很容易构成，并且不需要另外的实体来管理它们。 根据您查看Flux的方式，您可能会将此视为偏差或实施详细信息。 Flux经常被描述为(state, action) =&gt; state。 在这个意义上，Redux是真正的Flux架构，但由于纯函数使它更简单。
+
+与Flux的另一个重要区别是Redux假设你从不改变你的数据。 你可以使用简单的对象和数组为你的状态很好，但是在reducer内变异他们是强烈不鼓励。 你应该总是返回一个新的对象，这是很容易与对象扩展运算符建议，或与像Immutable的库。
+
+虽然在技术上可能编写不确定的缩减器，为性能角点突变数据，但我们积极阻止您这样做。 时间旅行，记录/重放或热重新加载等开发功能将会中断。 此外，似乎不可变性似乎在大多数真实应用程序中造成性能问题，因为，正如<a href="https://github.com/omcljs/om">Om</a>所示，即使你失去了对象分配，你仍然通过避免昂贵的重新渲染和重新计算赢得，因为你知道什么 改变由于减速器的纯度。
+</p>
+<h3>
+Elm
+</h3>
+<p>
+&lt;a href=&#8221;http://elm-lang.org/&#8221;Elm是一个由Haskell启发的函数式编程语言，由Evan Czaplicki创建。 它强制执行“模型视图更新”架构，其中更新具有以下签名：（action，state）=&gt; state。 Elm“updaters”与Redux中的reducer具有相同的目的。
+
+与Redux不同，Elm是一种语言，因此它可以从诸如强制纯度，静态类型，开箱不可变性和模式匹配（使用case表达式）等许多方面受益。 即使你不打算使用Elm，你应该阅读关于Elm架构，并玩它。 有一个有趣的javascript库操场实现类似的想法。 我们应该看看Redux的灵感！ 我们可以更接近Elm的静态类型的一种方法是使用渐进打字解决方案，如Flow。
+</p>
+<h3>
+Immutable
+</h3>
+<p>
+ <a href="https://facebook.github.io/immutable-js">Immutable</a>是一个实现持久数据结构的javascript库。 它是性能和有一个惯用的javascript API。
+
+Immutable的和最相似的库与Redux正交。 随意使用它们在一起！
+
+Redux不关心你如何存储状态 - 它可以是一个简单的对象，一个Immutable的对象，或任何其他。 你可能想要一个（de）序列化机制，用于编写通用应用程序和从服务器转化化它们的状态，但除此之外，你可以使用任何数据存储库，只要它支持Immutable。 例如，将Backbone用于Redux状态没有意义，因为Backbone模型是可变的。
+
+请注意，即使您的Immutable库支持光标，您不应在Redux应用程序中使用它们。 整个状态树应该被认为是只读的，你应该使用Redux来更新状态，并订阅更新。 因此，通过光标写入对于Redux没有意义。 如果您对光标的唯一用例是从UI树中解耦状态树并逐渐细化光标，则应查看选择器。 选择器是可组合的getter函数。 看到重选的一个真正伟大和简洁的可组合选择器的实现。
+</p>
+<h3>
+Baobab
+</h3>
+<p>
+<a href="https://github.com/Yomguithereal/baobab">Baobab</a>是另一个流行的库，用于实现不可变的API，用于更新纯javascript对象。 虽然你可以使用它与Redux，但是没有什么好处在一起使用它们。
+
+Baobab提供的大多数功能都与使用游标更新数据相关，但Redux强制更新数据的唯一方法是调度操作。 因此，他们不同地解决相同的问题，并且不互补。
+
+与Immutable不同，Baobab还没有实现任何特殊的高效数据结构，所以你不会真正赢得任何东西，使用它和Redux一起使用。 在这种情况下，更容易使用纯对象。
+</p>
+<h3>
+Rx
+</h3>
+<p>
+<a href="https://github.com/Reactive-Extensions/RxJS">Reactive </a>扩展（以及它们正在进行的现代重写）是管理异步应用程序的复杂性的极好方法。 实际上，有一种努力来创建一个将人机交互作为相互依赖的可观察者的库。
+
+与Rx一起使用Redux有意义吗？ 当然！ 他们一起工作。 例如，很容易将Redux存储暴露为可观察者：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">function</span> <span class="nx">toObservable</span><span class="p">(</span><span class="nx">store</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">subscribe</span><span class="p">({</span> <span class="nx">onNext</span> <span class="p">})</span> <span class="p">{</span>
+</span><span class="line">      <span class="kd">let</span> <span class="nx">dispose</span> <span class="o">=</span> <span class="nx">store</span><span class="p">.</span><span class="nx">subscribe</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">onNext</span><span class="p">(</span><span class="nx">store</span><span class="p">.</span><span class="nx">getState</span><span class="p">()))</span>
+</span><span class="line">      <span class="nx">onNext</span><span class="p">(</span><span class="nx">store</span><span class="p">.</span><span class="nx">getState</span><span class="p">())</span>
+</span><span class="line">      <span class="k">return</span> <span class="p">{</span> <span class="nx">dispose</span> <span class="p">}</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+类似地，您可以组合不同的异步流，将它们转换为动作，然后将它们提供给store.dispatch（）。
+
+问题是：如果你已经使用Rx，你真的需要Redux吗？ 也许不会。 在<a href="https://github.com/jas-chen/rx-redux">Rx中重新实现Redux</a>并不困难。 有人说这是一个两线程使用Rx.scan（）方法。 它可能很好！
+
+如果你有疑问，请查看Redux源代码（没有太多的事情），以及它的生态系统（例如，<a href="https://github.com/gaearon/redux-devtools">开发工具</a>）。 如果你不太关心它，并且希望与反应数据流一路走，你可能想要探索类似于<a href="https://cycle.js.org/">Cycle</a>的东西，或者甚至将它与Redux组合。 让我们知道它怎么回事！
+</p>
+
+<h2>
+生态系统
+</h2>
+<p>
+Redux是一个很小的库，但它的合同和API被仔细选择，以产生一个工具和扩展的生态系统。
+
+有关与Redux相关的一切的广泛列表，我们建议<a href="https://github.com/xgrommx/awesome-redux">Awesome Redux</a>。 它包含示例，模板，中间件，实用程序库等。<a href="https://github.com/markerikson/react-redux-links"> React / Redux链接</a>包含任何学习React或Redux的教程和其他有用的资源，<a href="https://github.com/markerikson/redux-ecosystem-links">Redux Ecosystem Links</a>列出了许多与Redux相关的库和插件。
+
+在本页上，我们将只介绍Redux维护者已亲自审核的几个。 不要让这不鼓励你尝试其余的！ 生态系统正在增长太快，我们有限的时间来看待一切。 考虑这些“职员选择”，如果你用Redux构建了一些奇妙的东西，不要犹豫提交PR。
+</p>
+
+<h2>
+学习Redux
+</h2>
+<h3>
+
+</h3>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[在现有iOS工程加入React-Native]]></title>
@@ -4539,150 +5009,6 @@ seg2</p>
 <p class="post-footer">
                         written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 </p></p></p></p></div></div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[数据保护 API]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/shu-ju-bao-hu-api/"/>
-    <updated>2016-08-25T14:48:07+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/shu-ju-bao-hu-api</id>
-    <content type="html"><![CDATA[<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">18</span> <span class="title">数据保护 API</span></h1>
-    <h3>题外话</h3>
-
-<p>开篇先扯几句题外话，许多朋友都问我怎么不写防啊，我确实有点犹豫。
-hackers 总是想象如果自己是开发者会怎么写，然后才能找到入手点。同理，开发者们也要想象自己是 hackers 会怎么做，才能采取相应的防御措施。然后，就是一场递归的博弈。</p>
-
-<p>拿越狱检测这件事来说，起初大家只需判断有无安装<code> Cydia </code>就好了，hackers 们说好，那我就不安装<code> Cydia </code>也可以动手脚。开发者们又说，那你一定得用的上<code> MobileSubstrate </code>，<code>bash </code>，<code>ssh </code>吧，我去检测手机有没有安装这些工具。可是又有什么用呢？你判断什么我绕过去什么。</p>
-
-<p>当<code> class-dump </code>大肆流行，函数符号都被暴露，开发者想尽办法藏起自己的敏感函数代码。hackers 们也知道<code> class-dump </code>的死穴在哪里，于是新的检索办法油然而生。也就说，当一个防御手段成为流行，它就不会再是个让 hackers 大骂“真特么费劲”的防御手段了。比如之前介绍的一个小技巧：<a href="http://ITMonkeyLife.github.io/Blog/blog/2016/08/25/shu-ju-ca-chu/">内存数据擦除</a> ，hackers 知道开发者都去擦数据了，那我<code> hook memset </code>在你擦之前去读就好了。开发者说：我直接写硬盘上然后删除！hackers 说：难道你没听说过文件恢复？</p>
-
-<div class="figure" id="figure-18-1">
-    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75ztnpoq2j202f031zk3.jpg" />
-
-    <p class="caption"><strong>图片 18.1</strong> data-erase1</p>
-</div>
-
-
-<p>OK，贫的有点多了，本文介绍一下防御相关的话题—— iOS 的数据保护 API 。</p>
-
-<h3>数据保护 API</h3>
-
-<p>文件系统中的文件、<code>keychain </code>中的项，都是加密存储的。当用户解锁设备后，系统通过<code> UDID </code>密钥和用户设定的密码生成一个用于解密的密码密钥，存放在内存中，直到设备再次被锁，开发者可以通过<code> Data Protection API </code>来设定文件系统中的文件、<code>keychain</code> 中的项应该何时被解密。</p>
-
-<h4>文件保护</h4>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cm">/* 为filePath文件设置保护等级 */</span>
-</span><span class="line"><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDictionary</span> <span class="nl">dictionaryWithObject:</span><span class="n">NSFileProtectionComplete</span>
-</span><span class="line">                                                       <span class="nl">forKey:</span><span class="n">NSFileProtectionKey</span><span class="p">];</span>
-</span><span class="line"><span class="p">[[</span><span class="n">NSFileManager</span> <span class="n">defaultManager</span><span class="p">]</span> <span class="nl">setAttributes:</span><span class="n">attributes</span>
-</span><span class="line">                                 <span class="nl">ofItemAtPath:</span><span class="n">filePath</span>
-</span><span class="line">                                        <span class="nl">error:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">//文件保护等级属性列表  </span>
-</span><span class="line"><span class="n">NSFileProtectionNone</span>                                    <span class="c1">//文件未受保护，随时可以访问 （Default）  </span>
-</span><span class="line"><span class="n">NSFileProtectionComplete</span>                                <span class="c1">//文件受到保护，而且只有在设备未被锁定时才可访问  </span>
-</span><span class="line"><span class="n">NSFileProtectionCompleteUntilFirstUserAuthentication</span>    <span class="c1">//文件收到保护，直到设备启动且用户第一次输入密码  </span>
-</span><span class="line"><span class="n">NSFileProtectionCompleteUnlessOpen</span>                      <span class="c1">//文件受到保护，而且只有在设备未被锁定时才可打开，不过即便在设备被锁定时，已经打开的文件还是可以继续使用和写入</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h4>keychain 项保护</h4>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cm">/* 设置keychain项保护等级 */</span>
-</span><span class="line"><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">query</span> <span class="o">=</span> <span class="err">@</span><span class="p">{(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecClass:</span> <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="n">kSecClassGenericPassword</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrGeneric:</span><span class="s">@&quot;MyItem&quot;</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrAccount:</span><span class="s">@&quot;username&quot;</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecValueData:</span><span class="s">@&quot;password&quot;</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrService:</span><span class="p">[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">].</span><span class="n">bundleIdentifier</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrLabel:</span><span class="s">@&quot;&quot;</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrDescription:</span><span class="s">@&quot;&quot;</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrAccessible:</span><span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="n">kSecAttrAccessibleWhenUnlocked</span><span class="p">};</span>
-</span><span class="line">
-</span><span class="line"><span class="n">OSStatus</span> <span class="n">result</span> <span class="o">=</span> <span class="n">SecItemAdd</span><span class="p">((</span><span class="n">__bridge</span> <span class="n">CFDictionaryRef</span><span class="p">)(</span><span class="n">query</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">//keychain项保护等级列表  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleWhenUnlocked</span>                          <span class="c1">//keychain项受到保护，只有在设备未被锁定时才可以访问  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleAfterFirstUnlock</span>                      <span class="c1">//keychain项受到保护，直到设备启动并且用户第一次输入密码  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleAlways</span>                                <span class="c1">//keychain未受保护，任何时候都可以访问 （Default）  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleWhenUnlockedThisDeviceOnly</span>            <span class="c1">//keychain项受到保护，只有在设备未被锁定时才可以访问，而且不可以转移到其他设备  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly</span>        <span class="c1">//keychain项受到保护，直到设备启动并且用户第一次输入密码，而且不可以转移到其他设备  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleAlwaysThisDeviceOnly</span>                  <span class="c1">//keychain未受保护，任何时候都可以访问，但是不能转移到其他设备</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>应用实例</h3>
-
-<p>把一段信息<code> infoStrng </code>字符串写进文件，然后通过 Data Protection API 设置保护。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">documentsPath</span> <span class="o">=</span><span class="p">[</span><span class="n">NSSearchPathForDirectoriesInDomains</span><span class="p">(</span><span class="n">NSDocumentDirectory</span><span class="p">,</span> <span class="n">NSUserDomainMask</span><span class="p">,</span> <span class="n">YES</span><span class="p">)</span> <span class="n">firstObject</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">filePath</span> <span class="o">=</span> <span class="p">[</span><span class="n">documentsPath</span> <span class="nl">stringByAppendingPathComponent:</span><span class="s">@&quot;DataProtect&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="p">[</span><span class="n">infoString</span> <span class="nl">writeToFile:</span><span class="n">filePath</span>
-</span><span class="line">             <span class="nl">atomically:</span><span class="n">YES</span>
-</span><span class="line">               <span class="nl">encoding:</span><span class="n">NSUTF8StringEncoding</span>
-</span><span class="line">                  <span class="nl">error:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDictionary</span> <span class="nl">dictionaryWithObject:</span><span class="n">NSFileProtectionComplete</span>
-</span><span class="line">                                                       <span class="nl">forKey:</span><span class="n">NSFileProtectionKey</span><span class="p">];</span>
-</span><span class="line"><span class="p">[[</span><span class="n">NSFileManager</span> <span class="n">defaultManager</span><span class="p">]</span> <span class="nl">setAttributes:</span><span class="n">attributes</span>
-</span><span class="line">                                 <span class="nl">ofItemAtPath:</span><span class="n">filePath</span>
-</span><span class="line">                                        <span class="nl">error:</span><span class="nb">nil</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>设备锁屏（带密码保护）后，即使是越狱机，在<code> root </code>权限下<code> cat </code>读取那个文件信息也会被拒绝。</p>
-
-<div class="figure" id="figure-18-2">
-    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75zu9sgihj202q02xdfo.jpg" />
-
-    <p class="caption"><strong>图片 18.2</strong> data-erase2</p>
-</div>
-
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
 ]]></content>
   </entry>
   

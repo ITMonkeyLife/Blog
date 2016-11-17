@@ -7,7 +7,8 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="今天一早，运维部门同事，说咱们友盟上面推送证书已经到期了。那么到期了证书应该怎么样去更换新的证书呢。 1、我们先去苹果开发者中心新建一个Certificates证书。 2、下载Cert文件到本地，双击之后。在Keychain Access中找到我们创建的证书。Export导出p12格式，创建密码 &hellip;">
+	<meta name="description" content="五线谱是对音符绘制的基础。现代的五线谱是由5根线和4个空间组成的。 在五线谱上的每行线或者空白处都表示键盘上的白建。 谱号分配给各个音符某些行或空格。
+两个谱号经常用到，分别是：高音和低音。 我们先讨论高音（通常也称为G 谱）.该谱号环绕（显示为红色）五线谱线被称为G.放在该行的任何音符变成G &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +76,71 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/09/06/yin-le-le-li-wu-xian-pu-%2Cpu-hao-%2Cjia-xian/">
+		
+			音乐乐理:五线谱，谱号，加线</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+<code>五线谱</code>是对音符绘制的基础。现代的五线谱是由5根线和4个空间组成的。
+<br />
+<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7jn3flan2j21kw0lcdh6.jpg" />
+在五线谱上的每行线或者空白处都表示键盘上的白建。
+<br />
+</p>
+
+<p>
+谱号分配给各个音符某些行或空格。
+两个谱号经常用到，分别是：高音和低音。
+<br />
+<img src="http://ww3.sinaimg.cn/large/626e5d69gw1f7jqbp0363j21kw0lcq4r.jpg" />
+<br />
+我们先讨论高音（通常也称为G 谱）.该谱号环绕（显示为红色）五线谱线被称为G.放在该行的任何音符变成G.
+<br />
+G调以上的空白处的调是A调（记住，没有一个“H”调）
+<br />
+A调以上的调是B调。以此类推，G、A、B、C、D、E、F、G
+<br />
+<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f7jqd7qzk5j21kw0lcdi6.jpg" />
+额我们看来已经超过了五线谱的范围了，这时候该怎么办？
+</p>
+
+<p>
+加线将解决我们的困境。
+我们在五线谱之外，额外添加一条线，然后在这个线处继续添加A
+<br />
+<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7jsx3rujij21kw0lcdi5.jpg" />
+</p>
+
+		
+		<a href="/Blog/blog/2016/09/06/yin-le-le-li-wu-xian-pu-%2Cpu-hao-%2Cjia-xian/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/yin-le/'>音乐</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/09/06/yin-le-le-li-wu-xian-pu-%2Cpu-hao-%2Cjia-xian/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1657,177 +1723,6 @@ seg2</p>
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/25/ji-yu-jiao-ben-shi-xian-dong-tai-ku-zhu-ru/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/shu-ju-bao-hu-api/">
-		
-			数据保护 API</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">18</span> <span class="title">数据保护 API</span></h1>
-    <h3>题外话</h3>
-
-<p>开篇先扯几句题外话，许多朋友都问我怎么不写防啊，我确实有点犹豫。
-hackers 总是想象如果自己是开发者会怎么写，然后才能找到入手点。同理，开发者们也要想象自己是 hackers 会怎么做，才能采取相应的防御措施。然后，就是一场递归的博弈。</p>
-
-<p>拿越狱检测这件事来说，起初大家只需判断有无安装<code> Cydia </code>就好了，hackers 们说好，那我就不安装<code> Cydia </code>也可以动手脚。开发者们又说，那你一定得用的上<code> MobileSubstrate </code>，<code>bash </code>，<code>ssh </code>吧，我去检测手机有没有安装这些工具。可是又有什么用呢？你判断什么我绕过去什么。</p>
-
-<p>当<code> class-dump </code>大肆流行，函数符号都被暴露，开发者想尽办法藏起自己的敏感函数代码。hackers 们也知道<code> class-dump </code>的死穴在哪里，于是新的检索办法油然而生。也就说，当一个防御手段成为流行，它就不会再是个让 hackers 大骂“真特么费劲”的防御手段了。比如之前介绍的一个小技巧：<a href="/Blog/blog/2016/08/25/shu-ju-ca-chu/">内存数据擦除</a> ，hackers 知道开发者都去擦数据了，那我<code> hook memset </code>在你擦之前去读就好了。开发者说：我直接写硬盘上然后删除！hackers 说：难道你没听说过文件恢复？</p>
-
-<div class="figure" id="figure-18-1">
-    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75ztnpoq2j202f031zk3.jpg" />
-
-    <p class="caption"><strong>图片 18.1</strong> data-erase1</p>
-</div>
-
-
-<p>OK，贫的有点多了，本文介绍一下防御相关的话题—— iOS 的数据保护 API 。</p>
-
-<h3>数据保护 API</h3>
-
-<p>文件系统中的文件、<code>keychain </code>中的项，都是加密存储的。当用户解锁设备后，系统通过<code> UDID </code>密钥和用户设定的密码生成一个用于解密的密码密钥，存放在内存中，直到设备再次被锁，开发者可以通过<code> Data Protection API </code>来设定文件系统中的文件、<code>keychain</code> 中的项应该何时被解密。</p>
-
-<h4>文件保护</h4>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cm">/* 为filePath文件设置保护等级 */</span>
-</span><span class="line"><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDictionary</span> <span class="nl">dictionaryWithObject:</span><span class="n">NSFileProtectionComplete</span>
-</span><span class="line">                                                       <span class="nl">forKey:</span><span class="n">NSFileProtectionKey</span><span class="p">];</span>
-</span><span class="line"><span class="p">[[</span><span class="n">NSFileManager</span> <span class="n">defaultManager</span><span class="p">]</span> <span class="nl">setAttributes:</span><span class="n">attributes</span>
-</span><span class="line">                                 <span class="nl">ofItemAtPath:</span><span class="n">filePath</span>
-</span><span class="line">                                        <span class="nl">error:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">//文件保护等级属性列表  </span>
-</span><span class="line"><span class="n">NSFileProtectionNone</span>                                    <span class="c1">//文件未受保护，随时可以访问 （Default）  </span>
-</span><span class="line"><span class="n">NSFileProtectionComplete</span>                                <span class="c1">//文件受到保护，而且只有在设备未被锁定时才可访问  </span>
-</span><span class="line"><span class="n">NSFileProtectionCompleteUntilFirstUserAuthentication</span>    <span class="c1">//文件收到保护，直到设备启动且用户第一次输入密码  </span>
-</span><span class="line"><span class="n">NSFileProtectionCompleteUnlessOpen</span>                      <span class="c1">//文件受到保护，而且只有在设备未被锁定时才可打开，不过即便在设备被锁定时，已经打开的文件还是可以继续使用和写入</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h4>keychain 项保护</h4>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cm">/* 设置keychain项保护等级 */</span>
-</span><span class="line"><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">query</span> <span class="o">=</span> <span class="err">@</span><span class="p">{(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecClass:</span> <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="n">kSecClassGenericPassword</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrGeneric:</span><span class="s">@&quot;MyItem&quot;</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrAccount:</span><span class="s">@&quot;username&quot;</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecValueData:</span><span class="s">@&quot;password&quot;</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrService:</span><span class="p">[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">].</span><span class="n">bundleIdentifier</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrLabel:</span><span class="s">@&quot;&quot;</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrDescription:</span><span class="s">@&quot;&quot;</span><span class="p">,</span>
-</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrAccessible:</span><span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="n">kSecAttrAccessibleWhenUnlocked</span><span class="p">};</span>
-</span><span class="line">
-</span><span class="line"><span class="n">OSStatus</span> <span class="n">result</span> <span class="o">=</span> <span class="n">SecItemAdd</span><span class="p">((</span><span class="n">__bridge</span> <span class="n">CFDictionaryRef</span><span class="p">)(</span><span class="n">query</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line"><span class="c1">//keychain项保护等级列表  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleWhenUnlocked</span>                          <span class="c1">//keychain项受到保护，只有在设备未被锁定时才可以访问  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleAfterFirstUnlock</span>                      <span class="c1">//keychain项受到保护，直到设备启动并且用户第一次输入密码  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleAlways</span>                                <span class="c1">//keychain未受保护，任何时候都可以访问 （Default）  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleWhenUnlockedThisDeviceOnly</span>            <span class="c1">//keychain项受到保护，只有在设备未被锁定时才可以访问，而且不可以转移到其他设备  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly</span>        <span class="c1">//keychain项受到保护，直到设备启动并且用户第一次输入密码，而且不可以转移到其他设备  </span>
-</span><span class="line"><span class="n">kSecAttrAccessibleAlwaysThisDeviceOnly</span>                  <span class="c1">//keychain未受保护，任何时候都可以访问，但是不能转移到其他设备</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>应用实例</h3>
-
-<p>把一段信息<code> infoStrng </code>字符串写进文件，然后通过 Data Protection API 设置保护。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">documentsPath</span> <span class="o">=</span><span class="p">[</span><span class="n">NSSearchPathForDirectoriesInDomains</span><span class="p">(</span><span class="n">NSDocumentDirectory</span><span class="p">,</span> <span class="n">NSUserDomainMask</span><span class="p">,</span> <span class="n">YES</span><span class="p">)</span> <span class="n">firstObject</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">filePath</span> <span class="o">=</span> <span class="p">[</span><span class="n">documentsPath</span> <span class="nl">stringByAppendingPathComponent:</span><span class="s">@&quot;DataProtect&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="p">[</span><span class="n">infoString</span> <span class="nl">writeToFile:</span><span class="n">filePath</span>
-</span><span class="line">             <span class="nl">atomically:</span><span class="n">YES</span>
-</span><span class="line">               <span class="nl">encoding:</span><span class="n">NSUTF8StringEncoding</span>
-</span><span class="line">                  <span class="nl">error:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDictionary</span> <span class="nl">dictionaryWithObject:</span><span class="n">NSFileProtectionComplete</span>
-</span><span class="line">                                                       <span class="nl">forKey:</span><span class="n">NSFileProtectionKey</span><span class="p">];</span>
-</span><span class="line"><span class="p">[[</span><span class="n">NSFileManager</span> <span class="n">defaultManager</span><span class="p">]</span> <span class="nl">setAttributes:</span><span class="n">attributes</span>
-</span><span class="line">                                 <span class="nl">ofItemAtPath:</span><span class="n">filePath</span>
-</span><span class="line">                                        <span class="nl">error:</span><span class="nb">nil</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>设备锁屏（带密码保护）后，即使是越狱机，在<code> root </code>权限下<code> cat </code>读取那个文件信息也会被拒绝。</p>
-
-<div class="figure" id="figure-18-2">
-    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75zu9sgihj202q02xdfo.jpg" />
-
-    <p class="caption"><strong>图片 18.2</strong> data-erase2</p>
-</div>
-
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/shu-ju-bao-hu-api/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

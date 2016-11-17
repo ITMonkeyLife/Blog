@@ -7,7 +7,8 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="17 Fishhook 众所周知，Objective-C 的首选 hook 方案为 Method Swizzle，于是大家纷纷表示核心内容应该用 C 写。 接下来进阶说说 iOS 下 C 函数的 hook 方案，先介绍第一种方案&#8212; fishhook . 什么是 fishhook &hellip;">
+	<meta name="description" content="18 数据保护 API 题外话 开篇先扯几句题外话，许多朋友都问我怎么不写防啊，我确实有点犹豫。
+hackers 总是想象如果自己是开发者会怎么写，然后才能找到入手点。同理，开发者们也要想象自己是 hackers 会怎么做，才能采取相应的防御措施。然后，就是一场递归的博弈。 拿越狱检测这件事来说 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +76,177 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/shu-ju-bao-hu-api/">
+		
+			数据保护 API</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">18</span> <span class="title">数据保护 API</span></h1>
+    <h3>题外话</h3>
+
+<p>开篇先扯几句题外话，许多朋友都问我怎么不写防啊，我确实有点犹豫。
+hackers 总是想象如果自己是开发者会怎么写，然后才能找到入手点。同理，开发者们也要想象自己是 hackers 会怎么做，才能采取相应的防御措施。然后，就是一场递归的博弈。</p>
+
+<p>拿越狱检测这件事来说，起初大家只需判断有无安装<code> Cydia </code>就好了，hackers 们说好，那我就不安装<code> Cydia </code>也可以动手脚。开发者们又说，那你一定得用的上<code> MobileSubstrate </code>，<code>bash </code>，<code>ssh </code>吧，我去检测手机有没有安装这些工具。可是又有什么用呢？你判断什么我绕过去什么。</p>
+
+<p>当<code> class-dump </code>大肆流行，函数符号都被暴露，开发者想尽办法藏起自己的敏感函数代码。hackers 们也知道<code> class-dump </code>的死穴在哪里，于是新的检索办法油然而生。也就说，当一个防御手段成为流行，它就不会再是个让 hackers 大骂“真特么费劲”的防御手段了。比如之前介绍的一个小技巧：<a href="/Blog/blog/2016/08/25/shu-ju-ca-chu/">内存数据擦除</a> ，hackers 知道开发者都去擦数据了，那我<code> hook memset </code>在你擦之前去读就好了。开发者说：我直接写硬盘上然后删除！hackers 说：难道你没听说过文件恢复？</p>
+
+<div class="figure" id="figure-18-1">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75ztnpoq2j202f031zk3.jpg" />
+
+    <p class="caption"><strong>图片 18.1</strong> data-erase1</p>
+</div>
+
+
+<p>OK，贫的有点多了，本文介绍一下防御相关的话题—— iOS 的数据保护 API 。</p>
+
+<h3>数据保护 API</h3>
+
+<p>文件系统中的文件、<code>keychain </code>中的项，都是加密存储的。当用户解锁设备后，系统通过<code> UDID </code>密钥和用户设定的密码生成一个用于解密的密码密钥，存放在内存中，直到设备再次被锁，开发者可以通过<code> Data Protection API </code>来设定文件系统中的文件、<code>keychain</code> 中的项应该何时被解密。</p>
+
+<h4>文件保护</h4>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cm">/* 为filePath文件设置保护等级 */</span>
+</span><span class="line"><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDictionary</span> <span class="nl">dictionaryWithObject:</span><span class="n">NSFileProtectionComplete</span>
+</span><span class="line">                                                       <span class="nl">forKey:</span><span class="n">NSFileProtectionKey</span><span class="p">];</span>
+</span><span class="line"><span class="p">[[</span><span class="n">NSFileManager</span> <span class="n">defaultManager</span><span class="p">]</span> <span class="nl">setAttributes:</span><span class="n">attributes</span>
+</span><span class="line">                                 <span class="nl">ofItemAtPath:</span><span class="n">filePath</span>
+</span><span class="line">                                        <span class="nl">error:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">//文件保护等级属性列表  </span>
+</span><span class="line"><span class="n">NSFileProtectionNone</span>                                    <span class="c1">//文件未受保护，随时可以访问 （Default）  </span>
+</span><span class="line"><span class="n">NSFileProtectionComplete</span>                                <span class="c1">//文件受到保护，而且只有在设备未被锁定时才可访问  </span>
+</span><span class="line"><span class="n">NSFileProtectionCompleteUntilFirstUserAuthentication</span>    <span class="c1">//文件收到保护，直到设备启动且用户第一次输入密码  </span>
+</span><span class="line"><span class="n">NSFileProtectionCompleteUnlessOpen</span>                      <span class="c1">//文件受到保护，而且只有在设备未被锁定时才可打开，不过即便在设备被锁定时，已经打开的文件还是可以继续使用和写入</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h4>keychain 项保护</h4>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cm">/* 设置keychain项保护等级 */</span>
+</span><span class="line"><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">query</span> <span class="o">=</span> <span class="err">@</span><span class="p">{(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecClass:</span> <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="n">kSecClassGenericPassword</span><span class="p">,</span>
+</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrGeneric:</span><span class="s">@&quot;MyItem&quot;</span><span class="p">,</span>
+</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrAccount:</span><span class="s">@&quot;username&quot;</span><span class="p">,</span>
+</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecValueData:</span><span class="s">@&quot;password&quot;</span><span class="p">,</span>
+</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrService:</span><span class="p">[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">].</span><span class="n">bundleIdentifier</span><span class="p">,</span>
+</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrLabel:</span><span class="s">@&quot;&quot;</span><span class="p">,</span>
+</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrDescription:</span><span class="s">@&quot;&quot;</span><span class="p">,</span>
+</span><span class="line">                        <span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="nl">kSecAttrAccessible:</span><span class="p">(</span><span class="n">__bridge</span> <span class="kt">id</span><span class="p">)</span><span class="n">kSecAttrAccessibleWhenUnlocked</span><span class="p">};</span>
+</span><span class="line">
+</span><span class="line"><span class="n">OSStatus</span> <span class="n">result</span> <span class="o">=</span> <span class="n">SecItemAdd</span><span class="p">((</span><span class="n">__bridge</span> <span class="n">CFDictionaryRef</span><span class="p">)(</span><span class="n">query</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">//keychain项保护等级列表  </span>
+</span><span class="line"><span class="n">kSecAttrAccessibleWhenUnlocked</span>                          <span class="c1">//keychain项受到保护，只有在设备未被锁定时才可以访问  </span>
+</span><span class="line"><span class="n">kSecAttrAccessibleAfterFirstUnlock</span>                      <span class="c1">//keychain项受到保护，直到设备启动并且用户第一次输入密码  </span>
+</span><span class="line"><span class="n">kSecAttrAccessibleAlways</span>                                <span class="c1">//keychain未受保护，任何时候都可以访问 （Default）  </span>
+</span><span class="line"><span class="n">kSecAttrAccessibleWhenUnlockedThisDeviceOnly</span>            <span class="c1">//keychain项受到保护，只有在设备未被锁定时才可以访问，而且不可以转移到其他设备  </span>
+</span><span class="line"><span class="n">kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly</span>        <span class="c1">//keychain项受到保护，直到设备启动并且用户第一次输入密码，而且不可以转移到其他设备  </span>
+</span><span class="line"><span class="n">kSecAttrAccessibleAlwaysThisDeviceOnly</span>                  <span class="c1">//keychain未受保护，任何时候都可以访问，但是不能转移到其他设备</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>应用实例</h3>
+
+<p>把一段信息<code> infoStrng </code>字符串写进文件，然后通过 Data Protection API 设置保护。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">documentsPath</span> <span class="o">=</span><span class="p">[</span><span class="n">NSSearchPathForDirectoriesInDomains</span><span class="p">(</span><span class="n">NSDocumentDirectory</span><span class="p">,</span> <span class="n">NSUserDomainMask</span><span class="p">,</span> <span class="n">YES</span><span class="p">)</span> <span class="n">firstObject</span><span class="p">];</span>
+</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">filePath</span> <span class="o">=</span> <span class="p">[</span><span class="n">documentsPath</span> <span class="nl">stringByAppendingPathComponent:</span><span class="s">@&quot;DataProtect&quot;</span><span class="p">];</span>
+</span><span class="line"><span class="p">[</span><span class="n">infoString</span> <span class="nl">writeToFile:</span><span class="n">filePath</span>
+</span><span class="line">             <span class="nl">atomically:</span><span class="n">YES</span>
+</span><span class="line">               <span class="nl">encoding:</span><span class="n">NSUTF8StringEncoding</span>
+</span><span class="line">                  <span class="nl">error:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line"><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSDictionary</span> <span class="nl">dictionaryWithObject:</span><span class="n">NSFileProtectionComplete</span>
+</span><span class="line">                                                       <span class="nl">forKey:</span><span class="n">NSFileProtectionKey</span><span class="p">];</span>
+</span><span class="line"><span class="p">[[</span><span class="n">NSFileManager</span> <span class="n">defaultManager</span><span class="p">]</span> <span class="nl">setAttributes:</span><span class="n">attributes</span>
+</span><span class="line">                                 <span class="nl">ofItemAtPath:</span><span class="n">filePath</span>
+</span><span class="line">                                        <span class="nl">error:</span><span class="nb">nil</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>设备锁屏（带密码保护）后，即使是越狱机，在<code> root </code>权限下<code> cat </code>读取那个文件信息也会被拒绝。</p>
+
+<div class="figure" id="figure-18-2">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75zu9sgihj202q02xdfo.jpg" />
+
+    <p class="caption"><strong>图片 18.2</strong> data-erase2</p>
+</div>
+
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/shu-ju-bao-hu-api/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1466,312 +1638,6 @@ Primer:/private/var/Keychains root# chmod +r keychain-2.db</pre>
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/25/shi-yong-keychain-dumper-dao-chu-keychain-shu-ju/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/jian-pan-huan-cun-yu-an-quan-jian-pan/">
-		
-			键盘缓存与安全键盘</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">8</span> <span class="title">键盘缓存与安全键盘</span></h1>
-    <p>大部分中文应用弹出的默认键盘是简体中文输入法键盘，在输入用户名和密码的时候，如果使用简体中文输入法键盘，输入英文字符和数字字符的用户名和密码时，会自动启动系统输入法自动更正提示，然后用户的输入记录会被缓存下来。</p>
-
-<p>系统键盘缓存最方便拿到的就是利用系统输入法自动更正的字符串输入记录。
-缓存文件的地址是：<br />
-<code>/private/var/mobile/Library/Keyboard/dynamic-text.dat</code></p>
-
-<p>导出该缓存文件，查看内容，欣喜的发现一切输入记录都是明文存储的。因为系统不会把所有的用户输入记录都当作密码等敏感信息来处理。
-一般情况下，一个常规 iPhone 用户的 dynamic-text.dat 文件，高频率出现的字符串就是用户名和密码。</p>
-
-<p>所以，一般银行客户端 app 输入密码时都不使用系统键盘，而使用自己定制的键盘，原因主要有 2 个：</p>
-
-<p>1）避免第三方读取系统键盘缓存</p>
-
-<p>2）防止屏幕录制 （自己定制的键盘按键不加按下效果）</p>
-
-<p>那么，如何实现自定义安全键盘呢？大致思路如下：</p>
-
-<p>1）首先捕获系统键盘的弹出、收回通知<br />
-2）创建一个更高级别的 window 挡住系统键盘<br />
-3）需要抛出一个 id<uitextinput>textInput 的弱引用切换焦点
-
-<p>下面给出一个简单的安全键盘模型：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-<span class="line-number">50</span>
-<span class="line-number">51</span>
-<span class="line-number">52</span>
-<span class="line-number">53</span>
-<span class="line-number">54</span>
-<span class="line-number">55</span>
-<span class="line-number">56</span>
-<span class="line-number">57</span>
-<span class="line-number">58</span>
-<span class="line-number">59</span>
-<span class="line-number">60</span>
-<span class="line-number">61</span>
-<span class="line-number">62</span>
-<span class="line-number">63</span>
-<span class="line-number">64</span>
-<span class="line-number">65</span>
-<span class="line-number">66</span>
-<span class="line-number">67</span>
-<span class="line-number">68</span>
-<span class="line-number">69</span>
-<span class="line-number">70</span>
-<span class="line-number">71</span>
-<span class="line-number">72</span>
-<span class="line-number">73</span>
-<span class="line-number">74</span>
-<span class="line-number">75</span>
-<span class="line-number">76</span>
-<span class="line-number">77</span>
-<span class="line-number">78</span>
-<span class="line-number">79</span>
-<span class="line-number">80</span>
-<span class="line-number">81</span>
-<span class="line-number">82</span>
-<span class="line-number">83</span>
-<span class="line-number">84</span>
-<span class="line-number">85</span>
-<span class="line-number">86</span>
-<span class="line-number">87</span>
-<span class="line-number">88</span>
-<span class="line-number">89</span>
-<span class="line-number">90</span>
-<span class="line-number">91</span>
-<span class="line-number">92</span>
-<span class="line-number">93</span>
-<span class="line-number">94</span>
-<span class="line-number">95</span>
-<span class="line-number">96</span>
-<span class="line-number">97</span>
-<span class="line-number">98</span>
-<span class="line-number">99</span>
-<span class="line-number">100</span>
-<span class="line-number">101</span>
-<span class="line-number">102</span>
-<span class="line-number">103</span>
-<span class="line-number">104</span>
-<span class="line-number">105</span>
-<span class="line-number">106</span>
-<span class="line-number">107</span>
-<span class="line-number">108</span>
-<span class="line-number">109</span>
-<span class="line-number">110</span>
-<span class="line-number">111</span>
-<span class="line-number">112</span>
-<span class="line-number">113</span>
-<span class="line-number">114</span>
-<span class="line-number">115</span>
-<span class="line-number">116</span>
-<span class="line-number">117</span>
-<span class="line-number">118</span>
-<span class="line-number">119</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">WQSafeKeyboard</span> : <span class="nc">UIWindow</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">weak</span><span class="p">,</span> <span class="n">setter</span> <span class="o">=</span> <span class="nl">focusOnTextFiled:</span><span class="p">)</span> <span class="n">UITextField</span> <span class="o">*</span><span class="n">textFiled</span><span class="p">;</span>
-</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">WQSafeKeyboard</span> <span class="o">*</span><span class="p">)</span><span class="nf">deploySafeKeyboard</span><span class="p">;</span>
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line">
-</span><span class="line"><span class="k">@interface</span> <span class="nc">WQSafeKeyboard</span><span class="p">()</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span><span class="n">WQInterKeyboard</span> <span class="o">*</span><span class="n">keyboard</span><span class="p">;</span>
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">WQSafeKeyboard</span>
-</span><span class="line">
-</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">WQSafeKeyboard</span> <span class="o">*</span><span class="p">)</span><span class="nf">deploySafeKeyboard</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">WQSafeKeyboard</span> <span class="o">*</span><span class="n">kb</span> <span class="o">=</span> <span class="p">[[</span><span class="n">WQSafeKeyboard</span> <span class="n">alloc</span><span class="p">]</span><span class="n">init</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">kb</span> <span class="n">addObserver</span><span class="p">];</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">kb</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">init</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">])</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">windowLevel</span> <span class="o">=</span> <span class="n">UIWindowLevelAlert</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectZero</span><span class="p">;</span>
-</span><span class="line">        <span class="n">self</span><span class="p">.</span><span class="n">rootViewController</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">keyboard</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dealloc</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span> <span class="nl">removeObserver:</span><span class="n">self</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">WQInterKeyboard</span> <span class="o">*</span><span class="p">)</span><span class="nf">keyboard</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">_keyboard</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">_keyboard</span> <span class="o">=</span> <span class="p">[[</span><span class="n">WQInterKeyboard</span> <span class="n">alloc</span><span class="p">]</span><span class="n">init</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">_keyboard</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">focusOnTextFiled:</span><span class="p">(</span><span class="n">UITextField</span> <span class="o">*</span><span class="p">)</span><span class="nv">textFiled</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">_textFiled</span> <span class="o">=</span> <span class="n">textFiled</span><span class="p">;</span>
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">keyboard</span><span class="p">.</span><span class="n">textField</span> <span class="o">=</span> <span class="n">_textFiled</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">addObserver</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">addObserver:</span><span class="n">self</span>
-</span><span class="line">                                            <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">keyboardWillShow:</span><span class="p">)</span>
-</span><span class="line">                                                <span class="nl">name:</span><span class="n">UIKeyboardWillShowNotification</span>
-</span><span class="line">                                              <span class="nl">object:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">addObserver:</span><span class="n">self</span>
-</span><span class="line">                                            <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">keyboardWillHide:</span><span class="p">)</span>
-</span><span class="line">                                                <span class="nl">name:</span><span class="n">UIKeyboardWillHideNotification</span>
-</span><span class="line">                                              <span class="nl">object:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">keyboardWillShow:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="nv">notification</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">textFiled</span> <span class="n">isFirstResponder</span><span class="p">])</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">keyboardAnimationWithNotification:</span><span class="n">notification</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">keyboardWillHide:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="nv">notification</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">textFiled</span> <span class="n">isFirstResponder</span><span class="p">])</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span><span class="p">;</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="nl">keyboardAnimationWithNotification:</span><span class="n">notification</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">keyboardAnimationWithNotification:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="nv">notification</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[</span><span class="n">self</span> <span class="n">makeKeyAndVisible</span><span class="p">];</span>
-</span><span class="line">    <span class="n">NSDictionary</span> <span class="o">*</span><span class="n">userInfo</span> <span class="o">=</span> <span class="p">[</span><span class="n">notification</span> <span class="n">userInfo</span><span class="p">];</span>
-</span><span class="line">    <span class="n">CGRect</span> <span class="n">kbFrame_end</span><span class="p">,</span><span class="n">kbFrame_begin</span><span class="p">;</span>
-</span><span class="line">    <span class="n">NSTimeInterval</span> <span class="n">animationDuration</span><span class="p">;</span>
-</span><span class="line">    <span class="n">UIViewAnimationCurve</span> <span class="n">animationCurve</span><span class="p">;</span>
-</span><span class="line">    <span class="p">[</span><span class="n">userInfo</span><span class="p">[</span><span class="n">UIKeyboardFrameEndUserInfoKey</span><span class="p">]</span> <span class="nl">getValue:</span><span class="o">&amp;</span><span class="n">kbFrame_end</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">userInfo</span><span class="p">[</span><span class="n">UIKeyboardFrameBeginUserInfoKey</span><span class="p">]</span> <span class="nl">getValue:</span><span class="o">&amp;</span><span class="n">kbFrame_begin</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">userInfo</span><span class="p">[</span><span class="n">UIKeyboardAnimationCurveUserInfoKey</span><span class="p">]</span> <span class="nl">getValue:</span><span class="o">&amp;</span><span class="n">animationCurve</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">userInfo</span><span class="p">[</span><span class="n">UIKeyboardAnimationDurationUserInfoKey</span><span class="p">]</span> <span class="nl">getValue:</span><span class="o">&amp;</span><span class="n">animationDuration</span><span class="p">];</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">self</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">resizeFrameToAdjust:</span><span class="n">kbFrame_begin</span><span class="p">];</span>
-</span><span class="line">    <span class="p">[</span><span class="n">UIView</span> <span class="nl">animateWithDuration:</span><span class="n">animationDuration</span>
-</span><span class="line">                          <span class="nl">delay:</span><span class="mi">0</span>
-</span><span class="line">                        <span class="nl">options:</span><span class="p">(</span><span class="n">animationCurve</span><span class="o">&lt;&lt;</span><span class="mi">16</span><span class="p">)</span>
-</span><span class="line">                     <span class="nl">animations:</span><span class="o">^</span><span class="p">{</span>
-</span><span class="line">                         <span class="n">self</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nl">resizeFrameToAdjust:</span><span class="n">kbFrame_end</span><span class="p">];</span>
-</span><span class="line">                     <span class="p">}</span><span class="nl">completion:</span><span class="o">^</span><span class="p">(</span><span class="kt">BOOL</span> <span class="n">finished</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">
-</span><span class="line">                     <span class="p">}];</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">([</span><span class="n">notification</span><span class="p">.</span><span class="n">name</span> <span class="nl">isEqualToString:</span><span class="n">UIKeyboardWillHideNotification</span><span class="p">])</span> <span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">self</span> <span class="n">resignKeyWindow</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nf">resizeFrameToAdjust:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">frame</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">([[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="n">isStatusBarHidden</span><span class="p">]</span> <span class="p">)</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">frame</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">SYSTEM_VERSION_LESS_THAN</span><span class="p">(</span><span class="s">@&quot;7.0&quot;</span><span class="p">))</span> <span class="p">{</span>
-</span><span class="line">        <span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">,</span>
-</span><span class="line">                           <span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">STATUSBAR_HEIGHT</span><span class="p">,</span>
-</span><span class="line">                           <span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span>
-</span><span class="line">                           <span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">frame</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-
-
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</uitextinput></p></div></div>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/jian-pan-huan-cun-yu-an-quan-jian-pan/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

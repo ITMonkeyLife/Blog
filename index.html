@@ -7,10 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="React-Native在iOS工程的集成 当我们想在现有的iOS开发工程中加入React-Native这个模块的时候，我们需要做一些准备工作。安装需要的工具：npm
-1
-brew install npm
-一般来说只要有这个就可以，但是鉴于npm 每次都要npm install React- &hellip;">
+	<meta name="description" content="Redux是一个可预测的javascript应用程序的状态容器。 它可以帮助您编写行为一致，在不同环境（客户端，服务器和本机）中运行的应用程序，并且易于测试。 此外，它提供了一个伟大的开发者体验，如实时代码编辑结合一个时间旅行调试器。 您可以与React或任何其他视图库一起使用Redux。 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -78,6 +75,189 @@ brew install npm
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/11/17/react-nativekai-fa-redux/">
+		
+			React Native开发Redux</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+Redux是一个可预测的javascript应用程序的状态容器。
+
+它可以帮助您编写行为一致，在不同环境（客户端，服务器和本机）中运行的应用程序，并且易于测试。 此外，它提供了一个伟大的开发者体验，如实时代码编辑结合一个时间旅行调试器。
+</p>
+<p>
+您可以与React或任何其他视图库一起使用<a href="https://facebook.github.io/react/">Redux</a>。
+它是微小的（2kB，包括依赖）。
+从其创建者学习Redux：<a href="https://egghead.io/series/getting-started-with-redux">Redux学习入门</a>
+</p>
+<h3>
+开发经验
+</h3>
+<p>
+我在工作在我的React Europe谈话时写了Redux，名为“Hot Reloading with Time Travel”。 我的目标是创建一个状态管理库，具有最少的API，但完全可预测的行为，所以可以实现日志记录，热重新加载，时间旅行，通用应用程序，记录和重放，没有任何从开发人员买入。
+</p>
+<h3>
+影响
+</h3>
+<p>
+Redux演化了<a href="http://facebook.github.io/flux/">Flux</a>的想法，但通过从<a href="https://github.com/evancz/elm-architecture-tutorial/">Elm</a>提取线索来避免其复杂性。
+无论您是否使用过它们，Redux只需要几分钟的时间就可以开始使用。
+</p>
+<h3>
+安装
+</h3>
+<p>
+安装稳定版本：
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">npm install --save redux</span></code></pre></td></tr></table></div></figure></notextile></div>
+这假设你使用<a href="https://www.npmjs.com/">npm</a>作为你的包管理器。
+
+最常见的是人们使用Redux作为<a href="http://webpack.github.io/docs/commonjs.html">CommonJS</a>模块的集合。 这些模块是在<a href="http://webpack.github.io/">Webpack</a>，<a href="http://browserify.org/">Browserify</a>或Node环境中导入redux时得到的。 如果你喜欢生活在边缘，使用<a href="http://rollupjs.org/">Rollup</a>，我们也支持。
+
+如果你不使用模块bundler，它也没关系。 <code>redux</code> npm包包括在<a href="https://unpkg.com/redux/dist/">dist文件夹</a>中预编译的生产和开发<a href="https://github.com/umdjs/umd">UMD</a>版本。 它们可以直接使用而无需捆绑器，因此与许多流行的javascript模块加载器和环境兼容。 例如，可以将UMD构建作为<a href="https://unpkg.com/redux/dist/redux.js">script标记</a>放在页面上，或者告诉<a href="https://github.com/reactjs/redux/pull/1181#issuecomment-167361975">Bower安装它</a>。 UMD构建使Redux可用作<code>window.Redux</code>全局变量。
+
+Redux源代码是在ES2015中编写的，但我们将CommonJS和UMD构建预编译为ES5，因此它们可在<a href="http://caniuse.com/#feat=es5">任何现代浏览器</a>中使用。 您不需要使用Babel或模块捆绑包来<a href="https://github.com/reactjs/redux/blob/master/examples/counter-vanilla/index.html">开始使用Redux</a>。
+</p>
+<h3>
+互补包
+</h3>
+<p>
+很可能，您还需要<a href="https://github.com/reactjs/react-redux">React绑定</a>和<a href="https://github.com/gaearon/redux-devtools">开发人员工具</a>。
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">npm install --save react-redux
+</span><span class="line">npm install --save-dev redux-devtools</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+请注意，与Redux本身不同，Redux生态系统中的许多软件包不提供UMD构建，因此我们建议使用<a href="http://webpack.github.io/"> Webpack </a>和<a href="http://browserify.org/">Browserify</a>之类的CommonJS模块捆绑软件，以获得最舒适的开发体验。
+</p>
+<h3>
+要点
+</h3>
+<p>
+应用程序的整个状态存储在单个存储中的对象树中。
+改变状态树的唯一方法是发出一个动作，一个描述发生了什么的对象。
+要指定动作如何转换状态树，您需要编写纯reducer。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">createStore</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;redux&#39;</span>
+</span><span class="line">
+</span><span class="line"><span class="cm">/**</span>
+</span><span class="line"><span class="cm"> * This is a reducer, a pure function with (state, action) =&gt; state signature.</span>
+</span><span class="line"><span class="cm"> * It describes how an action transforms the state into the next state.</span>
+</span><span class="line"><span class="cm"> *</span>
+</span><span class="line"><span class="cm"> * The shape of the state is up to you: it can be a primitive, an array, an object,</span>
+</span><span class="line"><span class="cm"> * or even an Immutable.js data structure. The only important part is that you should</span>
+</span><span class="line"><span class="cm"> * not mutate the state object, but return a new object if the state changes.</span>
+</span><span class="line"><span class="cm"> *</span>
+</span><span class="line"><span class="cm"> * In this example, we use a `switch` statement and strings, but you can use a helper that</span>
+</span><span class="line"><span class="cm"> * follows a different convention (such as function maps) if it makes sense for your</span>
+</span><span class="line"><span class="cm"> * project.</span>
+</span><span class="line"><span class="cm"> */</span>
+</span><span class="line"><span class="kd">function</span> <span class="nx">counter</span><span class="p">(</span><span class="nx">state</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">action</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">switch</span> <span class="p">(</span><span class="nx">action</span><span class="p">.</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">case</span> <span class="s1">&#39;INCREMENT&#39;</span><span class="o">:</span>
+</span><span class="line">    <span class="k">return</span> <span class="nx">state</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span class="line">  <span class="k">case</span> <span class="s1">&#39;DECREMENT&#39;</span><span class="o">:</span>
+</span><span class="line">    <span class="k">return</span> <span class="nx">state</span> <span class="o">-</span> <span class="mi">1</span>
+</span><span class="line">  <span class="k">default</span><span class="o">:</span>
+</span><span class="line">    <span class="k">return</span> <span class="nx">state</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// Create a Redux store holding the state of your app.</span>
+</span><span class="line"><span class="c1">// Its API is { subscribe, dispatch, getState }.</span>
+</span><span class="line"><span class="kd">let</span> <span class="nx">store</span> <span class="o">=</span> <span class="nx">createStore</span><span class="p">(</span><span class="nx">counter</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// You can use subscribe() to update the UI in response to state changes.</span>
+</span><span class="line"><span class="c1">// Normally you&#39;d use a view binding library (e.g. React Redux) rather than subscribe() directly.</span>
+</span><span class="line"><span class="c1">// However it can also be handy to persist the current state in the localStorage.</span>
+</span><span class="line">
+</span><span class="line"><span class="nx">store</span><span class="p">.</span><span class="nx">subscribe</span><span class="p">(()</span> <span class="o">=&gt;</span>
+</span><span class="line">  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">store</span><span class="p">.</span><span class="nx">getState</span><span class="p">())</span>
+</span><span class="line"><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// The only way to mutate the internal state is to dispatch an action.</span>
+</span><span class="line"><span class="c1">// The actions can be serialized, logged or stored and later replayed.</span>
+</span><span class="line"><span class="nx">store</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;INCREMENT&#39;</span> <span class="p">})</span>
+</span><span class="line"><span class="c1">// 1</span>
+</span><span class="line"><span class="nx">store</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;INCREMENT&#39;</span> <span class="p">})</span>
+</span><span class="line"><span class="c1">// 2</span>
+</span><span class="line"><span class="nx">store</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span> <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;DECREMENT&#39;</span> <span class="p">})</span>
+</span><span class="line"><span class="c1">// 1</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2016/11/17/react-nativekai-fa-redux/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/11/17/react-nativekai-fa-redux/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -770,71 +950,6 @@ Java的int有一个32位的表示; Java的double类型具有64位表示。 Java�
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/09/06/yin-le-le-li-yin-fu-chi-xu-shi-jian/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/09/06/yin-le-le-li-wu-xian-pu-%2Cpu-hao-%2Cjia-xian/">
-		
-			音乐乐理:五线谱，谱号，加线</a>
-	</h2>
-	<div class="entry-content">
-		<p>
-<code>五线谱</code>是对音符绘制的基础。现代的五线谱是由5根线和4个空间组成的。
-<br />
-<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7jn3flan2j21kw0lcdh6.jpg" />
-在五线谱上的每行线或者空白处都表示键盘上的白建。
-<br />
-</p>
-
-<p>
-谱号分配给各个音符某些行或空格。
-两个谱号经常用到，分别是：高音和低音。
-<br />
-<img src="http://ww3.sinaimg.cn/large/626e5d69gw1f7jqbp0363j21kw0lcq4r.jpg" />
-<br />
-我们先讨论高音（通常也称为G 谱）.该谱号环绕（显示为红色）五线谱线被称为G.放在该行的任何音符变成G.
-<br />
-G调以上的空白处的调是A调（记住，没有一个“H”调）
-<br />
-A调以上的调是B调。以此类推，G、A、B、C、D、E、F、G
-<br />
-<img src="http://ww1.sinaimg.cn/large/626e5d69gw1f7jqd7qzk5j21kw0lcdi6.jpg" />
-额我们看来已经超过了五线谱的范围了，这时候该怎么办？
-</p>
-
-<p>
-加线将解决我们的困境。
-我们在五线谱之外，额外添加一条线，然后在这个线处继续添加A
-<br />
-<img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7jsx3rujij21kw0lcdi5.jpg" />
-</p>
-
-		
-		<a href="/Blog/blog/2016/09/06/yin-le-le-li-wu-xian-pu-%2Cpu-hao-%2Cjia-xian/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/yin-le/'>音乐</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/09/06/yin-le-le-li-wu-xian-pu-%2Cpu-hao-%2Cjia-xian/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
