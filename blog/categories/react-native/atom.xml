@@ -4,7 +4,7 @@
   <title><![CDATA[Category: React Native | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/react-native/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-11-21T14:45:23+08:00</updated>
+  <updated>2016-11-21T18:41:18+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,550 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[JSX从0到1]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/21/jsxcong-0dao-1/"/>
+    <updated>2016-11-21T17:45:01+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/21/jsxcong-0dao-1</id>
+    <content type="html"><![CDATA[<p>
+什么是JSX。我们先看一段代码,考虑这个变量声明：
+```javascript
+const element = <h1>Hello, world!</h1>;
+```
+这个有趣的标签语法既不是字符串也不是HTML。
+
+它被称为JSX，它是JavaScript的语法扩展。 我们建议使用它与React来描述UI应该是什么样子。 JSX可以提醒你一个模板语言，但它伴随着JavaScript的全部力量。
+
+JSX产生React“元素”。 我们将在下一节中探讨将它们渲染到DOM。 下面，你可以找到JSX的基础知识，让你开始。
+</p>
+<h3>
+在JSX中嵌入表达式
+</h3>
+<p>
+您可以通过将其包含在大括号中来在JSX中嵌入任何<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions">JavaScript表达式</a>。
+
+例如，2 + 2，user.name和formatName（user）都是有效的表达式：
+```javascript
+function formatName(user) {
+  return user.firstName + ' ' + user.lastName;
+}
+
+const user = {
+  firstName: 'Harper',
+  lastName: 'Perez'
+};
+
+const element = (
+  <h1>
+    Hello, {formatName(user)}!
+  </h1>
+);
+
+ReactDOM.render(
+  element,
+  document.getElementById('root')
+);
+```
+我们将JSX拆分为多行以提高可读性。 虽然这不是强制性的，但当执行此操作时，我们还建议将其括在括号中，以避免<a href="http://stackoverflow.com/questions/2846283/what-are-the-rules-for-javascripts-automatic-semicolon-insertion-asi">自动分号插入</a>的陷阱。
+</p>
+<h3>
+JSX是一个表达式
+</h3>
+<p>
+编译后，JSX表达式成为常规JavaScript对象。这意味着您可以在if语句和for循环中使用JSX，将其分配给变量，将其接受为参数，然后从函数中返回：
+```javascript
+function getGreeting(user) {
+  if (user) {
+    return <h1>Hello, {formatName(user)}!</h1>;
+  }
+  return <h1>Hello, Stranger.</h1>;
+}
+```
+</p>
+<!--more-->
+<h3>
+使用JSX指定属性
+</h3>
+<p>
+您可以使用引号将字符串文字指定为属性：
+```javascript
+const element = <div tabindex="0"></div>;
+```
+您还可以使用大括号在属性中嵌入JavaScript表达式：
+```javascript
+const element = &lt;img src={user.avatarUrl}&gt;;
+```
+</p>
+<h3>
+使用JSX指定子项
+</h3>
+<p>
+如果标记为空，您可以使用<code>/&gt;</code>立即关闭它，例如XML：
+```javascript
+const element = &lt;img src={user.avatarUrl} /&gt;;
+```
+JSX标签可能包含子元素：
+```javascript
+const element = (
+  <div>
+    <h1>Hello!</h1>
+    <h2>Good to see you here.</h2>
+  </div>
+);
+```
+<blockquote>
+警告：
+由于JSX比HTML更接近JavaScript，React DOM使用camelCase属性命名约定而不是HTML属性名称。
+例如，类在JSX中变为<a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/className"><code>className</code></a>，tabindex变为<a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/tabIndex"><code>tabIndex</code></a>。
+</blockquote>
+</p>
+<h3>
+JSX防止注入攻击
+</h3>
+<p>
+在JSX中嵌入用户输入是安全的：
+```javascript
+const title = response.potentiallyMaliciousInput;
+// This is safe:
+const element = <h1>{title}</h1>;
+```
+默认情况下，React DOM在渲染它们之前转义嵌入在JSX中的<a href="http://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html">任何值</a>。 因此，它确保你不能注入没有明确写在你的应用程序中的任何东西。 在渲染之前，一切都转换为字符串。 这有助于防止<a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS（跨站点脚本）</a>攻击。
+</p>
+<h3>
+JSX表示对象
+</h3>
+<p>
+Babel将JSX编译为React.createElement（）调用。
+
+这两个例子是相同的：
+```javascript
+const element = (
+  <h1 classname="greeting">
+    Hello, world!
+  </h1>
+);
+```
+```javascript
+const element = React.createElement(
+  'h1',
+  {className: 'greeting'},
+  'Hello, world!'
+);
+```
+React.createElement（）执行一些检查，以帮助您编写无错误的代码，但本质上，它创建一个对象像这样：
+```javascript
+// Note: this structure is simplified
+const element = {
+  type: 'h1',
+  props: {
+    className: 'greeting',
+    children: 'Hello, world'
+  }
+};
+```
+这些对象称为“React元素”。 你可以把它们想象成你想在屏幕上看到的描述。 React读取这些对象，并使用它们构造DOM并保持其为最新。
+
+我们将在下一节中探索渲染React元素到DOM。
+<blockquote>
+提示：
+我们建议为您选择的编辑器搜索“Babel”语法方案，以便正确突出显示ES6和JSX代码。
+</blockquote>
+</p>
+<h2>
+更深层次解读JSX
+</h2>
+<p>
+从根本上说，JSX只是为React.createElement（component，props，... children）函数提供语法更方便。 JSX代码：
+```javascript
+&lt;MyButton color="blue" shadowSize={2}&gt;
+  Click Me
+
+```
+编译成
+```javascript
+React.createElement(
+  MyButton,
+  {color: 'blue', shadowSize: 2},
+  'Click Me'
+)
+```
+如果没有子代，也可以使用标记的自关闭形式。 所以：
+```javascript
+<div classname="sidebar"></div>
+```
+编译成
+```javascript
+React.createElement(
+  'div',
+  {className: 'sidebar'},
+  null
+)
+```
+如果你想测试一些特定的JSX是如何转换成JavaScript，你可以试试<a href="https://babeljs.io/repl/#?babili=false&amp;evaluate=true&amp;lineWrap=false&amp;presets=es2015%2Creact%2Cstage-0&amp;code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D">在线Babel编译器</a>。
+</p>
+<h3>
+指定React元素类型
+</h3>
+<p>
+JSX标记的第一部分决定了React元素的类型。
+
+大写的类型表示JSX标记指的是React组件。 这些标签被编译为对指定变量的直接引用，因此如果使用JSX<code> <foo /> </code>表达式，Foo必须在范围内。
+</p>
+<h4>
+React必须在范围内
+</h4>
+<p>
+由于JSX编译为对React.createElement的调用，因此React库也必须始终在JSX代码的作用域中。
+
+例如，这两个导入在这段代码中是必要的，即使React和CustomButton没有直接从JavaScript引用：
+```javascript
+import React from 'react';
+import CustomButton from './CustomButton';
+
+function WarningButton() {
+  // return React.createElement(CustomButton, {color: 'red'}, null);
+  return <custombutton color="red" />;
+}
+```
+如果不使用JavaScript绑定器并将React添加为脚本标记，则它已作为<code>React</code>全局范围。
+</p>
+<h3>
+对JSX类型使用点表示法
+</h3>
+<p>
+您还可以使用JSX中的点表示法来引用React组件。 如果您有一个模块导出许多React组件，这很方便。 例如，如果MyComponents.DatePicker是一个组件，您可以直接从JSX使用它：
+```javascript
+import React from 'react';
+
+const MyComponents = {
+  DatePicker: function DatePicker(props) {
+    return <div>Imagine a {props.color} datepicker here.</div>;
+  }
+}
+
+function BlueDatePicker() {
+  return <mycomponents.datepicker color="blue" />;
+}
+```
+</p>
+<h3>
+用户定义的组件必须大写
+</h3>
+<p>
+当元素类型以小写字母开头时，它指向一个内置组件，如<div>或<span>，并生成一个字符串'div'或'span'传递给React.createElement。 以大写字母开头的类型，如<code><foo /></code>编译为React.createElement（Foo），并且对应于在JavaScript文件中定义或导入的组件。
+
+我们建议使用大写字母命名组件。 如果你有一个以小写字母开头的组件，请在JSX中使用它之前将它分配给大写的变量。
+
+例如，此代码不会按预期运行：
+```javascript
+import React from 'react';
+
+// Wrong! This is a component and should have been capitalized:
+function hello(props) {
+  // Correct! This use of <div> is legitimate because div is a valid HTML tag:
+  return <div>Hello {props.toWhat}</div>;
+}
+
+function HelloWorld() {
+  // Wrong! React thinks <hello /> is an HTML tag because it's not capitalized:
+  return <hello towhat="World" />;
+}
+```
+要解决这个问题，我们将hello重命名为Hello，并在引用它时使用<code><hello /></code>：
+```javascript
+import React from 'react';
+
+// Correct! This is a component and should be capitalized:
+function Hello(props) {
+  // Correct! This use of <div> is legitimate because div is a valid HTML tag:
+  return <div>Hello {props.toWhat}</div>;
+}
+
+function HelloWorld() {
+  // Correct! React knows <hello /> is a component because it's capitalized.
+  return <hello towhat="World" />;
+}
+```
+
+<h3>
+在运行时选择类型
+</h3>
+<p>
+不能将常规表达式用作React元素类型。 如果你想使用一个通用表达式来表示元素的类型，只需首先将它分配给一个大写的变量。 这通常出现在当你想基于一个道具渲染一个不同的组件：
+```javascript
+import React from 'react';
+import { PhotoStory, VideoStory } from './stories';
+
+const components = {
+  photo: PhotoStory,
+  video: VideoStory
+};
+
+function Story(props) {
+  // Wrong! JSX type can't be an expression.
+  return &lt;components[props.storyType] story={props.story} /&gt;;
+}
+```
+为了解决这个问题，我们将首先将类型指定为大写变量：
+```javascript
+import React from 'react';
+import { PhotoStory, VideoStory } from './stories';
+
+const components = {
+  photo: PhotoStory,
+  video: VideoStory
+};
+
+function Story(props) {
+  // Correct! JSX type can be a capitalized variable.
+  const SpecificStory = components[props.storyType];
+  return &lt;SpecificStory story={props.story} /&gt;;
+}
+```
+</p>
+<h2>
+在JSX中的props
+</h2>
+<p>
+在JSX中指定props有几种不同的方法。
+</p>
+<h3>
+JavaScript表达式
+</h3>
+<p>
+你可以传递任何JavaScript表达式作为props，用{}包围它。 例如，在这个JSX中：
+```javascript
+&lt;MyComponent foo={1 + 2 + 3 + 4} /&gt;
+```
+对于MyComponent，props.foo的值将为10，因为表达式1 + 2 + 3 + 4得到计算。
+
+if语句和for循环在JavaScript中不是表达式，因此它们不能在JSX中直接使用。 相反，你可以把这些在周围的代码。 例如：
+```javascript
+function NumberDescriber(props) {
+  let description;
+  if (props.number % 2 == 0) {
+    description = <strong>even</strong>;
+  } else {
+    description = <i>odd</i>;
+  }
+  return <div>{props.number} is an {description} number</div>;
+}
+```
+</p>
+<h3>
+字符串字面量
+</h3>
+<p>
+你可以传递一个字符串文字作为props。 这两个JSX表达式是等价的：
+```javascript
+<mycomponent message="hello world" />
+
+&lt;MyComponent message={'hello world'} /&gt;
+```
+当你传递一个字符串字面量时，它的值是HTML-unescaped。 所以这两个JSX表达式是等价的：
+```javascript
+&lt;MyComponent message =“＆lt; 3”/&gt;
+
+&lt;MyComponent message = {'&lt;3'} /&gt;
+```
+此行为通常不相关。 这里只提到完整性。
+</p>
+<h3>
+Props默认为“True”
+</h3>
+<p>
+如果你不传递prop的值，它默认为true。 这两个JSX表达式是等价的：
+```javascript
+<mytextbox autocomplete="" />
+
+&lt;MyTextbox autocomplete = {true} /&gt;
+```
+一般来说，我们不建议使用它，因为它可以与ES6对象简写{foo}，这是{foo：foo}的简称，而不是{foo：true}混淆。 这种行为只是在那里，以便它匹配HTML的行为。
+</p>
+<h3>
+扩展属性
+</h3>
+<p>
+如果你已经有props作为对象，并且你想在JSX中传递它，你可以使用...作为一个“spread”运算符传递整个props对象。 这两个组件是等效的：
+```javascript
+function App1() {
+  return <greeting firstname="Ben" lastname="Hector" />;
+}
+
+function App2() {
+  const props = {firstName: 'Ben', lastName: 'Hector'};
+  return &lt;Greeting {...props} /&gt;;
+}
+```
+当构建通用容器时，扩展属性可能很有用。 然而，他们也可以让你的代码凌乱，通过使很容易将大量不相关的props传递给不关心它们的组件。 我们建议您谨慎使用此语法。
+</p>
+<h2>
+JSX中的子类
+</h2>
+<p>
+在包含开始标记和结束标记的JSX表达式中，这些标记之间的内容作为特殊prop：props.children传递。 有几种不同的方式传递子类：
+</p>
+<h3>
+字符串字面量
+</h3>
+<p>
+你可以在开始和结束标签之间放一个字符串，props.children就是那个字符串。 这对许多内置的HTML元素很有用。 例如：
+```javascript
+<mycomponent>Hello world!</mycomponent>
+```
+这是有效的JSX，并且MyComponent中的props.children将只是字符串“Hello world！”。 HTML是非转义的，所以你一般可以写JSX就像你这样写HTML：
+```javascript
+<div>这是有效的HTML＆amp; JSX同时。&lt;/ div&gt;
+```
+JSX删除行的开始和结尾处的空格。 它也删除空白行。 与标签相邻的新行被删除; 在字符串文本中间出现的新行会缩合到单个空间中。 所以这些都渲染相同的事情：
+```javascript
+<div>Hello World</div>
+
+<div>
+  Hello World
+</div>
+
+<div>
+  Hello
+  World
+</div>
+
+<div>
+
+  Hello World
+</div>
+```
+
+<h3>
+JSX 子类
+</h3>
+<p>
+你可以提供更多的JSX元素作为孩子。 这对显示嵌套组件很有用：
+```javascript
+<mycontainer>
+  <myfirstcomponent />
+  <mysecondcomponent />
+</mycontainer>
+```
+您可以将不同类型的子项混合在一起，因此可以与JSX子项一起使用字符串字面值。 这是JSX的另一种方式，就像HTML，所以这是有效的JSX和有效的HTML：
+```javascript
+<div>
+  Here is a list:
+  <ul>
+    <li>Item 1</li>
+    <li>Item 2</li>
+  </ul>
+</div>
+```
+React组件不能返回多个React元素，但是一个JSX表达式可以有多个子元素，因此如果你想要一个组件呈现多个东西，你可以将它包装在这样的div中。
+</p>
+<h3>
+JS表达式
+</h3>
+<p>
+您可以将任何JavaScript表达式作为子表达式传递，将其放在{}中。 例如，这些表达式是等价的：
+```javascript
+<mycomponent>foo</mycomponent>
+
+<mycomponent>{'foo'}</mycomponent>
+```
+这通常用于呈现任意长度的JSX表达式的列表。 例如，这将呈现一个HTML列表：
+```javascript
+function Item(props) {
+  return <li>{props.message}</li>;
+}
+
+function TodoList() {
+  const todos = ['finish doc', 'submit pr', 'nag dan to review'];
+  return (
+    <ul>
+      {todos.map((message) =&gt; &lt;Item key={message} message={message} /&gt;)}
+    </ul>
+  );
+}
+```
+JS表达式可以与其他类型的孩子混合使用。 这通常用于替换字符串模板：
+```javascript
+function Hello(props) {
+  return <div>Hello {props.addressee}!</div>;
+}
+```
+</p>
+<h3>
+作为子类的函数
+</h3>
+<p>
+通常，插入JSX中的JavaScript表达式将求值为字符串，React元素或这些事物的列表。 然而，props.children像任何其他道具一样工作，它可以传递任何类型的数据，而不只是React知道如何render的类。 例如，如果您有一个自定义组件，您可以将其作为props.children进行回调：
+```javascript
+function ListOfTenThings() {
+  return (
+    &lt;Repeat numTimes={10}&gt;
+      {(index) =&gt; &lt;div key={index}&gt;This is item {index} in the list}
+    
+  );
+}
+
+// Calls the children callback numTimes to produce a repeated component
+function Repeat(props) {
+  let items = [];
+  for (let i = 0; i &lt; props.numTimes; i++) {
+    items.push(props.children(i));
+  }
+  return <div>{items}</div>;
+}
+```
+传递给自定义组件的子项可以是任何东西，只要该组件将它们转换为React在render之前可以理解的东西即可。 这种用法不常见，但它的工作原理，如果你想扩展什么JSX的能力。
+</p>
+<h3>
+忽略布尔值，空值和未定义
+</h3>
+<p>
+false，null，undefined和true是有效的子类。 他们根本不render。 这些JSX表达式将呈现相同的东西：
+```javascript
+<div></div>
+
+<div></div>
+
+<div>{false}</div>
+
+<div>{null}</div>
+
+<div>{true}</div>
+```
+这对于有条件地呈现React元素很有用。 这个JSX只渲染一个<code><header /></code>如果showHeader为true：
+```javascript
+<div>
+  {showHeader &amp;&amp; <header />}
+  <content />
+&lt;/div
+```
+一个警告是，一些<a href="https://developer.mozilla.org/en-US/docs/Glossary/Falsy">“falsy”值</a>，如0号，仍然由React渲染。 例如，此代码将不会像您预期的那样工作，因为当props.messages是空数组时将打印0：
+```javascript
+<div>
+  {props.messages.length &amp;&amp;
+    &lt;MessageList messages={props.messages} /&gt;
+  }
+</div>
+```
+要解决这个问题，请确保&amp;&amp;之前的表达式始终是布尔值：
+```javascript
+<div>
+  {props.messages.length &gt; 0 &amp;&amp;
+    &lt;MessageList messages={props.messages} /&gt;
+  }
+</div>
+```
+相反，如果你想要一个值如false，true，null或undefined出现在输出中，你必须先将它<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#String_conversion">转换为字符串</a>：
+```javascript
+<div>
+  My JavaScript variable is {String(myVariable)}.
+</div>
+```
+
+</div></p></div></p></div></div></span></div></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[React.js 项目指南]]></title>

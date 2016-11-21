@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="在每个应用里我们都大量使用字符串。下面我们将快速看看一些常见的操作字符串的方法，过一遍常见操作的最佳实践。 字符串的比较、搜索和排序 排序和比较字符串比第一眼看上去要复杂得多。不只是因为字符串可以包含代理对（surrogate pairs ）(详见 Ole 写的这篇关于 Unicode 的文章 &hellip;">
+	<meta name="description" content="可能你很难相信 UIScrollView 和一个标准的 UIView 差异并不大，scroll view 确实会多出一些方法，但这些方法只是和 UIView 的属性很好的结合到一起了。因此，在要想弄懂 UIScrollView 是怎么工作之前，你需要先了解一下 UIView， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,84 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/">
+		
+			ScrollView的前世今生</a>
+	</h2>
+	<div class="entry-content">
+		<p>可能你很难相信 <a href="http://developer.apple.com/library/ios/#documentation/uikit/reference/UIScrollView_Class/Reference/UIScrollView.html">UIScrollView</a> 和一个标准的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html">UIView</a> 差异并不大，scroll view 确实会多出一些方法，但这些方法只是和 UIView 的属性很好的结合到一起了。因此，在要想弄懂 UIScrollView 是怎么工作之前，你需要先了解一下 UIView，特别是视图渲染的两步过程。</p>
+
+<h2>光栅化和组合</h2>
+
+<p>渲染过程的第一部分是众所周知的光栅化(<code>rasterization</code>)，光栅化简单的说就是产生一组绘图指令并且生成一张图片。比如绘制一个圆角矩形、带图片、标题居中的 UIButtons。这些图片并没有被绘制到屏幕上去；取而代之的是，他们被自己的视图保持着留到下一个步骤使用。</p>
+
+<p>一旦每个视图都产生了自己的光栅化图片，这些图片便被一个接一个的绘制，并产生一个屏幕大小的图片，这便是上文所说的组合。视图层级(view hierarchy)对于组合如何进行扮演了很重要的角色：一个视图的图片被组合在它父视图的图片上面。然后，组合好的图片被组合到父视图的父视图图片上面。视图层级最顶端是窗口(window)，它组合好的图片便是我们看到的东西了。</p>
+
+<p>概念上，依次在每个视图上放置独立分层的图片并最终产生一个图片，单调的图像更容易被理解，特别是如果你以前使用过像 Photoshop 这样的工具。我们还有另外一篇文章详细解释了<a href="http://objccn.io/issue-3-1/">像素是如何绘制到屏幕上去的</a>。</p>
+
+<p>现在，回想一下，每个视图都有一个 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/bounds">bounds</a> 和 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instp/UIView/frame">frame</a>。当布局一个界面时，我们需要处理视图的 frame。这允许我们放置并设置视图的大小。视图的 frame 和 bounds 的大小总是一样的，但是他们的 origin 有可能不同。弄懂这两个工作原理是理解 UIScrollView 的关键。</p>
+
+<p>在光栅化步骤中，视图并不关心即将发生的组合步骤。也就是说，它并不关心自己的 frame (这是用来放置视图的图像)或自己在视图层级中的位置(这是决定组合的顺序)。这时视图只关心一件事就是绘制它自己的 content。这个绘制发生在每个视图的 <a href="https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIView_Class/UIView/UIView.html#//apple_ref/occ/instm/UIView/drawRect:"><code>drawRect:</code></a> 方法中。</p>
+
+<p>在 <code>drawRect:</code> 方法被调用前，会为视图创建一个空白的图片来绘制 content。这个图片的坐标系统是视图的 bounds。几乎每个视图 bounds 的 origin 都是 {0，0}。因此，当在光栅化图片左上角绘制一些东西的时候，你都会在 bounds 的 origin {x:0, y:0} 处绘制。在一个图片右下角的地方绘制东西的时候，你都会绘制在 {x:width, y:height} 处。如果你的绘制超出了视图的 bounds，那么超出的部分就不属于光栅化图片的部分了，并且会被丢弃。</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV2.png" alt="" title="" /></p>
+
+<p>在组合的步骤中，每个视图将自己光栅化图片组合到自己父视图的光栅化图片上面。视图的 frame 决定了自己在父视图中绘制的位置，frame 的 origin 表明了视图光栅化图片左上角相对父视图光栅化图片左上角的偏移量。所以，一个 origin 为 {x:20, y:15} 的 frame 所绘制的图片左边距其父视图 20 点，上边距父视图 15 点。因为视图的 frame 和 bounds 矩形的大小总是一样的，所以光栅化图片组合的时候是像素对齐的。这确保了光栅化图片不会被拉伸或缩小。</p>
+
+<p><img src="http://img.objccn.io/issue-3/SV1.png" alt="" title="" /></p>
+
+<p>记住，我们才仅仅讨论了一个视图和它父视图之间的组合操作。一旦这两个视图被组合到一起，组合的结果图片将会和父视图的父视图进行组合，这是一个雪球效应。</p>
+
+<p>考虑一下组合图片背后的公式。视图图片的左上角会根据它 frame 的 origin 进行偏移，并绘制到父视图的图片上：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">Superview</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">Superview</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>正如之前所说的，如果一个视图 bounds 的 origin 是 {0,0}。那么，我们得到这个公式：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">CompositedPosition</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">View</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/04/09/scrollviewde-qian-shi-jin-sheng/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -685,61 +763,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/04/08/iCould-%E5%92%8C-Core-Data/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/04/02/%5B%3F%5D-ge-shao-nian/">
-		
-			一个少年</a>
-	</h2>
-	<div class="entry-content">
-		<p><img src="http://ww3.sinaimg.cn/large/626e5d69gw1ef12djbjbkj20s00j342z.jpg" alt="" /></p>
-<p>我要是没有生在这个世界就好了 受伤的心灵如此诉说</p>
-<p>要是这么想的话就中了那个混蛋的当了 不要认输呀少年</p>
-<p>「让内心休息一下」这种事 看来是不会被允许的呢</p>
-<p>略微玩耍一下 把该做的事都置于身后吧 选择自己喜欢的事情吧</p>
-<p>在这双手伸出之前 还有着无尽的喜悦</p>
-<p>那无穷无尽而来的悲伤 如果无法背负的话就不背好了</p>
-<p>为何要去勉强自己去感受痛苦呢? 本来谁都可以自由自在</p>
-<p>像那振翅翱翔的鸟儿一般 像那海面中跳跃的飞鱼一般</p>
-<p>在这欢乐的地方 比谁都能 自由微笑的少年吧</p>
-<p>如果穿上流行的服饰的话 明天也会变得落伍吧</p>
-<p>要不要去赶潮流 选择自己喜欢的方法就好了</p>
-<p>在这双脚踏出路程之前 还有着无限的幸福存在</p>
-<p>如果有着无尽的烦恼的话 那就让他烦恼下去好了</p>
-<p>欲速则不达 不要不懂装懂 每个人都有缺陷</p>
-<p>自己诞生而来的意义 即使最后再想也是绝妙的</p>
-<p>微风轻轻拂过 将身心委任给涓涓小溪 成为一个学习的少年吧</p>
-<p>成为在这个世界上 比谁都能 自由恋爱的少年吧</p>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/shi-ge/'>诗歌</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/04/02/%5B%3F%5D-ge-shao-nian/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

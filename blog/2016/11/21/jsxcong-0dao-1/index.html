@@ -1,0 +1,920 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>JSX从0到1 - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="什么是JSX。我们先看一段代码,考虑这个变量声明：
+1
+const element = &lt;h1&gt;Hello, world!&lt;/h1&gt;; 这个有趣的标签语法既不是字符串也不是HTML。 它被称为JSX，它是JavaScript的语法扩展。 &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/Blog/favicon.png" rel="shortcut icon">
+	<link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/Blog/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">JSX从0到1</h2>
+	<div class="entry-content"><p>
+什么是JSX。我们先看一段代码,考虑这个变量声明：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+这个有趣的标签语法既不是字符串也不是HTML。
+
+它被称为JSX，它是JavaScript的语法扩展。 我们建议使用它与React来描述UI应该是什么样子。 JSX可以提醒你一个模板语言，但它伴随着JavaScript的全部力量。
+
+JSX产生React“元素”。 我们将在下一节中探讨将它们渲染到DOM。 下面，你可以找到JSX的基础知识，让你开始。
+</p>
+<h3>
+在JSX中嵌入表达式
+</h3>
+<p>
+您可以通过将其包含在大括号中来在JSX中嵌入任何<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions">JavaScript表达式</a>。
+
+例如，2 + 2，user.name和formatName（user）都是有效的表达式：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">function</span> <span class="nx">formatName</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span> <span class="nx">user</span><span class="p">.</span><span class="nx">firstName</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="nx">user</span><span class="p">.</span><span class="nx">lastName</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">const</span> <span class="nx">user</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">firstName</span><span class="o">:</span> <span class="s1">&#39;Harper&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="nx">lastName</span><span class="o">:</span> <span class="s1">&#39;Perez&#39;</span>
+</span><span class="line"><span class="p">};</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="p">(</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="nx">Hello</span><span class="p">,</span> <span class="p">{</span><span class="nx">formatName</span><span class="p">(</span><span class="nx">user</span><span class="p">)}</span><span class="o">!</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="err">/h1&gt;</span>
+</span><span class="line"><span class="p">);</span>
+</span><span class="line">
+</span><span class="line"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+</span><span class="line">  <span class="nx">element</span><span class="p">,</span>
+</span><span class="line">  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
+</span><span class="line"><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+我们将JSX拆分为多行以提高可读性。 虽然这不是强制性的，但当执行此操作时，我们还建议将其括在括号中，以避免<a href="http://stackoverflow.com/questions/2846283/what-are-the-rules-for-javascripts-automatic-semicolon-insertion-asi">自动分号插入</a>的陷阱。
+</p>
+<h3>
+JSX是一个表达式
+</h3>
+<p>
+编译后，JSX表达式成为常规JavaScript对象。这意味着您可以在if语句和for循环中使用JSX，将其分配给变量，将其接受为参数，然后从函数中返回：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">function</span> <span class="nx">getGreeting</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">if</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="p">{</span><span class="nx">formatName</span><span class="p">(</span><span class="nx">user</span><span class="p">)}</span><span class="o">!&lt;</span><span class="err">/h1&gt;;</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">Stranger</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/h1&gt;;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<!--more-->
+<h3>
+使用JSX指定属性
+</h3>
+<p>
+您可以使用引号将字符串文字指定为属性：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">tabIndex</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="o">&gt;&lt;</span><span class="err">/div&gt;;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+您还可以使用大括号在属性中嵌入JavaScript表达式：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">avatarUrl</span><span class="p">}</span><span class="o">&gt;&lt;</span><span class="err">/img&gt;;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h3>
+使用JSX指定子项
+</h3>
+<p>
+如果标记为空，您可以使用<code>/&gt;</code>立即关闭它，例如XML：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">avatarUrl</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+JSX标签可能包含子元素：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="p">(</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="o">!&lt;</span><span class="err">/h1&gt;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="nx">h2</span><span class="o">&gt;</span><span class="nx">Good</span> <span class="nx">to</span> <span class="nx">see</span> <span class="nx">you</span> <span class="nx">here</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/h2&gt;</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span><span class="line"><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<blockquote>
+警告：
+由于JSX比HTML更接近JavaScript，React DOM使用camelCase属性命名约定而不是HTML属性名称。
+例如，类在JSX中变为<a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/className"><code>className</code></a>，tabindex变为<a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/tabIndex"><code>tabIndex</code></a>。
+</blockquote>
+</p>
+<h3>
+JSX防止注入攻击
+</h3>
+<p>
+在JSX中嵌入用户输入是安全的：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">const</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">potentiallyMaliciousInput</span><span class="p">;</span>
+</span><span class="line"><span class="c1">// This is safe:</span>
+</span><span class="line"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">title</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+默认情况下，React DOM在渲染它们之前转义嵌入在JSX中的<a href="http://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html">任何值</a>。 因此，它确保你不能注入没有明确写在你的应用程序中的任何东西。 在渲染之前，一切都转换为字符串。 这有助于防止<a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS（跨站点脚本）</a>攻击。
+</p>
+<h3>
+JSX表示对象
+</h3>
+<p>
+Babel将JSX编译为React.createElement（）调用。
+
+这两个例子是相同的：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="p">(</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="nx">h1</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;greeting&quot;</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="err">/h1&gt;</span>
+</span><span class="line"><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
+</span><span class="line">  <span class="s1">&#39;h1&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;greeting&#39;</span><span class="p">},</span>
+</span><span class="line">  <span class="s1">&#39;Hello, world!&#39;</span>
+</span><span class="line"><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+React.createElement（）执行一些检查，以帮助您编写无错误的代码，但本质上，它创建一个对象像这样：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// Note: this structure is simplified</span>
+</span><span class="line"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;h1&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;greeting&#39;</span><span class="p">,</span>
+</span><span class="line">    <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;Hello, world&#39;</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+这些对象称为“React元素”。 你可以把它们想象成你想在屏幕上看到的描述。 React读取这些对象，并使用它们构造DOM并保持其为最新。
+
+我们将在下一节中探索渲染React元素到DOM。
+<blockquote>
+提示：
+我们建议为您选择的编辑器搜索“Babel”语法方案，以便正确突出显示ES6和JSX代码。
+</blockquote>
+</p>
+<h2>
+更深层次解读JSX
+</h2>
+<p>
+从根本上说，JSX只是为React.createElement（component，props，&#8230; children）函数提供语法更方便。 JSX代码：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">MyButton</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="nx">shadowSize</span><span class="o">=</span><span class="p">{</span><span class="mi">2</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="nx">Click</span> <span class="nx">Me</span>
+</span><span class="line"><span class="o">&lt;</span><span class="err">/MyButton&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+编译成
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
+</span><span class="line">  <span class="nx">MyButton</span><span class="p">,</span>
+</span><span class="line">  <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="nx">shadowSize</span><span class="o">:</span> <span class="mi">2</span><span class="p">},</span>
+</span><span class="line">  <span class="s1">&#39;Click Me&#39;</span>
+</span><span class="line"><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+如果没有子代，也可以使用标记的自关闭形式。 所以：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;sidebar&quot;</span> <span class="o">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+编译成
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
+</span><span class="line">  <span class="s1">&#39;div&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;sidebar&#39;</span><span class="p">},</span>
+</span><span class="line">  <span class="kc">null</span>
+</span><span class="line"><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+如果你想测试一些特定的JSX是如何转换成JavaScript，你可以试试<a href="https://babeljs.io/repl/#?babili=false&amp;evaluate=true&amp;lineWrap=false&amp;presets=es2015%2Creact%2Cstage-0&amp;code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D">在线Babel编译器</a>。
+</p>
+<h3>
+指定React元素类型
+</h3>
+<p>
+JSX标记的第一部分决定了React元素的类型。
+
+大写的类型表示JSX标记指的是React组件。 这些标签被编译为对指定变量的直接引用，因此如果使用JSX<code> <foo /> </code>表达式，Foo必须在范围内。
+</p>
+<h4>
+React必须在范围内
+</h4>
+<p>
+由于JSX编译为对React.createElement的调用，因此React库也必须始终在JSX代码的作用域中。
+
+例如，这两个导入在这段代码中是必要的，即使React和CustomButton没有直接从JavaScript引用：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line"><span class="kr">import</span> <span class="nx">CustomButton</span> <span class="nx">from</span> <span class="s1">&#39;./CustomButton&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">function</span> <span class="nx">WarningButton</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="c1">// return React.createElement(CustomButton, {color: &#39;red&#39;}, null);</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">CustomButton</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+如果不使用JavaScript绑定器并将React添加为脚本标记，则它已作为<code>React</code>全局范围。
+</p>
+<h3>
+对JSX类型使用点表示法
+</h3>
+<p>
+您还可以使用JSX中的点表示法来引用React组件。 如果您有一个模块导出许多React组件，这很方便。 例如，如果MyComponents.DatePicker是一个组件，您可以直接从JSX使用它：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">const</span> <span class="nx">MyComponents</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">DatePicker</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">DatePicker</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Imagine</span> <span class="nx">a</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">color</span><span class="p">}</span> <span class="nx">datepicker</span> <span class="nx">here</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">function</span> <span class="nx">BlueDatePicker</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponents</span><span class="p">.</span><span class="nx">DatePicker</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h3>
+用户定义的组件必须大写
+</h3>
+<p>
+当元素类型以小写字母开头时，它指向一个内置组件，如<div>或<span>，并生成一个字符串&#8217;div&#8217;或&#8217;span&#8217;传递给React.createElement。 以大写字母开头的类型，如<code><foo /></code>编译为React.createElement（Foo），并且对应于在JavaScript文件中定义或导入的组件。
+
+我们建议使用大写字母命名组件。 如果你有一个以小写字母开头的组件，请在JSX中使用它之前将它分配给大写的变量。
+
+例如，此代码不会按预期运行：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// Wrong! This is a component and should have been capitalized:</span>
+</span><span class="line"><span class="kd">function</span> <span class="nx">hello</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="c1">// Correct! This use of &lt;div&gt; is legitimate because div is a valid HTML tag:</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">toWhat</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">function</span> <span class="nx">HelloWorld</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="c1">// Wrong! React thinks &lt;hello /&gt; is an HTML tag because it&#39;s not capitalized:</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">hello</span> <span class="nx">toWhat</span><span class="o">=</span><span class="s2">&quot;World&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+要解决这个问题，我们将hello重命名为Hello，并在引用它时使用<code><hello /></code>：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// Correct! This is a component and should be capitalized:</span>
+</span><span class="line"><span class="kd">function</span> <span class="nx">Hello</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="c1">// Correct! This use of &lt;div&gt; is legitimate because div is a valid HTML tag:</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">toWhat</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">function</span> <span class="nx">HelloWorld</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="c1">// Correct! React knows &lt;Hello /&gt; is a component because it&#39;s capitalized.</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Hello</span> <span class="nx">toWhat</span><span class="o">=</span><span class="s2">&quot;World&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>
+在运行时选择类型
+</h3>
+<p>
+不能将常规表达式用作React元素类型。 如果你想使用一个通用表达式来表示元素的类型，只需首先将它分配给一个大写的变量。 这通常出现在当你想基于一个道具渲染一个不同的组件：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">PhotoStory</span><span class="p">,</span> <span class="nx">VideoStory</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;./stories&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">const</span> <span class="nx">components</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">photo</span><span class="o">:</span> <span class="nx">PhotoStory</span><span class="p">,</span>
+</span><span class="line">  <span class="nx">video</span><span class="o">:</span> <span class="nx">VideoStory</span>
+</span><span class="line"><span class="p">};</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">function</span> <span class="nx">Story</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="c1">// Wrong! JSX type can&#39;t be an expression.</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">components</span><span class="p">[</span><span class="nx">props</span><span class="p">.</span><span class="nx">storyType</span><span class="p">]</span> <span class="nx">story</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+为了解决这个问题，我们将首先将类型指定为大写变量：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">PhotoStory</span><span class="p">,</span> <span class="nx">VideoStory</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;./stories&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">const</span> <span class="nx">components</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">photo</span><span class="o">:</span> <span class="nx">PhotoStory</span><span class="p">,</span>
+</span><span class="line">  <span class="nx">video</span><span class="o">:</span> <span class="nx">VideoStory</span>
+</span><span class="line"><span class="p">};</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">function</span> <span class="nx">Story</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="c1">// Correct! JSX type can be a capitalized variable.</span>
+</span><span class="line">  <span class="kr">const</span> <span class="nx">SpecificStory</span> <span class="o">=</span> <span class="nx">components</span><span class="p">[</span><span class="nx">props</span><span class="p">.</span><span class="nx">storyType</span><span class="p">];</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">SpecificStory</span> <span class="nx">story</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h2>
+在JSX中的props
+</h2>
+<p>
+在JSX中指定props有几种不同的方法。
+</p>
+<h3>
+JavaScript表达式
+</h3>
+<p>
+你可以传递任何JavaScript表达式作为props，用{}包围它。 例如，在这个JSX中：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+对于MyComponent，props.foo的值将为10，因为表达式1 + 2 + 3 + 4得到计算。
+
+if语句和for循环在JavaScript中不是表达式，因此它们不能在JSX中直接使用。 相反，你可以把这些在周围的代码。 例如：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">function</span> <span class="nx">NumberDescriber</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="kd">let</span> <span class="nx">description</span><span class="p">;</span>
+</span><span class="line">  <span class="k">if</span> <span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">number</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">description</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">strong</span><span class="o">&gt;</span><span class="nx">even</span><span class="o">&lt;</span><span class="err">/strong&gt;;</span>
+</span><span class="line">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">description</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">i</span><span class="o">&gt;</span><span class="nx">odd</span><span class="o">&lt;</span><span class="err">/i&gt;;</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">number</span><span class="p">}</span> <span class="nx">is</span> <span class="nx">an</span> <span class="p">{</span><span class="nx">description</span><span class="p">}</span> <span class="nx">number</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h3>
+字符串字面量
+</h3>
+<p>
+你可以传递一个字符串文字作为props。 这两个JSX表达式是等价的：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">message</span><span class="o">=</span><span class="s2">&quot;hello world&quot;</span> <span class="o">/&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">message</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;hello world&#39;</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+当你传递一个字符串字面量时，它的值是HTML-unescaped。 所以这两个JSX表达式是等价的：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">message</span> <span class="o">=</span><span class="err">“＆</span><span class="nx">lt</span><span class="p">;</span> <span class="mi">3</span><span class="err">”</span><span class="o">/&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">message</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;&lt;3&#39;</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+此行为通常不相关。 这里只提到完整性。
+</p>
+<h3>
+Props默认为“True”
+</h3>
+<p>
+如果你不传递prop的值，它默认为true。 这两个JSX表达式是等价的：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">MyTextBox</span> <span class="nx">autocomplete</span> <span class="o">/&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">MyTextbox</span> <span class="nx">autocomplete</span> <span class="o">=</span> <span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+一般来说，我们不建议使用它，因为它可以与ES6对象简写{foo}，这是{foo：foo}的简称，而不是{foo：true}混淆。 这种行为只是在那里，以便它匹配HTML的行为。
+</p>
+<h3>
+扩展属性
+</h3>
+<p>
+如果你已经有props作为对象，并且你想在JSX中传递它，你可以使用&#8230;作为一个“spread”运算符传递整个props对象。 这两个组件是等效的：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">function</span> <span class="nx">App1</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Greeting</span> <span class="nx">firstName</span><span class="o">=</span><span class="s2">&quot;Ben&quot;</span> <span class="nx">lastName</span><span class="o">=</span><span class="s2">&quot;Hector&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">function</span> <span class="nx">App2</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="kr">const</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{</span><span class="nx">firstName</span><span class="o">:</span> <span class="s1">&#39;Ben&#39;</span><span class="p">,</span> <span class="nx">lastName</span><span class="o">:</span> <span class="s1">&#39;Hector&#39;</span><span class="p">};</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Greeting</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+当构建通用容器时，扩展属性可能很有用。 然而，他们也可以让你的代码凌乱，通过使很容易将大量不相关的props传递给不关心它们的组件。 我们建议您谨慎使用此语法。
+</p>
+<h2>
+JSX中的子类
+</h2>
+<p>
+在包含开始标记和结束标记的JSX表达式中，这些标记之间的内容作为特殊prop：props.children传递。 有几种不同的方式传递子类：
+</p>
+<h3>
+字符串字面量
+</h3>
+<p>
+你可以在开始和结束标签之间放一个字符串，props.children就是那个字符串。 这对许多内置的HTML元素很有用。 例如：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/MyComponent&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+这是有效的JSX，并且MyComponent中的props.children将只是字符串“Hello world！”。 HTML是非转义的，所以你一般可以写JSX就像你这样写HTML：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="err">这是有效的</span><span class="nx">HTML</span><span class="err">＆</span><span class="nx">amp</span><span class="p">;</span> <span class="nx">JSX</span><span class="err">同时。</span><span class="o">&lt;</span><span class="err">/ div&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+JSX删除行的开始和结尾处的空格。 它也删除空白行。 与标签相邻的新行被删除; 在字符串文本中间出现的新行会缩合到单个空间中。 所以这些都渲染相同的事情：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="nx">Hello</span> <span class="nx">World</span>
+</span><span class="line"><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="nx">Hello</span>
+</span><span class="line">  <span class="nx">World</span>
+</span><span class="line"><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line">  <span class="nx">Hello</span> <span class="nx">World</span>
+</span><span class="line"><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h3>
+JSX 子类
+</h3>
+<p>
+你可以提供更多的JSX元素作为孩子。 这对显示嵌套组件很有用：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">MyContainer</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="nx">MyFirstComponent</span> <span class="o">/&gt;</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="nx">MySecondComponent</span> <span class="o">/&gt;</span>
+</span><span class="line"><span class="o">&lt;</span><span class="err">/MyContainer&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+您可以将不同类型的子项混合在一起，因此可以与JSX子项一起使用字符串字面值。 这是JSX的另一种方式，就像HTML，所以这是有效的JSX和有效的HTML：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="nx">Here</span> <span class="nx">is</span> <span class="nx">a</span> <span class="nx">list</span><span class="o">:</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Item</span> <span class="mi">1</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Item</span> <span class="mi">2</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="err">/ul&gt;</span>
+</span><span class="line"><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+React组件不能返回多个React元素，但是一个JSX表达式可以有多个子元素，因此如果你想要一个组件呈现多个东西，你可以将它包装在这样的div中。
+</p>
+<h3>
+JS表达式
+</h3>
+<p>
+您可以将任何JavaScript表达式作为子表达式传递，将其放在{}中。 例如，这些表达式是等价的：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">&gt;</span><span class="nx">foo</span><span class="o">&lt;</span><span class="err">/MyComponent&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;foo&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/MyComponent&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+这通常用于呈现任意长度的JSX表达式的列表。 例如，这将呈现一个HTML列表：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">function</span> <span class="nx">Item</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">message</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kd">function</span> <span class="nx">TodoList</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="kr">const</span> <span class="nx">todos</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;finish doc&#39;</span><span class="p">,</span> <span class="s1">&#39;submit pr&#39;</span><span class="p">,</span> <span class="s1">&#39;nag dan to review&#39;</span><span class="p">];</span>
+</span><span class="line">  <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
+</span><span class="line">      <span class="p">{</span><span class="nx">todos</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">message</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">Item</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span> <span class="nx">message</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">)}</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="err">/ul&gt;</span>
+</span><span class="line">  <span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+JS表达式可以与其他类型的孩子混合使用。 这通常用于替换字符串模板：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">function</span> <span class="nx">Hello</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">addressee</span><span class="p">}</span><span class="o">!&lt;</span><span class="err">/div&gt;;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h3>
+作为子类的函数
+</h3>
+<p>
+通常，插入JSX中的JavaScript表达式将求值为字符串，React元素或这些事物的列表。 然而，props.children像任何其他道具一样工作，它可以传递任何类型的数据，而不只是React知道如何render的类。 例如，如果您有一个自定义组件，您可以将其作为props.children进行回调：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kd">function</span> <span class="nx">ListOfTenThings</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="nx">Repeat</span> <span class="nx">numTimes</span><span class="o">=</span><span class="p">{</span><span class="mi">10</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">      <span class="p">{(</span><span class="nx">index</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">index</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">This</span> <span class="nx">is</span> <span class="nx">item</span> <span class="p">{</span><span class="nx">index</span><span class="p">}</span> <span class="k">in</span> <span class="nx">the</span> <span class="nx">list</span><span class="o">&lt;</span><span class="err">/div&gt;}</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="err">/Repeat&gt;</span>
+</span><span class="line">  <span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// Calls the children callback numTimes to produce a repeated component</span>
+</span><span class="line"><span class="kd">function</span> <span class="nx">Repeat</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="kd">let</span> <span class="nx">items</span> <span class="o">=</span> <span class="p">[];</span>
+</span><span class="line">  <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">props</span><span class="p">.</span><span class="nx">numTimes</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">items</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">(</span><span class="nx">i</span><span class="p">));</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">items</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+传递给自定义组件的子项可以是任何东西，只要该组件将它们转换为React在render之前可以理解的东西即可。 这种用法不常见，但它的工作原理，如果你想扩展什么JSX的能力。
+</p>
+<h3>
+忽略布尔值，空值和未定义
+</h3>
+<p>
+false，null，undefined和true是有效的子类。 他们根本不render。 这些JSX表达式将呈现相同的东西：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">div</span> <span class="o">/&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;&lt;</span><span class="err">/div&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="kc">null</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+这对于有条件地呈现React元素很有用。 这个JSX只渲染一个<code><header /></code>如果showHeader为true：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="p">{</span><span class="nx">showHeader</span> <span class="o">&amp;&amp;</span> <span class="o">&lt;</span><span class="nx">Header</span> <span class="o">/&gt;</span><span class="p">}</span>
+</span><span class="line">  <span class="o">&lt;</span><span class="nx">Content</span> <span class="o">/&gt;</span>
+</span><span class="line"><span class="o">&lt;</span><span class="err">/div</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+一个警告是，一些<a href="https://developer.mozilla.org/en-US/docs/Glossary/Falsy">“falsy”值</a>，如0号，仍然由React渲染。 例如，此代码将不会像您预期的那样工作，因为当props.messages是空数组时将打印0：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">messages</span><span class="p">.</span><span class="nx">length</span> <span class="o">&amp;&amp;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="nx">MessageList</span> <span class="nx">messages</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">messages</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+要解决这个问题，请确保&amp;&amp;之前的表达式始终是布尔值：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">messages</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span>
+</span><span class="line">    <span class="o">&lt;</span><span class="nx">MessageList</span> <span class="nx">messages</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">messages</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+相反，如果你想要一个值如false，true，null或undefined出现在输出中，你必须先将它<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String#String_conversion">转换为字符串</a>：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="line">  <span class="nx">My</span> <span class="nx">JavaScript</span> <span class="nx">variable</span> <span class="nx">is</span> <span class="p">{</span><span class="nb">String</span><span class="p">(</span><span class="nx">myVariable</span><span class="p">)}.</span>
+</span><span class="line"><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</span></div></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/Blog/javascripts/slash.js"></script>
+<script src="/Blog/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io/Blog/blog/2016/11/21/jsxcong-0dao-1/';
+        var disqus_url = 'http://ITMonkeyLife.github.io/Blog/blog/2016/11/21/jsxcong-0dao-1/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>

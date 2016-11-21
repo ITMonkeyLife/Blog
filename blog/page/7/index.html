@@ -7,9 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="一直更新了iOS8，但是一直没有开始研究这个iOS8，今天因为项目用到了推送，于是体验了iOS8的推送，先讲讲这个推送。目前分为四个推送：用户推送，本地推送，远程推送，地理位置推送。 用户推送
-我们先开始讲这个用户推送,我们要使用之前必须先注册这个推送，用户要允许这个程序进行推送
-注册过程： 1 &hellip;">
+	<meta name="description" content="在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例， &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -77,6 +75,65 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/">
+		
+			闭包，你了解多少？</a>
+	</h2>
+	<div class="entry-content">
+		<p>在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例，不同的引用环境和相同的函数组合可以产生不同的实例。
+闭包的概念出现于60年代，最早实现闭包的程序语言是Scheme。之后，闭包被广泛使用于函数式编程语言如ML语言和LISP。很多命令式程序语言也开始支持闭包。
+在一些语言中，在函数中可以（嵌套）定义另一个函数时，如果内部的函数引用了外部的函数的变量，则可能产生闭包。运行时，一旦外部的 函数被执行，一个闭包就形成了，闭包中包含了内部函数的代码，以及所需外部函数中的变量的引用。其中所引用的变量称作上值(upvalue)。
+闭包一词经常和匿名函数混淆。这可能是因为两者经常同时使用，但是它们是不同的概念。</p>
+
+<p>闭包和状态表达闭包可以用来在一个函数与一组“私有”变量之间创建关联关系。在给定函数被多次调用的过程中，这些私有变量能够保持其持久性。变量的作用域仅限于包含它们的函数，因此无法从其它程序代码部分进行访问。不过，变量的生存期是可以很长，在一次函数调用期间所创建所生成的值在下次函数调用时仍然存在。正因为这一特点，闭包可以用来完成信息隐藏，并进而应用于需要状态表达的某些编程范型中。
+不过，用这种方式来使用闭包时，闭包不再具有引用透明性，因此也不再是纯函数。即便如此，在某些“近似于函数式编程语言”的语言，例如Scheme中，闭包还是得到了广泛的使用。</p>
+
+<p>闭包和第一类函数</p>
+
+<p>典型的支持闭包的语言中，通常将函数当作第一类对象——在这些语言中，函数可以被当作参数传递、也可以作为函数返回值、绑定到变量名、就像字符串、整数等简单类型。例如以下Scheme代码：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="scheme"><span class="line"><span class="c1">; Return a list  of all books with at least THRESHOLD copies sold.</span>
+</span><span class="line"><span class="p">(</span><span class="k">define </span> <span class="p">(</span><span class="nf">best-selling-books</span>  <span class="nv">threshold</span><span class="p">)</span>
+</span><span class="line">   <span class="p">(</span><span class="nf">filter</span>
+</span><span class="line">    <span class="p">(</span><span class="k">lambda </span><span class="p">(</span><span class="nf">book</span><span class="p">)</span> <span class="p">(</span><span class="nb">&gt;= </span><span class="p">(</span><span class="nf">book-sales</span> <span class="nv">book</span><span class="p">)</span>  <span class="nv">threshold</span><span class="p">))</span>
+</span><span class="line">    <span class="nv">book-list</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+<p>在这个例子中，lambda表达式(lambda (book) (&gt;= (book-sales book) threshold))出现在函数best-selling-books中。当这个lambda表达式被执行时，Scheme创造了一个包含此表达式以及对threshold变量的引用的闭包，其中threshold变量在lambda表达式中是自由变量。
+这个闭包接着被传递到filter函数。这个函数的功能是重复调用这个闭包以判断哪些书需要增加到列表那些需要丢弃。因为闭包中引用了变量threshold，所以它在每次被filter调用时都可以使用这个变量，虽然filter可能定义在另一个文件中。
+
+		
+		<a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/07/04/bi-bao-%2Cni-liao-jie-duo-shao-%3F/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -665,66 +722,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/14/view-layerxie-zuo/">
-		
-			View-Layer协作</a>
-	</h2>
-	<div class="entry-content">
-		<p>在 iOS 中，所有的 view 都是由一个底层的 layer 来驱动的。view 和它的 layer 之间有着紧密的联系，view 其实直接从 layer 对象中获取了绝大多数它所需要的数据。在 iOS 中也有一些单独的 layer，比如 <code>AVCaptureVideoPreviewLayer</code> 和 <code>CAShapeLayer</code>，它们不需要附加到 view 上就可以在屏幕上显示内容。两种情况下其实都是 layer 在起决定作用。当然了，附加到 view 上的 layer 和单独的 layer 在行为上还是稍有不同的。</p>
-
-<p>基本上你改变一个单独的 layer 的任何属性的时候，都会触发一个从旧的值过渡到新值的简单动画（这就是所谓的可动画 <code>animatable</code>）。然而，如果你改变的是 view 中 layer 的同一个属性，它只会从这一帧直接跳变到下一帧。尽管两种情况中都有 layer，但是当 layer 附加在 view 上时，它的默认的隐式动画的 layer 行为就不起作用了。</p>
-
-<blockquote>
-  <p>animatable；几乎所有的层的属性都是隐性可动画的。你可以在文档中看到它们的简介是以 &#8216;animatable&#8217; 结尾的。这不仅包括了比如位置，尺寸，颜色或者透明度这样的绝大多数的数值属性，甚至也囊括了像 isHidden 和 doubleSided 这样的布尔值。 像 paths 这样的属性也是 animatable 的，但是它不支持隐式动画。</p>
-</blockquote>
-
-<p>在 Core Animation 编程指南的 “How to Animate Layer-Backed Views” 中，对<em>为什么</em>会这样做出了一个解释：</p>
-
-<blockquote>
-  <p>UIView 默认情况下禁止了 layer 动画，但是在 animation block 中又重新启用了它们</p>
-</blockquote>
-
-<p>这正是我们所看到的行为；当一个属性在动画 block 之外被改变时，没有动画，但是当属性在动画 block 内被改变时，就带上了动画。对于这是<em>如何</em>发生的这一问题的答案十分简单和优雅，它优美地阐明和揭示了 view 和 layer 之间是如何协同工作和被精心设计的。</p>
-
-<p>无论何时一个可动画的 layer 属性改变时，layer 都会寻找并运行合适的 &#8216;action&#8217; 来实行这个改变。在 Core Animation 的专业术语中就把这样的动画统称为动作 (action，或者 <code>CAAction</code>)。</p>
-
-<blockquote>
-  <p>CAAction：技术上来说，这是一个接口，并可以用来做各种事情。但是实际中，某种程度上你可以只把它理解为用来处理动画。</p>
-</blockquote>
-
-<p>layer 将像文档中所写的的那样去寻找动作，整个过程分为五个步骤。第一步中的在 view 和 layer 中交互的部分是最有意思的：</p>
-
-<p>layer 通过向它的 delegate 发送 <code>actionForLayer:forKey:</code> 消息来询问提供一个对应属性变化的 action。delegate 可以通过返回以下三者之一来进行响应：</p>
-
-		
-		<a href="/Blog/blog/2014/05/14/view-layerxie-zuo/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/14/view-layerxie-zuo/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
