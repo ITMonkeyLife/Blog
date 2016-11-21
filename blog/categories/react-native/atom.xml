@@ -4,7 +4,7 @@
   <title><![CDATA[Category: React Native | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/react-native/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-11-17T19:47:30+08:00</updated>
+  <updated>2016-11-21T14:45:23+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,566 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[React.js 项目指南]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/21/react-dot-js-xiang-mu-zhi-nan/"/>
+    <updated>2016-11-21T09:52:42+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/21/react-dot-js-xiang-mu-zhi-nan</id>
+    <content type="html"><![CDATA[<p>React 是一种声明性、高效和灵活的JavaScript库来构建用户界面。</p>
+<h2>
+React 组件
+</h2>
+<p>
+```javascript
+class ShoppingList extends React.Component {
+  render() {
+    return (
+      <div classname="shopping-list">
+        <h1>Shopping List for {this.props.name}</h1>
+        <ul>
+          <li>Instagram</li>
+          <li>WhatsApp</li>
+          <li>Oculus</li>
+        </ul>
+      </div>
+    );
+  }
+}
+
+// Example usage: <shoppinglist name="Mark" />
+```
+组件告诉React你想提供的，然后React会在你数据更新时高效更新和提供正确组件。
+
+在这里，ShoppingList 是一个React组件类或者React组件类型。一个组件包含的参数成为props，并且通过render方法返回一个层级视图来显示。
+
+render 方法返回一个描述关于你想render的，并且React采用描述返回给屏幕。特别是，render会返回一个React元素，一个render什么的轻量级描述。许多React开发者使用一个特殊的语法称之为JSX，可以更方便的编写这些结构。div标记在编译时被转化成了React.createElement('div')。
+```javascript
+return React.createElement('div', {className: 'shopping-list'},
+  React.createElement('h1', ...),
+  React.createElement('ul', ...)
+);
+```
+可以将任何 JavaScript 表达式放在大括号内 JSX 内。React的每个元素是一个真正的 JavaScript 对象，可以存储在一个变量或在程序中传递。
+ShoppingList组件只能在内置的DOM组件提供，但是你能自己组合一个定制的React组件。通过<code><shoppinglist /></code>。每个组件都包含因此他能独立操作，允许你构建复杂的UI通过简单的组件。
+</p>
+
+<h2>
+实例
+</h2>
+<p>
+通过下面的例子来讲解React：
+<!--more-->
+```javascript
+class Square extends React.Component {
+  render() {
+    return (
+      <button classname="square">
+        {/* TODO */}
+      </button>
+    );
+  }
+}
+
+class Board extends React.Component {
+  renderSquare(i) {
+    return <square />;
+  }
+  render() {
+    const status = 'Next player: X';
+    return (
+      <div>
+        <div classname="status">{status}</div>
+        <div classname="board-row">
+          {this.renderSquare(0)}
+          {this.renderSquare(1)}
+          {this.renderSquare(2)}
+        </div>
+        <div classname="board-row">
+          {this.renderSquare(3)}
+          {this.renderSquare(4)}
+          {this.renderSquare(5)}
+        </div>
+        <div classname="board-row">
+          {this.renderSquare(6)}
+          {this.renderSquare(7)}
+          {this.renderSquare(8)}
+        </div>
+      </div>
+    );
+  }
+}
+
+class Game extends React.Component {
+  render() {
+    return (
+      <div classname="game">
+        <div classname="game-board">
+          <board />
+        </div>
+        <div classname="game-info">
+          <div>{/* status */}</div>
+          <ol>{/* TODO */}</ol>
+        </div>
+      </div>
+    );
+  }
+}
+
+// ========================================
+
+ReactDOM.render(
+  <game />,
+  document.getElementById('container')
+);
+
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let i = 0; i &lt; lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] &amp;&amp; squares[a] === squares[b] &amp;&amp; squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+}
+
+```
+它包含了今天需要编写的脚本。它会提供一些样式这样你只需要关心的你javascript。
+我们有三个组件：
+<ul>
+<li>Square</li>
+<li>Board</li>
+<li>Game</li>
+</ul>
+
+Square组件提供一个div，Board提供9宫格，Game提供一个板包含我们接下来要填的字段。calculateWinner这个函数我们接下来会用到。
+</p>
+<h3>
+通过props传递数据
+</h3>
+<p>
+我们试图从Board组件传递数据到Square组件。Board的renderSquare方法，改变这个代码去返回<code>&lt;Square value={i} /&gt;</code>然后改变Square的render方法展示替换<code>{/* TODO*/}</code>为<code>{this.props.value}</code>
+</p>
+<h3>
+一个交互的组件
+</h3>
+<p>
+Square组件填充
+```html
+&lt;button className="square" onClick={() =&gt; alert('click')}&gt;
+```
+通过在构造函数中设置this.state，React组件可以具有状态，这应该被视为组件的私有。 让我们将方形的当前值存储在状态中，并在单击方形时更改它。 首先，向类添加一个构造函数以初始化状态：
+```javascript
+class Square extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      value: null,
+    };
+  }
+  ...
+}
+```
+在JavaScript类中，需要显式调用super（）; 当定义一个子类的构造函数。
+
+现在更改render方法以显示this.state.value，而不是this.props.value，并将事件处理程序更改为be（）=&gt; this.setState（{value：'X'}），而不是alert：
+```javascript
+&lt;button className="square" onClick={() =&gt; this.setState({value: 'X'})}&gt;
+    {this.state.value}
+
+```
+每当调用this.setState时，都会调度组件的更新，导致React在已传递的状态更新中合并，并重新渲染组件及其后代。 当组件重建时，this.state.value将是'X'，所以你将在网格中看到一个X.
+</p>
+<h3>
+开发工具
+</h3>
+<p>
+Chrome和Firefox的React Devtools Extensions允许您检查浏览器devtools中的React组件树。
+
+它允许您检查树中任何组件的道具和状态。
+
+它不能在CodePen上工作很好，因为多个框架，但如果你登录到CodePen并确认您的电子邮件（为防止垃圾邮件），您可以转到更改视图&gt;调试以在新标签中打开您的代码，然后 devtools将工作。 这是很好，如果你不想这样做。
+</p>
+<h3>
+向上移动状态
+</h3>
+<p>
+我们现在有一个tic-tac-toe游戏的基本构建块。 但现在，状态被封装在每个Square组件中。 要做一个全面的游戏，我们现在需要检查一个玩家是否赢得了游戏，并将X和O交替放置在正方形中。 要检查某人是否赢了，我们需要在一个地方拥有所有9个方块的值，而不是在Square组件之间拆分。
+
+你可能认为Board应该询问每个Square的当前状态。 虽然在技术上可以在React中做到这一点，但是它不鼓励，因为它往往使代码难以理解，更脆弱，更难重构。
+
+相反，这里的最佳解决方案是将此状态存储在Board组件中，而不是每个Square - 并且Board组件可以告诉每个Square要显示什么，就像我们如何让每个方块早先显示其索引。
+
+当要聚合来自多个子项的数据或使两个子组件相互通信时，向上移动状态，使其居住在父组件中。 然后父对象可以通过props将状态传回给孩子，这样子组件总是与父对象和父对象同步。
+
+在重构React组件时，向上拉这种状态是很常见的，所以让我们借此机会尝试一下。 为包含具有9个空值的数组的Board添加初始状态，对应于9个正方形：
+```javascript
+class Board extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      squares: Array(9).fill(null),
+    };
+  }
+}
+```
+我们会在以后填写它，使板子看起来像:
+```
+[
+  'O', null, 'X',
+  'X', 'X', 'O',
+  'O', null, null,
+]
+```
+传递每个方块的值
+```javascript
+renderSquare(i) {
+  return &lt;Square value={this.state.squares[i]} /&gt;;
+}
+```
+并更改Square以再次使用this.props.value。 现在我们需要改变点击方块时发生的情况。 Board组件现在存储哪些方块填充，这意味着我们需要一些方法来更新Board的状态。 由于组件状态被认为是私有的，我们不能直接从Square更新Board的状态。 这里通常的模式是传递一个函数从Board到Square，当方块被点击时被调用。 再次更改renderSquare，使其显示为：
+```javascript
+return &lt;Square value={this.state.squares[i]} onClick={() =&gt; this.handleClick(i)} /&gt;;
+```
+现在我们把两个props从Board传递给Square：value和onClick。 后者是Square可以调用的函数。 所以让我们通过改变在Square中的render有：
+```javascript
+&lt;button className="square" onClick={() =&gt; this.props.onClick()}&gt;
+```
+这意味着，当方块被点击时，它调用由父代传递的onClick函数。 onClick在这里没有任何特殊的意义，但它很受欢迎的命名处理程序道具从开始和他们的实现与句柄。 尝试点击一个方块 - 你应该得到一个错误，因为我们还没有定义handleClick。 将其添加到Board类中：
+```javascript
+handleClick(i) {
+  const squares = this.state.squares.slice();
+  squares[i] = 'X';
+  this.setState({squares: squares});
+}
+```
+我们调用.slice（）来复制square数组，而不是改变现有数组。 下面会了解为什么不变性很重要。
+
+现在你应该能够点击方块再次填充它们，但状态存储在Board组件，而不是每个Square，这使我们继续构建游戏。 注意每当Board的状态改变时，Square组件会自动重新渲染。
+
+Board不再保持自己的状态; 它从其父Board接收其值，并在其被点击时通知其父级。 我们调用类似这种受控组件的组件。
+</p>
+<h3>
+为什么不变性很重要
+</h3>
+<p>
+在前面的代码示例中，我建议使用.slice（）运算符在进行更改之前复制方块数组，并防止对现有数组进行修改。 让我们来谈谈这是什么意思，以及为什么它是一个重要的学习概念。
+
+通常有两种方式来改变数据。 第一种方法是通过直接改变变量的值来改变数据。 第二种方法是使用还包括所需更改的对象的新副本替换数据。
+
+直接更改变量的值
+```javascript
+var player = {score: 1, name: 'Jeff'};
+player.score = 2;
+// Now player is {score: 2, name: 'Jeff'}
+```
+
+不直接更改变量的值
+```javascript
+var player = {score: 1, name: 'Jeff'};
+
+var newPlayer = Object.assign({}, player, {score: 2});
+// Now player is unchanged, but newPlayer is {score: 2, name: 'Jeff'}
+
+// Or if you are using object spread, you can write:
+// var newPlayer = {score: 2, ...player};
+```
+最终结果是相同的，但是通过不直接改变（或改变底层数据），我们现在有一个额外的好处，可以帮助我们增加组件和总体应用程序性能。
+</p>
+<h4>
+追踪变化
+</h4>
+<p>
+确定改变对象是否已更改是复杂的，因为更改是直接对对象进行的。 这需要将当前对象与前一个副本进行比较，遍历整个对象树，并比较每个变量和值。 这个过程可能变得越来越复杂。
+
+确定不可变对象如何改变是相当容易的。 如果被引用的对象与以前不同，那么对象已经改变。
+</p>
+<h3>
+确定何时在React中重新渲染
+</h3>
+<p>
+当你构建简单的纯组件时，React中不可变性的最大好处就是。 由于不可变数据可以更容易地确定是否已经进行了更改，因此也有助于确定组件何时需要重新渲染。
+
+要了解如何构建纯组件，请参阅<a href="https://facebook.github.io/react/docs/update.html">shouldComponentUpdate()</a>。 另外，看看<a href="https://facebook.github.io/immutable-js/">Immutable.js</a>库来严格执行不可变的数据。
+</p>
+<h2>
+功能组件
+</h2>
+<p>
+回到我们的项目，你现在可以从Square中删除构造函数; 我们不再需要它了。 事实上，React支持一种更简单的语法，称为无状态功能组件，用于类似于仅由渲染方法组成的Square。 而不是定义一个扩展React.Component的类，只需编写一个函数，它接受props并返回应该渲染的内容：
+```javascript
+function Square(props) {
+  return (
+    &lt;button className="square" onClick={() =&gt; props.onClick()}&gt;
+      {props.value}
+    
+  );
+}
+```
+你需要改变this.props到props每次出现。 您的应用程序中的许多组件将能够写作功能组件：这些组件往往更容易编写，并且React将在未来更好地优化它们。
+</p>
+<h3>
+轮换
+</h3>
+<p>
+我们的游戏的一个明显缺陷是只有X可以玩。 让我们解决这个问题。
+
+让我们默认第一个移动是'X'。 在我们的Board构造函数中修改我们的初始状态。
+```javascript
+class Board extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      ...
+      xIsNext: true,
+    };
+  }
+}
+```
+每次我们移动，我们将通过翻转布尔值并保存状态来切换xIsNext。 现在更新我们的handleClick函数来翻转xIsNext的值。
+```javascript
+handleClick(i) {
+  const squares = this.state.squares.slice();
+  squares[i] = this.state.xIsNext ? 'X' : 'O';
+  this.setState({
+    squares: squares,
+    xIsNext: !this.state.xIsNext,
+  });
+}
+```
+现在X和O轮流。 接下来，更改Board的渲染中的“状态”文本，以便它也显示下一个是谁。
+</p>
+<h3>
+宣布获胜者
+</h3>
+<p>
+让我们展示游戏赢了。 已在文件底部为您提供了一个calculateWinner(squares)助手函数，其中包含9个值的列表。 你可以在Board的render函数中调用它来检查是否有人赢得了游戏，并且当有人赢了时，使状态文本显示“Winner：[X / O]”：
+```javascript
+render() {
+  const winner = calculateWinner(this.state.squares);
+  let status;
+  if (winner) {
+    status = 'Winner: ' + winner;
+  } else {
+    status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+  }
+  ...
+}
+```
+你现在可以更改handleClick以更早返回，并忽略点击如果有人已经赢得了游戏或如果一个square已经填充：
+```javascript
+handleClick(i) {
+  const squares = this.state.squares.slice();
+  if (calculateWinner(squares) || squares[i]) {
+    return;
+  }
+  ...
+}
+```
+恭喜！ 你现在有一个工作的tic-tac-toe游戏。 现在你知道React的基本知识。 所以你可能是真正的赢家。
+</p>
+<h3>
+存储历史
+</h3>
+<p>
+让我们可以重新审视board的旧状态，以便我们可以看到在任何以前的举动后，它看起来像什么。 我们已经在每次移动时创建了一个新的方形数组，这意味着我们可以轻松地同时存储过去的board状态。
+
+让我们计划在状态中存储一个这样的对象：
+```
+history = [
+  {
+    squares: [null x 9]
+  },
+  {
+    squares: [... x 9]
+  },
+  ...
+]
+```
+我们希望顶级游戏组件负责显示移动列表。 因此，就像我们将状态从Square推入Board之前，让我们再次将它从Board上拉到游戏中 - 这样我们就可以获得顶级所需的所有信息。
+
+首先，设置Game的初始状态：
+```javascript
+class Game extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      history: [{
+        squares: Array(9).fill(null)
+      }],
+      xIsNext: true
+    };
+  }
+  ...
+}
+```
+然后从Board中删除构造函数，并更改Board，以便它通过props使用square，并具有自己的由Game指定的onClick prop，就像我们之前对Square的转换一样。 您可以将每个Square的位置传递到点击处理程序，以便我们仍然知道点击了哪个Square：
+```javascript
+return &lt;Square value={this.props.squares[i]} onClick={() =&gt; this.props.onClick(i)} /&gt;;
+```
+游戏的渲染应该查看最近的历史记录，并可以接管计算游戏状态：
+```javascript
+const history = this.state.history;
+const current = history[history.length - 1];
+const winner = calculateWinner(current.squares);
+
+let status;
+if (winner) {
+  status = 'Winner: ' + winner;
+} else {
+  status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+}
+...
+<div classname="game-board">
+  &lt;Board
+    squares={current.squares}
+    onClick={(i) =&gt; this.handleClick(i)}
+  /&gt;
+</div>
+<div classname="game-info">
+  <div>{status}</div>
+  <ol>{/* TODO */}</ol>
+</div>
+```
+它的handleClick可以通过连接新的历史记录条目来创建新的历史记录数组来将新的条目推入堆栈：
+```javascript
+handleClick(i) {
+  const history = this.state.history;
+  const current = history[history.length - 1];
+  const squares = current.squares.slice();
+  if (calculateWinner(squares) || squares[i]) {
+    return;
+  }
+  squares[i] = this.state.xIsNext ? 'X' : 'O';
+  this.setState({
+    history: history.concat([{
+      squares: squares
+    }]),
+    xIsNext: !this.state.xIsNext,
+  });
+}
+```
+此时，Board只需要renderSquare和render; 状态初始化和点击处理程序都应该存在于Game中。
+</p>
+<h3>
+显示移动
+</h3>
+<p>
+让我们展示以前在游戏中做的动作。 我们早些时候学到React元素是一流的JS对象，我们可以存储它们或传递它们。 要在React中渲染多个项目，我们传递一个React元素数组。 最常见的构建数组的方法是映射数据数组。 让我们在游戏的渲染方法中这样做：
+```javascript
+const moves = history.map((step, move) =&gt; {
+  const desc = move ?
+    'Move #' + move :
+    'Game start';
+  return (
+    <li>
+      &lt;a href="#" onClick={() =&gt; this.jumpTo(move)}&gt;{desc}
+    </li>
+  );
+});
+...
+<ol>{moves}</ol>
+```
+对于历史记录中的每个步骤，我们创建一个列表项<li>，其中的链接a在无处（href =“＃”），但有一个点击处理程序，我们将很快实现。 有了这个代码，你应该看到在游戏中做出的举动的列表，以及一个警告说
+```
+Warning: Each child in an array or iterator should have a unique "key" prop. Check the render method of "Game".
+```
+让我们来谈谈这个警告是什么意思。
+
+<h3>
+Keys
+</h3>
+<p>
+当渲染项目列表时，React总是存储列表中每个项目的一些信息。 如果渲染具有状态的组件，该状态需要存储，并且无论如何实现组件，React都会存储对后端本地视图的引用。
+
+当您更新该列表时，React需要确定已更改的内容。 您可以在列表中添加，删除，重新排列或更新项目。
+
+想象一下
+```html
+<li>Alexa: 7 tasks left</li>
+<li>Ben: 5 tasks left</li>
+```
+改成了
+```html
+<li>Ben: 9 tasks left</li>
+<li>Claudia: 8 tasks left</li>
+<li>Alexa: 5 tasks left</li>
+```
+对于人眼来说，看起来很可能Alexa和Ben交换了地方，Claudia被添加了 - 但React只是一个计算机程序，不知道你打算做什么。 因此，React要求您在列表中的每个元素上指定一个键属性，一个字符串来区分每个组件与其同级。 在这种情况下，alexa，ben，claudia可能是合理的键; 如果项目对应于数据库中的对象，则数据库ID通常是一个不错的选择：
+```html
+&lt;li key={user.id}&gt;{user.name}: {user.taskCount} tasks left
+```
+key是React保留的一个特殊属性（与ref一起，是一个更高级的特性）。 当一个元素被创建时，React拉下key属性并将键直接存储在返回的元素上。 即使它可能看起来像是道具的一部分，它不能使用this.props.key来引用。 React在决定更新哪些子项时自动使用该键; 组件无法查询其自己的key。
+
+当重新列出列表时，React会使用新版本中的每个元素，并在上一个列表中查找具有匹配键的元素。 当向该集合添加键时，将创建一个组件; 当删除键时，组件被销毁。 键告诉React关于每个组件的身份，以便它可以保持整个rerenders状态。 如果更改组件的键，它将被完全销毁并使用新状态重新创建。
+
+强烈建议您在构建动态列表时分配正确的键。 如果您没有适当的key，您可能需要考虑重组您的数据，以便使用。
+
+如果你不指定任何键，React会警告你并回退到使用数组索引作为键 - 这不是正确的选择，如果你重新排序列表中的元素或添加/删除项目的任何地方，但底部 列表。 显式传递key = {i}使警告静音，但具有相同的问题，因此在大多数情况下不建议使用。
+
+组件键不需要是全局唯一的，相对于直接同级的只有唯一的。
+</p>
+<h3>
+实施时间旅行
+</h3>
+<p>
+对于我们的移动列表，我们已经为每个步骤都有一个唯一的ID：发生移动的次数。 将键添加为&lt;li key= {move}&gt;，键警告应该消失。
+
+单击任何移动链接都会抛出错误，因为jumpTo未定义。 让我们在Game的状态中添加一个新键，以指示我们当前正在查看哪个步骤。 首先，将stepNumber：0添加到初始状态，然后让jumpTo更新该状态。
+
+我们还想更新xIsNext。 如果移动号码的索引是偶数，那么我们将xIsNext设置为true。
+```javascript
+jumpTo(step) {
+  this.setState({
+    stepNumber: step,
+    xIsNext: (step % 2) ? false : true,
+  });
+}
+```
+然后通过向handleClick中的状态更新添加步骤Number：history.length来更新新的移动时的Number。 现在您可以修改渲染以从历史记录中的该步骤读取：
+```javascript
+const current = history[this.state.stepNumber];
+```
+如果你现在点击任何移动链接，Board应该立即更新，以显示游戏当时的样子。 您可能还需要更新handleClick以在读取当前Board状态时注意stepNumber，以便您可以及时返回，然后单击Board以创建新条目。 （提示：最简单的是.slice（）从handleClick的最顶部的历史的额外元素）。
+</p>
+<h2>
+结束
+</h2>
+<p>
+现在，你做了一个tic-tac-toe游戏：
+<ul>
+<li>让你玩tic-tac-toe，</li>
+<li>表示当一个玩家赢得游戏时，</li>
+<li>存储游戏期间的移动历史，</li>
+<li>允许玩家在时间上跳回来看到老版本的游戏板。</li>
+</ul>
+
+我们希望你现在觉得你有一个正确的把握React的工作原理。
+
+如果你有额外的时间或想练习你的新技能，这里有一些想法，你可以做的改进，列出难度递增的顺序：
+
+<ul>
+<li>1、以“（1，3）”格式而不是“6”格式显示移动位置。</li>
+<li>2、加粗移动列表中当前选择的项目。</li>
+<li>3、重写板使用两个循环来制作正方形，而不是硬编码。</li>
+<li>4、添加一个切换按钮，可以按升序或降序对移动进行排序。</li>
+<li>5、当有人赢了，突出显示导致胜利的三个方块。</li>
+</ul>
+</p>
+ <hr />
+</li></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[React Native开发Redux]]></title>

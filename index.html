@@ -7,7 +7,23 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="Redux是一个可预测的javascript应用程序的状态容器。 它可以帮助您编写行为一致，在不同环境（客户端，服务器和本机）中运行的应用程序，并且易于测试。 此外，它提供了一个伟大的开发者体验，如实时代码编辑结合一个时间旅行调试器。 您可以与React或任何其他视图库一起使用Redux。 &hellip;">
+	<meta name="description" content="React 是一种声明性、高效和灵活的JavaScript库来构建用户界面。 React 组件 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+class ShoppingList extends React.Component { render() { &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +91,102 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/11/21/react-dot-js-xiang-mu-zhi-nan/">
+		
+			React.js 项目指南</a>
+	</h2>
+	<div class="entry-content">
+		<p>React 是一种声明性、高效和灵活的JavaScript库来构建用户界面。</p>
+<h2>
+React 组件
+</h2>
+<p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">class</span> <span class="nx">ShoppingList</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;shopping-list&quot;</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Shopping</span> <span class="nx">List</span> <span class="k">for</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Instagram</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">WhatsApp</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
+</span><span class="line">          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Oculus</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="err">/ul&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// Example usage: &lt;ShoppingList name=&quot;Mark&quot; /&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+组件告诉React你想提供的，然后React会在你数据更新时高效更新和提供正确组件。
+
+在这里，ShoppingList 是一个React组件类或者React组件类型。一个组件包含的参数成为props，并且通过render方法返回一个层级视图来显示。
+
+render 方法返回一个描述关于你想render的，并且React采用描述返回给屏幕。特别是，render会返回一个React元素，一个render什么的轻量级描述。许多React开发者使用一个特殊的语法称之为JSX，可以更方便的编写这些结构。div标记在编译时被转化成了React.createElement(&#8216;div&#8217;)。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;shopping-list&#39;</span><span class="p">},</span>
+</span><span class="line">  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="p">...),</span>
+</span><span class="line">  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">...)</span>
+</span><span class="line"><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+可以将任何 JavaScript 表达式放在大括号内 JSX 内。React的每个元素是一个真正的 JavaScript 对象，可以存储在一个变量或在程序中传递。
+ShoppingList组件只能在内置的DOM组件提供，但是你能自己组合一个定制的React组件。通过<code><shoppinglist /></code>。每个组件都包含因此他能独立操作，允许你构建复杂的UI通过简单的组件。
+</p>
+
+<h2>
+实例
+</h2>
+<p>
+通过下面的例子来讲解React：
+
+		
+		<a href="/Blog/blog/2016/11/21/react-dot-js-xiang-mu-zhi-nan/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/11/21/react-dot-js-xiang-mu-zhi-nan/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -894,62 +1006,6 @@ Java的int有一个32位的表示; Java的double类型具有64位表示。 Java�
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/09/07/yin-le-le-li-biao-zhun-yin-yu-jie-pai/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/09/06/yin-le-le-li-yin-fu-chi-xu-shi-jian/">
-		
-			音乐乐理:音符持续时间</a>
-	</h2>
-	<div class="entry-content">
-		<div id="static">
-<ul>
-<li> 一个音符演奏的时间长度被称为它的音符时值，它是由音符的类型决定。<br /><img src="/Blog/images/music/lesson11_20@2x.png" />
-<li> 该全音符在现代音乐最长的音符时值。<br /><img src="/Blog/images/music/lesson11_40@2x.png" />
-<li> 二分音符具有全音符的一半的持续时间。<br /><img src="/Blog/images/music/lesson11_60@2x.png" />
-<li> 两个半音符占据的时间相同为一体的全音符。<br /><img src="/Blog/images/music/lesson11_80@2x.png" />
-<li> 四分音符为全音符的第四（或四分之一）。<br /><img src="/Blog/images/music/lesson11_100@2x.png" />
-<li> 四个四分音符占据的时间相同为一体的全音符。两个四分音符等于一个半音符的持续时间。<br /><img src="/Blog/images/music/lesson11_120@2x.png" />
-<li> 注意到，在持续时间小于四分音符有标志。每个标志减半音符的价值。<br /><img src="/Blog/images/music/lesson11_140@2x.png" />
-<li> 八分音符有一个标志。<br /><img src="/Blog/images/music/lesson11_160@2x.png" />
-<li> 因此，二个八分音符占用的时间相同数量的四分之一音符。<br /><img src="/Blog/images/music/lesson11_180@2x.png" />
-<li> 一个十六分音符有两个标志，再减半值。<br /><img src="/Blog/images/music/lesson11_200@2x.png" />
-<li> 两个十六分音符等于八分音符的持续时间。<br /><img src="/Blog/images/music/lesson11_220@2x.png" />
-<li> 四个十六分音符占据的时间相同数量的四分之一音符。<br /><img src="/Blog/images/music/lesson11_240@2x.png" />
-<li> 虽然可以有一个与三个或更多个标志音符，它们一般不使用。<br /><img src="/Blog/images/music/lesson11_260@2x.png" />
-<li> 该图表显示在本节讨论的所有五种音符类型的关系。<br /><img src="/Blog/images/music/lesson11_261@2x.png" />
-
-
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</li></li></li></li></li></li></li></li></li></li></li></li></li></li></ul></div>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/yin-le/'>音乐</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/09/06/yin-le-le-li-yin-fu-chi-xu-shi-jian/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
