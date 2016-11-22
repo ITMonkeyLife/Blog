@@ -4,7 +4,7 @@
   <title><![CDATA[Category: React Native | IT Monkey Life]]></title>
   <link href="http://ITMonkeyLife.github.io/Blog/blog/categories/react-native/atom.xml" rel="self"/>
   <link href="http://ITMonkeyLife.github.io/Blog/"/>
-  <updated>2016-11-21T18:41:18+08:00</updated>
+  <updated>2016-11-22T14:08:56+08:00</updated>
   <id>http://ITMonkeyLife.github.io/Blog/</id>
   <author>
     <name><![CDATA[Rick]]></name>
@@ -12,6 +12,605 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[React Native的Text]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/22/react-nativede-text/"/>
+    <updated>2016-11-22T10:24:38+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/22/react-nativede-text</id>
+    <content type="html"><![CDATA[<p>
+用于显示文本的React组件。
+
+文本支持嵌套，样式和触摸处理。
+
+在以下示例中，嵌套标题和正文文本将从styles.baseText继承fontFamily，但标题提供了自己的附加样式。 标题和主体将叠加在一起，因为文字换行：
+```javascript
+import React, { Component } from 'react';
+import { AppRegistry, Text, StyleSheet } from 'react-native';
+
+class TextInANest extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      titleText: "Bird's Nestaaa",
+      bodyText: 'This is not really a bird nest.'
+    };
+  }
+
+  render() {
+    return (
+      &lt;Text style={styles.baseText}&gt;
+        &lt;Text style={styles.titleText} onPress={this.onPressTitle}&gt;
+          {this.state.titleText}{'\n'}{'\n'}
+        
+        &lt;Text numberOfLines={5}&gt;
+          {this.state.bodyText}
+        
+      
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  baseText: {
+    fontFamily: 'Cochin',
+  },
+  titleText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+});
+
+// App registration and rendering
+AppRegistry.registerComponent('TextInANest', () =&gt; TextInANest);
+```
+</p>
+<!--more-->
+<h3>
+处理文本输入
+</h3>
+<p>
+TextInput是一个基本组件，允许用户输入文本。 它有一个onChangeText prop，它接受一个函数，每次文本改变时被调用，和一个onSubmitEditing prop，当一个函数被提交时被调用。
+
+例如，让我们说，当用户键入时，您将他们的词翻译成不同的语言。 在这种新语言中，每个单词的写法都是一样的：🍕。 所以句子“Hello there Bob”将翻译为“🍕🍕🍕”。
+```javascript
+import React, { Component } from 'react';
+import { AppRegistry, Text, TextInput, View } from 'react-native';
+
+class PizzaTranslator extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {text: ''};
+  }
+
+  render() {
+    return (
+      &lt;View style=&gt;
+        &lt;TextInput
+          style=
+          placeholder="Type here to translate!"
+          onChangeText={(text) =&gt; this.setState({text})}
+        /&gt;
+        &lt;Text style=&gt;
+          {this.state.text.split(' ').map((word) =&gt; word &amp;&amp; '🍕').join(' ')}
+        
+      
+    );
+  }
+}
+
+AppRegistry.registerComponent('PizzaTranslator', () =&gt; PizzaTranslator);
+```
+在这个例子中，我们将文本存储在状态中，因为它随时间而变化。
+
+还有很多事情你可能想做一个文本输入。 例如，您可以在用户键入时验证内部的文本。 有关更多详细示例，请参阅受控组件上的React文档，或TextInput的参考文档。
+
+文本输入可能是其状态随时间自然改变的组件的最简单的示例。
+</p>
+<h3>
+嵌套文本
+</h3>
+<p>
+iOS和Android都允许通过使用粗体或彩色文本（在iOS上为NSAttributedString，Android上为SpannableString）等特定格式设置字符串的范围来显示格式化的文本。 在实践中，这是非常乏味。 对于React Native，我们决定使用Web范例，在这里你可以嵌套文本来实现相同的效果。
+```javascript
+import React, { Component } from 'react';
+import { AppRegistry, Text } from 'react-native';
+
+class BoldAndBeautiful extends Component {
+  render() {
+    return (
+      &lt;Text style=&gt;
+        I am bold
+        &lt;Text style=&gt;
+          and red
+        
+      
+    );
+  }
+}
+
+AppRegistry.registerComponent('BoldAndBeautiful', () =&gt; BoldAndBeautiful);
+```
+在幕后，React Native将其转换为包含以下信息的平面NSAttributedString或SpannableString：
+```
+"I am bold and red"
+0-9: bold
+9-17: bold, red
+```
+</p>
+<h3>
+嵌套视图（仅限iOS）
+</h3>
+<p>
+在iOS上，您可以在文本组件中嵌套视图。 这里有一个例子：
+```javascript
+import React, { Component } from 'react';
+import { AppRegistry, Text, View } from 'react-native';
+
+class BlueIsCool extends Component {
+  render() {
+    return (
+      <text>
+        There is a blue square
+        &lt;View style= /&gt;
+        in between my text.
+      </text>
+    );
+  }
+}
+
+AppRegistry.registerComponent('BlueIsCool', () =&gt; BlueIsCool);
+```
+<blockquote>
+为了使用此功能，您必须给视图一个宽度和高度。
+</blockquote>
+</p>
+<h3>
+容器
+</h3>
+<p>
+<text>元素相对于布局是特殊的：内部的一切不再使用flexbox布局，而是使用文本布局。 这意味着<text>中的元素不再是矩形，而是当它们看到行的末尾时换行。
+```html
+<text>
+  <text>First part and </text>
+  <text>second part</text>
+</text>
+// Text container: all the text flows as if it was one
+// |First part |
+// |and second |
+// |part       |
+
+<view>
+  <text>First part and </text>
+  <text>second part</text>
+</view>
+// View container: each text is its own block
+// |First part |
+// |and        |
+// |second part|
+```
+
+<h3>
+有限样式继承
+</h3>
+<p>
+在网络上，设置整个文档的字体系列和大小的通常方法是写：
+```css
+/* CSS, *not* React Native */
+html {
+  font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+  font-size: 11px;
+  color: #141823;
+}
+```
+当浏览器试图渲染文本节点时，它将一直到树的根元素，并找到一个具有font-size属性的元素。 这个系统的一个意想不到的属性是任何节点都可以有font-size属性，包括一个<div>。 这是为了方便，即使不是真的语义正确。
+
+在React Native中，我们对它更严格：你必须将所有的文本节点包装在<text>组件内; 您不能在<view>下直接放置文本节点。
+```html
+// BAD: will raise exception, can't have a text node as child of a <view>
+<view>
+  Some text
+</view>
+
+// GOOD
+<view>
+  <text>
+    Some text
+  </text>
+</view>
+```
+您还失去为整个子树设置默认字体的能力。 在应用程序中使用一致的字体和大小的建议方法是创建一个包含它们的组件MyAppText，并在整个应用程序中使用此组件。 您还可以使用此组件为其他类型的文本创建更具体的组件，如MyAppHeaderText。
+```html
+<view>
+  <myapptext>Text styled with the default font for the entire application</myapptext>
+  <myappheadertext>Text styled as a header</myappheadertext>
+</view>
+```
+假设MyAppText是一个通过样式简单地将其子代渲染为Text组件的组件，则MyAppHeaderText可以定义如下：
+```javascript
+class MyAppHeaderText extends Component {
+  render() {
+    <myapptext>
+      &lt;Text style=&gt;
+        {this.props.children}
+      
+    </myapptext>
+  }
+}
+```
+以这种方式组合MyAppText确保我们从顶级组件获取样式，但让我们能够在特定用例中添加/覆盖它们。
+
+React Native仍然具有样式继承的概念，但仅限于文本子树。 在这种情况下，第二部分将是粗体和红色。
+```html
+&lt;Text style=&gt;
+  I am bold
+  &lt;Text style=&gt;
+    and red
+  
+
+```
+我们相信，这种更受限制的样式文本的方式将产生更好的应用程序：
+<ul>
+<li>（开发者）React组件的设计考虑了强烈的隔离：你应该能够在应用程序的任何地方放置一个组件，相信只要<code>props</code>是相同的，它将看起来和行为相同的方式。 可以从<code>props</code>外继承的文本属性会破坏这种隔离。</li>
+<li>（实现者）React Native的实现也被简化。 我们不需要在每个单个元素上都有一个fontFamily字段，并且我们不需要在每次显示文本节点时都将树遍历到根。 样式继承仅在原生Text组件内编码，不会泄漏到其他组件或系统本身。</li>
+</ul>
+
+</view></view></text></div></p></text></text></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[React Native的布局]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/22/react-nativede-style/"/>
+    <updated>2016-11-22T09:48:39+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/22/react-nativede-style</id>
+    <content type="html"><![CDATA[<h2>
+Style样式
+</h2>
+<p>
+使用React Native，不要使用特殊语言或语法来定义样式。 你只需使用JavaScript来设计你的应用程序。 所有的核心组件接受<code>props</code>命名风格。 样式名称和值通常匹配CSS在Web上的工作方式，除了名称被写为<em>backgroundColor</em>而不是像<em>background-color</em>。
+
+样式prop可以是一个普通的旧JavaScript对象。 这是最简单的，我们通常用于示例代码。 您还可以传递样式数组 - 数组中的最后一个样式具有优先级，因此可以使用它来继承样式。
+
+由于组件的复杂性增加，使用<em>StyleSheet.create</em>在一个位置定义多个样式通常更加清晰。 这里有一个例子：
+```javascript
+import React, { Component } from 'react';
+import { AppRegistry, StyleSheet, Text, View } from 'react-native';
+
+class LotsOfStyles extends Component {
+  render() {
+    return (
+      <view>
+        &lt;Text style={styles.red}&gt;just red
+        &lt;Text style={styles.bigblue}&gt;just bigblue
+        &lt;Text style={[styles.bigblue, styles.red]}&gt;bigblue, then red
+        &lt;Text style={[styles.red, styles.bigblue]}&gt;red, then bigblue
+      </view>
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  bigblue: {
+    color: 'blue',
+    fontWeight: 'bold',
+    fontSize: 30,
+  },
+  red: {
+    color: 'red',
+  },
+});
+
+AppRegistry.registerComponent('LotsOfStyles', () =&gt; LotsOfStyles);
+```
+一个常见的模式是使你的组件接受一个样式属性，反过来，它被用于样式子组件。 你可以使用它来使样式“级联”他们在CSS中的方式。
+<!--more-->
+有很多自定义文本样式的方法。 查看<a href="">Text组件引用</a>以获取完整列表。
+
+现在你可以让你的文本美丽。 成为风格大师的下一步是学习如何控制组件大小。
+</p>
+<h2>
+高和宽
+</h2>
+<p>
+组件的高度和宽度决定了其在屏幕上的大小。
+</p>
+<h3>
+固定尺寸
+</h3>
+<p>
+设置组件尺寸的最简单的方法是通过向样式添加固定的宽度和高度。 React Native中的所有维都是无单位的，表示与密度无关的像素。
+```html
+import React, { Component } from 'react';
+import { AppRegistry, View } from 'react-native';
+
+class FixedDimensionsBasics extends Component {
+  render() {
+    return (
+      <view>
+        &lt;View style={ {width: 50, height: 50, backgroundColor: 'powderblue'} } /&gt;
+        &lt;View style={ {width: 100, height: 100, backgroundColor: 'skyblue'} } /&gt;
+        &lt;View style={ {width: 150, height: 150, backgroundColor: 'steelblue'} } /&gt;
+      </view>
+    );
+  }
+};
+
+AppRegistry.registerComponent('AwesomeProject', () =&gt; FixedDimensionsBasics);
+```
+以此方式设置尺寸对于始终按照完全相同的大小呈现的组件而言是常见的，而不管屏幕尺寸如何。
+</p>
+<h3>
+Flex尺寸
+</h3>
+<p>
+在组件的样式中使用flex，以根据可用空间动态地展开和缩小组件。 通常你将使用flex：1，它告诉组件填充所有可用空间，在相同的父组件之间均匀分配。 给定的flex越大，组件与其兄弟节点相比所需的空间比例越高。
+<blockquote>
+如果组件的父级的尺寸大于0，则组件只能扩展以填充可用空间。如果父级组件不具有固定宽度和高度或flex，则父级的尺寸为0，而flex子组件将不可见。
+</blockquote>
+```html
+import React, { Component } from 'react';
+import { AppRegistry, View } from 'react-native';
+
+class FlexDimensionsBasics extends Component {
+  render() {
+    return (
+      // Try removing the `flex: 1` on the parent View.
+      // The parent will not have dimensions, so the children can't expand.
+      // What if you add `height: 300` instead of `flex: 1`?
+      &lt;View style={ {flex: 1} }&gt;
+        &lt;View style={ {flex: 1, backgroundColor: 'powderblue'} } /&gt;
+        &lt;View style={ {flex: 2, backgroundColor: 'skyblue'} } /&gt;
+        &lt;View style={ {flex: 3, backgroundColor: 'steelblue'} } /&gt;
+      
+    );
+  }
+};
+
+AppRegistry.registerComponent('AwesomeProject', () =&gt; FlexDimensionsBasics);
+```
+在您可以控制组件的大小后，下一步是学习如何将其放在屏幕上。
+</p>
+<h2>
+使用Flexbox布局
+</h2>
+<p>
+组件可以使用flexbox算法指定其子项的布局。 Flexbox旨在在不同的屏幕尺寸上提供一致的布局。
+
+你通常会使用flexDirection，alignItems和justifyContent的组合来实现正确的布局。
+<blockquote>
+Flexbox在React Native中的工作方式与在Web上的CSS中的工作方式相同，但有一些例外。 默认值不同，flexDirection默认为column而不是row，alignItems默认为stretch而不是flex-start，flex参数只支持一个数字。
+</blockquote>
+</p>
+<h3>
+Flex方向
+</h3>
+<p>
+将flexDirection添加到组件的样式确定其布局的主轴。 孩子们应该是水平（行）还是垂直（列）组织？ 默认值为column。
+```html
+import React, { Component } from 'react';
+import { AppRegistry, View } from 'react-native';
+
+class FlexDirectionBasics extends Component {
+  render() {
+    return (
+      // Try setting `flexDirection` to `column`.
+      &lt;View style={ {flex: 1, flexDirection: 'row'} }&gt;
+        &lt;View style={ {width: 50, height: 50, backgroundColor: 'powderblue'} } /&gt;
+        &lt;View style={ {width: 50, height: 50, backgroundColor: 'skyblue'} } /&gt;
+        &lt;View style={ {width: 50, height: 50, backgroundColor: 'steelblue'} } /&gt;
+      
+    );
+  }
+};
+
+AppRegistry.registerComponent('AwesomeProject', () =&gt; FlexDirectionBasics);
+```
+</p>
+<h3>
+证明内容
+</h3>
+<p>
+将justifyContent添加到组件的样式确定沿主轴的子项分布。 是否应该在开始，中心，结束或均匀分布children？ 可用选项包括flex-start，center，flex-end，space-around和space-between。
+```html
+import React, { Component } from 'react';
+import { AppRegistry, View } from 'react-native';
+
+class JustifyContentBasics extends Component {
+  render() {
+    return (
+      // Try setting `justifyContent` to `center`.
+      // Try setting `flexDirection` to `row`.
+      &lt;View style={ {
+        flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+      } }&gt;
+        &lt;View style={ {width: 50, height: 50, backgroundColor: 'powderblue'} } /&gt;
+        &lt;View style={ {width: 50, height: 50, backgroundColor: 'skyblue'} } /&gt;
+        &lt;View style={ {width: 50, height: 50, backgroundColor: 'steelblue'} } /&gt;
+      
+    );
+  }
+};
+
+AppRegistry.registerComponent('AwesomeProject', () =&gt; JustifyContentBasics);
+```
+</p>
+<h3>
+对齐
+</h3>
+<p>
+将alignItems添加到组件的样式确定沿辅助轴的子对齐（如果主轴是行，则辅助轴是列，反之亦然）。 children应该在开始，中心，结束，还是伸展填充？ 可用选项有flex-start，center，flex-end和stretch。
+<blockquote>
+为了拉伸有效果，children不得沿着辅助轴具有固定尺寸。 在下面的示例中，设置alignItems：stretch不执行任何操作，直到宽度：50从子项中删除。
+</blockquote>
+```html
+import React, { Component } from 'react';
+import { AppRegistry, View } from 'react-native';
+
+class AlignItemsBasics extends Component {
+  render() {
+    return (
+      // Try setting `alignItems` to 'flex-start'
+      // Try setting `justifyContent` to `flex-end`.
+      // Try setting `flexDirection` to `row`.
+      &lt;View style={ {
+        flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+      } }&gt;
+        &lt;View style={ {width: 50, height: 50, backgroundColor: 'powderblue'} } /&gt;
+        &lt;View style={ {width: 50, height: 50, backgroundColor: 'skyblue'} } /&gt;
+        &lt;View style={ {width: 50, height: 50, backgroundColor: 'steelblue'} } /&gt;
+      
+    );
+  }
+};
+
+AppRegistry.registerComponent('AwesomeProject', () =&gt; AlignItemsBasics);
+```
+</p>
+<h3>
+深入探讨
+</h3>
+<p>
+我们已经介绍了基础知识，但是有许多其他样式可能需要布局。 控制布局的道具的完整列表在<a href="http://facebook.github.io/react-native/docs/layout-props.html">这里</a>记录。
+
+我们正在接近能够构建一个真正的应用程序。 我们还缺少一个方法来接受用户输入，所以让我们继续学习如何使用TextInput组件处理文本输入。
+</p>
+
+<hr />
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[React Native的State]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/22/react-nativede-state/"/>
+    <updated>2016-11-22T09:45:39+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/22/react-nativede-state</id>
+    <content type="html"><![CDATA[<p>
+有两种类型的数据控制组件：props和state。 props由父节点设置，它们在组件的整个生命周期中都是固定的。 对于要改变的数据，我们必须使用状态。
+
+一般来说，你应该在构造函数中初始化状态，然后当你想改变它时调用setState。
+
+例如，假设我们想让文本一直闪烁。 文本本身在创建闪烁组件时设置一次，因此文本本身是一个<code>props</code>。 “文本是否当前打开或关闭”随时间改变，所以应保持状态。
+```javascript
+import React, { Component } from 'react';
+import { AppRegistry, Text, View } from 'react-native';
+
+class Blink extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {showText: true};
+
+    // Toggle the state every second
+    setInterval(() =&gt; {
+      this.setState({ showText: !this.state.showText });
+    }, 1000);
+  }
+
+  render() {
+    let display = this.state.showText ? this.props.text : ' ';
+    return (
+      <text>{display}</text>
+    );
+  }
+}
+
+class BlinkApp extends Component {
+  render() {
+    return (
+      <view>
+        <blink text="I love to blink" />
+        <blink text="Yes blinking is so great" />
+        <blink text="Why did they ever take this out of HTML" />
+        <blink text="Look at me look at me look at me" />
+      </view>
+    );
+  }
+}
+
+AppRegistry.registerComponent('BlinkApp', () =&gt; BlinkApp);
+```
+在实际应用中，您可能不会使用计时器设置状态。 您可以在从服务器收到新数据或用户输入时设置状态。 您还可以使用状态容器（如<a href="http://redux.js.org/index.html">Redux</a>）来控制数据流。 在这种情况下，您将使用Redux来修改状态，而不是直接调用setState。
+<!--more-->
+State的工作方式与React中的相同，因此有关处理状态的更多详细信息，可以查看<a href="https://facebook.github.io/react/docs/component-api.html">React.Component API</a>。
+
+在这一点上，你可能会感到懊恼，我们的大多数示例迄今为止使用无聊的默认黑色文本。 为了使事情更美丽，你必须学习风格。
+</p>
+<hr />
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[React Native的Props]]></title>
+    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/22/react-nativede-props/"/>
+    <updated>2016-11-22T09:37:53+08:00</updated>
+    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/22/react-nativede-props</id>
+    <content type="html"><![CDATA[<p>
+大多数组件可以在创建时使用不同的参数进行自定义。 这些创建参数称为<code>props</code>。
+
+例如，一个基本的React Native组件是Image。 当您创建图像时，可以使用prop命名<code>source</code>来控制其显示的图像。
+```javascript
+import React, { Component } from 'react';
+import { AppRegistry, Image } from 'react-native';
+
+class Bananas extends Component {
+  render() {
+    let pic = {
+      uri: 'https://upload.wikimedia.org/wikipedia/commons/d/de/Bananavarieties.jpg'
+    };
+    return (
+      &lt;Image source={pic} style=/&gt;
+    );
+  }
+}
+
+AppRegistry.registerComponent('Bananas', () =&gt; Bananas);
+```
+注意<em>{pic}</em>被大括号括起来，以将变量<em>pic</em>嵌入到JSX中。 你可以把任何JavaScript表达式放在大括号内JSX。
+
+你自己的组件也可以使用<em>props</em>。 这样，您可以在应用程序的许多不同位置创建单个组件，每个位置的属性略有不同。 只需在<em>render</em>函数中引用<em>this.props</em>。 这里有一个例子：
+```javascript
+import React, { Component } from 'react';
+import { AppRegistry, Text, View } from 'react-native';
+
+class Greeting extends Component {
+  render() {
+    return (
+      <text>Hello {this.props.name}!</text>
+    );
+  }
+}
+
+class LotsOfGreetings extends Component {
+  render() {
+    return (
+      &lt;View style=&gt;
+        <greeting name="Rexxar" />
+        <greeting name="Jaina" />
+        <greeting name="Valeera" />
+      
+    );
+  }
+}
+
+AppRegistry.registerComponent('LotsOfGreetings', () =&gt; LotsOfGreetings);
+```
+使用名称作为<code>props</code>，我们可以自定义<em>Greeting</em>组件，因此我们可以为每个问候重复使用该组件。 此示例还在JSX中使用Greeting组件，就像内置组件一样。 做到这一点的力量是什么使React这么酷 - 如果你发现自己希望有一组不同的UI原语来工作，你只是发明新的。
+<!--more-->
+另一个新的东西在这里是视图组件。 视图可用作其他组件的容器，以帮助控制样式和布局。
+
+使用<code>props</code>和基本的文本，图像和视图组件，您可以构建各种各样的静态屏幕。 要了解如何让您的应用随时间变化，您需要了解状态。
+</p>
+<hr />
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[JSX从0到1]]></title>
@@ -553,927 +1152,8 @@ false，null，undefined和true是有效的子类。 他们根本不render。 �
 </div>
 ```
 
+<hr />
 </div></p></div></p></div></div></span></div></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[React.js 项目指南]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/21/react-dot-js-xiang-mu-zhi-nan/"/>
-    <updated>2016-11-21T09:52:42+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/21/react-dot-js-xiang-mu-zhi-nan</id>
-    <content type="html"><![CDATA[<p>React 是一种声明性、高效和灵活的JavaScript库来构建用户界面。</p>
-<h2>
-React 组件
-</h2>
-<p>
-```javascript
-class ShoppingList extends React.Component {
-  render() {
-    return (
-      <div classname="shopping-list">
-        <h1>Shopping List for {this.props.name}</h1>
-        <ul>
-          <li>Instagram</li>
-          <li>WhatsApp</li>
-          <li>Oculus</li>
-        </ul>
-      </div>
-    );
-  }
-}
-
-// Example usage: <shoppinglist name="Mark" />
-```
-组件告诉React你想提供的，然后React会在你数据更新时高效更新和提供正确组件。
-
-在这里，ShoppingList 是一个React组件类或者React组件类型。一个组件包含的参数成为props，并且通过render方法返回一个层级视图来显示。
-
-render 方法返回一个描述关于你想render的，并且React采用描述返回给屏幕。特别是，render会返回一个React元素，一个render什么的轻量级描述。许多React开发者使用一个特殊的语法称之为JSX，可以更方便的编写这些结构。div标记在编译时被转化成了React.createElement('div')。
-```javascript
-return React.createElement('div', {className: 'shopping-list'},
-  React.createElement('h1', ...),
-  React.createElement('ul', ...)
-);
-```
-可以将任何 JavaScript 表达式放在大括号内 JSX 内。React的每个元素是一个真正的 JavaScript 对象，可以存储在一个变量或在程序中传递。
-ShoppingList组件只能在内置的DOM组件提供，但是你能自己组合一个定制的React组件。通过<code><shoppinglist /></code>。每个组件都包含因此他能独立操作，允许你构建复杂的UI通过简单的组件。
-</p>
-
-<h2>
-实例
-</h2>
-<p>
-通过下面的例子来讲解React：
-<!--more-->
-```javascript
-class Square extends React.Component {
-  render() {
-    return (
-      <button classname="square">
-        {/* TODO */}
-      </button>
-    );
-  }
-}
-
-class Board extends React.Component {
-  renderSquare(i) {
-    return <square />;
-  }
-  render() {
-    const status = 'Next player: X';
-    return (
-      <div>
-        <div classname="status">{status}</div>
-        <div classname="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
-        </div>
-        <div classname="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
-        </div>
-        <div classname="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
-        </div>
-      </div>
-    );
-  }
-}
-
-class Game extends React.Component {
-  render() {
-    return (
-      <div classname="game">
-        <div classname="game-board">
-          <board />
-        </div>
-        <div classname="game-info">
-          <div>{/* status */}</div>
-          <ol>{/* TODO */}</ol>
-        </div>
-      </div>
-    );
-  }
-}
-
-// ========================================
-
-ReactDOM.render(
-  <game />,
-  document.getElementById('container')
-);
-
-function calculateWinner(squares) {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
-  for (let i = 0; i &lt; lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] &amp;&amp; squares[a] === squares[b] &amp;&amp; squares[a] === squares[c]) {
-      return squares[a];
-    }
-  }
-  return null;
-}
-
-```
-它包含了今天需要编写的脚本。它会提供一些样式这样你只需要关心的你javascript。
-我们有三个组件：
-<ul>
-<li>Square</li>
-<li>Board</li>
-<li>Game</li>
-</ul>
-
-Square组件提供一个div，Board提供9宫格，Game提供一个板包含我们接下来要填的字段。calculateWinner这个函数我们接下来会用到。
-</p>
-<h3>
-通过props传递数据
-</h3>
-<p>
-我们试图从Board组件传递数据到Square组件。Board的renderSquare方法，改变这个代码去返回<code>&lt;Square value={i} /&gt;</code>然后改变Square的render方法展示替换<code>{/* TODO*/}</code>为<code>{this.props.value}</code>
-</p>
-<h3>
-一个交互的组件
-</h3>
-<p>
-Square组件填充
-```html
-&lt;button className="square" onClick={() =&gt; alert('click')}&gt;
-```
-通过在构造函数中设置this.state，React组件可以具有状态，这应该被视为组件的私有。 让我们将方形的当前值存储在状态中，并在单击方形时更改它。 首先，向类添加一个构造函数以初始化状态：
-```javascript
-class Square extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      value: null,
-    };
-  }
-  ...
-}
-```
-在JavaScript类中，需要显式调用super（）; 当定义一个子类的构造函数。
-
-现在更改render方法以显示this.state.value，而不是this.props.value，并将事件处理程序更改为be（）=&gt; this.setState（{value：'X'}），而不是alert：
-```javascript
-&lt;button className="square" onClick={() =&gt; this.setState({value: 'X'})}&gt;
-    {this.state.value}
-
-```
-每当调用this.setState时，都会调度组件的更新，导致React在已传递的状态更新中合并，并重新渲染组件及其后代。 当组件重建时，this.state.value将是'X'，所以你将在网格中看到一个X.
-</p>
-<h3>
-开发工具
-</h3>
-<p>
-Chrome和Firefox的React Devtools Extensions允许您检查浏览器devtools中的React组件树。
-
-它允许您检查树中任何组件的道具和状态。
-
-它不能在CodePen上工作很好，因为多个框架，但如果你登录到CodePen并确认您的电子邮件（为防止垃圾邮件），您可以转到更改视图&gt;调试以在新标签中打开您的代码，然后 devtools将工作。 这是很好，如果你不想这样做。
-</p>
-<h3>
-向上移动状态
-</h3>
-<p>
-我们现在有一个tic-tac-toe游戏的基本构建块。 但现在，状态被封装在每个Square组件中。 要做一个全面的游戏，我们现在需要检查一个玩家是否赢得了游戏，并将X和O交替放置在正方形中。 要检查某人是否赢了，我们需要在一个地方拥有所有9个方块的值，而不是在Square组件之间拆分。
-
-你可能认为Board应该询问每个Square的当前状态。 虽然在技术上可以在React中做到这一点，但是它不鼓励，因为它往往使代码难以理解，更脆弱，更难重构。
-
-相反，这里的最佳解决方案是将此状态存储在Board组件中，而不是每个Square - 并且Board组件可以告诉每个Square要显示什么，就像我们如何让每个方块早先显示其索引。
-
-当要聚合来自多个子项的数据或使两个子组件相互通信时，向上移动状态，使其居住在父组件中。 然后父对象可以通过props将状态传回给孩子，这样子组件总是与父对象和父对象同步。
-
-在重构React组件时，向上拉这种状态是很常见的，所以让我们借此机会尝试一下。 为包含具有9个空值的数组的Board添加初始状态，对应于9个正方形：
-```javascript
-class Board extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      squares: Array(9).fill(null),
-    };
-  }
-}
-```
-我们会在以后填写它，使板子看起来像:
-```
-[
-  'O', null, 'X',
-  'X', 'X', 'O',
-  'O', null, null,
-]
-```
-传递每个方块的值
-```javascript
-renderSquare(i) {
-  return &lt;Square value={this.state.squares[i]} /&gt;;
-}
-```
-并更改Square以再次使用this.props.value。 现在我们需要改变点击方块时发生的情况。 Board组件现在存储哪些方块填充，这意味着我们需要一些方法来更新Board的状态。 由于组件状态被认为是私有的，我们不能直接从Square更新Board的状态。 这里通常的模式是传递一个函数从Board到Square，当方块被点击时被调用。 再次更改renderSquare，使其显示为：
-```javascript
-return &lt;Square value={this.state.squares[i]} onClick={() =&gt; this.handleClick(i)} /&gt;;
-```
-现在我们把两个props从Board传递给Square：value和onClick。 后者是Square可以调用的函数。 所以让我们通过改变在Square中的render有：
-```javascript
-&lt;button className="square" onClick={() =&gt; this.props.onClick()}&gt;
-```
-这意味着，当方块被点击时，它调用由父代传递的onClick函数。 onClick在这里没有任何特殊的意义，但它很受欢迎的命名处理程序道具从开始和他们的实现与句柄。 尝试点击一个方块 - 你应该得到一个错误，因为我们还没有定义handleClick。 将其添加到Board类中：
-```javascript
-handleClick(i) {
-  const squares = this.state.squares.slice();
-  squares[i] = 'X';
-  this.setState({squares: squares});
-}
-```
-我们调用.slice（）来复制square数组，而不是改变现有数组。 下面会了解为什么不变性很重要。
-
-现在你应该能够点击方块再次填充它们，但状态存储在Board组件，而不是每个Square，这使我们继续构建游戏。 注意每当Board的状态改变时，Square组件会自动重新渲染。
-
-Board不再保持自己的状态; 它从其父Board接收其值，并在其被点击时通知其父级。 我们调用类似这种受控组件的组件。
-</p>
-<h3>
-为什么不变性很重要
-</h3>
-<p>
-在前面的代码示例中，我建议使用.slice（）运算符在进行更改之前复制方块数组，并防止对现有数组进行修改。 让我们来谈谈这是什么意思，以及为什么它是一个重要的学习概念。
-
-通常有两种方式来改变数据。 第一种方法是通过直接改变变量的值来改变数据。 第二种方法是使用还包括所需更改的对象的新副本替换数据。
-
-直接更改变量的值
-```javascript
-var player = {score: 1, name: 'Jeff'};
-player.score = 2;
-// Now player is {score: 2, name: 'Jeff'}
-```
-
-不直接更改变量的值
-```javascript
-var player = {score: 1, name: 'Jeff'};
-
-var newPlayer = Object.assign({}, player, {score: 2});
-// Now player is unchanged, but newPlayer is {score: 2, name: 'Jeff'}
-
-// Or if you are using object spread, you can write:
-// var newPlayer = {score: 2, ...player};
-```
-最终结果是相同的，但是通过不直接改变（或改变底层数据），我们现在有一个额外的好处，可以帮助我们增加组件和总体应用程序性能。
-</p>
-<h4>
-追踪变化
-</h4>
-<p>
-确定改变对象是否已更改是复杂的，因为更改是直接对对象进行的。 这需要将当前对象与前一个副本进行比较，遍历整个对象树，并比较每个变量和值。 这个过程可能变得越来越复杂。
-
-确定不可变对象如何改变是相当容易的。 如果被引用的对象与以前不同，那么对象已经改变。
-</p>
-<h3>
-确定何时在React中重新渲染
-</h3>
-<p>
-当你构建简单的纯组件时，React中不可变性的最大好处就是。 由于不可变数据可以更容易地确定是否已经进行了更改，因此也有助于确定组件何时需要重新渲染。
-
-要了解如何构建纯组件，请参阅<a href="https://facebook.github.io/react/docs/update.html">shouldComponentUpdate()</a>。 另外，看看<a href="https://facebook.github.io/immutable-js/">Immutable.js</a>库来严格执行不可变的数据。
-</p>
-<h2>
-功能组件
-</h2>
-<p>
-回到我们的项目，你现在可以从Square中删除构造函数; 我们不再需要它了。 事实上，React支持一种更简单的语法，称为无状态功能组件，用于类似于仅由渲染方法组成的Square。 而不是定义一个扩展React.Component的类，只需编写一个函数，它接受props并返回应该渲染的内容：
-```javascript
-function Square(props) {
-  return (
-    &lt;button className="square" onClick={() =&gt; props.onClick()}&gt;
-      {props.value}
-    
-  );
-}
-```
-你需要改变this.props到props每次出现。 您的应用程序中的许多组件将能够写作功能组件：这些组件往往更容易编写，并且React将在未来更好地优化它们。
-</p>
-<h3>
-轮换
-</h3>
-<p>
-我们的游戏的一个明显缺陷是只有X可以玩。 让我们解决这个问题。
-
-让我们默认第一个移动是'X'。 在我们的Board构造函数中修改我们的初始状态。
-```javascript
-class Board extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      ...
-      xIsNext: true,
-    };
-  }
-}
-```
-每次我们移动，我们将通过翻转布尔值并保存状态来切换xIsNext。 现在更新我们的handleClick函数来翻转xIsNext的值。
-```javascript
-handleClick(i) {
-  const squares = this.state.squares.slice();
-  squares[i] = this.state.xIsNext ? 'X' : 'O';
-  this.setState({
-    squares: squares,
-    xIsNext: !this.state.xIsNext,
-  });
-}
-```
-现在X和O轮流。 接下来，更改Board的渲染中的“状态”文本，以便它也显示下一个是谁。
-</p>
-<h3>
-宣布获胜者
-</h3>
-<p>
-让我们展示游戏赢了。 已在文件底部为您提供了一个calculateWinner(squares)助手函数，其中包含9个值的列表。 你可以在Board的render函数中调用它来检查是否有人赢得了游戏，并且当有人赢了时，使状态文本显示“Winner：[X / O]”：
-```javascript
-render() {
-  const winner = calculateWinner(this.state.squares);
-  let status;
-  if (winner) {
-    status = 'Winner: ' + winner;
-  } else {
-    status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-  }
-  ...
-}
-```
-你现在可以更改handleClick以更早返回，并忽略点击如果有人已经赢得了游戏或如果一个square已经填充：
-```javascript
-handleClick(i) {
-  const squares = this.state.squares.slice();
-  if (calculateWinner(squares) || squares[i]) {
-    return;
-  }
-  ...
-}
-```
-恭喜！ 你现在有一个工作的tic-tac-toe游戏。 现在你知道React的基本知识。 所以你可能是真正的赢家。
-</p>
-<h3>
-存储历史
-</h3>
-<p>
-让我们可以重新审视board的旧状态，以便我们可以看到在任何以前的举动后，它看起来像什么。 我们已经在每次移动时创建了一个新的方形数组，这意味着我们可以轻松地同时存储过去的board状态。
-
-让我们计划在状态中存储一个这样的对象：
-```
-history = [
-  {
-    squares: [null x 9]
-  },
-  {
-    squares: [... x 9]
-  },
-  ...
-]
-```
-我们希望顶级游戏组件负责显示移动列表。 因此，就像我们将状态从Square推入Board之前，让我们再次将它从Board上拉到游戏中 - 这样我们就可以获得顶级所需的所有信息。
-
-首先，设置Game的初始状态：
-```javascript
-class Game extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      history: [{
-        squares: Array(9).fill(null)
-      }],
-      xIsNext: true
-    };
-  }
-  ...
-}
-```
-然后从Board中删除构造函数，并更改Board，以便它通过props使用square，并具有自己的由Game指定的onClick prop，就像我们之前对Square的转换一样。 您可以将每个Square的位置传递到点击处理程序，以便我们仍然知道点击了哪个Square：
-```javascript
-return &lt;Square value={this.props.squares[i]} onClick={() =&gt; this.props.onClick(i)} /&gt;;
-```
-游戏的渲染应该查看最近的历史记录，并可以接管计算游戏状态：
-```javascript
-const history = this.state.history;
-const current = history[history.length - 1];
-const winner = calculateWinner(current.squares);
-
-let status;
-if (winner) {
-  status = 'Winner: ' + winner;
-} else {
-  status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-}
-...
-<div classname="game-board">
-  &lt;Board
-    squares={current.squares}
-    onClick={(i) =&gt; this.handleClick(i)}
-  /&gt;
-</div>
-<div classname="game-info">
-  <div>{status}</div>
-  <ol>{/* TODO */}</ol>
-</div>
-```
-它的handleClick可以通过连接新的历史记录条目来创建新的历史记录数组来将新的条目推入堆栈：
-```javascript
-handleClick(i) {
-  const history = this.state.history;
-  const current = history[history.length - 1];
-  const squares = current.squares.slice();
-  if (calculateWinner(squares) || squares[i]) {
-    return;
-  }
-  squares[i] = this.state.xIsNext ? 'X' : 'O';
-  this.setState({
-    history: history.concat([{
-      squares: squares
-    }]),
-    xIsNext: !this.state.xIsNext,
-  });
-}
-```
-此时，Board只需要renderSquare和render; 状态初始化和点击处理程序都应该存在于Game中。
-</p>
-<h3>
-显示移动
-</h3>
-<p>
-让我们展示以前在游戏中做的动作。 我们早些时候学到React元素是一流的JS对象，我们可以存储它们或传递它们。 要在React中渲染多个项目，我们传递一个React元素数组。 最常见的构建数组的方法是映射数据数组。 让我们在游戏的渲染方法中这样做：
-```javascript
-const moves = history.map((step, move) =&gt; {
-  const desc = move ?
-    'Move #' + move :
-    'Game start';
-  return (
-    <li>
-      &lt;a href="#" onClick={() =&gt; this.jumpTo(move)}&gt;{desc}
-    </li>
-  );
-});
-...
-<ol>{moves}</ol>
-```
-对于历史记录中的每个步骤，我们创建一个列表项<li>，其中的链接a在无处（href =“＃”），但有一个点击处理程序，我们将很快实现。 有了这个代码，你应该看到在游戏中做出的举动的列表，以及一个警告说
-```
-Warning: Each child in an array or iterator should have a unique "key" prop. Check the render method of "Game".
-```
-让我们来谈谈这个警告是什么意思。
-
-<h3>
-Keys
-</h3>
-<p>
-当渲染项目列表时，React总是存储列表中每个项目的一些信息。 如果渲染具有状态的组件，该状态需要存储，并且无论如何实现组件，React都会存储对后端本地视图的引用。
-
-当您更新该列表时，React需要确定已更改的内容。 您可以在列表中添加，删除，重新排列或更新项目。
-
-想象一下
-```html
-<li>Alexa: 7 tasks left</li>
-<li>Ben: 5 tasks left</li>
-```
-改成了
-```html
-<li>Ben: 9 tasks left</li>
-<li>Claudia: 8 tasks left</li>
-<li>Alexa: 5 tasks left</li>
-```
-对于人眼来说，看起来很可能Alexa和Ben交换了地方，Claudia被添加了 - 但React只是一个计算机程序，不知道你打算做什么。 因此，React要求您在列表中的每个元素上指定一个键属性，一个字符串来区分每个组件与其同级。 在这种情况下，alexa，ben，claudia可能是合理的键; 如果项目对应于数据库中的对象，则数据库ID通常是一个不错的选择：
-```html
-&lt;li key={user.id}&gt;{user.name}: {user.taskCount} tasks left
-```
-key是React保留的一个特殊属性（与ref一起，是一个更高级的特性）。 当一个元素被创建时，React拉下key属性并将键直接存储在返回的元素上。 即使它可能看起来像是道具的一部分，它不能使用this.props.key来引用。 React在决定更新哪些子项时自动使用该键; 组件无法查询其自己的key。
-
-当重新列出列表时，React会使用新版本中的每个元素，并在上一个列表中查找具有匹配键的元素。 当向该集合添加键时，将创建一个组件; 当删除键时，组件被销毁。 键告诉React关于每个组件的身份，以便它可以保持整个rerenders状态。 如果更改组件的键，它将被完全销毁并使用新状态重新创建。
-
-强烈建议您在构建动态列表时分配正确的键。 如果您没有适当的key，您可能需要考虑重组您的数据，以便使用。
-
-如果你不指定任何键，React会警告你并回退到使用数组索引作为键 - 这不是正确的选择，如果你重新排序列表中的元素或添加/删除项目的任何地方，但底部 列表。 显式传递key = {i}使警告静音，但具有相同的问题，因此在大多数情况下不建议使用。
-
-组件键不需要是全局唯一的，相对于直接同级的只有唯一的。
-</p>
-<h3>
-实施时间旅行
-</h3>
-<p>
-对于我们的移动列表，我们已经为每个步骤都有一个唯一的ID：发生移动的次数。 将键添加为&lt;li key= {move}&gt;，键警告应该消失。
-
-单击任何移动链接都会抛出错误，因为jumpTo未定义。 让我们在Game的状态中添加一个新键，以指示我们当前正在查看哪个步骤。 首先，将stepNumber：0添加到初始状态，然后让jumpTo更新该状态。
-
-我们还想更新xIsNext。 如果移动号码的索引是偶数，那么我们将xIsNext设置为true。
-```javascript
-jumpTo(step) {
-  this.setState({
-    stepNumber: step,
-    xIsNext: (step % 2) ? false : true,
-  });
-}
-```
-然后通过向handleClick中的状态更新添加步骤Number：history.length来更新新的移动时的Number。 现在您可以修改渲染以从历史记录中的该步骤读取：
-```javascript
-const current = history[this.state.stepNumber];
-```
-如果你现在点击任何移动链接，Board应该立即更新，以显示游戏当时的样子。 您可能还需要更新handleClick以在读取当前Board状态时注意stepNumber，以便您可以及时返回，然后单击Board以创建新条目。 （提示：最简单的是.slice（）从handleClick的最顶部的历史的额外元素）。
-</p>
-<h2>
-结束
-</h2>
-<p>
-现在，你做了一个tic-tac-toe游戏：
-<ul>
-<li>让你玩tic-tac-toe，</li>
-<li>表示当一个玩家赢得游戏时，</li>
-<li>存储游戏期间的移动历史，</li>
-<li>允许玩家在时间上跳回来看到老版本的游戏板。</li>
-</ul>
-
-我们希望你现在觉得你有一个正确的把握React的工作原理。
-
-如果你有额外的时间或想练习你的新技能，这里有一些想法，你可以做的改进，列出难度递增的顺序：
-
-<ul>
-<li>1、以“（1，3）”格式而不是“6”格式显示移动位置。</li>
-<li>2、加粗移动列表中当前选择的项目。</li>
-<li>3、重写板使用两个循环来制作正方形，而不是硬编码。</li>
-<li>4、添加一个切换按钮，可以按升序或降序对移动进行排序。</li>
-<li>5、当有人赢了，突出显示导致胜利的三个方块。</li>
-</ul>
-</p>
- <hr />
-</li></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[React Native开发Redux]]></title>
-    <link href="http://ITMonkeyLife.github.io/Blog/blog/2016/11/17/react-nativekai-fa-redux/"/>
-    <updated>2016-11-17T14:52:37+08:00</updated>
-    <id>http://ITMonkeyLife.github.io/Blog/blog/2016/11/17/react-nativekai-fa-redux</id>
-    <content type="html"><![CDATA[<p>
-Redux是一个可预测的javascript应用程序的状态容器。
-
-它可以帮助您编写行为一致，在不同环境（客户端，服务器和本机）中运行的应用程序，并且易于测试。 此外，它提供了一个伟大的开发者体验，如实时代码编辑结合一个时间旅行调试器。
-</p>
-<p>
-您可以与React或任何其他视图库一起使用<a href="https://facebook.github.io/react/">Redux</a>。
-它是微小的（2kB，包括依赖）。
-从其创建者学习Redux：<a href="https://egghead.io/series/getting-started-with-redux">Redux学习入门</a>
-</p>
-<h3>
-开发经验
-</h3>
-<p>
-我在工作在我的React Europe谈话时写了Redux，名为“Hot Reloading with Time Travel”。 我的目标是创建一个状态管理库，具有最少的API，但完全可预测的行为，所以可以实现日志记录，热重新加载，时间旅行，通用应用程序，记录和重放，没有任何从开发人员买入。
-</p>
-<h3>
-影响
-</h3>
-<p>
-Redux演化了<a href="http://facebook.github.io/flux/">Flux</a>的想法，但通过从<a href="https://github.com/evancz/elm-architecture-tutorial/">Elm</a>提取线索来避免其复杂性。
-无论您是否使用过它们，Redux只需要几分钟的时间就可以开始使用。
-</p>
-<h3>
-安装
-</h3>
-<p>
-安装稳定版本：
-```
-npm install --save redux
-```
-这假设你使用<a href="https://www.npmjs.com/">npm</a>作为你的包管理器。
-
-最常见的是人们使用Redux作为<a href="http://webpack.github.io/docs/commonjs.html">CommonJS</a>模块的集合。 这些模块是在<a href="http://webpack.github.io/">Webpack</a>，<a href="http://browserify.org/">Browserify</a>或Node环境中导入redux时得到的。 如果你喜欢生活在边缘，使用<a href="http://rollupjs.org/">Rollup</a>，我们也支持。
-
-如果你不使用模块bundler，它也没关系。 <code>redux</code> npm包包括在<a href="https://unpkg.com/redux/dist/">dist文件夹</a>中预编译的生产和开发<a href="https://github.com/umdjs/umd">UMD</a>版本。 它们可以直接使用而无需捆绑器，因此与许多流行的javascript模块加载器和环境兼容。 例如，可以将UMD构建作为<a href="https://unpkg.com/redux/dist/redux.js">script标记</a>放在页面上，或者告诉<a href="https://github.com/reactjs/redux/pull/1181#issuecomment-167361975">Bower安装它</a>。 UMD构建使Redux可用作<code>window.Redux</code>全局变量。
-
-Redux源代码是在ES2015中编写的，但我们将CommonJS和UMD构建预编译为ES5，因此它们可在<a href="http://caniuse.com/#feat=es5">任何现代浏览器</a>中使用。 您不需要使用Babel或模块捆绑包来<a href="https://github.com/reactjs/redux/blob/master/examples/counter-vanilla/index.html">开始使用Redux</a>。
-</p>
-<h3>
-互补包
-</h3>
-<p>
-很可能，您还需要<a href="https://github.com/reactjs/react-redux">React绑定</a>和<a href="https://github.com/gaearon/redux-devtools">开发人员工具</a>。
-```
-npm install --save react-redux
-npm install --save-dev redux-devtools
-```
-
-请注意，与Redux本身不同，Redux生态系统中的许多软件包不提供UMD构建，因此我们建议使用<a href="http://webpack.github.io/"> Webpack </a>和<a href="http://browserify.org/">Browserify</a>之类的CommonJS模块捆绑软件，以获得最舒适的开发体验。
-</p>
-<h3>
-要点
-</h3>
-<p>
-应用程序的整个状态存储在单个存储中的对象树中。
-改变状态树的唯一方法是发出一个动作，一个描述发生了什么的对象。
-要指定动作如何转换状态树，您需要编写纯reducer。
-```javascript
-import { createStore } from 'redux'
-
-/**
- * This is a reducer, a pure function with (state, action) =&gt; state signature.
- * It describes how an action transforms the state into the next state.
- *
- * The shape of the state is up to you: it can be a primitive, an array, an object,
- * or even an Immutable.js data structure. The only important part is that you should
- * not mutate the state object, but return a new object if the state changes.
- *
- * In this example, we use a `switch` statement and strings, but you can use a helper that
- * follows a different convention (such as function maps) if it makes sense for your
- * project.
- */
-function counter(state = 0, action) {
-  switch (action.type) {
-  case 'INCREMENT':
-    return state + 1
-  case 'DECREMENT':
-    return state - 1
-  default:
-    return state
-  }
-}
-
-// Create a Redux store holding the state of your app.
-// Its API is { subscribe, dispatch, getState }.
-let store = createStore(counter)
-
-// You can use subscribe() to update the UI in response to state changes.
-// Normally you'd use a view binding library (e.g. React Redux) rather than subscribe() directly.
-// However it can also be handy to persist the current state in the localStorage.
-
-store.subscribe(() =&gt;
-  console.log(store.getState())
-)
-
-// The only way to mutate the internal state is to dispatch an action.
-// The actions can be serialized, logged or stored and later replayed.
-store.dispatch({ type: 'INCREMENT' })
-// 1
-store.dispatch({ type: 'INCREMENT' })
-// 2
-store.dispatch({ type: 'DECREMENT' })
-// 1
-```
-<!--more-->
-而不是直接改变状态，你指定你想要发生的变异称为动作的简单对象的突变。 然后，您编写一个称为reducer的特殊函数来决定每个操作如何转换整个应用程序的状态。
-
-如果你来自Flux，有一个重要的区别，你需要了解。 Redux没有Dispatcher或者支持很多商店。 相反，只有一个存储具有单个根减少功能。 随着应用程序的增长，而不是添加商店，您将根还原器分割成更小的reducer独立操作在状态树的不同部分。 这就像在React应用程序中只有一个根组件，但是它由许多小组件组成。
-
-这个架构可能看起来像一个计数器应用程序的过分，但这种模式的美丽是它扩展到大型和复杂的应用程序。 它还支持非常强大的开发工具，因为可以跟踪每个突变到导致它的操作。 您可以记录用户会话，并通过重播每个操作重现它们。
-
-
-<a href="https://egghead.io/series/getting-started-with-redux">Redux入门</a>是一个视频课程，由30个视频组成，由Dan Abramov（Redux的作者）讲述。 它旨在补充文档的“基础”部分，同时提供关于不可变性，测试，Redux最佳实践以及使用Redux与React的更多见解。 本课程是免费的，将永远是。
-</p>
-<h3>
-附录
-</h3>
-<p>
-<a href="http://redux.js.org/docs/basics/">http://redux.js.org/docs/basics/</a>
-</p>
-
-<h3>
-动机
-</h3>
-<p>
-由于对javascript单页应用程序的要求变得越来越复杂，我们的代码必须管理更多的状态。 此状态可以包括服务器响应和缓存数据，以及尚未保留到服务器的本地创建的数据。 UI状态也越来越复杂，因为我们需要管理活动路由，选定的选项卡，是否显示微调框，是否应显示分页控件等。
-
-管理这种不断变化的状态是很困难的。 如果模型可以更新另一个模型，则视图可以更新模型，该模型更新另一个模型，这反过来可能导致另一个视图更新。 在某些时候，你不再理解你的应用程序发生了什么，因为你失去了对状态的时间，原因和方式的控制。 当系统不透明和非确定性时，很难再现错误或添加新功能。
-
-好像这还不够，考虑新的需求在前端产品开发中变得普遍。 作为开发人员，我们需要处理乐观更新，服务器端呈现，在执行路由转换之前获取数据，等等。 我们发现自己试图管理我们从来没有处理的复杂性，我们不可避免地提出这个问题：是时候放弃了吗？ 答案是不。
-
-这种复杂性很难处理，因为我们混合了两个对人类思想很难理解的概念：变异和异步性。 我叫他们<a href="https://en.wikipedia.org/wiki/Diet_Coke_and_Mentos_eruption">Mentos和Coke</a>。 两者都可以伟大的分离，但在一起，他们创造了一团糟。 像React这样的库试图通过同时删除异步和直接DOM操作来解决视图层中的这个问题。 但是，管理数据的状态取决于您。 这是Redux进入的地方。
-
-在Flux，<a href="http://martinfowler.com/bliki/CQRS.html">CQRS</a>和<a href="http://martinfowler.com/eaaDev/EventSourcing.html">Event Sourcing</a>的步骤中，Redux试图通过对可能发生更新的方式和时间施加某些限制来使状态突变可预测。 这些限制反映在Redux的三个原则中。
-
-CQRS代表命令查询责任分离。 这是我第一次听到格雷格·杨描述的模式。 其核心是这样的概念：您可以使用不同的模型来更新信息，而不是用于读取信息的模型。 在某些情况下，这种分离是有价值的，但要注意对于大多数系统，CQRS增加了复杂性。
-
-我们可以查询应用程序的状态以找出世界的当前状态，这回答了许多问题。然而，有时我们不只是想看看我们在哪里，我们也想知道我们如何到达那里。
-
-事件源采购确保对应用程序状态的所有更改都存储为事件序列。我们不仅可以查询这些事件，还可以使用事件日志来重建过去的状态，并作为自动调整状态以应对追溯变化的基础。
-
-Event Sourcing的基本思想是确保每个对应用程序状态的更改都捕获在事件对象中，并且这些事件对象本身按应用程序状态本身的相同生命周期存储在序列中。
-
-让我们考虑一个关于运送通知的简单示例。在这个例子中，我们在公海上有许多船只，我们需要知道它们在哪里。一个简单的方法是让跟踪应用程序具有方法，以允许我们告知船舶何时到达或离开港口。
-
-在这种情况下，当调用服务时，它会找到相关的船并更新其位置。船舶对象记录船舶的当前已知状态。
-
-Event Sourcing简介为此过程增加了一个步骤。现在服务创建一个事件对象来记录更改并处理它以更新船。
-
-看看刚才的处理，这只是一个不必要的间接级别。有趣的区别是，当我们看看在几个更改后应用程序中存在什么。让我们想象一些简单的变化：
-
-使用基本服务，我们只看到船对象捕获的最终状态。我将这个称为应用程序状态。
-
-使用事件源，我们还捕获每个事件。如果我们使用持久存储，事件将被持久化，就像船对象一样。我认为我们坚持两种不同的东西应用程序状态和事件日志是有用的。
-</p>
-<h2>
-三个原则
-</h2>
-<p>
-Redux可以用三个基本原则来描述：
-</p>
-<h3>
-事实唯一性
-</h3>
-<p>
-整个应用程序的状态存储在单个存储中的对象树中。
-
-这使得创建通用应用程序变得容易，因为来自服务器的状态可以被序列化并转化到客户端，而无需额外的编码工作。 单个状态树还使得更容易调试或内测应用程序; 它还使您能够坚持您的应用程序的状态在开发中，以更快的开发周期。 一些传统上很难实现的功能 - 例如撤消/重做 - 如果你的所有状态都存储在一棵树中，那么它可能突然变得不重要。
-```javascript
-console.log(store.getState())
-
-/* Prints
-{
-  visibilityFilter: 'SHOW_ALL',
-  todos: [
-    {
-      text: 'Consider using Redux',
-      completed: true,
-    },
-    {
-      text: 'Keep all state in a single tree',
-      completed: false
-    }
-  ]
-}
-*/
-
-```
-</p>
-<h3>
-状态只读
-</h3>
-<p>
-改变状态的唯一方法是发出一个动作，一个描述发生了什么的对象。
-这确保视图和网络回调都不会直接写入状态。 相反，他们表达了改变状态的意图。 因为所有的变化是集中的，并以严格的顺序一个接一个地发生，没有微妙的竞争条件值得注意。 由于操作只是普通对象，它们可以被记录，序列化，存储，并且随后被重放以用于调试或测试目的。
-```javascript
-store.dispatch({
-  type: 'COMPLETE_TODO',
-  index: 1
-})
-
-store.dispatch({
-  type: 'SET_VISIBILITY_FILTER',
-  filter: 'SHOW_COMPLETED'
-})
-
-```
-</p>
-<h3>
-使用纯函数进行更改
-</h3>
-<p>
-要指定如何通过操作转换状态树，可以编写纯reducer。
-
-减少者只是纯函数，它采取前一个状态和一个动作，并返回下一个状态。 记住返回新的状态对象，而不是改变之前的状态。 你可以从一个单一的reducer开始，随着你的应用程序的增长，把它拆分成更小的reducer，它管理状态树的特定部分。 因为reducers只是函数，你可以控制它们被调用的顺序，传递额外的数据，甚至为普通任务（如分页）创建可重用的reducers。
-```javascript
-function visibilityFilter(state = 'SHOW_ALL', action) {
-  switch (action.type) {
-    case 'SET_VISIBILITY_FILTER':
-      return action.filter
-    default:
-      return state
-  }
-}
-
-function todos(state = [], action) {
-  switch (action.type) {
-    case 'ADD_TODO':
-      return [
-        ...state,
-        {
-          text: action.text,
-          completed: false
-        }
-      ]
-    case 'COMPLETE_TODO':
-      return state.map((todo, index) =&gt; {
-        if (index === action.index) {
-          return Object.assign({}, todo, {
-            completed: true
-          })
-        }
-        return todo
-      })
-    default:
-      return state
-  }
-}
-
-import { combineReducers, createStore } from 'redux'
-let reducer = combineReducers({ visibilityFilter, todos })
-let store = createStore(reducer)
-```
-</p>
-<h2>
-现有技术
-</h2>
-<p>
-Redux有一个混合遗产。 它类似于一些模式和技术，但也有重要的方面与他们不同。 我们将探讨一些相似之处和下面的差异。
-</p>
-<h3>
-Flux
-</h3>
-<p>
-可以将Redux视为Flux实现吗？
-
-是的，没有。
-
-（不要担心，Flux的创作者赞成它，如果这是你想知道的。）
-
-Redux的灵感来自于Flux的几个重要特性。 像Flux一样，Redux规定您将模型更新逻辑集中在应用程序的某个层（“Flux”中的“商店”，Redux中的“reducer”）。 不是让应用程序代码直接变换数据，而是告诉你将每个变量描述为一个称为“动作”的简单对象。
-
-与Flux不同，Redux没有Dispatcher的概念。 这是因为它依赖于纯函数而不是事件发射器，而纯函数很容易构成，并且不需要另外的实体来管理它们。 根据您查看Flux的方式，您可能会将此视为偏差或实施详细信息。 Flux经常被描述为(state, action) =&gt; state。 在这个意义上，Redux是真正的Flux架构，但由于纯函数使它更简单。
-
-与Flux的另一个重要区别是Redux假设你从不改变你的数据。 你可以使用简单的对象和数组为你的状态很好，但是在reducer内变异他们是强烈不鼓励。 你应该总是返回一个新的对象，这是很容易与对象扩展运算符建议，或与像Immutable的库。
-
-虽然在技术上可能编写不确定的缩减器，为性能角点突变数据，但我们积极阻止您这样做。 时间旅行，记录/重放或热重新加载等开发功能将会中断。 此外，似乎不可变性似乎在大多数真实应用程序中造成性能问题，因为，正如<a href="https://github.com/omcljs/om">Om</a>所示，即使你失去了对象分配，你仍然通过避免昂贵的重新渲染和重新计算赢得，因为你知道什么 改变由于减速器的纯度。
-</p>
-<h3>
-Elm
-</h3>
-<p>
-&lt;a href="http://elm-lang.org/"Elm是一个由Haskell启发的函数式编程语言，由Evan Czaplicki创建。 它强制执行“模型视图更新”架构，其中更新具有以下签名：（action，state）=&gt; state。 Elm“updaters”与Redux中的reducer具有相同的目的。
-
-与Redux不同，Elm是一种语言，因此它可以从诸如强制纯度，静态类型，开箱不可变性和模式匹配（使用case表达式）等许多方面受益。 即使你不打算使用Elm，你应该阅读关于Elm架构，并玩它。 有一个有趣的javascript库操场实现类似的想法。 我们应该看看Redux的灵感！ 我们可以更接近Elm的静态类型的一种方法是使用渐进打字解决方案，如Flow。
-</p>
-<h3>
-Immutable
-</h3>
-<p>
- <a href="https://facebook.github.io/immutable-js">Immutable</a>是一个实现持久数据结构的javascript库。 它是性能和有一个惯用的javascript API。
-
-Immutable的和最相似的库与Redux正交。 随意使用它们在一起！
-
-Redux不关心你如何存储状态 - 它可以是一个简单的对象，一个Immutable的对象，或任何其他。 你可能想要一个（de）序列化机制，用于编写通用应用程序和从服务器转化化它们的状态，但除此之外，你可以使用任何数据存储库，只要它支持Immutable。 例如，将Backbone用于Redux状态没有意义，因为Backbone模型是可变的。
-
-请注意，即使您的Immutable库支持光标，您不应在Redux应用程序中使用它们。 整个状态树应该被认为是只读的，你应该使用Redux来更新状态，并订阅更新。 因此，通过光标写入对于Redux没有意义。 如果您对光标的唯一用例是从UI树中解耦状态树并逐渐细化光标，则应查看选择器。 选择器是可组合的getter函数。 看到重选的一个真正伟大和简洁的可组合选择器的实现。
-</p>
-<h3>
-Baobab
-</h3>
-<p>
-<a href="https://github.com/Yomguithereal/baobab">Baobab</a>是另一个流行的库，用于实现不可变的API，用于更新纯javascript对象。 虽然你可以使用它与Redux，但是没有什么好处在一起使用它们。
-
-Baobab提供的大多数功能都与使用游标更新数据相关，但Redux强制更新数据的唯一方法是调度操作。 因此，他们不同地解决相同的问题，并且不互补。
-
-与Immutable不同，Baobab还没有实现任何特殊的高效数据结构，所以你不会真正赢得任何东西，使用它和Redux一起使用。 在这种情况下，更容易使用纯对象。
-</p>
-<h3>
-Rx
-</h3>
-<p>
-<a href="https://github.com/Reactive-Extensions/RxJS">Reactive </a>扩展（以及它们正在进行的现代重写）是管理异步应用程序的复杂性的极好方法。 实际上，有一种努力来创建一个将人机交互作为相互依赖的可观察者的库。
-
-与Rx一起使用Redux有意义吗？ 当然！ 他们一起工作。 例如，很容易将Redux存储暴露为可观察者：
-```javascript
-function toObservable(store) {
-  return {
-    subscribe({ onNext }) {
-      let dispose = store.subscribe(() =&gt; onNext(store.getState()))
-      onNext(store.getState())
-      return { dispose }
-    }
-  }
-}
-```
-
-类似地，您可以组合不同的异步流，将它们转换为动作，然后将它们提供给store.dispatch（）。
-
-问题是：如果你已经使用Rx，你真的需要Redux吗？ 也许不会。 在<a href="https://github.com/jas-chen/rx-redux">Rx中重新实现Redux</a>并不困难。 有人说这是一个两线程使用Rx.scan（）方法。 它可能很好！
-
-如果你有疑问，请查看Redux源代码（没有太多的事情），以及它的生态系统（例如，<a href="https://github.com/gaearon/redux-devtools">开发工具</a>）。 如果你不太关心它，并且希望与反应数据流一路走，你可能想要探索类似于<a href="https://cycle.js.org/">Cycle</a>的东西，或者甚至将它与Redux组合。 让我们知道它怎么回事！
-</p>
-
-<h2>
-生态系统
-</h2>
-<p>
-Redux是一个很小的库，但它的合同和API被仔细选择，以产生一个工具和扩展的生态系统。
-
-有关与Redux相关的一切的广泛列表，我们建议<a href="https://github.com/xgrommx/awesome-redux">Awesome Redux</a>。 它包含示例，模板，中间件，实用程序库等。<a href="https://github.com/markerikson/react-redux-links"> React / Redux链接</a>包含任何学习React或Redux的教程和其他有用的资源，<a href="https://github.com/markerikson/redux-ecosystem-links">Redux Ecosystem Links</a>列出了许多与Redux相关的库和插件。
-
-在本页上，我们将只介绍Redux维护者已亲自审核的几个。 不要让这不鼓励你尝试其余的！ 生态系统正在增长太快，我们有限的时间来看待一切。 考虑这些“职员选择”，如果你用Redux构建了一些奇妙的东西，不要犹豫提交PR。
-</p>
-
-<h2>
-学习Redux
-</h2>
-<h3>
-
-</h3>
 ]]></content>
   </entry>
   

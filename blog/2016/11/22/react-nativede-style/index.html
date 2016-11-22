@@ -1,0 +1,510 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>React Native的布局 - IT Monkey Life</title>
+	<meta name="author" content="Rick">
+
+	
+	<meta name="description" content="Style样式 使用React Native，不要使用特殊语言或语法来定义样式。 你只需使用JavaScript来设计你的应用程序。 所有的核心组件接受props命名风格。 样式名称和值通常匹配CSS在Web上的工作方式，除了名称被写为backgroundColor而不是像background- &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/Blog/atom.xml" rel="alternate" title="IT Monkey Life" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/Blog/favicon.png" rel="shortcut icon">
+	<link href="/Blog/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/Blog/">IT Monkey Life</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/Blog/">Blog</a></li>
+	<li><a href="/Blog/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/Blog/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:ITMonkeyLife.github.io/Blog">
+	</form>
+</nav>
+
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">React Native的布局</h2>
+	<div class="entry-content"><h2>
+Style样式
+</h2>
+<p>
+使用React Native，不要使用特殊语言或语法来定义样式。 你只需使用JavaScript来设计你的应用程序。 所有的核心组件接受<code>props</code>命名风格。 样式名称和值通常匹配CSS在Web上的工作方式，除了名称被写为<em>backgroundColor</em>而不是像<em>background-color</em>。
+
+样式prop可以是一个普通的旧JavaScript对象。 这是最简单的，我们通常用于示例代码。 您还可以传递样式数组 - 数组中的最后一个样式具有优先级，因此可以使用它来继承样式。
+
+由于组件的复杂性增加，使用<em>StyleSheet.create</em>在一个位置定义多个样式通常更加清晰。 这里有一个例子：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">AppRegistry</span><span class="p">,</span> <span class="nx">StyleSheet</span><span class="p">,</span> <span class="nx">Text</span><span class="p">,</span> <span class="nx">View</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-native&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">LotsOfStyles</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">View</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">red</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">just</span> <span class="nx">red</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">bigblue</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">just</span> <span class="nx">bigblue</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{[</span><span class="nx">styles</span><span class="p">.</span><span class="nx">bigblue</span><span class="p">,</span> <span class="nx">styles</span><span class="p">.</span><span class="nx">red</span><span class="p">]}</span><span class="o">&gt;</span><span class="nx">bigblue</span><span class="p">,</span> <span class="nx">then</span> <span class="nx">red</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{[</span><span class="nx">styles</span><span class="p">.</span><span class="nx">red</span><span class="p">,</span> <span class="nx">styles</span><span class="p">.</span><span class="nx">bigblue</span><span class="p">]}</span><span class="o">&gt;</span><span class="nx">red</span><span class="p">,</span> <span class="nx">then</span> <span class="nx">bigblue</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/View&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">const</span> <span class="nx">styles</span> <span class="o">=</span> <span class="nx">StyleSheet</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">bigblue</span><span class="o">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span>
+</span><span class="line">    <span class="nx">fontWeight</span><span class="o">:</span> <span class="s1">&#39;bold&#39;</span><span class="p">,</span>
+</span><span class="line">    <span class="nx">fontSize</span><span class="o">:</span> <span class="mi">30</span><span class="p">,</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nx">red</span><span class="o">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span><span class="line">
+</span><span class="line"><span class="nx">AppRegistry</span><span class="p">.</span><span class="nx">registerComponent</span><span class="p">(</span><span class="s1">&#39;LotsOfStyles&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">LotsOfStyles</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+一个常见的模式是使你的组件接受一个样式属性，反过来，它被用于样式子组件。 你可以使用它来使样式“级联”他们在CSS中的方式。
+<!--more-->
+有很多自定义文本样式的方法。 查看<a href="">Text组件引用</a>以获取完整列表。
+
+现在你可以让你的文本美丽。 成为风格大师的下一步是学习如何控制组件大小。
+</p>
+<h2>
+高和宽
+</h2>
+<p>
+组件的高度和宽度决定了其在屏幕上的大小。
+</p>
+<h3>
+固定尺寸
+</h3>
+<p>
+设置组件尺寸的最简单的方法是通过向样式添加固定的宽度和高度。 React Native中的所有维都是无单位的，表示与密度无关的像素。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="html"><span class="line">import React, { Component } from &#39;react&#39;;
+</span><span class="line">import { AppRegistry, View } from &#39;react-native&#39;;
+</span><span class="line">
+</span><span class="line">class FixedDimensionsBasics extends Component {
+</span><span class="line">  render() {
+</span><span class="line">    return (
+</span><span class="line">      <span class="nt">&lt;View&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">50</span><span class="err">,</span> <span class="na">height:</span> <span class="na">50</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">powderblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">100</span><span class="err">,</span> <span class="na">height:</span> <span class="na">100</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">skyblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">150</span><span class="err">,</span> <span class="na">height:</span> <span class="na">150</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">steelblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">      <span class="nt">&lt;/View&gt;</span>
+</span><span class="line">    );
+</span><span class="line">  }
+</span><span class="line">};
+</span><span class="line">
+</span><span class="line">AppRegistry.registerComponent(&#39;AwesomeProject&#39;, () =&gt; FixedDimensionsBasics);
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+以此方式设置尺寸对于始终按照完全相同的大小呈现的组件而言是常见的，而不管屏幕尺寸如何。
+</p>
+<h3>
+Flex尺寸
+</h3>
+<p>
+在组件的样式中使用flex，以根据可用空间动态地展开和缩小组件。 通常你将使用flex：1，它告诉组件填充所有可用空间，在相同的父组件之间均匀分配。 给定的flex越大，组件与其兄弟节点相比所需的空间比例越高。
+<blockquote>
+如果组件的父级的尺寸大于0，则组件只能扩展以填充可用空间。如果父级组件不具有固定宽度和高度或flex，则父级的尺寸为0，而flex子组件将不可见。
+</blockquote>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="html"><span class="line">import React, { Component } from &#39;react&#39;;
+</span><span class="line">import { AppRegistry, View } from &#39;react-native&#39;;
+</span><span class="line">
+</span><span class="line">class FlexDimensionsBasics extends Component {
+</span><span class="line">  render() {
+</span><span class="line">    return (
+</span><span class="line">      // Try removing the `flex: 1` on the parent View.
+</span><span class="line">      // The parent will not have dimensions, so the children can&#39;t expand.
+</span><span class="line">      // What if you add `height: 300` instead of `flex: 1`?
+</span><span class="line">      <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">flex:</span> <span class="na">1</span><span class="err">}</span> <span class="err">}</span><span class="nt">&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">flex:</span> <span class="na">1</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">powderblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">flex:</span> <span class="na">2</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">skyblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">flex:</span> <span class="na">3</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">steelblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">      <span class="nt">&lt;/View&gt;</span>
+</span><span class="line">    );
+</span><span class="line">  }
+</span><span class="line">};
+</span><span class="line">
+</span><span class="line">AppRegistry.registerComponent(&#39;AwesomeProject&#39;, () =&gt; FlexDimensionsBasics);
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+在您可以控制组件的大小后，下一步是学习如何将其放在屏幕上。
+</p>
+<h2>
+使用Flexbox布局
+</h2>
+<p>
+组件可以使用flexbox算法指定其子项的布局。 Flexbox旨在在不同的屏幕尺寸上提供一致的布局。
+
+你通常会使用flexDirection，alignItems和justifyContent的组合来实现正确的布局。
+<blockquote>
+Flexbox在React Native中的工作方式与在Web上的CSS中的工作方式相同，但有一些例外。 默认值不同，flexDirection默认为column而不是row，alignItems默认为stretch而不是flex-start，flex参数只支持一个数字。
+</blockquote>
+</p>
+<h3>
+Flex方向
+</h3>
+<p>
+将flexDirection添加到组件的样式确定其布局的主轴。 孩子们应该是水平（行）还是垂直（列）组织？ 默认值为column。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+</pre></td><td class="code"><pre><code class="html"><span class="line">import React, { Component } from &#39;react&#39;;
+</span><span class="line">import { AppRegistry, View } from &#39;react-native&#39;;
+</span><span class="line">
+</span><span class="line">class FlexDirectionBasics extends Component {
+</span><span class="line">  render() {
+</span><span class="line">    return (
+</span><span class="line">      // Try setting `flexDirection` to `column`.
+</span><span class="line">      <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">flex:</span> <span class="na">1</span><span class="err">,</span> <span class="na">flexDirection:</span> <span class="err">&#39;</span><span class="na">row</span><span class="err">&#39;}</span> <span class="err">}</span><span class="nt">&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">50</span><span class="err">,</span> <span class="na">height:</span> <span class="na">50</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">powderblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">50</span><span class="err">,</span> <span class="na">height:</span> <span class="na">50</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">skyblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">50</span><span class="err">,</span> <span class="na">height:</span> <span class="na">50</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">steelblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">      <span class="nt">&lt;/View&gt;</span>
+</span><span class="line">    );
+</span><span class="line">  }
+</span><span class="line">};
+</span><span class="line">
+</span><span class="line">AppRegistry.registerComponent(&#39;AwesomeProject&#39;, () =&gt; FlexDirectionBasics);
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h3>
+证明内容
+</h3>
+<p>
+将justifyContent添加到组件的样式确定沿主轴的子项分布。 是否应该在开始，中心，结束或均匀分布children？ 可用选项包括flex-start，center，flex-end，space-around和space-between。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+</pre></td><td class="code"><pre><code class="html"><span class="line">import React, { Component } from &#39;react&#39;;
+</span><span class="line">import { AppRegistry, View } from &#39;react-native&#39;;
+</span><span class="line">
+</span><span class="line">class JustifyContentBasics extends Component {
+</span><span class="line">  render() {
+</span><span class="line">    return (
+</span><span class="line">      // Try setting `justifyContent` to `center`.
+</span><span class="line">      // Try setting `flexDirection` to `row`.
+</span><span class="line">      <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span>
+</span><span class="line">        <span class="na">flex:</span> <span class="na">1</span><span class="err">,</span>
+</span><span class="line">        <span class="na">flexDirection:</span> <span class="err">&#39;</span><span class="na">column</span><span class="err">&#39;,</span>
+</span><span class="line">        <span class="na">justifyContent:</span> <span class="err">&#39;</span><span class="na">space-between</span><span class="err">&#39;,</span>
+</span><span class="line">      <span class="err">}</span> <span class="err">}</span><span class="nt">&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">50</span><span class="err">,</span> <span class="na">height:</span> <span class="na">50</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">powderblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">50</span><span class="err">,</span> <span class="na">height:</span> <span class="na">50</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">skyblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">50</span><span class="err">,</span> <span class="na">height:</span> <span class="na">50</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">steelblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">      <span class="nt">&lt;/View&gt;</span>
+</span><span class="line">    );
+</span><span class="line">  }
+</span><span class="line">};
+</span><span class="line">
+</span><span class="line">AppRegistry.registerComponent(&#39;AwesomeProject&#39;, () =&gt; JustifyContentBasics);
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h3>
+对齐
+</h3>
+<p>
+将alignItems添加到组件的样式确定沿辅助轴的子对齐（如果主轴是行，则辅助轴是列，反之亦然）。 children应该在开始，中心，结束，还是伸展填充？ 可用选项有flex-start，center，flex-end和stretch。
+<blockquote>
+为了拉伸有效果，children不得沿着辅助轴具有固定尺寸。 在下面的示例中，设置alignItems：stretch不执行任何操作，直到宽度：50从子项中删除。
+</blockquote>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+</pre></td><td class="code"><pre><code class="html"><span class="line">import React, { Component } from &#39;react&#39;;
+</span><span class="line">import { AppRegistry, View } from &#39;react-native&#39;;
+</span><span class="line">
+</span><span class="line">class AlignItemsBasics extends Component {
+</span><span class="line">  render() {
+</span><span class="line">    return (
+</span><span class="line">      // Try setting `alignItems` to &#39;flex-start&#39;
+</span><span class="line">      // Try setting `justifyContent` to `flex-end`.
+</span><span class="line">      // Try setting `flexDirection` to `row`.
+</span><span class="line">      <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span>
+</span><span class="line">        <span class="na">flex:</span> <span class="na">1</span><span class="err">,</span>
+</span><span class="line">        <span class="na">flexDirection:</span> <span class="err">&#39;</span><span class="na">column</span><span class="err">&#39;,</span>
+</span><span class="line">        <span class="na">justifyContent:</span> <span class="err">&#39;</span><span class="na">center</span><span class="err">&#39;,</span>
+</span><span class="line">        <span class="na">alignItems:</span> <span class="err">&#39;</span><span class="na">center</span><span class="err">&#39;,</span>
+</span><span class="line">      <span class="err">}</span> <span class="err">}</span><span class="nt">&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">50</span><span class="err">,</span> <span class="na">height:</span> <span class="na">50</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">powderblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">50</span><span class="err">,</span> <span class="na">height:</span> <span class="na">50</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">skyblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">        <span class="nt">&lt;View</span> <span class="na">style=</span><span class="s">{</span> <span class="err">{</span><span class="na">width:</span> <span class="na">50</span><span class="err">,</span> <span class="na">height:</span> <span class="na">50</span><span class="err">,</span> <span class="na">backgroundColor:</span> <span class="err">&#39;</span><span class="na">steelblue</span><span class="err">&#39;}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</span><span class="line">      <span class="nt">&lt;/View&gt;</span>
+</span><span class="line">    );
+</span><span class="line">  }
+</span><span class="line">};
+</span><span class="line">
+</span><span class="line">AppRegistry.registerComponent(&#39;AwesomeProject&#39;, () =&gt; AlignItemsBasics);
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+<h3>
+深入探讨
+</h3>
+<p>
+我们已经介绍了基础知识，但是有许多其他样式可能需要布局。 控制布局的道具的完整列表在<a href="http://facebook.github.io/react-native/docs/layout-props.html">这里</a>记录。
+
+我们正在接近能够构建一个真正的应用程序。 我们还缺少一个方法来接受用户输入，所以让我们继续学习如何使用TextInput组件处理文本输入。
+</p>
+
+<hr />
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+
+<section id="comment">
+    <h2 class="title">Comments</h2>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Rick
+
+</footer>
+	<script src="/Blog/javascripts/slash.js"></script>
+<script src="/Blog/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'ITMonkeyLife';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://ITMonkeyLife.github.io/Blog/blog/2016/11/22/react-nativede-style/';
+        var disqus_url = 'http://ITMonkeyLife.github.io/Blog/blog/2016/11/22/react-nativede-style/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//go.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-52658428-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>

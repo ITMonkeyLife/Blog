@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="在计算机科学中，闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，有另一种说法认为闭包是由函数和与其相关的引用环境组合而成的实体。闭包在运行时可以有多个实例， &hellip;">
+	<meta name="description" content="在写任何东西之前我需要承认我是带有偏见的：我爱 Swift。我认为这是从我开始接触 Cocoa 生态系统以来这个平台上发生的最好的事情。我想通过分享我在 Swift，Objective-C 和 Haskell 上的经验让大家知道我为何这样认为。写这篇文章并不是为了介绍一些最好的实践 ( &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,252 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/">
+		
+			Swift的强大之处</a>
+	</h2>
+	<div class="entry-content">
+		<p>在写任何东西之前我需要承认我是带有偏见的：我爱 Swift。我认为这是从我开始接触 Cocoa 生态系统以来这个平台上发生的最好的事情。我想通过分享我在 Swift，Objective-C 和 Haskell 上的经验让大家知道我为何这样认为。写这篇文章并不是为了介绍一些最好的实践 (写这些的时候 Swift 还太年轻，还没最好实践被总结出来)，而是举几个关于 Swift 强大之处的例子。</p>
+
+<p>给大家一些我的个人背景：在成为全职 iOS/Mac 工程师之前我花了几年的时间做 Haskell (包括一些其他函数式编程语言) 开发。我仍然认为 Haskell 是我所有使用过的语言中最棒的之一。然而我转战到了 Objective-C，是因为我相信 iOS 是最令人激动的平台。刚开始接触 Objective-C 的时候我有些许沮丧，但我慢慢地学会了欣赏它。</p>
+
+<p>当苹果在 WWDC 发布 Swift 的时候我非常的激动。我已经很久没有对新技术的发布感的如此兴奋了。在看过文档之后我意识到 Swift 使我们能够将现有的函数式编程知识和 Cocoa API 无缝地整合到一起。我觉得这两者的组合非常独特：没有任何其他的语言将它们融合地如此完美。就拿 Haskell 来说，想要用它来使用 Objective-C API 相当的困难。同样，想用 Objective-C 去做函数式编程也是十分困难的。</p>
+
+<p>在 Utrecht 大学期间我学会了函数式编程。因为是在很学术的环境下学习所以并没有觉得很多复杂的术语 (moands，applicative functors 以及很多其他的东西) 有多么难懂。我觉得对很多想学习函数式编程的人来说这些名称是一个很大的阻碍。</p>
+
+<p>不仅仅名称很不同，风格也不一样。作为 Objective-C 程序员，我们很习惯于面向对象编程。而且因为大多数语言不是面对对象编程就是与之类似，我们可以看懂很多不同语言的代码。阅读函数式编程语言的时候则大不相同 &#8211; 如果你没有习惯的话看起来简直莫名其妙。</p>
+
+<p>那么，为什么你要使用函数式编程呢？它很奇怪，很多人都不习惯而且学习它要花费大量的时间。并且对于大多数问题面向对象编程都能解决，所以没有必要去学习任何新的东西对吧？</p>
+
+<p>对于我来说，函数式编程只是工具箱中的一件工具。它是一个改变了我对编程的理解的强大工具。在解决问题的时候它非常强大。对于大多数问题面向对象编程都很棒，但是对于其他一些问题应用函数式编程会给你带来巨大的时间/精力的节省。</p>
+
+<p>开始学习函数式编程或许有些痛苦。第一，你必须放手一些老的模式。而因为我们很多人常年用面对对象的方式去思考，做到这一点是很困难的。在函数式编程当中你想的是不变的数据结构以及那些转换它们的函数。在面对对象编程当中你考虑的是互相发送信息的对象。如果你没有马上理解函数式编程，这是一个好的信号。你的大脑很可能已经完全适应了用面对对象的方法来解决问题。</p>
+
+<h2>例子</h2>
+
+		
+		<a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/09/18/swiftde-qiang-da-zhi-chu/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/">
+		
+			Swift的函数式API</a>
+	</h2>
+	<div class="entry-content">
+		<p>在过去的时间里，人们对于设计 API 总结了很多通用的模式和最佳实践方案。一般情况下，我们总是可以从苹果的 Foundation、Cocoa、Cocoa Touch 和很多其他框架中总结出一些开发中的范例。毫无疑问，对于“特定情境下的 API 应该如何设计”这个问题，不同的人总是有着不同的意见，对于这个问题有很大的讨论空间。不过对于很多 Objective-C 的开发者来说，对于那些常用的模式早已习以为常。</p>
+
+<p>随着 Swift 的出现，设计 API 引起了更多的问题。绝大多数情况下，我们只能继续做着手头的工作，然后把现有的方法翻译成 Swift 版本。不过，这对于 Swift 来说并不公平，因为和 Objective-C 相比，Swift 添加了很多新的特性。引用 Swift 创始人 <a href="https://twitter.com/clattner_llvm">Chris Lattner</a> 的一段话：</p>
+
+<blockquote>
+  <p>Swift 引入了泛型和函数式编程的思想，极大地扩展了设计的空间。</p>
+</blockquote>
+
+<p>在这篇文章里，我们将会围绕 <code>Core Image</code> 进行 API 封装，以此为例，探索如何在 API 设计中使用这些新的工具。 <code>Core Image</code> 是一个功能强大的图像处理框架，但是它的 API 有时有点笨重。 <code>Core Image</code> 的 API 是弱类型的 - 它通过键值对 (key-value) 设置图像滤镜。这样在设置参数的类型和名字时很容易失误，会导致运行时错误。新的 API 将会十分的安全和模块化，通过使用类型而不是键值对来规避这样的运行时错误。</p>
+
+<h2>目标</h2>
+
+<p>我们的目标是构建一个 API ，让我们可以简单安全的组装自定义滤镜。举个例子，在文章的结尾，我们可以这样写：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">let</span> <span class="n">myFilter</span> <span class="o">=</span> <span class="n">blur</span><span class="p">(</span><span class="n">blurRadius</span><span class="p">)</span> <span class="o">&gt;|&gt;</span> <span class="n">colorOverlay</span><span class="p">(</span><span class="n">overlayColor</span><span class="p">)</span>
+</span><span class="line"><span class="n">let</span> <span class="n">result</span> <span class="o">=</span> <span class="n">myFilter</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>上面构建了一个自定义的滤镜，先模糊图像，然后再添加一个颜色蒙版。为了达到这个目标，我们将充分利用 Swift 函数是一等公民这一特性。项目源码可以在 Github 上的这个<a href="https://github.com/objcio/issue-16-functional-apis">示例项目</a>中下载。</p>
+
+<h2 id="filter">Filter 类型</h2>
+
+<p><code>CIFilter</code> 是 <code>Core Image</code> 中的一个核心类，用来创建图像滤镜。当实例化一个 <code>CIFilter</code> 对象之后，你 (几乎) 总是通过 <code>kCIInputImageKey</code> 来输入图像，然后通过 <code>kCIOutputImageKey</code> 获取返回的图像，返回的结果可以作为下一个滤镜的参数输入。</p>
+
+<p>在我们即将开发的 API 里，我们会把这些键值对 (key-value) 对应的真实内容抽离出来，为用户提供一个安全的强类型 API。我们定义了自己的滤镜类型 <code>Filter</code>，它是一个可以传入图片作为参数的函数，并且返回一个新的图片。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">typealias</span> <span class="n">Filter</span> <span class="o">=</span> <span class="n">CIImage</span> <span class="o">-&gt;</span> <span class="n">CIImage</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/swift/'>Swift</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/09/18/swiftde-han-shu-shi-api/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/">
+		
+			iOS绘图详细解析</a>
+	</h2>
+	<div class="entry-content">
+		<div id="cnblogs_post_body"><p><span style="font-family: 'comic sans ms', sans-serif;">　　本文是《<a href="http://www.amazon.com/Programming-iOS-Fundamentals-iPhone-Development/dp/1449319343/ref=sr_1_3?ie=UTF8&amp;qid=1357784362&amp;sr=8-3&amp;keywords=ios" target="_blank">Programming iOS5</a>》中Drawing一章的翻译，考虑到主题完整性，翻译版本中加入了一些书中未涉及到的内容。希望本文能够对你有所帮助。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">
+<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; Core Graphics Framework是一套基于C的API框架，使用了Quartz作为绘图引擎。它提供了低级别、轻量级、高保真度的2D渲染。该框架可以用于基于路径的绘图、变换、颜色管理、脱屏渲染，模板、渐变、遮蔽、图像数据管理、图像的创建、遮罩以及PDF文档的创建、显示和分析。为了从感官上对这些概念做一个入门的认识，你可以运行一下官方的<a href="http://developer.apple.com/library/ios/samplecode/QuartzDemo/Introduction/Intro.html#//apple_ref/doc/uid/DTS40007531">example code</a>。<span><br />
+</span></span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp;iOS支持两套图形API族：Core Graphics/QuartZ 2D 和OpenGL ES。OpenGL ES是跨平台的图形API，属于OpenGL的一个简化版本。QuartZ 2D是苹果公司开发的一套API，它是Core Graphics Framework的一部分。需要注意的是：OpenGL ES是应用程序编程接口，该接口描述了方法、结构、函数应具有的行为以及应该如何被使用的语义。也就是说它只定义了一套规范，具体的实现由设备制造商根据规范去做。而往往很多人对接口和实现存在误解。举一个不恰当的比喻：上发条的时钟和装电池的时钟都有相同的可视行为，但两者的内部<strong>实现</strong>截然不同。因为制造商可以自由的实现Open GL ES，所以不同系统实现的OpenGL ES也存在着巨大的性能差异。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">&nbsp; &nbsp; &nbsp; &nbsp;Core Graphics API所有的操作都在上下文中进行。所以在绘图之前需要获取该上下文并传入执行渲染的函数内。如果你正在渲染一副在内存中的图片，此时就需要传入图片所属的上下文。获得一个图形上下文是我们完成绘图任务的第一步，你可以将图形上下文理解为一块画布。如果你没有得到这块画布，那么你就无法完成任何绘图操作。有许多方式获得一个图形上下文，这里我介绍两种最为常用的获取方法。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　第一种方法就是创建一个图片类型的上下文。调用<strong>UIGraphicsBeginImageContextWithOptions</strong>函数就可获得用来处理图片的图形上下文。利用该上下文，你就可以在其上进行绘图，并生成图片。调用<strong>UIGraphicsGetImageFromCurrentImageContext</strong>函数可从当前上下文中获取一个UIImage对象。记住在你所有的绘图操作后别忘了调用<strong>UIGraphicsEndImageContext</strong>函数关闭图形上下文。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　第二种方法是利用cocoa为你生成的图形上下文。当你子类化了一个UIView并实现了自己的<strong>drawRect：</strong>方法后，一旦<strong>drawRect</strong>：方法被调用，Cocoa就会为你创建一个图形上下文，此时你对图形上下文的所有绘图操作都会显示在UIView上。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　判断一个上下文是否为当前图形上下文需要注意的几点：</span></p>
+<ul>
+     <li><span style="font-family: 'comic sans ms', sans-serif;"><strong>UIGraphicsBeginImageContextWithOptions</strong>函数不仅仅是创建了一个适用于图形操作的上下文，并且该上下文也属于当前上下文。</span></li>
+     <li><span style="font-family: 'comic sans ms', sans-serif;">当<strong>drawRect</strong>方法被调用时，UIView的绘图上下文属于当前图形上下文。</span></li>
+     <li><span style="font-family: 'comic sans ms', sans-serif;">回调方法所持有的context：参数并不会让任何上下文成为当前图形上下文。此参数仅仅是对一个图形上下文的引用罢了。</span></li>
+</ul>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　作为初学者，很容易被UIKit和Core Graphics两个支持绘图的框架迷惑。</span></p>
+<p align="left"><span style="font-family: 'comic sans ms', sans-serif;">　　UIKit</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　像UIImage、NSString（绘制文本）、UIBezierPath（绘制形状）、UIColor都知道如何绘制自己。这些类提供了功能有限但使用方便的方法来让我们完成绘图任务。一般情况下，UIKit就是我们所需要的。</span></p>
+<p>使用UiKit，<span style="color: #ff0000;">你只能在当前上下文中绘图</span>，所以如果你当前处于</p>
+<p><strong>UIGraphicsBeginImageContextWithOptions</strong>函数或<strong>drawRect</strong>：方法中，你就可以直接使用UIKit提供的方法进行绘图。如果你持有一个context：参数，那么使用UIKit提供的方法之前，必须将该上下文参数转化为当前上下文。幸运的是，调用<strong>UIGraphicsPushContext</strong> 函数可以方便的将context：参数转化为当前上下文，记住最后别忘了调用<strong>UIGraphicsPopContext函数</strong>恢复上下文环境。</p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　Core Graphics</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　这是一个绘图专用的API族，它经常被称为QuartZ或QuartZ 2D。Core Graphics是iOS上所有绘图功能的基石，包括UIKit。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　使用Core Graphics之前需要指定一个用于绘图的图形上下文（CGContextRef），这个图形上下文会在每个绘图函数中都会被用到。如果你持有一个图形上下文context：参数，那么你等同于有了一个图形上下文，这个上下文也许就是你需要用来绘图的那个。如果你当前处于<strong>UIGraphicsBeginImageContextWithOptions函数</strong>或<strong>drawRect：</strong>方法中，并没有引用一个上下文。为了使用Core Graphics，你可以调用<strong>UIGraphicsGetCurrentContext</strong>函数获得当前的图形上下文。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　至此，我们有了两大绘图框架的支持以及三种获得图形上下文的方法（<strong>drawRect:</strong><strong>、drawRect: inContext:、</strong><strong>UIGraphicsBeginImageContextWithOptions</strong><strong>）</strong>。那么我们就有6种绘图的形式。如果你有些困惑了，不用怕，我接下来将说明这6种情况。无需担心还没有具体的绘图命令，你只需关注上下文如何被创建以及我们是在使用UIKit还是Core Graphics。</span></p>
+<p><span style="font-family: 'comic sans ms', sans-serif;">　　第一种绘图形式：在UIView的子类方法drawRect：中绘制一个蓝色圆，使用<strong>UIKit</strong>在Cocoa为我们提供的当前上下文中完成绘图任务。</span></p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">drawRect:</span> <span class="p">(</span><span class="n">CGRect</span><span class="p">)</span> <span class="n">rect</span> <span class="p">{</span>
+</span><span class="line">	<span class="n">UIBezierPath</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="nl">UIBezierPathbezierPathWithOvalInRect:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">100</span><span class="p">)];</span>
+</span><span class="line">	<span class="p">[[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span> <span class="n">setFill</span><span class="p">];</span>
+</span><span class="line">	<span class="p">[</span><span class="n">p</span> <span class="n">fill</span><span class="p">];</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+		
+		<a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/08/04/ioshui-tu-xiang-xi-jie-xi/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/">
+		
+			从UIKit到APPKit</a>
+	</h2>
+	<div class="entry-content">
+		<p>Mac 不仅是一个强大的生产平台，也十分值得你<em>为其</em>开发一些东西。去年我们开始构建我们的第一款 <a href="http://decksetapp.com">Mac 应用</a>，成功为我们日常工作所在的平台开发点东西是一次十分美好的体验。但是，和为 iOS 系统开发应用相比，在我们了解 Mac 特性的过程中也遇到了一些困难。这篇文章总结了我们从这一过渡中得到的经验，希望能启发你们去开发自己的第一个 Mac 应用。</p>
+
+<p>在这篇文章中，我们假定 OS X Yosemite 为我们默认使用的系统。今年，为了融合 iOS 和 OS X，苹果站在开发者的角度对 OS X 做出了巨大的改进。不过，我们会指出哪些特性仅适用于 Yosemite，而哪些特性也适用于之前的系统版本。</p>
+
+<h2>相似点</h2>
+
+<p>尽管 iOS 和 OS X 是两个独立的系统，它们却有很多共性。先就开发环境而言，它们使用同样的开发语言，同样的IDE。所以你会对这一切都感到非常熟悉。</p>
+
+<p>更重要的是，OS X 和你已经熟悉的 iOS 共用许多框架，像 Foundation，Core Data 和 Core Animation。今年，Apple 进一步整合两个平台，并给 Mac 带来了一些之前仅能在 iOS 上面使用的框架，其中一个例子就是 Multipeer Connectivity。在更底层的地方，你立刻可以看到你熟悉的 API：Core Graphics，Core Text，libdispatch 等等。</p>
+
+<p>真正开始有区别的是 UI 框架 — AppKit 早在 NeXT 时代就已面世并不断进化，而 UIKit 就像是简约版及现代版的 AppKit。出现这种情况的原因，是当 Apple 推出 iPhone 时可以从头开始，并吸取 AppKit 的经验：把已证实过可行的概念和部件拿过来用，并改进不够精良的设计。</p>
+
+<p>如果你对这个转换是怎么发生的感兴趣，请观看前 Apple iOS 应用总监 <a href="https://twitter.com/nitinganatra">Nitin Ganatra</a> 播客上的精彩剧集：<a href="http://www.imore.com/debug-39-nitin-ganatra-episode-i-system-7-carbon">System 7 to Carbon</a>，<a href="http://www.imore.com/debug-40-nitin-ganatra-episode-ii-os-x-ios">OS X to iOS</a>，以及 <a href="http://www.imore.com/debug-41-nitin-ganatra-episode-iii-iphone-ipad">iPhone to iPad</a>。</p>
+
+<p>考虑到这一点，也就不奇怪为什么 UIKit 和 AppKit 仍旧共享许多概念了。UI 是基于 window 和 view 构建起来的，消息像 iOS 一样通过响应者链传递。此外，<code>UIView</code> 是 <code>NSView</code>，<code>UIControl</code> 是 <code>NSControl</code>，<code>UIImage</code> 是 <code>NSImage</code>，<code>UIViewController</code> 是 <code>NSViewController</code>，<code>UITextView</code> 是 <code>NSTextView</code>&#8230;这样的例子不胜枚举。</p>
+
+<p>看起来就像你仅需把 <code>UI</code> 前缀替换为 <code>NS</code> 前缀，你就可以用同样的方法使用这些类。但事实是在很多情况下这并不奏效。它们在实现上并没有在概念上那么相似。你在 iOS 上的经验至多能帮你大致了解构建用户界面的基础，以及使用很多设计模式，比如代理，都是类似的。但是细节是魔鬼 — 你真的应该通过阅读文档来学习如果使用这些类。</p>
+
+<p>下一节，我们来看看那些常见的陷阱。</p>
+
+<h2>不同点</h2>
+
+<h3 id="windowwindowcontroller">Window 和 Window Controller</h3>
+
+		
+		<a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/" class="more-link">Read on &rarr;</a>
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2014/08/04/cong-uikitdao-appkit/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -448,280 +694,6 @@
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2014/05/23/jiao-hu-shi-dong-hua/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/">
-		
-			iOS动画解释</a>
-	</h2>
-	<div class="entry-content">
-		<p>我们写的应用程序往往都不是静态的，因为它们需要适应用户的需求以及为执行各种任务而改变状态。</p>
-
-<p>在这些状态之间转换时，清晰的揭示正在发生什么是非常重要的。而不是在页面之间跳跃，动画帮助我们解释用户从哪里来，要到哪里去。</p>
-
-<p>键盘在 view 中滑进滑出给了我们一个错觉，让我们以为它是简单的被隐藏在屏幕下方的，并且是手机很自然的一个部分。View controller 转场加强了我们的应用程序的导航结构，并且给了用户正在移向哪个方向的提示。微妙的反弹和碰撞使界面栩栩如生，并且激发出了物理的质感。要是没有这些的话，我们就只有一个没有视觉修饰的干巴巴环境了。</p>
-
-<p>动画是叙述你的应用的故事的绝佳方式，在了解动画背后的基本原理之后，设计它们会轻松很多。</p>
-
-<h2>首要任务</h2>
-
-<p>在这篇文章 (以及这个话题中其余大多数文章) 中，我们将特别地针对 Core Animation 进行探讨。虽然你将看到的很多东西也可以用更高层级的 UIKit 的方法来完成，但是 Core Animation 将会让你更好的理解正在发生什么。它以一种更明确的方式来描述动画，这对这篇文章读者以及你自己的代码的读者来说都非常有用。</p>
-
-<p>在看动画如何与我们在屏幕上看到的内容交互之前，我们需要快速浏览一下 Core Animation 的 <code>CALayer</code>，这是动画产生作用的地方。</p>
-
-<p>你大概知道 <code>UIView</code> 实例，以及 layer-backed 的 <code>NSView</code>，修改它们的 <code>layer</code> 来委托强大的 Core Graphics 框架来进行渲染。然而，你务必要理解，当把动画添加到一个 layer 时，是不直接修改它的属性的。</p>
-
-<p>取而代之，Core Animation 维护了两个平行 layer 层次结构： <em>model layer tree（模型层树）</em> 和 <em>presentation layer tree（表示层树）</em>。前者中的 layers 反映了我们能直接看到的 layers 的状态，而后者的 layers 则是动画正在表现的值的近似。</p>
-
-<blockquote>
-  <p>实际上还有所谓的第三个 layer 树，叫做 <em>rendering tree（渲染树）</em>。因为它对 Core Animation 而言是私有的，所以我们在这里不讨论它。</p>
-</blockquote>
-
-<p>考虑在 view 上增加一个渐出动画。如果在动画中的任意时刻，查看 layer 的 <code>opacity</code> 值，你是得不到与屏幕内容对应的透明度的。取而代之，你需要查看 presentation layer 以获得正确的结果。</p>
-
-<p>虽然你可能不会去直接设置 presentation layer 的属性，但是使用它的当前值来创建新的动画或者在动画发生时与 layers 交互是非常有用的。</p>
-
-<p>通过使用 <code>-[CALayer presentationLayer]</code> 和 <code>-[CALayer modelLayer]</code>，你可以在两个 layer 之间轻松切换。</p>
-
-<h2>基本动画</h2>
-
-<p>可能最常见的情况是将一个 view 的属性从一个值改变为另一个值，考虑下面这个例子：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/rocket-linear.gif" width="400px" /></center></p>
-
-<p>在这里，我们让红色小火箭的 x-position 从 <code>77.0</code> 变为 <code>455.0</code>，刚好超过它的 parent view 的边。为了填充所有路径，我们需要确定我们的火箭在任意时刻所到达的位置。这通常使用线性插值法来完成：</p>
-
-<p><center><img src="http://img.objccn.io/issue-12/lerp.png" width="135" /></center></p>
-
-<p>也就是说，对于动画给定的一个分数 <code>t</code>，火箭的 x 坐标就是起始点的 x 坐标 <code>77</code>，加上一个到终点的距离 <code>∆x = 378</code> 乘以该分数的值。</p>
-
-<p>使用 <code>CABasicAnimation</code>，我们可以如下实现这个动画：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">CABasicAnimation</span> <span class="o">*</span><span class="n">animation</span> <span class="o">=</span> <span class="p">[</span><span class="n">CABasicAnimation</span> <span class="n">animation</span><span class="p">];</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">keyPath</span> <span class="o">=</span> <span class="s">@&quot;position.x&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">fromValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">77</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">toValue</span> <span class="o">=</span> <span class="err">@</span><span class="mi">455</span><span class="p">;</span>
-</span><span class="line"><span class="n">animation</span><span class="p">.</span><span class="n">duration</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="p">[</span><span class="n">rocket</span><span class="p">.</span><span class="n">layer</span> <span class="nl">addAnimation:</span><span class="n">animation</span> <span class="nl">forKey:</span><span class="s">@&quot;basic&quot;</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/18/iosdong-hua-jie-shi/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/">
-		
-			自定义Formatters</a>
-	</h2>
-	<div class="entry-content">
-		<p>我们希望有一种快速的一次性的解决方案，可以把数据格式化为一种易读的格式。Foundation 框架中的就有 <code>NSFormatter</code> 可以很好地胜任这个工作。另外，在 Mac 上，Appkit 已经内建了 <code>NSFormatter</code> 的支持。</p>
-
-<h2>内建格式器</h2>
-
-<p>Foundation 框架中的 <code>NSFormatter</code> 是一个抽象类，它有两个已经实现的子类：<code>NSNumberFormatter</code> 与 <code>NSDateFormatter</code>。现在我们先跳过这些，来实现我们自己的子类。</p>
-
-<p>如果你想了解更多的相关知识，我推荐阅读 <a href="http://nshipster.com/nsformatter/">NSHipster</a>。</p>
-
-<h2>介绍</h2>
-
-<p><code>NSFormatter</code> 除了抛出错误，其它什么事也不做。我还不知道有人想要用这个，当然如果它对你有用，就去用它吧。</p>
-
-<p>因为我们不喜欢错误，我们在此实现一个 <code>NSFormatter</code> 的子类，它可以把 <code>UIColor</code> 实例转换成可读的名字。例如，以下代码可以返回字符串“Blue”:</p>
-
-<pre><code>KPAColorFormatter *colorFormatter = [[KPAColorFormatter alloc] init];
-[colorFormatter stringForObjectValue:[UIColor blueColor]] // Blue
-</code></pre>
-
-<p><code>NSFormatter</code> 的子类化有两个方法需要实现：<code>stringForObjectValue:</code> 与 <code>getObjectValue:ForString:errorDescription:</code>。我们先开始介绍第一个方法，因为这个方法更常用。第二个方法，就我所知，经常用于 OS X 上，并且通常不是很有用，我们将稍后介绍。</p>
-
-<h2>初始化</h2>
-
-<p>首先，我们需要做些初始化的工作。由于没有事先定义好的字典可以把颜色映射至名字，这些工作将由我们来完成。为了简化，这些工作将在初始化方法中完成：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span><span class="p">;</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">return</span> <span class="p">[</span><span class="n">self</span> <span class="nl">initWithColors:</span><span class="err">@</span><span class="p">{</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Red&quot;</span><span class="p">,</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Blue&quot;</span><span class="p">,</span>
-</span><span class="line">        <span class="p">[</span><span class="n">UIColor</span> <span class="n">greenColor</span><span class="p">]</span><span class="o">:</span> <span class="s">@&quot;Green&quot;</span>
-</span><span class="line">    <span class="p">}];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-		
-		<a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/16/zi-ding-yi-formatters/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/">
-		
-			消息传递机制</a>
-	</h2>
-	<div class="entry-content">
-		<p>每个应用或多或少都由一些需要相互传递消息的对象结合起来以完成任务。在这篇文章里，我们将介绍所有可用的消息传递机制，并通过例子来介绍怎样在苹果的框架里使用。我们还会选择一些最佳范例来介绍什么时候该用什么机制。</p>
-
-<p>虽然这一期的主题是关于 Foundation 框架的，但是我们会超出 Foundation 的消息传递机制 (KVO 和 通知) 来讲一讲 delegation，block 和 target-action 几种机制。</p>
-
-<p>当然，有些情况下该使用什么机制没有唯一的答案，所以应该按照自己的喜好去试试。另外大多数情况下该使用什么机制应该是很清楚的。</p>
-
-<p>本文中，我们会常常提及“接收者”和“发送者”。它们在消息传递中的意思可以通过以下的例子解释：一个 table view 是发送者，它的 delegate 就是接收者。Core Data managed object context 是它所发出的 notification 的发送者，获取 notification 的就是接收者。一个滑块 (slider) 是 action 消息的发送者，而实现这个 action （方法）的是它的接收者。任何修改一个支持 KVO 的对象的对象是发送者，这个 KVO 对象的观察者就是接收者。明白精髓了吗？</p>
-
-<h2>几种消息传递机制</h2>
-
-<p>首先我们来看看每种机制的具体特点。在这个基础上，下一节我们会画一个流程图来帮我们在具体情况下正确选择应该使用的机制。最后，我们会介绍一些苹果框架里的例子并且解释为什么在那些用例中会选择这样的机制。</p>
-
-<h3 id="kvo">KVO</h3>
-
-<p>KVO 是提供对象属性被改变时的通知的机制。KVO 的实现在 Foundation 中，很多基于 Foundation 的框架都依赖它。想要了解更多有关 KVO 的最佳实践，请阅读本期 Daniel 写的 <a href="http://objccn.io/issue-7-3">KVO 和 KVC 文章</a>。</p>
-
-<p>如果只对某个对象的值的改变感兴趣的话，就可以使用 KVO 消息传递。不过有一些前提：第一，接收者（接收对象改变的通知的对象）需要知道发送者 （值会改变的对象）；第二，接收者需要知道发送者的生命周期，因为它需要在发送者被销毁前注销观察者身份。如果这两个要去符合的话，这个消息传递机制可以一对多（多个观察者可以注册观察同一个对象的变化）</p>
-
-<p>If you plan to use KVO on Core Data objects, you have to know that things work a bit differently here. This has to do with Core Data&#8217;s faulting mechanism. Once a managed object turns into a fault, it will fire the observers on its properties although their values haven&#8217;t changed.</p>
-
-<p>如果要在 Core Data 上使用 KVO 的话，方法会有些许差别。这和 Core Data 的 faulting 机制有关。一旦一个 managed object 被 faulting 处理的话，即使它的属性没有被改变，它还是会触发相应的观察者。</p>
-
-<blockquote>
-  <span class="secondary radius label">编者注</span> 把属性值先取入缓存中，在对象需要的时候再进行一次访问，这在 Core Data 中是默认行为，这种技术称为 Faulting。这么做可以避免降低内存开销，但是如果你确定将访问结果对象的具体属性值时，可以禁用 Faults 以提高获取性能。关于这个技术更多的情况，请移步<a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreData/Articles/cdFaultingUniquing.html">官方文档</a>
-</blockquote>
-
-<h3>通知</h3>
-
-		
-		<a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/14/xiao-xi-chuan-di-ji-zhi/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/">
-		
-			语言标签</a>
-	</h2>
-	<div class="entry-content">
-		<p>当我们处理自然语言（相对于程序语言而言）的时候会遇到一项挑战，即涵义模棱两可。程序语言是被设计成为有且只有一个可能解释的语言，而人类语言可能由于模糊性和不确定性衍生出很多问题。这是由于有时候你并不想确切地告诉别人你对某事物的想法。在社交场合这完全没有问题，但是当你试图使用计算机来处理人类语言的话，就会非常痛苦。</p>
-
-<p>词法标识（token）就是一个简单的例子。程序语言的词法分析对于标识表示什么，它是什么类型（语句分隔符，标识符，保留关键字等等）是什么有着明确的规则。而自然语言则远不能如此清晰可辩。<em>can’t</em> 是一个还是两个标识？并且根据你做出的判断，<em>cannot</em> 或者 <em>can not</em> 这两个应该是相同意思的词又各是几个标识呢？很多复合词都可以写成一个词（比如：<em>bookshelf</em>），或者两个词（比如：<em>lawn mower</em>），甚至还可以用连字符来连接（比如：<em>life-cycle</em>）。有些字符 （比如说连字符或者右肩单撇号），可以有很多种解释，而如何选择正确字符往往取决于上下文语言环境（撇号在一个单词的最后是表示所有格符号还是后单引号？）</p>
-
-<p>句子的情况同样不怎么好：如果简单认为句号是用来结束一个句子的话，在我们使用缩写或是序数的时候就悲剧了。虽然通常情况下，我们是可以解决这个问题的，但是对有些句子而言，除非将整个段落彻底分析，否则无法真正确定这些句子的意思。我们人类甚至也无法有意识地考虑这些问题。</p>
-
-<p>不过我们希望能够处理人类语言，因为在跟软件交流的时候，使用人类语言对用户更加友好。我们更愿意直接告诉计算机要做什么，让计算机为我们分析报纸文章，并对我们感兴趣的新闻做个总结，而不是通过敲击键盘或者点击小小的按钮（或者在小小的虚拟键盘上打字）来让计算机为我们做这些事。其中有些还在我们的能力范围之外（至少在苹果为我们提供与 Siri 交互的  API 之前）。但是有些已经成为可能，那就是 <code>NSLinguisticTagger</code>。</p>
-
-<p><code>NSLinguisticTagger</code> 是 Foundation 框架中命名极为不当的类之一，这是因为它远远不止是一个小小的词性 tagger，而是集词法分析，分词器，命名实体识别及词性标注为一体的类。换句话说，它几乎可以满足你处理某些计算机语言处理的全部要求。</p>
-
-<p>为了展示 <code>NSLinguisticTagger</code> 类的用法，我们会开发一个灵活的工具用来搜索。我们有一个充满了文本（比如新闻，电邮，或者其他的任意文本）的集合，然后我们输入一个单词，这个单词将返回所有包含这个单词的句子。我们会忽略功能词（比如 <em>the</em>，<em>of</em> 或者 <em>and</em>），因为它们在这个语言环境中太过于常见，没有什么用处。我们目前要实现的是第一步：从一个单独文件中提取相关单词。由此可以迅速地扩展到提供完整功能。</p>
-
-<p><a href="https://github.com/objcio/issue-7-linguistic-tagging">GitHub</a> 上有源代码和样本文本。这是《卫报》上一篇关于中英贸易的文章。当用软件分析这份文本时，你会发现，它并不是总是运行良好，不过，出现运行故障完全正常：人类语言和任何正式语言都不同，人类语言凌乱复杂，无法简单划归到整齐划一的规则系统。很多理论问题（哪怕就像词性一样基础的问题）在某种程度上是无法解决的，这是由于我们仍然对如何才能最好地描述语言还所知甚少。比如说，词的分类是以拉丁语为依据的，但这并不意味着就必定适合英语。它们充其量只是大概近似而已。不过从很多实际的目的来看，这样就已经足够了，不需要让人怎么担心了。</p>
-
-		
-		<a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/" class="more-link">Read on &rarr;</a>
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2014/05/14/yu-yan-biao-qian/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>

@@ -7,7 +7,7 @@
 	<meta name="author" content="Rick">
 
 	
-	<meta name="description" content="20 越狱检测的攻与防 在应用开发过程中，我们希望知道设备是否越狱，正以什么权限运行程序，好对应采取一些防御和安全提示措施。 iOS7 相比之前版本的系统而言，升级了沙盒机制，封锁了几乎全部应用沙盒可以共享数据的入口。即使在越狱情况下，限制也非常多，大大增加了应用层攻击难度。比如，在 iOS7 &hellip;">
+	<meta name="description" content="24 敏感逻辑的保护方案 Objective-C 代码容易被 hook，暴露信息太赤裸裸，为了安全，改用 C 来写吧！ 图片 24.1 sensitive1 当然不是全部代码都要 C 来写，我指的是敏感业务逻辑代码。 本文就介绍一种低学习成本的，简易的，Objective-C 逻辑代码重写为 C &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -75,6 +75,722 @@
 		
 	
 	<div id="content" class="inner">
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an/">
+		
+			敏感逻辑的保护方案</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">24</span> <span class="title">敏感逻辑的保护方案</span></h1>
+    <p>Objective-C 代码容易被 hook，暴露信息太赤裸裸，为了安全，改用 C 来写吧！</p>
+
+<div class="figure" id="figure-24-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760k4kot8j205p04gdfu.jpg" />
+
+    <p class="caption"><strong>图片 24.1</strong> sensitive1</p>
+</div>
+
+
+<p>当然不是全部代码都要 C 来写，我指的是敏感业务逻辑代码。</p>
+
+<p>本文就介绍一种低学习成本的，简易的，Objective-C 逻辑代码重写为 C 代码的办法。</p>
+
+<p>也许，程序中存在一个类似这样的类：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">XXUtil</span> : <span class="nc">NSObject</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isVerified</span><span class="p">;</span>
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">isNeedSomething</span><span class="p">;</span>
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">resetPassword:</span><span class="p">(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>被 class-dump 出来后，利用 Cycript 很容易实现攻击，容易被 hook ，存在很大的安全隐患。</p>
+
+<div class="figure" id="figure-24-2">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760knfbzhj20350360sm.jpg" />
+
+    <p class="caption"><strong>图片 24.2</strong> sensitive2</p>
+</div>
+
+
+<p>想改，但是不想大改程序结构，肿么办呢？</p>
+
+<p>把函数名隐藏在结构体里，以函数指针成员的形式存储。
+这样做的好处是，编译后，只留了下地址，去掉了名字和参数表，提高了逆向成本和攻击门槛。</p>
+
+<p>改写的程序如下：</p>
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+<span class="line-number">50</span>
+<span class="line-number">51</span>
+<span class="line-number">52</span>
+<span class="line-number">53</span>
+<span class="line-number">54</span>
+<span class="line-number">55</span>
+<span class="line-number">56</span>
+<span class="line-number">57</span>
+<span class="line-number">58</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="c1">//XXUtil.h  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">Foundation</span><span class="o">/</span><span class="n">Foundation</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_util</span> <span class="p">{</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="p">(</span><span class="o">*</span><span class="n">isVerified</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class="line">    <span class="kt">BOOL</span> <span class="p">(</span><span class="o">*</span><span class="n">isNeedSomething</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class="line">    <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">resetPassword</span><span class="p">)(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">password</span><span class="p">);</span>
+</span><span class="line"><span class="p">}</span><span class="n">XXUtil_t</span> <span class="p">;</span>
+</span><span class="line">
+</span><span class="line"> <span class="err">#</span><span class="n">define</span> <span class="n">XXUtil</span> <span class="p">([</span><span class="n">_XXUtil</span> <span class="n">sharedUtil</span><span class="p">])</span>
+</span><span class="line">
+</span><span class="line"><span class="k">@interface</span> <span class="nc">_XXUtil</span> : <span class="nc">NSObject</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="n">XXUtil_t</span> <span class="o">*</span><span class="p">)</span><span class="nf">sharedUtil</span><span class="p">;</span>
+</span><span class="line"><span class="k">@end</span>
+</span><span class="line">
+</span><span class="line">
+</span><span class="line"><span class="c1">//XXUtil.m  </span>
+</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="s">&quot;XXUtil.h&quot;</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">BOOL</span> <span class="n">_isVerified</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">//bala bala ...  </span>
+</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">BOOL</span> <span class="n">_isNeedSomething</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">//bala bala ...  </span>
+</span><span class="line">    <span class="k">return</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="n">_resetPassword</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">password</span><span class="p">)</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="c1">//bala bala ...  </span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="n">XXUtil_t</span> <span class="o">*</span> <span class="n">util</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class="line"><span class="k">@implementation</span> <span class="nc">_XXUtil</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span><span class="p">(</span><span class="n">XXUtil_t</span> <span class="o">*</span><span class="p">)</span><span class="nf">sharedUtil</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="k">static</span> <span class="n">dispatch_once_t</span> <span class="n">onceToken</span><span class="p">;</span>
+</span><span class="line">    <span class="n">dispatch_once</span><span class="p">(</span><span class="o">&amp;</span><span class="n">onceToken</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class="line">        <span class="n">util</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">XXUtil_t</span><span class="p">));</span>
+</span><span class="line">        <span class="n">util</span><span class="o">-&gt;</span><span class="n">isVerified</span> <span class="o">=</span> <span class="n">_isVerified</span><span class="p">;</span>
+</span><span class="line">        <span class="n">util</span><span class="o">-&gt;</span><span class="n">isNeedSomething</span> <span class="o">=</span> <span class="n">_isNeedSomething</span><span class="p">;</span>
+</span><span class="line">        <span class="n">util</span><span class="o">-&gt;</span><span class="n">resetPassword</span> <span class="o">=</span> <span class="n">_resetPassword</span><span class="p">;</span>
+</span><span class="line">    <span class="p">});</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">util</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">destroy</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">util</span> <span class="o">?</span> <span class="n">free</span><span class="p">(</span><span class="n">util</span><span class="p">)</span><span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class="line">    <span class="n">util</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>最后，根据 Xcode 的报错指引，把以前这样的调用
+<code>[XXUtil isVerified];</code></p>
+
+<p>对应改成：
+<code>XXUtil-&gt;isVerified();</code></p>
+
+<p>就可以了。</p>
+
+<p>是的，绝不费一点脑子。</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/min-gan-luo-ji-de-bao-hu-fang-an/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/objective-c-dai-ma-hun-yao/">
+		
+			Objective-C 代码混淆</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">23</span> <span class="title">Objective-C 代码混淆</span></h1>
+    <p>class-dump 可以很方便的导出程序头文件，不仅让攻击者了解了程序结构方便逆向，还让着急赶进度时写出的欠完善的程序给同行留下笑柄。
+所以，我们迫切的希望混淆自己的代码。</p>
+
+<h3>混淆的常规思路</h3>
+
+<p>混淆分许多思路，比如：</p>
+
+<p>1）花代码花指令，即随意往程序中加入迷惑人的代码指令</p>
+
+<p>2）易读字符替换 等等</p>
+
+<div class="figure" id="figure-23-1">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f760g4dzitj202o031dfp.jpg" />
+
+    <p class="caption"><strong>图片 23.1</strong> confusion1</p>
+</div>
+
+
+<p>防止 class-dump 出可读信息的有效办法是易读字符替换。</p>
+
+<h3>Objective-C 的方法名混淆</h3>
+
+<h4>混淆的时机</h4>
+
+<p>我们希望在开发时一直保留清晰可读的程序代码，方便自己。
+同时，希望编译出来的二进制包含乱七八糟的混淆后的程序代码，恶心他人。</p>
+
+<p>因此，我们可以在 Build Phrase 中设定在编译之前进行方法名的字符串替换。</p>
+
+<h4>混淆的方法</h4>
+
+<p>方法名混淆其实就是字符串替换，有 2 个方法可以，一个是 <code>#define</code>，一个是利用 tops。</p>
+
+<p>利用 <code>#define</code> 的方法有一个好处，就是可以把混淆结果合并在一个 .h 中，在工程 Prefix.pch 的最前面 <code>#import</code> 这个 .h 。不导入也可以编译、导入则实现混淆。</p>
+
+<p>单段的 selector ，如 <code>func:</code> ，可以通过 <code>#define func</code> 来实现字符串替换。</p>
+
+<p>多段的 selector，如 <code>a:b:c:</code> ，可以通过分别 <code>#define a 、b、c</code> 来实现字符串替换。</p>
+
+<h3>我的混淆工具</h3>
+
+<p>我写了个简易的混淆脚本，主要思路是把敏感方法名集中写在一个名叫 func.list 的文件中，逐一 <code>#define</code> 成随机字符，追加写入 .h 。</p>
+
+<p>脚本如下：</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+<span class="line-number">20</span>
+<span class="line-number">21</span>
+<span class="line-number">22</span>
+<span class="line-number">23</span>
+<span class="line-number">24</span>
+<span class="line-number">25</span>
+<span class="line-number">26</span>
+<span class="line-number">27</span>
+<span class="line-number">28</span>
+<span class="line-number">29</span>
+<span class="line-number">30</span>
+<span class="line-number">31</span>
+<span class="line-number">32</span>
+<span class="line-number">33</span>
+<span class="line-number">34</span>
+<span class="line-number">35</span>
+<span class="line-number">36</span>
+<span class="line-number">37</span>
+<span class="line-number">38</span>
+<span class="line-number">39</span>
+<span class="line-number">40</span>
+<span class="line-number">41</span>
+<span class="line-number">42</span>
+<span class="line-number">43</span>
+<span class="line-number">44</span>
+<span class="line-number">45</span>
+<span class="line-number">46</span>
+<span class="line-number">47</span>
+<span class="line-number">48</span>
+<span class="line-number">49</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">#!/usr/bin/env bash  
+</span><span class="line">
+</span><span class="line">TABLENAME=symbols  
+</span><span class="line">SYMBOL_DB_FILE="symbols"  
+</span><span class="line">STRING_SYMBOL_FILE="func.list"  
+</span><span class="line">HEAD_FILE="$PROJECT_DIR/$PROJECT_NAME/codeObfuscation.h"  
+</span><span class="line">export LC_CTYPE=C  
+</span><span class="line">
+</span><span class="line">#维护数据库方便日后作排重  
+</span><span class="line">createTable()  
+</span><span class="line">{  
+</span><span class="line">   echo "create table $TABLENAME(src text, des text);" | sqlite3 $SYMBOL_DB_FILE  
+</span><span class="line">}  
+</span><span class="line">
+</span><span class="line">insertValue()  
+</span><span class="line">{  
+</span><span class="line">   echo "insert into $TABLENAME values('$1' ,'$2');" | sqlite3 $SYMBOL_DB_FILE  
+</span><span class="line">}  
+</span><span class="line">
+</span><span class="line">query()  
+</span><span class="line">{  
+</span><span class="line">   echo "select * from $TABLENAME where src='$1';" | sqlite3 $SYMBOL_DB_FILE  
+</span><span class="line">}  
+</span><span class="line">
+</span><span class="line">ramdomString()  
+</span><span class="line">{  
+</span><span class="line">   openssl rand -base64 64 | tr -cd 'a-zA-Z' |head -c 16  
+</span><span class="line">}  
+</span><span class="line">
+</span><span class="line">rm -f $SYMBOL_DB_FILE  
+</span><span class="line">rm -f $HEAD_FILE  
+</span><span class="line">createTable  
+</span><span class="line">
+</span><span class="line">touch $HEAD_FILE  
+</span><span class="line">echo '#ifndef Demo_codeObfuscation_h  
+</span><span class="line">#define Demo_codeObfuscation_h' &gt;&gt; $HEAD_FILE  
+</span><span class="line">echo "//confuse string at `date`" &gt;&gt; $HEAD_FILE  
+</span><span class="line">cat "$STRING_SYMBOL_FILE" | while read -ra line; do  
+</span><span class="line">   if [[ ! -z "$line" ]]; then  
+</span><span class="line">       ramdom=`ramdomString`  
+</span><span class="line">       echo $line $ramdom  
+</span><span class="line">       insertValue $line $ramdom  
+</span><span class="line">       echo "#define $line $ramdom" &gt;&gt; $HEAD_FILE  
+</span><span class="line">   fi  
+</span><span class="line">done  
+</span><span class="line">echo "#endif" &gt;&gt; $HEAD_FILE  
+</span><span class="line">
+</span><span class="line">
+</span><span class="line">sqlite3 $SYMBOL_DB_FILE .dump</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h4>操作步骤</h4>
+
+<p>1.将混淆脚本 confuse.sh 放到工程目录下
+<code>mv confuse.sh your_proj_path/</code></p>
+
+<p>2.修改 Prefix.pch</p>
+
+<p>打开 Xcode，修改 XXX-Prefix.ch ，添加混淆头文件:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#ifdef __OBJC__  </span>
+</span><span class="line">   <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">UIKit</span><span class="o">/</span><span class="n">UIKit</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">   <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">Foundation</span><span class="o">/</span><span class="n">Foundation</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+</span><span class="line">   <span class="c1">//添加混淆作用的头文件（这个文件名是脚本confuse.sh中定义的）  </span>
+</span><span class="line">   <span class="err">#</span><span class="n">import</span> <span class="s">&quot;codeObfuscation.h&quot;</span>
+</span><span class="line"><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>3.配置 Build Phase</p>
+
+<p>在工程 Build Phase 中添加执行脚本操作，执行 confuse.sh 脚本，如图：</p>
+
+<div class="figure" id="figure-23-2">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f760gkuq1ej20z80eqjtx.jpg" />
+
+    <p class="caption"><strong>图片 23.2</strong> confusion3</p>
+</div>
+
+
+<p>4.创建函数名列表 func.list ，写入待混淆的函数名，如:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">sample</span><span class="p">;</span>
+</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">seg1:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">string</span> <span class="nf">seg2:</span><span class="p">(</span><span class="n">NSUInteger</span><span class="p">)</span><span class="nv">num</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>就这样写：</p>
+
+<p>sample<br />
+seg1<br />
+seg2</p>
+
+<p>并将文件放置于与 confuse.sh 脚本同级<br />
+<code>mv func.list your_proj_path/</code></p>
+
+<p>5.编译查看结果</p>
+
+<p>直接 build，混淆脚本会在编译前运行，进行字符随机替换，并且每次 build 的随机字符不同，如图：</p>
+
+<div class="figure" id="figure-23-3">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f760hdde9nj20w40ecwjs.jpg" />
+
+    <p class="caption"><strong>图片 23.3</strong> confusion4</p>
+</div>
+
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/objective-c-dai-ma-hun-yao/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao/">
+		
+			Static 和被裁的符号表</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">22</span> <span class="title">static 和被裁的符号表</span></h1>
+    <p>为了不让攻击者理清自己程序的敏感业务逻辑，于是我们想方设法提高逆向门槛。</p>
+
+<p>本文就介绍一个防御技巧——利用 static 关键字裁掉函数符号。</p>
+
+<h3>原理</h3>
+
+<p>如果函数属性为 static ，那么编译时该函数符号就会被解析为 local 符号。</p>
+
+<p>在发布 release 程序时（用 Xcode 打包编译二进制）默认会 strip 裁掉这些函数符号，无疑给逆向者加大了工作难度。</p>
+
+<h3>验证</h3>
+
+<p>写个 demo 验证一下上述理论，以一段创建 Button 的代码为例，对应补充一个 static 版本。</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+<span class="line-number">17</span>
+<span class="line-number">18</span>
+<span class="line-number">19</span>
+</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="kt">id</span> <span class="nf">createBtn</span><span class="p">()</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIButton</span> <span class="o">*</span><span class="n">btn</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIButton</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithFrame:</span><span class="n">CGRectZero</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">btn</span> <span class="nl">setFrame:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">btn</span> <span class="nl">setBackgroundColor:</span><span class="p">[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">btn</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">cornerRadius</span> <span class="o">=</span> <span class="mf">7.0f</span><span class="p">;</span>
+</span><span class="line">    <span class="n">btn</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">masksToBounds</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">btn</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line">
+</span><span class="line"><span class="k">static</span> <span class="kt">id</span> <span class="nf">static_createBtn</span><span class="p">()</span>
+</span><span class="line"><span class="p">{</span>
+</span><span class="line">    <span class="n">UIButton</span> <span class="o">*</span><span class="n">btn</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIButton</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithFrame:</span><span class="n">CGRectZero</span><span class="p">];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">btn</span> <span class="nl">setFrame:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)];</span>
+</span><span class="line">    <span class="p">[</span><span class="n">btn</span> <span class="nl">setBackgroundColor:</span><span class="p">[</span><span class="n">UIColor</span> <span class="n">blueColor</span><span class="p">]];</span>
+</span><span class="line">    <span class="n">btn</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">cornerRadius</span> <span class="o">=</span> <span class="mf">7.0f</span><span class="p">;</span>
+</span><span class="line">    <span class="n">btn</span><span class="p">.</span><span class="n">layer</span><span class="p">.</span><span class="n">masksToBounds</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span>
+</span><span class="line">    <span class="k">return</span> <span class="n">btn</span><span class="p">;</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>再来看一下反编的结果，对于 createBtn() 方法，我们可以得到它的伪代码：</p>
+
+<div class="figure" id="figure-22-1">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f760d9iqmfj20ns10aakb.jpg" />
+
+    <p class="caption"><strong>图片 22.1</strong> static</p>
+</div>
+
+
+<p>函数名虽然面目全非，但是基本操作还是清晰的。</p>
+
+<p>对于<code>static_createBtn() </code>方法呢，我们已经无法看到它任何直观的有价值信息了。</p>
+
+<h3>局限</h3>
+
+<p>当然这种方法也有局限性。正如你所知道的，<code>static </code>函数，只在本文件可见。</p>
+
+<h3>打破局限</h3>
+
+<p>怎么让别的文件也能调到本文件的<code> static </code>方法呢？</p>
+
+<p>在本文件建造一个结构体，结构体里包含函数指针。把<code> static </code>函数的函数指针都赋在这个结构体里，再把这个结构体抛出去。</p>
+
+<p>这样做的好处是，既隐藏了函数代码也丰富了调用方式。</p>
+
+</div>
+</div>
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/static-he-bei-cai-de-fu-hao-biao/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
+
+
+    <article class="post">
+	<h2 class="title">
+		
+		<a href="/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/">
+		
+			废除应用程序的 ASLR特性</a>
+	</h2>
+	<div class="entry-content">
+		<div class="container">
+<div class="item chapter">
+    <h1 class="title"><span class="label">21</span> <span class="title">废除应用程序的 ASLR 特性</span></h1>
+    <p>ASLR (Address Space Layout Randomization)，即地址空间随机布局。大部分主流的操作系统都已实现了 ASLR，以防范对已知地址进行恶意攻击。iOS 从 4.3 开始支持 ASLR，Android 从 4.0 也支持了 ASLR 机制。</p>
+
+<p>ASLR 的存在，给 iOS 系统越狱造成了很大的困难，某些不完美越狱方案就是因为攻破不了或者绕不开 ASLR ，所以每次重新启动后地址再度随机偏移，需要重新进行越狱操作。与此同时，ASLR 也给应用层攻击带来了一些困难，不同进程会造成不同的地址空间偏移，而且在运行时才可确定其偏移量，不易锁定攻击地址。</p>
+
+<p><code>Mach-O </code>文件的文件头会记录二进制的属性标识，有个 flag 叫做 PIE  (Position Independent Enable)。开启了 PIE 的二进制文件，在执行时会产生 ASLR 。</p>
+
+<p>我们可以使用<code> otool </code>工具，来查看任意应用程序二进制文件的属性，以支付宝为例：<br />
+<code>otool -hv Portal</code></p>
+
+<div class="figure" id="figure-21-1">
+    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f7607zmgrxj216a032ju4.jpg" />
+
+    <p class="caption"><strong>图片 21.1</strong> aslr</p>
+</div>
+
+
+<p>有 PIE 标识，表示该程序在启动时会产生随机地址布局。</p>
+
+<div class="figure" id="figure-21-2">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f7608woa04j202m02s3yc.jpg" />
+
+    <p class="caption"><strong>图片 21.2</strong> aslr1</p>
+</div>
+<a href="https://github.com/peterfillmore/removePIE">removePIE</a> 是个去掉 PIE flag 的工具。
+
+<p>坏消息是，年久失修，它不支持 iOS7 。
+好消息是，我们还有 2 个变通方法可以走。<br />
+    - 利用<code> Theos </code>编译 removePIE<br />
+    - 改编一个 Mac 版的 MyRemovePIE</p>
+
+<p>非越狱开发者可能不熟悉 Theos ，低学习成本的做法是第二种，那么让我们来改编一个 Mac 版的 MyRemovePIE 吧。
+（懒得动手的可以直接到<a href="https://github.com/CarinaTT/MyRemovePIE">这里</a>下载 demo ）</p>
+
+<p>创建一个 Command Line Tool 工程，</p>
+
+<div class="figure" id="figure-21-3">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609flo73j214k0rgqac.jpg" />
+
+    <p class="caption"><strong>图片 21.3</strong> aslr2</p>
+</div>
+
+
+<p>然后复制 <a href="https://github.com/peterfillmore/removePIE/blob/master/removePIE.c">removePIE.c</a>  代码到 <code>main.c</code> 中，并且修改第 43 行：
+    <code>if(currentHeader.magic == MH_MAGIC){ //little endian</code></p>
+
+<p>添加 iOS7 的判断条件:
+    <code>if(currentHeader.magic == MH_MAGIC || currentHeader.magic == 0xbebafeca ){ //little endian</code></p>
+
+<p>编译后生成可执行文件 MyRemovePIE .</p>
+
+<p>利用我们编译生成的 MyRemovePIE 来处理应用程序：</p>
+
+<p><code>./MyRemovePIE Portal</code></p>
+
+<div class="figure" id="figure-21-4">
+    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f76079jd97j20p409iad1.jpg" />
+
+    <p class="caption"><strong>图片 21.4</strong> aslr3</p>
+</div>
+
+
+<p>这样以后支付宝 Portal 再被启动执行就不会具有 ASLR 特性了</p>
+
+<div class="figure" id="figure-21-5">
+    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f7609ztn5kj215y04egnk.jpg" />
+
+    <p class="caption"><strong>图片 21.5</strong> aslr4</p>
+</div>
+
+
+<p>如何验证一下结果呢？</p>
+
+<p>把处理过的 Portal 二进制拷贝回 iPhone ，启动支付宝钱包应用，然后 gdb 该进程，利用<code> info sh </code>命令查看偏移：</p>
+
+<div class="figure" id="figure-21-6">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760anz667j21kw066gri.jpg" />
+
+    <p class="caption"><strong>图片 21.6</strong> aslr5</p>
+</div>
+
+
+<p>偏移量为 0 ，嗯，这下就好了。一些手动处理的过程可以升级为自动了～ <div class="figure" id="figure-21-7">
+    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f760b57h2fj202j02ka9v.jpg" />
+
+    <p class="caption"><strong>图片 21.7</strong> aslr6</p>
+</div>
+
+
+
+
+<p class="post-footer">
+                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
+</p></div></div>
+
+		
+		
+	</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+</div>
+	<div class="tags">
+
+
+	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
+
+
+</div>
+	
+	<div class="comments"><a href="/Blog/blog/2016/08/25/fei-chu-ying-yong-cheng-xu-de-aslrte-xing/#disqus_thread">Comments</a></div>
+	
+</div>
+</article>
 
 
     <article class="post">
@@ -1137,619 +1853,6 @@ hackers 总是想象如果自己是开发者会怎么写，然后才能找到入
 </div>
 	
 	<div class="comments"><a href="/Blog/blog/2016/08/25/shi-yong-inalyzer-fen-xi-ying-yong-cheng-xu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian/">
-		
-			Hack 实战——支付宝 App 手势密码校验欺骗</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">14</span> <span class="title">Hack 实战——支付宝 App 手势密码校验欺骗</span></h1>
-    <p>在 <a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">iOS 安全攻防（十一）：Hack实战——探究支付宝 app 手势密码</a>中，介绍了如何利用 gdb 分析 app ，确定了支付宝 app 的手势密码格式为字符串，9 个点分别对应 123456789。在 <a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/">iOS 安全攻防（十二）：iOS7 的动态库注入</a>中，介绍了如果利用越狱大神们为我们开辟的 iOS7 动态库注入方法。</p>
-
-<p>本文将继续深入 hack 实战，hook 支付宝手势密码校验操作，欺骗其通过任意手势输入。</p>
-
-<p>那么到现在为止，我们已经掌握了什么信息呢？</p>
-
-<p>1）一个名叫<code> GestureUnlockViewController </code>的类，含有<code> gestureInputView:didFinishWithPassword:  </code>方法，来处理输入的手势</p>
-
-<p>2）正确的手势密码通过一个名叫<code> GestureUtil </code>的类读取，方法是<code> getPassword</code></p>
-
-<p>思路马上清晰了，我们需要做 2 步：</p>
-
-<p>1）hook <code>getPassword </code>存下正确的密码</p>
-
-<p>2）hook <code>gestureInputView:didFinishWithPassword: </code> 替换当前输入为正确的密码</p>
-
-<p>一个关键点，我们是用<code> Method Swizzling </code>来 hook，那么就意味操作不能过早，因为我们要保证在取到  <code>GestureUnlockViewController </code>和<code> GestureUtil class </code>后，才能进行 imp 替换。</p>
-
-<p>所以， 我采用<code> NSNotificationCenter </code>通知机制协助完成任务。</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-<span class="line-number">22</span>
-<span class="line-number">23</span>
-<span class="line-number">24</span>
-<span class="line-number">25</span>
-<span class="line-number">26</span>
-<span class="line-number">27</span>
-<span class="line-number">28</span>
-<span class="line-number">29</span>
-<span class="line-number">30</span>
-<span class="line-number">31</span>
-<span class="line-number">32</span>
-<span class="line-number">33</span>
-<span class="line-number">34</span>
-<span class="line-number">35</span>
-<span class="line-number">36</span>
-<span class="line-number">37</span>
-<span class="line-number">38</span>
-<span class="line-number">39</span>
-<span class="line-number">40</span>
-<span class="line-number">41</span>
-<span class="line-number">42</span>
-<span class="line-number">43</span>
-<span class="line-number">44</span>
-<span class="line-number">45</span>
-<span class="line-number">46</span>
-<span class="line-number">47</span>
-<span class="line-number">48</span>
-<span class="line-number">49</span>
-<span class="line-number">50</span>
-<span class="line-number">51</span>
-<span class="line-number">52</span>
-<span class="line-number">53</span>
-<span class="line-number">54</span>
-<span class="line-number">55</span>
-<span class="line-number">56</span>
-<span class="line-number">57</span>
-<span class="line-number">58</span>
-<span class="line-number">59</span>
-<span class="line-number">60</span>
-<span class="line-number">61</span>
-<span class="line-number">62</span>
-<span class="line-number">63</span>
-<span class="line-number">64</span>
-<span class="line-number">65</span>
-<span class="line-number">66</span>
-<span class="line-number">67</span>
-<span class="line-number">68</span>
-<span class="line-number">69</span>
-<span class="line-number">70</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;objc/runtime.h&gt;  </span>
-</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">UIKit</span><span class="o">/</span><span class="n">UIKit</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"><span class="n">IMP</span> <span class="n">ori_getPasswd_IMP</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class="line"><span class="n">IMP</span> <span class="n">ori_gesture_IMP</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@interface</span> <span class="nc">NSObject</span> <span class="nl">(HackPortal)</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">NSObject</span> <span class="nl">(HackPortal)</span>
-</span><span class="line">
-</span><span class="line"><span class="k">+</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">getPassword</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSString</span> <span class="o">*</span><span class="n">passwd</span> <span class="o">=</span> <span class="n">ori_getPasswd_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">passwd</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">password</span> <span class="o">=</span> <span class="n">ori_getPasswd_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
-</span><span class="line">    <span class="n">ori_gesture_IMP</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">),</span> <span class="n">view</span><span class="p">,</span> <span class="n">password</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">PortalListener</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">init</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="n">init</span><span class="p">];</span>
-</span><span class="line">    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">        <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">addObserver:</span><span class="n">self</span>
-</span><span class="line">                                                <span class="nl">selector:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">appLaunched:</span><span class="p">)</span>
-</span><span class="line">                                                    <span class="nl">name:</span><span class="n">UIApplicationDidBecomeActiveNotification</span>
-</span><span class="line">                                                  <span class="nl">object:</span><span class="nb">nil</span><span class="p">];</span>
-</span><span class="line">    <span class="p">}</span>
-</span><span class="line">    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">appLaunched:</span><span class="p">(</span><span class="n">NSNotification</span> <span class="o">*</span><span class="p">)</span><span class="nv">notification</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">Class</span> <span class="n">class_GestureUtil</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;GestureUtil&quot;</span><span class="p">);</span>
-</span><span class="line">    <span class="n">Class</span> <span class="n">class_PortalListener</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;PortalListener&quot;</span><span class="p">);</span>
-</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method</span> <span class="o">=</span> <span class="n">class_getClassMethod</span><span class="p">(</span><span class="n">class_GestureUtil</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
-</span><span class="line">    <span class="n">ori_getPasswd_IMP</span> <span class="o">=</span> <span class="n">method_getImplementation</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">);</span>
-</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method</span> <span class="o">=</span> <span class="n">class_getClassMethod</span><span class="p">(</span><span class="n">class_PortalListener</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">getPassword</span><span class="p">));</span>
-</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">,</span> <span class="n">my_Method</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">Class</span> <span class="n">class_Gesture</span> <span class="o">=</span> <span class="n">NSClassFromString</span><span class="p">(</span><span class="s">@&quot;GestureUnlockViewController&quot;</span><span class="p">);</span>
-</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method1</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class_Gesture</span><span class="p">,</span>
-</span><span class="line">                                                 <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">));</span>
-</span><span class="line">    <span class="n">ori_gesture_IMP</span> <span class="o">=</span> <span class="n">method_getImplementation</span><span class="p">(</span><span class="n">ori_Method1</span><span class="p">);</span>
-</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method1</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class_PortalListener</span><span class="p">,</span>
-</span><span class="line">                                                <span class="k">@selector</span><span class="p">(</span><span class="nl">gestureInputView:didFinishWithPassword:</span><span class="p">));</span>
-</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method1</span><span class="p">,</span> <span class="n">my_Method1</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">dealloc</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span><span class="nl">removeObserver:</span><span class="n">self</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="nf">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span> <span class="n">initialize</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="k">static</span> <span class="n">PortalListener</span> <span class="o">*</span><span class="n">entrance</span><span class="p">;</span>
-</span><span class="line">    <span class="n">entrance</span> <span class="o">=</span> <span class="p">[[</span><span class="n">PortalListener</span> <span class="n">alloc</span><span class="p">]</span><span class="n">init</span><span class="p">];</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>OK！编译好动态库，塞进 iPhone 试试效果吧～</p>
-
-<p>不管我们输入什么手势，都会被替换为正确的密码去给<code>     gestureInputView:didFinishWithPassword: </code>验证，然后顺利解锁。</p>
-
-<p>这意味着什么呢？</p>
-
-<p>意味着，我们可以通过正规的渠道让用户下载这个动态库，然后悄悄放进越狱的 iPhone 的 <code>/Library/MobileSubstrate/DynamicLibraries/</code> 目录下……然后……然后去给妹纸帅锅变魔术吧：“你看，我和你多心有灵犀，你改什么密码我都猜的到!”</p>
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/hack-shi-zhan-zhi-fu-bao-app-shou-shi-mi-ma-xiao-yan-qi-pian/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/shu-ju-ca-chu/">
-		
-			数据擦除</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">13</span> <span class="title">数据擦除</span></h1>
-    <p>对于敏感数据，我们不希望长时间放在内存中，而希望使用完后立即就被释放掉。</p>
-
-<p>但是不管是<code> ARC </code>还是<code> MRC</code>，自动释放池也有轮循工作周期，我们都无法控制内存数据被擦除的准确时间，让 hackers 们有机可乘。
-本文介绍一个小技巧——及时数据擦除。</p>
-
-<p>假如一个 View Controller A的一个数据被绑在一个 property 上，</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">@interface</span> <span class="nc">WipingMemoryViewController</span> : <span class="nc">UIViewController</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span><span class="n">copy</span><span class="p">)</span> <span class="n">NSString</span><span class="o">*</span> <span class="n">text</span><span class="p">;</span>
-</span><span class="line"><span class="k">@end</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>当 A push 到另外一个 View Controller B 时，该数据还是有可能被读到的</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">WipingMemoryViewController</span> <span class="o">*</span><span class="n">lastController</span> <span class="o">=</span> <span class="p">(</span><span class="n">WipingMemoryViewController</span> <span class="o">*</span><span class="p">)</span><span class="n">self</span><span class="p">.</span><span class="n">navigationController</span><span class="p">.</span><span class="n">viewControllers</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;text = %@&quot;</span><span class="p">,</span><span class="n">lastController</span><span class="p">.</span><span class="n">text</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>于是，“用后即擦”变得十分必要：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">_text</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSString</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithFormat:</span><span class="s">@&quot;information&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Origal string = %@&quot;</span><span class="p">,</span><span class="n">_text</span><span class="p">);</span>
-</span><span class="line"><span class="c1">//do something...  </span>
-</span><span class="line"><span class="n">charchar</span> <span class="o">*</span><span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="n">charchar</span> <span class="o">*</span><span class="p">)</span><span class="n">CFStringGetCStringPtr</span><span class="p">((</span><span class="n">CFStringRef</span><span class="p">)</span><span class="n">_text</span><span class="p">,</span> <span class="n">CFStringGetSystemEncoding</span><span class="p">());</span>
-</span><span class="line"><span class="n">memset</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">_text</span> <span class="n">length</span><span class="p">]);</span>
-</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;final text = %@&quot;</span><span class="p">,</span><span class="n">_text</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>Log 输出如下：</p>
-
-<div class="code code">
-<pre class="code">WipingMemory[2518:70b] Origal string = information  
-WipingMemory[2518:70b] final text =</pre>
-</div>
-
-<p>可以看到，我们想要保护的数据，被有效的擦除了。</p>
-
-<p>还有提个醒，如果是这样</p>
-
-<p><code>_text = @"information";</code></p>
-
-<p>创建的字符串，是会被分配到 data 区，而是无法修改的。</p>
-
-<p>如果有兴趣也有闲心，可以试试运行下面的代码，有彩蛋哦：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">_text</span> <span class="o">=</span> <span class="s">@&quot;information&quot;</span><span class="p">;</span>
-</span><span class="line"><span class="n">memset</span><span class="p">((</span><span class="n">__bridge</span> <span class="n">voidvoid</span> <span class="o">*</span><span class="p">)(</span><span class="n">_text</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">_text</span><span class="p">.</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
-</span><span class="line"><span class="n">NSString</span> <span class="o">*</span><span class="n">myString</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSString</span> <span class="n">alloc</span><span class="p">]</span><span class="nl">initWithFormat:</span><span class="s">@&quot;information&quot;</span><span class="p">];</span>
-</span><span class="line"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Origal text : %@ </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">myString</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>编译器把两个 information 的省略到一个地址了～</p>
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/shu-ju-ca-chu/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/">
-		
-			iOS7 的动态库注入</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">12</span> <span class="title">iOS7 的动态库注入</span></h1>
-    <p>iOS 系统不断升级，结构不断调整，所以我们可以利用的动态库注入方法也根据系统版本的不同而不同。</p>
-
-<p>在此之前，我们可以利用环境变量 <code>DYLD_INSERT_LIBRARY</code> 来添加动态库，iOS7 被成功越狱后，我们需要自己去探索实践 iOS7 动态库注入的方式。</p>
-
-<p>本文将在 iOS7.0.4 环境下，以 hook 支付宝 app 程序中 <code> ALPLauncherController </code>的视图加载方法为例，介绍在 iOS7 下，如何实现动态库注入攻击。</p>
-
-<h3>相关工具位置信息</h3>
-
-<p>先总结罗列一下相关编译、链接工具的位置路径信息，在各位自行下载的 iOS SDK中</p>
-
-<div class="code code">
-<pre class="code">clang :    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
-gcc :    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2
-ld :   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ld
-                /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld
-sdk  :   /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/</pre>
-</div>
-
-<h3>动态库源程序</h3>
-
-<p>我们编写一个 hook 支付宝 app 程序中 ALPLauncherController  的 viewDidLoad 方法，具体方法是利用 Method Swizzling 。</p>
-
-<p>不熟悉 Method Swizzling 的话，可以参看我的这篇文章：<a href="/Blog/blog/2016/08/26/method-swizzling/">Method Swizzling</a></p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-<span class="line-number">8</span>
-<span class="line-number">9</span>
-<span class="line-number">10</span>
-<span class="line-number">11</span>
-<span class="line-number">12</span>
-<span class="line-number">13</span>
-<span class="line-number">14</span>
-<span class="line-number">15</span>
-<span class="line-number">16</span>
-<span class="line-number">17</span>
-<span class="line-number">18</span>
-<span class="line-number">19</span>
-<span class="line-number">20</span>
-<span class="line-number">21</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="cp">#import &lt;UIKit/UIKit.h&gt;  </span>
-</span><span class="line"> <span class="err">#</span><span class="n">import</span> <span class="o">&lt;</span><span class="n">objc</span><span class="o">/</span><span class="n">runtime</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@implementation</span> <span class="nc">UIViewController</span> <span class="nl">(HookPortal)</span>
-</span><span class="line">
-</span><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">myViewDidLoad</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;----------------------- myViewDidLoad ----------------------&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span><span class="line">
-</span><span class="line"><span class="k">@end</span>
-</span><span class="line">
-</span><span class="line"><span class="k">static</span> <span class="kt">void</span> <span class="nf">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span> <span class="n">initialize</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class="line"><span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;======================= initialize ========================&quot;</span><span class="p">);</span>
-</span><span class="line">
-</span><span class="line">    <span class="n">Class</span> <span class="n">class</span> <span class="o">=</span> <span class="n">objc_getClass</span><span class="p">(</span><span class="s">&quot;ALPLauncherController&quot;</span><span class="p">);</span>
-</span><span class="line">    <span class="n">Method</span> <span class="n">ori_Method</span> <span class="o">=</span>  <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">viewDidLoad</span><span class="p">));</span>
-</span><span class="line">    <span class="n">Method</span> <span class="n">my_Method</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">class</span><span class="p">,</span> <span class="k">@selector</span><span class="p">(</span><span class="n">myViewDidLoad</span><span class="p">));</span>
-</span><span class="line">    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">ori_Method</span><span class="p">,</span> <span class="n">my_Method</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>编译 dylib</h3>
-
-<p>我们可以利用 xcode 直接帮忙编译 .o，或者自己手动使用 clang 编译，然后手动 ld ：</p>
-
-<div class="code code">
-<pre class="code">ld -dylib -lsystem -lobjc  -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/ -o libwq.dylib xxx.o</pre>
-</div>
-
-<h3>安置、验证 dylib</h3>
-
-<p>将编译好的 libwq.dylib 拷贝到 iPhone 文件系统中 <code>/Library/MobileSubstrate/DynamicLibraries/</code> 下</p>
-
-<p>如果不放心库是否能正常工作，可以加一步验证操作，写一个 demo 尝试打开自己的库：</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-<span class="line-number">2</span>
-<span class="line-number">3</span>
-<span class="line-number">4</span>
-<span class="line-number">5</span>
-<span class="line-number">6</span>
-<span class="line-number">7</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="n">voidvoid</span> <span class="o">*</span><span class="n">handle</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="n">dlopen</span><span class="p">(</span><span class="s">&quot;/Library/MobileSubstrate/DynamicLibraries/libwq.dylib&quot;</span><span class="p">,</span> <span class="mh">0x2</span><span class="p">);</span>
-</span><span class="line"><span class="n">handle</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="s">&quot;myViewDidLoad&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="k">if</span> <span class="p">(</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;++++&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span><span class="k">else</span><span class="p">{</span>
-</span><span class="line">    <span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;----&quot;</span><span class="p">);</span>
-</span><span class="line"><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<h3>运行检验效果</h3>
-
-<p>到了验证效果的时候，重启设备后者执行：
-<code>killall SpringBoard</code></p>
-
-<p>启动支付宝 app，然后观察 log 信息：</p>
-
-<div class="code code">
-<pre class="code">Portal[3631] &lt;Notice&gt;: MS:Notice: Injecting: com.alipay.iphoneclient `[Portal] (847.21)`  
-Portal[3631] &lt;Notice&gt;: MS:Notice: Loading: /Library/MobileSubstrate/DynamicLibraries/libwq.dylib  
-Portal[3631] &lt;Warning&gt;: ======================= initialize ========================  
-Portal[3631] &lt;Warning&gt;: ----------------------- myViewDidLoad ----------------------</pre>
-</div>
-
-<p>证明我们的动态库已经被加载， 我们的 Hook 也成功了。
-剩下的就要自己去思考了，除了加句无聊的 Log，我们还可以做点什么呢？</p>
-
-</div>
-</div>
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/ios7-de-dong-tai-ku-zhu-ru/#disqus_thread">Comments</a></div>
-	
-</div>
-</article>
-
-
-    <article class="post">
-	<h2 class="title">
-		
-		<a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/">
-		
-			Hack实战——探究支付宝 App 手势密码</a>
-	</h2>
-	<div class="entry-content">
-		<div class="container">
-<div class="item chapter">
-    <h1 class="title"><span class="label">11</span> <span class="title">Hack 实战——探究支付宝 App 手势密码</span></h1>
-    <p>在之前的 <a href="/Blog/blog/2016/08/25/hack-shi-zhan-jie-chu-zhi-fu-bao-shou-shi-jie-suo-ci-shu-xian-zhi/">iOS安全攻防（七）：Hack实战——解除支付宝app手势解锁错误次数限制</a>中，留了一个问题，就是如何破解手势密码。</p>
-
-<p>方法不唯一，本文介绍如何利用 gdb 分析破解 App 。</p>
-
-<p>当没有程序源代码的情况下，我们如何利用 gdb 呢？</p>
-
-<p>为了确定应该如何设置断点，不得不反汇编程序来作为参考了。</p>
-
-<p>在前面的文章提到过，支付宝 app 的手势密码校验处理非常严谨，没有抛出 BOOL 判断的方法让我们可以直接修改返回值跳过验证，而是将全部操作封在了</p>
-
-<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
-</pre></td><td class="code"><pre><code class="objc"><span class="line"><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">gestureInputView:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">view</span> <span class="nf">didFinishWithPassword:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">password</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div>
-
-<p>于是，我反汇编了支付宝 app ，找到手势密码解锁的相关代码片段：</p>
-
-<div class="figure" id="figure-11-1">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75unaa1pzj20l90jyjw5.jpg" />
-
-    <p class="caption"><strong>图片 11.1</strong> guesture-password</p>
-</div>
-
-
-<p>红色箭头标注的地方，让人欣喜，这将是我们断点位置的最好选择。</p>
-
-<p>首先，查看一下相关程序段符号表：</p>
-
-<p><code>nm Portal | grep -i gestureinputview</code></p>
-
-<p>得到结果：</p>
-
-<p>nm Portal | grep -i getpassword</p>
-
-<p>得到结果：</p>
-
-<div class="figure" id="figure-11-2">
-    <img src="http://ww2.sinaimg.cn/large/626e5d69gw1f75unyvcgaj20fg04hwg4.jpg" />
-
-    <p class="caption"><strong>图片 11.2</strong> guesture-password2</p>
-</div>
-
-
-<p>确定了了关键函数的输出符号。</p>
-
-<p>启动支付宝 app ，并 gdb 该进程：
-<code>gdb -q -p 671</code></p>
-
-<p>在上述两个函数位置设置断点：
-<div class="figure" id="figure-11-3">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75up0u087j20hp02bgmb.jpg" />
-
-    <p class="caption"><strong>图片 11.3</strong> guesture-password3</p>
-</div>
-
-
-<p>可以通过 info breakpoints 查看断点：
-<div class="figure" id="figure-11-4">
-    <img src="http://ww3.sinaimg.cn/large/626e5d69gw1f75uppyzbzj20pj034my3.jpg" />
-
-    <p class="caption"><strong>图片 11.4</strong> guesture-password4</p>
-</div>
-
-
-<p>continue 到 getPassword 位置，打印函数栈：
-<div class="figure" id="figure-11-5">
-    <img src="http://ww4.sinaimg.cn/large/626e5d69gw1f75uq86ydyj20kn09en0w.jpg" />
-
-    <p class="caption"><strong>图片 11.5</strong> guesture-password5</p>
-</div>
-
-
-<p>我们可以确定了 getPassword 的返回地址是 0x00becb36 ,  对该地址加断点：</p>
-
-<p><code>b * 0xbecb36</code></p>
-
-<p>然后继续 continue ，程序将卡在上面的断点上。</p>
-
-<p>从上面的反汇编代码，我们可以知道，用户输入的密码为存在 r8 上，原始密码为存在 r0 上，我们直接打印出这两个寄存器的值：</p>
-
-<div class="figure" id="figure-11-6">
-    <img src="http://ww1.sinaimg.cn/large/626e5d69gw1f75ur9u2hlj20mm07pmxu.jpg" />
-
-    <p class="caption"><strong>图片 11.6</strong> guesture-password6</p>
-</div>
-
-
-<p>正确密码是个 “Z” 手势图画，而当前输入为 “一” 手势图画。
-可以得出结论，支付宝 app 的手势密码和大多数 app 一样，手势密码格式是字符串，9 个点分别对应字符 123456789 。</p>
-
-
-
-<p class="post-footer">
-                        written by <a href="http://ITMonkeyLife.github.io/Blog">Rick</a>&nbsp;posted at <a href="http://ITMonkeyLife.github.io/Blog">http://ITMonkeyLife.github.io/Blog</a></p>
-</p></p></p></div></div>
-
-		
-		
-	</div>
-
-
-<div class="meta">
-	<div class="date">
-
-
-
-
-</div>
-	<div class="tags">
-
-
-	<a class='category' href='/Blog/blog/categories/ios/'>iOS</a>
-
-
-</div>
-	
-	<div class="comments"><a href="/Blog/blog/2016/08/25/hackshi-zhan-tan-jiu-zhi-fu-bao-app-shou-shi-mi-ma/#disqus_thread">Comments</a></div>
 	
 </div>
 </article>
